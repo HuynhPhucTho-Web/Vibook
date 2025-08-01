@@ -32,3 +32,9 @@ select
 ✅ Hosting: Configure files for Firebase Hosting...
 Spacebar
 
+
+git add .
+git commit -m "Setup Firebase Hosting"
+git push origin main
+
+firebase deploy
