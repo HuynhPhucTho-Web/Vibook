@@ -16,6 +16,12 @@ npm install firebase
 npm install react-toastify
 npm install bootstrap
 npm install -D tailwindcss@3
+npm install react-router-dom react-icons
+npm install react
+
+## Short Dependence
+npm install react-router-dom react-icons react-toastify bootstrap firebase
+npm install -D eslint eslint-plugin-react eslint-plugin-react-refresh
 
 ## buil run firebase
 npm install -g firebase-tools
@@ -32,9 +38,12 @@ select
 ✅ Hosting: Configure files for Firebase Hosting...
 Spacebar
 
-
 git add .
 git commit -m "Setup Firebase Hosting"
 git push origin main
 
 firebase deploy
+
+## Build and Check
+npm run build
+npm run preview
