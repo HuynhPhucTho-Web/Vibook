@@ -1,17 +1,18 @@
-import { useEffect, useState, useContext } from "react";
+// home.jsx
+import React, { useEffect, useState, useContext } from "react";
 import { auth, db } from "../components/firebase";
-import { doc, getDoc, updateDoc, collection, addDoc, query, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, addDoc, query, getDocs, deleteDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../contexts/ThemeContext";
-import { FaComment, FaHeart, FaLaugh, FaSurprise, FaSadTear, FaAngry } from 'react-icons/fa';
+import { FaComment, FaHeart, FaLaugh, FaSurprise, FaSadTear, FaAngry, FaTrash, FaSignOutAlt } from "react-icons/fa";
+import PostCreator from "../components/PostCreate";
 
 function Home() {
   const { theme } = useContext(ThemeContext);
   const [userDetails, setUserDetails] = useState(null);
-  const [postContent, setPostContent] = useState('');
   const [posts, setPosts] = useState([]);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [selectedPostIdForReactions, setSelectedPostIdForReactions] = useState(null);
 
@@ -20,6 +21,7 @@ function Home() {
     let unsubscribe;
     try {
       unsubscribe = auth.onAuthStateChanged(async (user) => {
+        console.log("Auth state changed:", user ? "Logged in" : "Logged out");
         if (user) {
           const docRef = doc(db, "Users", user.uid);
           const docSnap = await getDoc(docRef);
@@ -28,19 +30,20 @@ function Home() {
           } else {
             toast.error("User data not found", { position: "top-center" });
           }
-
           const postsQuery = query(collection(db, "Posts"));
           const postsSnapshot = await getDocs(postsQuery);
-          const allPosts = await Promise.all(postsSnapshot.docs.map(async (doc) => {
-            const postData = { id: doc.id, ...doc.data() };
-            const commentsQuery = query(collection(db, "Posts", doc.id, "comments"));
-            const commentsSnapshot = await getDocs(commentsQuery);
-            const comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
-            return { ...postData, comments };
-          }));
+          const allPosts = await Promise.all(
+            postsSnapshot.docs.map(async (doc) => {
+              const postData = { id: doc.id, ...doc.data() };
+              const commentsQuery = query(collection(db, "Posts", doc.id, "comments"));
+              const commentsSnapshot = await getDocs(commentsQuery);
+              const comments = commentsSnapshot.docs.map((c) => ({ id: c.id, ...c.data() }));
+              return { ...postData, comments };
+            })
+          );
           setPosts(allPosts.sort((a, b) => b.createdAt - a.createdAt));
         } else {
-          toast.error("Please log in to view your profile", { position: "top-center" });
+          setUserDetails(null);
           setPosts([]);
         }
       });
@@ -51,39 +54,26 @@ function Home() {
     return () => unsubscribe && unsubscribe();
   }, []);
 
-  // Handle post submission
-  const handlePostSubmit = async (e) => {
-    e.preventDefault();
-    if (!postContent.trim()) {
-      toast.error("Post content cannot be empty", { position: "top-center" });
-      return;
-    }
-    if (!auth.currentUser || !userDetails) {
-      toast.error("You must be logged in to post", { position: "top-center" });
-      return;
-    }
+  // Handle logout
+  const handleLogout = async () => {
     try {
-      const postData = {
-        userId: auth.currentUser.uid,
-        userName: userDetails.firstName + (userDetails.lastName ? ' ' + userDetails.lastName : ''),
-        userPhoto: userDetails.photo || "https://via.placeholder.com/40",
-        content: postContent,
-        createdAt: Date.now(),
-        likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
-        reactedBy: {},
-        comments: [],
-      };
-      const docRef = await addDoc(collection(db, "Posts"), postData);
-      setPosts([{ id: docRef.id, ...postData }, ...posts]);
-      setPostContent('');
-      toast.success("Post created successfully", { position: "top-center" });
+      console.log("Attempting to log out:", auth.currentUser);
+      await auth.signOut();
+      console.log("Logout successful");
+      toast.success("Logged out successfully", { position: "top-center" });
     } catch (error) {
-      console.error("Error creating post:", error);
-      toast.error("Failed to create post", { position: "top-center" });
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out: " + error.message, { position: "top-center" });
     }
   };
 
-  // Handle reaction
+  // Handle new post from PostCreator
+  const handlePostCreated = async (postData) => {
+    const docRef = await addDoc(collection(db, "Posts"), postData);
+    setPosts([{ id: docRef.id, ...postData }, ...posts]);
+  };
+
+  // Handle reaction (unchanged)
   const handleReaction = async (postId, reaction) => {
     try {
       const postRef = doc(db, "Posts", postId);
@@ -116,10 +106,12 @@ function Home() {
       }
 
       await updateDoc(postRef, { likes: updatedLikes, reactedBy: updatedReactedBy });
-      setPosts(posts.map(post =>
-        post.id === postId ? { ...post, likes: updatedLikes, reactedBy: updatedReactedBy } : post
-      ));
-      const actionText = updatedReactedBy[userId] ? `Reacted with ${reaction}` : 'Reaction removed';
+      setPosts(
+        posts.map((post) =>
+          post.id === postId ? { ...post, likes: updatedLikes, reactedBy: updatedReactedBy } : post
+        )
+      );
+      const actionText = updatedReactedBy[userId] ? `Reacted with ${reaction}` : "Reaction removed";
       toast.success(actionText, { position: "top-center" });
     } catch (error) {
       console.error("Error reacting to post:", error);
@@ -127,9 +119,15 @@ function Home() {
     }
   };
 
-  // Handle comment submission
+  // Handle comment submission (unchanged)
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
+    console.log("Submitting comment:", {
+      commentText,
+      selectedPostId,
+      authCurrentUser: auth.currentUser?.uid,
+      userDetails,
+    });
     if (!commentText.trim()) {
       toast.error("Comment cannot be empty", { position: "top-center" });
       return;
@@ -138,46 +136,90 @@ function Home() {
       toast.error("You must be logged in to comment", { position: "top-center" });
       return;
     }
+    if (!selectedPostId) {
+      toast.error("No post selected for commenting", { position: "top-center" });
+      return;
+    }
     try {
       const commentData = {
         userId: auth.currentUser.uid,
-        userName: userDetails.firstName + (userDetails.lastName ? ' ' + userDetails.lastName : ''),
+        userName: userDetails.firstName + (userDetails.lastName ? " " + userDetails.lastName : ""),
         userPhoto: userDetails.photo || "https://via.placeholder.com/30",
         content: commentText,
         createdAt: Date.now(),
       };
+      console.log("Adding comment to:", `Posts/${selectedPostId}/comments`, commentData);
       const commentsRef = collection(db, "Posts", selectedPostId, "comments");
       const docRef = await addDoc(commentsRef, commentData);
-      setPosts(posts.map(post =>
-        post.id === selectedPostId
-          ? { ...post, comments: [...(post.comments || []), { id: docRef.id, ...commentData }] }
-          : post
-      ));
-      setCommentText('');
+      setPosts(
+        posts.map((post) =>
+          post.id === selectedPostId
+            ? { ...post, comments: [...(post.comments || []), { id: docRef.id, ...commentData }] }
+            : post
+        )
+      );
+      setCommentText("");
       setSelectedPostId(null);
       toast.success("Comment added successfully", { position: "top-center" });
     } catch (error) {
       console.error("Error adding comment:", error);
-      toast.error("Failed to add comment", { position: "top-center" });
+      toast.error("Failed to add comment: " + error.message, { position: "top-center" });
     }
   };
 
-  // Get reaction icon
+  // Handle post deletion (unchanged)
+  const handleDeletePost = async (postId) => {
+    try {
+      const postRef = doc(db, "Posts", postId);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) {
+        toast.error("Post not found", { position: "top-center" });
+        return;
+      }
+
+      const postData = postSnap.data();
+      if (postData.userId !== auth.currentUser?.uid) {
+        toast.error("You can only delete your own posts", { position: "top-center" });
+        return;
+      }
+
+      await deleteDoc(postRef);
+      const commentsQuery = query(collection(db, "Posts", postId, "comments"));
+      const commentsSnapshot = await getDocs(commentsQuery);
+      const deletePromises = commentsSnapshot.docs.map((commentDoc) => deleteDoc(commentDoc.ref));
+      await Promise.all(deletePromises);
+
+      setPosts(posts.filter((post) => post.id !== postId));
+      toast.success("Post deleted successfully", { position: "top-center" });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast.error("Failed to delete post", { position: "top-center" });
+    }
+  };
+
+  // Get reaction icon (unchanged)
   const getReactionIcon = (reaction) => {
     switch (reaction) {
-      case 'Like': return '👍';
-      case 'Love': return '❤️';
-      case 'Haha': return '😂';
-      case 'Wow': return '😮';
-      case 'Sad': return '😢';
-      case 'Angry': return '😠';
-      default: return '👍';
+      case "Like":
+        return "👍";
+      case "Love":
+        return "❤️";
+      case "Haha":
+        return "😂";
+      case "Wow":
+        return "😮";
+      case "Sad":
+        return "😢";
+      case "Angry":
+        return "😠";
+      default:
+        return "👍";
     }
   };
 
   if (!userDetails) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
@@ -188,48 +230,21 @@ function Home() {
   return (
     <div className={`min-vh-100 ${theme}`}>
       <div className="container">
-        {/* Create Post Section */}
-        <div className="card mb-4 shadow-sm">
-          <div className="card-body">
-            <div className="d-flex align-items-center mb-3">
-              <img
-                src={userDetails.photo || "https://via.placeholder.com/40"}
-                alt="Profile"
-                className="rounded-circle me-3"
-                style={{ width: "40px", height: "40px", objectFit: "cover" }}
-              />
-              <h6 className="mb-0">What's on your mind, {userDetails.firstName}?</h6>
-            </div>
-            <form onSubmit={handlePostSubmit}>
-              <textarea
-                value={postContent}
-                onChange={(e) => setPostContent(e.target.value)}
-                placeholder="What's happening?"
-                className="form-control mb-3"
-                rows="3"
-                style={{ resize: 'none' }}
-              />
-              <div className="d-flex justify-content-between align-items-center">
-                <div className="d-flex">
-                  <button type="button" className="btn btn-link text-primary me-2 p-1">
-                    📷 Photo/Video
-                  </button>
-                  <button type="button" className="btn btn-link text-primary p-1">
-                    😊 Feeling/Activity
-                  </button>
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={!postContent.trim()}>
-                  Post
-                </button>
-              </div>
-            </form>
-          </div>
+        {/* Logout Button */}
+        <div className="d-flex justify-content-end mb-3">
+          <button
+            className="btn btn-outline-danger"
+            onClick={handleLogout}
+            disabled={!auth.currentUser}
+          >
+            <FaSignOutAlt /> Logout
+          </button>
         </div>
-
+        <PostCreator onPostCreated={handlePostCreated} />
         {/* Posts Feed */}
         <div>
           {posts.length > 0 ? (
-            posts.map(post => (
+            posts.map((post) => (
               <div key={post.id} className="card mb-4 shadow-sm">
                 <div className="card-body">
                   {/* Post Header */}
@@ -242,27 +257,44 @@ function Home() {
                     />
                     <div>
                       <p className="mb-0 fw-bold">{post.userName}</p>
-                      <small className="text-muted">
-                        {new Date(post.createdAt).toLocaleString()}
-                      </small>
+                      <small className="text-muted">{new Date(post.createdAt).toLocaleString()}</small>
                     </div>
+                    {post.userId === auth.currentUser?.uid && (
+                      <button
+                        className="btn btn-link text-danger p-2 ms-auto"
+                        onClick={() => handleDeletePost(post.id)}
+                      >
+                        <FaTrash /> Delete
+                      </button>
+                    )}
                   </div>
 
                   {/* Post Content */}
                   <p className="mb-3">{post.content}</p>
-
+                  {post.mediaUrl && (
+                    post.mediaUrl.match(/\.(jpg|jpeg|png|gif)$/) ? (
+                      <img src={post.mediaUrl} alt="Post media" style={{ maxWidth: "100%", maxHeight: "300px" }} />
+                    ) : (
+                      <video controls style={{ maxWidth: "100%", maxHeight: "300px" }}>
+                        <source src={post.mediaUrl} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )
+                  )}
                   {/* Reactions Summary */}
                   <div className="d-flex justify-content-between align-items-center mb-2 text-muted small">
                     <div>
-                      {Object.entries(post.likes || {}).filter(([, count]) => count > 0).map(([reaction, count]) => (
-                        <span key={reaction} className="me-2">
-                          {getReactionIcon(reaction)} {count}
-                        </span>
-                      ))}
+                      {Object.entries(post.likes || {})
+                        .filter(([, count]) => count > 0)
+                        .map(([reaction, count]) => (
+                          <span key={reaction} className="me-2">
+                            {getReactionIcon(reaction)} {count}
+                          </span>
+                        ))}
                     </div>
                     <div>
                       {post.comments && post.comments.length > 0 && (
-                        <span>{post.comments.length} comment{post.comments.length !== 1 ? 's' : ''}</span>
+                        <span>{post.comments.length} comment{post.comments.length !== 1 ? "s" : ""}</span>
                       )}
                     </div>
                   </div>
@@ -274,8 +306,10 @@ function Home() {
                     {/* Like Button with Reaction Menu */}
                     <div className="position-relative">
                       <button
-                        className={`btn btn-link text-muted p-2 flex-fill ${post.reactedBy && post.reactedBy[auth.currentUser?.uid] ? 'text-primary' : ''}`}
-                        onClick={() => handleReaction(post.id, 'Like')}
+                        className={`btn btn-link text-muted p-2 flex-fill ${
+                          post.reactedBy && post.reactedBy[auth.currentUser?.uid] ? "text-primary" : ""
+                        }`}
+                        onClick={() => handleReaction(post.id, "Like")}
                         onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
                         onMouseLeave={() => setSelectedPostIdForReactions(null)}
                       >
@@ -288,7 +322,7 @@ function Home() {
                           onMouseLeave={() => setSelectedPostIdForReactions(null)}
                           style={{ zIndex: 1000 }}
                         >
-                          {['Like', 'Love', 'Haha', 'Wow', 'Sad', 'Angry'].map(reaction => (
+                          {["Like", "Love", "Haha", "Wow", "Sad", "Angry"].map((reaction) => (
                             <button
                               key={reaction}
                               className="btn btn-link p-1"
@@ -304,7 +338,10 @@ function Home() {
 
                     <button
                       className="btn btn-link text-muted p-2 flex-fill"
-                      onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
+                      onClick={() => {
+                        console.log("Selecting post for comment:", post.id);
+                        setSelectedPostId(selectedPostId === post.id ? null : post.id);
+                      }}
                     >
                       <FaComment className="me-1" /> Comment
                     </button>
@@ -312,7 +349,7 @@ function Home() {
                     <button
                       className="btn btn-link text-muted p-2 flex-fill"
                       onClick={() => {
-                        navigator.clipboard.writeText(window.location.href + '/post/' + post.id);
+                        navigator.clipboard.writeText(window.location.href + "/post/" + post.id);
                         toast.success("Post link copied to clipboard", { position: "top-center" });
                       }}
                     >
@@ -324,7 +361,7 @@ function Home() {
                   {post.comments && post.comments.length > 0 && (
                     <div className="mt-3">
                       <hr />
-                      {post.comments.map(comment => (
+                      {post.comments.map((comment) => (
                         <div key={comment.id} className="d-flex align-items-start mb-2">
                           <img
                             src={comment.userPhoto || "https://via.placeholder.com/30"}
@@ -335,9 +372,7 @@ function Home() {
                           <div className="bg-light rounded p-2 flex-grow-1">
                             <small className="fw-bold">{comment.userName}</small>
                             <p className="mb-1 small">{comment.content}</p>
-                            <small className="text-muted">
-                              {new Date(comment.createdAt).toLocaleTimeString()}
-                            </small>
+                            <small className="text-muted">{new Date(comment.createdAt).toLocaleTimeString()}</small>
                           </div>
                         </div>
                       ))}
