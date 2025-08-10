@@ -6,14 +6,12 @@ import { toast } from "react-toastify";
 import { ThemeContext } from "../contexts/ThemeContext";
 import { FaImage } from "react-icons/fa";
 
-
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
   const [postContent, setPostContent] = useState("");
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaPreview, setMediaPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  
 
   useEffect(() => {
     return () => {
@@ -25,7 +23,7 @@ const PostCreator = ({ onPostCreated }) => {
 
   const handleMediaUpload = (e) => {
     const file = e.target.files[0];
-    console.log("Selected file:", file, "User:", auth.currentUser?.uid);
+    console.log("Selected file:", file, "Type:", file?.type, "Size:", file?.size);
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
@@ -79,7 +77,7 @@ const PostCreator = ({ onPostCreated }) => {
       let mediaUrl = null;
       if (mediaFile) {
         const storageRef = ref(storage, `posts/${auth.currentUser.uid}/${Date.now()}_${mediaFile.name}`);
-        console.log("Uploading to:", storageRef.fullPath, "with user:", auth.currentUser.uid);
+        console.log("Uploading to:", storageRef.fullPath);
         const snapshot = await uploadBytes(storageRef, mediaFile);
         console.log("Upload completed:", snapshot);
         mediaUrl = await getDownloadURL(storageRef);
@@ -104,8 +102,10 @@ const PostCreator = ({ onPostCreated }) => {
       setMediaPreview(null);
       toast.success("Post created successfully", { position: "top-center" });
     } catch (error) {
-      console.error("Error creating post:", error);
-      if (error.code === "storage/unauthorized") {
+      console.error("Error creating post:", error.code, error.message);
+      if (error.code === "storage/cors") {
+        toast.error("CORS error. Check Storage CORS settings.", { position: "top-center" });
+      } else if (error.code === "storage/unauthorized") {
         toast.error("Permission denied. Check Storage Rules.", { position: "top-center" });
       } else if (error.code === "storage/network-error") {
         toast.error("Network error. Please try again.", { position: "top-center" });

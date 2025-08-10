@@ -1,12 +1,13 @@
-// home.jsx
+// home.jsx (updated)
 import React, { useEffect, useState, useContext } from "react";
 import { auth, db } from "../components/firebase";
 import { doc, getDoc, updateDoc, collection, addDoc, query, getDocs, deleteDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../contexts/ThemeContext";
-import { FaComment, FaHeart, FaLaugh, FaSurprise, FaSadTear, FaAngry, FaTrash, FaSignOutAlt } from "react-icons/fa";
+import { FaSignOutAlt } from "react-icons/fa";
 import PostCreator from "../components/PostCreate";
+import PostItem from "../components/PostItem"; // Import new component
 
 function Home() {
   const { theme } = useContext(ThemeContext);
@@ -73,7 +74,7 @@ function Home() {
     setPosts([{ id: docRef.id, ...postData }, ...posts]);
   };
 
-  // Handle reaction (unchanged)
+  // Handle reaction
   const handleReaction = async (postId, reaction) => {
     try {
       const postRef = doc(db, "Posts", postId);
@@ -119,8 +120,8 @@ function Home() {
     }
   };
 
-  // Handle comment submission (unchanged)
-  const handleCommentSubmit = async (e) => {
+  // Handle comment submission
+  const handleCommentSubmit = async (e, postId) => {
     e.preventDefault();
     console.log("Submitting comment:", {
       commentText,
@@ -136,7 +137,7 @@ function Home() {
       toast.error("You must be logged in to comment", { position: "top-center" });
       return;
     }
-    if (!selectedPostId) {
+    if (!postId) {
       toast.error("No post selected for commenting", { position: "top-center" });
       return;
     }
@@ -148,12 +149,12 @@ function Home() {
         content: commentText,
         createdAt: Date.now(),
       };
-      console.log("Adding comment to:", `Posts/${selectedPostId}/comments`, commentData);
-      const commentsRef = collection(db, "Posts", selectedPostId, "comments");
+      console.log("Adding comment to:", `Posts/${postId}/comments`, commentData);
+      const commentsRef = collection(db, "Posts", postId, "comments");
       const docRef = await addDoc(commentsRef, commentData);
       setPosts(
         posts.map((post) =>
-          post.id === selectedPostId
+          post.id === postId
             ? { ...post, comments: [...(post.comments || []), { id: docRef.id, ...commentData }] }
             : post
         )
@@ -167,7 +168,7 @@ function Home() {
     }
   };
 
-  // Handle post deletion (unchanged)
+  // Handle post deletion
   const handleDeletePost = async (postId) => {
     try {
       const postRef = doc(db, "Posts", postId);
@@ -197,7 +198,7 @@ function Home() {
     }
   };
 
-  // Get reaction icon (unchanged)
+  // Get reaction icon
   const getReactionIcon = (reaction) => {
     switch (reaction) {
       case "Like":
@@ -245,167 +246,22 @@ function Home() {
         <div>
           {posts.length > 0 ? (
             posts.map((post) => (
-              <div key={post.id} className="card mb-4 shadow-sm">
-                <div className="card-body">
-                  {/* Post Header */}
-                  <div className="d-flex align-items-center mb-3">
-                    <img
-                      src={post.userPhoto || "https://via.placeholder.com/40"}
-                      alt="User"
-                      className="rounded-circle me-3"
-                      style={{ width: "40px", height: "40px", objectFit: "cover" }}
-                    />
-                    <div>
-                      <p className="mb-0 fw-bold">{post.userName}</p>
-                      <small className="text-muted">{new Date(post.createdAt).toLocaleString()}</small>
-                    </div>
-                    {post.userId === auth.currentUser?.uid && (
-                      <button
-                        className="btn btn-link text-danger p-2 ms-auto"
-                        onClick={() => handleDeletePost(post.id)}
-                      >
-                        <FaTrash /> Delete
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Post Content */}
-                  <p className="mb-3">{post.content}</p>
-                  {post.mediaUrl && (
-                    post.mediaUrl.match(/\.(jpg|jpeg|png|gif)$/) ? (
-                      <img src={post.mediaUrl} alt="Post media" style={{ maxWidth: "100%", maxHeight: "300px" }} />
-                    ) : (
-                      <video controls style={{ maxWidth: "100%", maxHeight: "300px" }}>
-                        <source src={post.mediaUrl} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    )
-                  )}
-                  {/* Reactions Summary */}
-                  <div className="d-flex justify-content-between align-items-center mb-2 text-muted small">
-                    <div>
-                      {Object.entries(post.likes || {})
-                        .filter(([, count]) => count > 0)
-                        .map(([reaction, count]) => (
-                          <span key={reaction} className="me-2">
-                            {getReactionIcon(reaction)} {count}
-                          </span>
-                        ))}
-                    </div>
-                    <div>
-                      {post.comments && post.comments.length > 0 && (
-                        <span>{post.comments.length} comment{post.comments.length !== 1 ? "s" : ""}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <hr className="my-2" />
-
-                  {/* Action Buttons */}
-                  <div className="d-flex justify-content-around">
-                    {/* Like Button with Reaction Menu */}
-                    <div className="position-relative">
-                      <button
-                        className={`btn btn-link text-muted p-2 flex-fill ${
-                          post.reactedBy && post.reactedBy[auth.currentUser?.uid] ? "text-primary" : ""
-                        }`}
-                        onClick={() => handleReaction(post.id, "Like")}
-                        onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
-                        onMouseLeave={() => setSelectedPostIdForReactions(null)}
-                      >
-                        👍 Like
-                      </button>
-                      {selectedPostIdForReactions === post.id && (
-                        <div
-                          className="position-absolute bg-white border rounded shadow-lg p-2 d-flex gap-1"
-                          onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
-                          onMouseLeave={() => setSelectedPostIdForReactions(null)}
-                          style={{ zIndex: 1000 }}
-                        >
-                          {["Like", "Love", "Haha", "Wow", "Sad", "Angry"].map((reaction) => (
-                            <button
-                              key={reaction}
-                              className="btn btn-link p-1"
-                              onClick={() => handleReaction(post.id, reaction)}
-                              title={reaction}
-                            >
-                              {getReactionIcon(reaction)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      className="btn btn-link text-muted p-2 flex-fill"
-                      onClick={() => {
-                        console.log("Selecting post for comment:", post.id);
-                        setSelectedPostId(selectedPostId === post.id ? null : post.id);
-                      }}
-                    >
-                      <FaComment className="me-1" /> Comment
-                    </button>
-
-                    <button
-                      className="btn btn-link text-muted p-2 flex-fill"
-                      onClick={() => {
-                        navigator.clipboard.writeText(window.location.href + "/post/" + post.id);
-                        toast.success("Post link copied to clipboard", { position: "top-center" });
-                      }}
-                    >
-                      📤 Share
-                    </button>
-                  </div>
-
-                  {/* Comments Section */}
-                  {post.comments && post.comments.length > 0 && (
-                    <div className="mt-3">
-                      <hr />
-                      {post.comments.map((comment) => (
-                        <div key={comment.id} className="d-flex align-items-start mb-2">
-                          <img
-                            src={comment.userPhoto || "https://via.placeholder.com/30"}
-                            alt="Commenter"
-                            className="rounded-circle me-2"
-                            style={{ width: "30px", height: "30px", objectFit: "cover" }}
-                          />
-                          <div className="bg-light rounded p-2 flex-grow-1">
-                            <small className="fw-bold">{comment.userName}</small>
-                            <p className="mb-1 small">{comment.content}</p>
-                            <small className="text-muted">{new Date(comment.createdAt).toLocaleTimeString()}</small>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Comment Input */}
-                  {selectedPostId === post.id && (
-                    <div className="mt-3">
-                      <hr />
-                      <form onSubmit={handleCommentSubmit} className="d-flex gap-2">
-                        <img
-                          src={userDetails.photo || "https://via.placeholder.com/30"}
-                          alt="Your avatar"
-                          className="rounded-circle"
-                          style={{ width: "30px", height: "30px", objectFit: "cover" }}
-                        />
-                        <input
-                          type="text"
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          placeholder="Write a comment..."
-                          className="form-control"
-                          autoFocus
-                        />
-                        <button type="submit" className="btn btn-primary btn-sm" disabled={!commentText.trim()}>
-                          Post
-                        </button>
-                      </form>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <PostItem
+                key={post.id}
+                post={post}
+                handleReaction={handleReaction}
+                handleCommentSubmit={handleCommentSubmit}
+                handleDeletePost={handleDeletePost}
+                commentText={commentText}
+                setCommentText={setCommentText}
+                selectedPostId={selectedPostId}
+                setSelectedPostId={setSelectedPostId}
+                selectedPostIdForReactions={selectedPostIdForReactions}
+                setSelectedPostIdForReactions={setSelectedPostIdForReactions}
+                auth={auth}
+                userDetails={userDetails}
+                getReactionIcon={getReactionIcon}
+              />
             ))
           ) : (
             <div className="text-center py-5">

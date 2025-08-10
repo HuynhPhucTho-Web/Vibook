@@ -10,9 +10,9 @@ import {
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Login from "./components/login";
+import Login from "./components/Login";
 import SignUp from "./components/register";
-import Home from "./pages/home";
+import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Messenger from "./pages/Messenger";
 import Notifications from "./pages/Notifications";
@@ -83,19 +83,19 @@ function App() {
             <Route path="/register" element={<SignUp />} />
           </Route>
           <Route element={<MainLayout />}>
-            <Route path="/homevibook" element={user ? <Home /> : <Navigate to="/login" />} />
-            <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
-            <Route path="/messenger" element={user ? <Messenger /> : <Navigate to="/login" />} />
-            <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
-            <Route path="/groups" element={user ? <Groups /> : <Navigate to="/login" />} />
-            <Route path="/events" element={user ? <Events /> : <Navigate to="/login" />} />
-            <Route path="/reels" element={user ? <Reels /> : <Navigate to="/login" />} />
-            <Route path="/pages" element={user ? <Pages /> : <Navigate to="/login" />} />
-            <Route path="/page-management" element={user ? <PageManagement /> : <Navigate to="/login" />} />
-            <Route path="/inbox" element={user ? <Inbox /> : <Navigate to="/login" />} />
-            <Route path="/insights" element={user ? <Insights /> : <Navigate to="/login" />} />
-            <Route path="/comment-management" element={user ? <CommentManagement /> : <Navigate to="/login" />} />
-            <Route path="/fan-badges" element={user ? <FanBadges /> : <Navigate to="/login" />} />
+            <Route path="/homevibook" element={user ? <Home /> : <Navigate to="/Login" />} />
+            <Route path="/profile" element={user ? <Profile /> : <Navigate to="/Login" />} />
+            <Route path="/messenger" element={user ? <Messenger /> : <Navigate to="/Login" />} />
+            <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="Login" />} />
+            <Route path="/groups" element={user ? <Groups /> : <Navigate to="Login" />} />
+            <Route path="/events" element={user ? <Events /> : <Navigate to="/Login" />} />
+            <Route path="/reels" element={user ? <Reels /> : <Navigate to="/Login" />} />
+            <Route path="/pages" element={user ? <Pages /> : <Navigate to="/Login" />} />
+            <Route path="/page-management" element={user ? <PageManagement /> : <Navigate to="/Login" />} />
+            <Route path="/inbox" element={user ? <Inbox /> : <Navigate to="/Login" />} />
+            <Route path="/insights" element={user ? <Insights /> : <Navigate to="/Login" />} />
+            <Route path="/comment-management" element={user ? <CommentManagement /> : <Navigate to="/Login" />} />
+            <Route path="/fan-badges" element={user ? <FanBadges /> : <Navigate to="/Login" />} />
           </Route>
         </Routes>
         <ToastContainer />
