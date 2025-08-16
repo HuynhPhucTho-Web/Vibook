@@ -109,41 +109,34 @@ const PostCreator = ({ onPostCreated }) => {
 
   const handlePostSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate inputs
+    console.log(`[${currentDateTime}] Submitting post:`, { postContent, mediaFile, user: auth.currentUser });
     if (!postContent.trim() && !mediaFile) {
-      toast.error("Vui lòng nhập nội dung hoặc chọn file media", { position: "top-center" });
+      toast.error("Post content or media is required", { position: "top-center" });
       return;
     }
-    
-    // Check authentication
     if (!auth.currentUser) {
-      toast.error("Vui lòng đăng nhập để đăng bài", { position: "top-center" });
+      toast.error("You must be logged in to post", { position: "top-center" });
       return;
     }
-
-    console.log(`[${currentDateTime}] Creating post...`, {
-      user: auth.currentUser?.email,
-      hasContent: !!postContent.trim(),
-      hasMedia: !!mediaFile,
-      mediaType: mediaFile?.type
-    });
 
     setIsUploading(true);
-    
     try {
       let mediaUrl = null;
+      let publicIdResult = null;
       
-      // STEP 1: Upload media to Cloudinary if exists
+      // STEP 1: Upload media to Cloudinary first (if exists)
       if (mediaFile) {
-        toast.info("Đang tải lên media...", { position: "top-center" });
-        
         const formData = new FormData();
         formData.append("file", mediaFile);
         formData.append("upload_preset", import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET);
-        formData.append("folder", "posts"); // Organize files
 
-        console.log(`[${currentDateTime}] Uploading to Cloudinary...`);
+        console.log(`[${currentDateTime}] Uploading to Cloudinary with preset:`, {
+          cloudName: import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME,
+          uploadPreset: import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET,
+          fileName: mediaFile.name,
+          fileSize: mediaFile.size,
+          formDataEntries: Array.from(formData.entries()),
+        });
         
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME}/auto/upload`,
@@ -153,101 +146,72 @@ const PostCreator = ({ onPostCreated }) => {
           }
         );
         
+        console.log(`[${currentDateTime}] Cloudinary response status:`, response.status);
+        
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`[${currentDateTime}] Cloudinary error:`, errorText);
+          console.error(`[${currentDateTime}] Cloudinary error response:`, errorText);
           
-          let errorMessage = "Lỗi tải lên media";
+          // Parse error để hiểu rõ hơn
           try {
             const parsedError = JSON.parse(errorText);
             if (parsedError.error?.message?.includes("Upload preset must be whitelisted")) {
-              errorMessage = "Cấu hình Cloudinary chưa đúng. Vui lòng bật 'Unsigned' mode cho upload preset.";
-            } else if (parsedError.error?.message) {
-              errorMessage = parsedError.error.message;
+              throw new Error("Upload preset chưa được bật 'Unsigned' mode. Vui lòng vào Cloudinary Console và bật 'Unsigned' cho preset này.");
             }
-          } catch (e) {
-            errorMessage = `Lỗi ${response.status}: ${response.statusText}`;
+            throw new Error(parsedError.error?.message || `Upload failed: ${response.statusText}`);
+          } catch (parseError) {
+            throw new Error(`Upload failed: ${response.statusText} - ${errorText}`);
           }
-          
-          throw new Error(errorMessage);
         }
         
         const result = await response.json();
+        console.log(`[${currentDateTime}] Cloudinary response data:`, result);
         
-        if (!result.secure_url) {
-          throw new Error("Không nhận được URL từ Cloudinary");
+        if (!result.secure_url || !result.public_id) {
+          throw new Error("Invalid response from Cloudinary");
         }
         
         mediaUrl = result.secure_url;
-        console.log(`[${currentDateTime}] Media uploaded:`, mediaUrl);
-        toast.success("Tải lên media thành công!", { position: "top-center" });
+        publicIdResult = result.public_id;
+        setPublicId(publicIdResult); // Update state for preview
+        console.log(`[${currentDateTime}] Uploaded to Cloudinary:`, mediaUrl);
       }
 
-      // STEP 2: Create post data with proper structure
+      // STEP 2: Create post data
       const postData = {
         userId: auth.currentUser.uid,
-        userName: auth.currentUser.displayName || auth.currentUser.email || "Người dùng",
+        userName: auth.currentUser.displayName || "Anonymous",
         userPhoto: auth.currentUser.photoURL || "https://via.placeholder.com/40",
-        content: postContent.trim(),
-        mediaUrl: mediaUrl,
+        content: postContent,
+        mediaUrl: mediaUrl, // URL from Cloudinary or null
         createdAt: Date.now(),
-        // Initialize social features
         likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
         reactedBy: {},
-        comments: []
+        comments: [],
       };
 
-      console.log(`[${currentDateTime}] Saving post data:`, postData);
+      // STEP 3: Save to Firestore (chỉ 1 lần duy nhất)
+      console.log(`[${currentDateTime}] Saving post to Firestore:`, postData);
+      const postRef = await addDoc(collection(db, "posts"), postData);
+      console.log(`[${currentDateTime}] Post saved to Firestore with ID:`, postRef.id);
 
-      // STEP 3: Save to Firestore
-      const docRef = await addDoc(collection(db, "posts"), postData);
-      console.log(`[${currentDateTime}] Post saved with ID:`, docRef.id);
-
-      // STEP 4: Create complete post object for UI update
-      const completePost = {
-        id: docRef.id,
-        ...postData
+      // STEP 4: Notify parent component with complete post data
+      const completePostData = {
+        ...postData,
+        id: postRef.id,
       };
+      await onPostCreated(completePostData);
 
-      // STEP 5: Notify parent component
-      if (onPostCreated) {
-        await onPostCreated(completePost);
-      }
-
-      // STEP 6: Reset form
+      // STEP 5: Reset form
       setPostContent("");
       setMediaFile(null);
       setMediaPreview(null);
       setPublicId(null);
       
-      // Clean up video URL if exists
-      if (mediaPreview && mediaFile?.type?.startsWith("video/")) {
-        URL.revokeObjectURL(mediaPreview);
-      }
-      
-      toast.success("Đăng bài thành công! 🎉", { position: "top-center" });
-      
+      toast.success("Post created successfully", { position: "top-center" });
     } catch (error) {
       console.error(`[${currentDateTime}] Error creating post:`, error);
-      
-      // User-friendly error messages
-      let errorMessage = "Có lỗi xảy ra khi đăng bài";
-      
-      if (error.message.includes("Permission denied")) {
-        errorMessage = "Không có quyền đăng bài. Vui lòng kiểm tra cấu hình Firestore.";
-      } else if (error.message.includes("Cloudinary")) {
-        errorMessage = error.message;
-      } else if (error.message.includes("Network")) {
-        errorMessage = "Lỗi kết nối mạng. Vui lòng thử lại.";
-      } else {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { 
-        position: "top-center",
-        autoClose: 5000
-      });
-      
+      toast.error(`Failed to create post: ${error.message}`, { position: "top-center" });
     } finally {
       setIsUploading(false);
     }

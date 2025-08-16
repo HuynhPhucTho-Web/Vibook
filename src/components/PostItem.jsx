@@ -4,9 +4,9 @@ import { db } from "../components/firebase";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../contexts/ThemeContext";
-import { FaComment, FaHeart, FaLaugh, FaSurprise, FaSadTear, FaAngry, FaTrash, FaShare, FaLink } from "react-icons/fa";
+import { FaComment, FaTrash, FaShare, FaLink, FaTimes } from "react-icons/fa";
 
-const PostItem = ({ post, auth, userDetails }) => {
+const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
   const { theme } = useContext(ThemeContext);
   const [commentText, setCommentText] = useState("");
   const [selectedPostId, setSelectedPostId] = useState(null);
@@ -15,6 +15,7 @@ const PostItem = ({ post, auth, userDetails }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReacting, setIsReacting] = useState(false);
+  const [localPost, setLocalPost] = useState(post);
 
   // Real-time comments listener
   useEffect(() => {
@@ -23,13 +24,12 @@ const PostItem = ({ post, auth, userDetails }) => {
     const fetchComments = async () => {
       if (selectedPostId === post.id) {
         try {
-          // SỬA: "Posts" → "posts" để match với PostCreator
           const commentsQuery = query(collection(db, "posts", post.id, "comments"));
           unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
             const postComments = snapshot.docs.map((doc) => ({ 
               id: doc.id, 
               ...doc.data() 
-            })).sort((a, b) => a.createdAt - b.createdAt); // Sort by time
+            })).sort((a, b) => a.createdAt - b.createdAt);
             setComments(postComments);
           });
         } catch (error) {
@@ -44,12 +44,23 @@ const PostItem = ({ post, auth, userDetails }) => {
     };
   }, [selectedPostId, post.id]);
 
+  // Real-time post updates listener
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, "posts", post.id), (doc) => {
+      if (doc.exists()) {
+        setLocalPost({ ...doc.data(), id: doc.id });
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [post.id]);
+
   const handleReaction = async (postId, reaction) => {
-    if (isReacting) return; // Prevent double clicks
+    if (isReacting || !auth.currentUser) return;
+    
     setIsReacting(true);
     
     try {
-      // SỬA: "Posts" → "posts"
       const postRef = doc(db, "posts", postId);
       const postSnap = await getDoc(postRef);
       
@@ -59,15 +70,10 @@ const PostItem = ({ post, auth, userDetails }) => {
       }
 
       const postData = postSnap.data();
-      const userId = auth.currentUser?.uid;
+      const userId = auth.currentUser.uid;
       
-      if (!userId) {
-        toast.error("Vui lòng đăng nhập để thả cảm xúc", { position: "top-center" });
-        return;
-      }
-
-      const updatedLikes = { ...postData.likes };
-      const updatedReactedBy = { ...postData.reactedBy };
+      const updatedLikes = { ...postData.likes } || {};
+      const updatedReactedBy = { ...postData.reactedBy } || {};
 
       // Remove previous reaction if exists
       if (updatedReactedBy[userId]) {
@@ -84,13 +90,25 @@ const PostItem = ({ post, auth, userDetails }) => {
         // Add new reaction
         updatedLikes[reaction] = (updatedLikes[reaction] || 0) + 1;
         updatedReactedBy[userId] = reaction;
-        toast.success(`${getReactionText(reaction)} 👍`, { position: "top-center", autoClose: 1000 });
+        
+        const reactionTexts = {
+          "Like": "Thích",
+          "Love": "Yêu thích", 
+          "Haha": "Haha",
+          "Wow": "Wow",
+          "Sad": "Buồn",
+          "Angry": "Tức giận"
+        };
+        toast.success(`${reactionTexts[reaction]} 👍`, { position: "top-center", autoClose: 1000 });
       }
 
       await updateDoc(postRef, { 
         likes: updatedLikes, 
         reactedBy: updatedReactedBy 
       });
+
+      // Hide reaction picker after selecting
+      setSelectedPostIdForReactions(null);
       
     } catch (error) {
       console.error("Error reacting to post:", error);
@@ -108,7 +126,7 @@ const PostItem = ({ post, auth, userDetails }) => {
       return;
     }
     
-    if (!auth.currentUser || !userDetails) {
+    if (!auth.currentUser) {
       toast.error("Vui lòng đăng nhập để bình luận", { position: "top-center" });
       return;
     }
@@ -116,16 +134,16 @@ const PostItem = ({ post, auth, userDetails }) => {
     try {
       const commentData = {
         userId: auth.currentUser.uid,
-        userName: `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}` || 
-                 auth.currentUser.displayName || 
-                 auth.currentUser.email || 
-                 "Người dùng",
-        userPhoto: userDetails.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
+        userName: userDetails ? 
+          `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}` : 
+          auth.currentUser.displayName || 
+          auth.currentUser.email?.split('@')[0] || 
+          "Người dùng",
+        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
         content: commentText.trim(),
         createdAt: Date.now(),
       };
       
-      // SỬA: "Posts" → "posts"
       const commentsRef = collection(db, "posts", post.id, "comments");
       await addDoc(commentsRef, commentData);
       
@@ -143,7 +161,6 @@ const PostItem = ({ post, auth, userDetails }) => {
     
     setIsDeleting(true);
     try {
-      // SỬA: "Posts" → "posts"
       const postRef = doc(db, "posts", post.id);
       const postSnap = await getDoc(postRef);
       
@@ -158,16 +175,21 @@ const PostItem = ({ post, auth, userDetails }) => {
         return;
       }
 
-      // Delete post
-      await deleteDoc(postRef);
-      
-      // Delete all comments
+      // Delete all comments first
       const commentsQuery = query(collection(db, "posts", post.id, "comments"));
       const commentsSnapshot = await getDocs(commentsQuery);
       const deletePromises = commentsSnapshot.docs.map((commentDoc) => deleteDoc(commentDoc.ref));
       await Promise.all(deletePromises);
+
+      // Delete post
+      await deleteDoc(postRef);
       
       toast.success("Đã xóa bài viết thành công", { position: "top-center" });
+      
+      // Notify parent component
+      if (onPostDeleted) {
+        onPostDeleted(post.id);
+      }
       
     } catch (error) {
       console.error("Error deleting post:", error);
@@ -179,13 +201,18 @@ const PostItem = ({ post, auth, userDetails }) => {
 
   const handleShare = async (type) => {
     const postUrl = `${window.location.origin}/post/${post.id}`;
-    const shareText = `${post.content}\n\nXem bài viết tại: ${postUrl}`;
+    const shareText = `${post.userName} đã đăng:\n\n"${post.content}"\n\nXem bài viết tại: ${postUrl}`;
     
     try {
       switch (type) {
         case 'copy':
           await navigator.clipboard.writeText(postUrl);
           toast.success("Đã sao chép link!", { position: "top-center" });
+          break;
+          
+        case 'copyWithContent':
+          await navigator.clipboard.writeText(shareText);
+          toast.success("Đã sao chép nội dung!", { position: "top-center" });
           break;
           
         case 'native':
@@ -196,18 +223,19 @@ const PostItem = ({ post, auth, userDetails }) => {
               url: postUrl,
             });
           } else {
-            // Fallback to copy
             await navigator.clipboard.writeText(shareText);
             toast.success("Đã sao chép nội dung!", { position: "top-center" });
           }
           break;
           
         case 'facebook':
-          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
+          const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}&quote=${encodeURIComponent(`${post.userName}: ${post.content}`)}`;
+          window.open(fbUrl, '_blank', 'width=600,height=400');
           break;
           
         case 'twitter':
-          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
+          const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+          window.open(twitterUrl, '_blank', 'width=600,height=400');
           break;
           
         default:
@@ -261,14 +289,17 @@ const PostItem = ({ post, auth, userDetails }) => {
   };
 
   const isImageUrl = (url) => {
-    return url && /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
+    if (!url) return false;
+    return /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url) || url.includes('cloudinary.com');
   };
 
   const isVideoUrl = (url) => {
-    return url && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+    if (!url) return false;
+    return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url) || (url.includes('cloudinary.com') && url.includes('/video/'));
   };
 
-  const currentUserReaction = post.reactedBy && post.reactedBy[auth.currentUser?.uid];
+  const currentUserReaction = localPost.reactedBy && localPost.reactedBy[auth.currentUser?.uid];
+  const totalReactions = Object.values(localPost.likes || {}).reduce((sum, count) => sum + count, 0);
 
   return (
     <div className={`card mb-4 shadow-sm ${theme}`}>
@@ -276,16 +307,23 @@ const PostItem = ({ post, auth, userDetails }) => {
         {/* Post Header */}
         <div className="d-flex align-items-center mb-3">
           <img
-            src={post.userPhoto || userDetails?.photo || "https://via.placeholder.com/40"}
+            src={localPost.userPhoto || "https://via.placeholder.com/40"}
             alt="Profile"
             className="rounded-circle me-3"
             style={{ width: "40px", height: "40px", objectFit: "cover" }}
           />
           <div className="flex-grow-1">
-            <p className="mb-0 fw-bold">{post.userName}</p>
-            <small className="text-muted">{formatTimeAgo(post.createdAt)}</small>
+            <p className="mb-0 fw-bold">{localPost.userName}</p>
+            <small className="text-muted">{formatTimeAgo(localPost.createdAt)}</small>
+            {/* Show shared info if applicable */}
+            {localPost.isShared && localPost.sharedBy && (
+              <div className="small text-muted">
+                <FaShare className="me-1" size="12" />
+                Được chia sẻ bởi {localPost.sharedBy.name}
+              </div>
+            )}
           </div>
-          {post.userId === auth.currentUser?.uid && (
+          {localPost.userId === auth.currentUser?.uid && (
             <button 
               className="btn btn-outline-danger btn-sm" 
               onClick={handleDeletePost}
@@ -297,38 +335,38 @@ const PostItem = ({ post, auth, userDetails }) => {
         </div>
 
         {/* Post Content */}
-        <p className="mb-3" style={{ whiteSpace: "pre-wrap" }}>{post.content}</p>
+        <p className="mb-3" style={{ whiteSpace: "pre-wrap" }}>{localPost.content}</p>
 
         {/* Post Media */}
-        {post.mediaUrl && (
+        {localPost.mediaUrl && (
           <div className="mb-3">
-            {isImageUrl(post.mediaUrl) ? (
+            {isImageUrl(localPost.mediaUrl) ? (
               <img 
-                src={post.mediaUrl} 
+                src={localPost.mediaUrl} 
                 alt="Post media" 
                 className="img-fluid rounded"
                 style={{ maxWidth: "100%", maxHeight: "500px", objectFit: "contain" }}
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  console.error('Failed to load image:', post.mediaUrl);
+                  console.error('Failed to load image:', localPost.mediaUrl);
                 }}
               />
-            ) : isVideoUrl(post.mediaUrl) ? (
+            ) : isVideoUrl(localPost.mediaUrl) ? (
               <video 
                 controls 
                 className="img-fluid rounded"
                 style={{ maxWidth: "100%", maxHeight: "500px" }}
                 onError={(e) => {
-                  console.error('Failed to load video:', post.mediaUrl);
+                  console.error('Failed to load video:', localPost.mediaUrl);
                 }}
               >
-                <source src={post.mediaUrl} type="video/mp4" />
+                <source src={localPost.mediaUrl} type="video/mp4" />
                 Trình duyệt không hỗ trợ video này.
               </video>
             ) : (
               <div className="alert alert-info">
                 <FaLink className="me-2" />
-                <a href={post.mediaUrl} target="_blank" rel="noopener noreferrer">
+                <a href={localPost.mediaUrl} target="_blank" rel="noopener noreferrer">
                   Xem tệp đính kèm
                 </a>
               </div>
@@ -337,25 +375,40 @@ const PostItem = ({ post, auth, userDetails }) => {
         )}
 
         {/* Reaction Summary */}
-        <div className="d-flex justify-content-between align-items-center mb-2 text-muted small">
-          <div>
-            {Object.entries(post.likes || {})
-              .filter(([, count]) => count > 0)
-              .sort(([,a], [,b]) => b - a) // Sort by count descending
-              .map(([reaction, count]) => (
-                <span key={reaction} className="me-2">
-                  {getReactionIcon(reaction)} {count}
+        {totalReactions > 0 && (
+          <div className="d-flex justify-content-between align-items-center mb-2 text-muted small">
+            <div className="d-flex align-items-center">
+              {Object.entries(localPost.likes || {})
+                .filter(([, count]) => count > 0)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3) // Show top 3 reactions
+                .map(([reaction, count]) => (
+                  <span key={reaction} className="me-2 d-flex align-items-center">
+                    <span className="me-1" style={{ fontSize: "1.1em" }}>
+                      {getReactionIcon(reaction)}
+                    </span>
+                    <span>{count}</span>
+                  </span>
+                ))}
+              {totalReactions > 0 && (
+                <span className="ms-2">
+                  {totalReactions} {totalReactions === 1 ? 'lượt thích' : 'lượt thích'}
                 </span>
-              ))}
+              )}
+            </div>
+            <div>
+              {comments.length > 0 && (
+                <span 
+                  style={{ cursor: "pointer" }} 
+                  onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
+                  className="text-decoration-underline"
+                >
+                  {comments.length} bình luận
+                </span>
+              )}
+            </div>
           </div>
-          <div>
-            {comments.length > 0 && (
-              <span style={{ cursor: "pointer" }} onClick={() => setSelectedPostId(post.id)}>
-                {comments.length} bình luận
-              </span>
-            )}
-          </div>
-        </div>
+        )}
 
         <hr className="my-2" />
 
@@ -364,15 +417,17 @@ const PostItem = ({ post, auth, userDetails }) => {
           {/* Like Button with Reactions */}
           <div className="position-relative flex-fill">
             <button
-              className={`btn btn-link p-2 w-100 ${
+              className={`btn btn-link p-2 w-100 border-0 ${
                 currentUserReaction ? "text-primary fw-bold" : "text-muted"
               }`}
               onClick={() => handleReaction(post.id, "Like")}
               onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
-              onMouseLeave={() => setTimeout(() => setSelectedPostIdForReactions(null), 300)}
               disabled={isReacting}
+              style={{ transition: "all 0.2s" }}
             >
-              {currentUserReaction ? getReactionIcon(currentUserReaction) : "👍"} {" "}
+              <span style={{ fontSize: "1.2em", marginRight: "5px" }}>
+                {currentUserReaction ? getReactionIcon(currentUserReaction) : "👍"}
+              </span>
               {currentUserReaction ? getReactionText(currentUserReaction) : "Thích"}
             </button>
             
@@ -388,20 +443,23 @@ const PostItem = ({ post, auth, userDetails }) => {
                   marginBottom: "5px"
                 }}
                 onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
-                onMouseLeave={() => setSelectedPostIdForReactions(null)}
+                onMouseLeave={() => setTimeout(() => setSelectedPostIdForReactions(null), 200)}
               >
                 {["Like", "Love", "Haha", "Wow", "Sad", "Angry"].map((reaction) => (
                   <button
                     key={reaction}
-                    className="btn btn-link p-1 reaction-btn"
+                    className="btn btn-link p-1"
                     onClick={() => handleReaction(post.id, reaction)}
                     title={getReactionText(reaction)}
                     style={{ 
                       fontSize: "1.5rem",
                       transition: "transform 0.2s",
+                      border: "none",
+                      background: "none"
                     }}
                     onMouseEnter={(e) => e.target.style.transform = "scale(1.3)"}
                     onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                    disabled={isReacting}
                   >
                     {getReactionIcon(reaction)}
                   </button>
@@ -412,7 +470,7 @@ const PostItem = ({ post, auth, userDetails }) => {
 
           {/* Comment Button */}
           <button
-            className="btn btn-link text-muted p-2 flex-fill"
+            className="btn btn-link text-muted p-2 flex-fill border-0"
             onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
           >
             <FaComment className="me-1" /> Bình luận
@@ -421,7 +479,7 @@ const PostItem = ({ post, auth, userDetails }) => {
           {/* Share Button */}
           <div className="position-relative flex-fill">
             <button
-              className="btn btn-link text-muted p-2 w-100"
+              className="btn btn-link text-muted p-2 w-100 border-0"
               onClick={() => setShowShareMenu(!showShareMenu)}
             >
               <FaShare className="me-1" /> Chia sẻ
@@ -429,105 +487,145 @@ const PostItem = ({ post, auth, userDetails }) => {
             
             {/* Share Menu */}
             {showShareMenu && (
-              <div 
-                className="position-absolute bg-white border rounded shadow-lg p-2"
-                style={{ 
-                  top: "100%", 
-                  right: "0",
-                  zIndex: 1000,
-                  minWidth: "150px",
-                  marginTop: "5px"
-                }}
-              >
-                <button
-                  className="btn btn-link text-start w-100 p-2"
-                  onClick={() => handleShare('copy')}
+              <>
+                <div 
+                  className="position-fixed w-100 h-100"
+                  style={{ 
+                    top: 0, 
+                    left: 0, 
+                    zIndex: 999 
+                  }}
+                  onClick={() => setShowShareMenu(false)}
+                />
+                <div 
+                  className="position-absolute bg-white border rounded shadow-lg p-2"
+                  style={{ 
+                    top: "100%", 
+                    right: "0",
+                    zIndex: 1000,
+                    minWidth: "200px",
+                    marginTop: "5px"
+                  }}
                 >
-                  <FaLink className="me-2" /> Sao chép link
-                </button>
-                
-                {navigator.share && (
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <small className="text-muted fw-bold">Chia sẻ bài viết</small>
+                    <button
+                      className="btn btn-link p-0 text-muted"
+                      onClick={() => setShowShareMenu(false)}
+                    >
+                      <FaTimes size="12" />
+                    </button>
+                  </div>
+                  
                   <button
-                    className="btn btn-link text-start w-100 p-2"
-                    onClick={() => handleShare('native')}
+                    className="btn btn-link text-start w-100 p-2 border-0"
+                    onClick={() => handleShare('copy')}
                   >
-                    <FaShare className="me-2" /> Chia sẻ
+                    <FaLink className="me-2" /> Sao chép link
                   </button>
-                )}
-                
-                <button
-                  className="btn btn-link text-start w-100 p-2"
-                  onClick={() => handleShare('facebook')}
-                >
-                  📘 Facebook
-                </button>
-                
-                <button
-                  className="btn btn-link text-start w-100 p-2"
-                  onClick={() => handleShare('twitter')}
-                >
-                  🐦 Twitter
-                </button>
-              </div>
+                  
+                  <button
+                    className="btn btn-link text-start w-100 p-2 border-0"
+                    onClick={() => handleShare('copyWithContent')}
+                  >
+                    <FaLink className="me-2" /> Sao chép nội dung
+                  </button>
+                  
+                  {navigator.share && (
+                    <button
+                      className="btn btn-link text-start w-100 p-2 border-0"
+                      onClick={() => handleShare('native')}
+                    >
+                      <FaShare className="me-2" /> Chia sẻ hệ thống
+                    </button>
+                  )}
+                  
+                  <hr className="my-2" />
+                  
+                  <button
+                    className="btn btn-link text-start w-100 p-2 border-0"
+                    onClick={() => handleShare('facebook')}
+                  >
+                    📘 Facebook
+                  </button>
+                  
+                  <button
+                    className="btn btn-link text-start w-100 p-2 border-0"
+                    onClick={() => handleShare('twitter')}
+                  >
+                    🐦 Twitter
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
 
         {/* Comments Section */}
-        {comments.length > 0 && (
-          <div className="mt-3">
-            <hr />
-            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-              {comments.map((comment) => (
-                <div key={comment.id} className="d-flex align-items-start mb-2">
-                  <img
-                    src={comment.userPhoto || "https://via.placeholder.com/30"}
-                    alt="Commenter"
-                    className="rounded-circle me-2"
-                    style={{ width: "30px", height: "30px", objectFit: "cover" }}
-                  />
-                  <div className="bg-light rounded p-2 flex-grow-1">
-                    <small className="fw-bold d-block">{comment.userName}</small>
-                    <p className="mb-1 small" style={{ whiteSpace: "pre-wrap" }}>{comment.content}</p>
-                    <small className="text-muted">{formatTimeAgo(comment.createdAt)}</small>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Comment Input */}
         {selectedPostId === post.id && (
-          <div className="mt-3">
-            <hr />
-            <form onSubmit={handleCommentSubmit} className="d-flex gap-2 align-items-start">
-              <img
-                src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
-                alt="Your avatar"
-                className="rounded-circle"
-                style={{ width: "30px", height: "30px", objectFit: "cover" }}
-              />
-              <div className="flex-grow-1">
-                <textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Viết bình luận..."
-                  className="form-control"
-                  rows="2"
-                  style={{ resize: "none" }}
-                  autoFocus
-                />
+          <>
+            {comments.length > 0 && (
+              <div className="mt-3">
+                <hr />
+                <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="d-flex align-items-start mb-3">
+                      <img
+                        src={comment.userPhoto || "https://via.placeholder.com/30"}
+                        alt="Commenter"
+                        className="rounded-circle me-2"
+                        style={{ width: "30px", height: "30px", objectFit: "cover" }}
+                      />
+                      <div className="bg-light rounded p-2 flex-grow-1">
+                        <small className="fw-bold d-block">{comment.userName}</small>
+                        <p className="mb-1 small" style={{ whiteSpace: "pre-wrap" }}>{comment.content}</p>
+                        <small className="text-muted">{formatTimeAgo(comment.createdAt)}</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <button 
-                type="submit" 
-                className="btn btn-primary btn-sm px-3" 
-                disabled={!commentText.trim()}
-              >
-                Đăng
-              </button>
-            </form>
-          </div>
+            )}
+
+            {/* Comment Input */}
+            <div className="mt-3">
+              <hr />
+              <form onSubmit={handleCommentSubmit} className="d-flex gap-2 align-items-start">
+                <img
+                  src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
+                  alt="Your avatar"
+                  className="rounded-circle"
+                  style={{ width: "30px", height: "30px", objectFit: "cover" }}
+                />
+                <div className="flex-grow-1">
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Viết bình luận..."
+                    className="form-control"
+                    rows="2"
+                    style={{ resize: "none" }}
+                    autoFocus
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (commentText.trim()) {
+                          handleCommentSubmit(e);
+                        }
+                      }
+                    }}
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary btn-sm px-3" 
+                  disabled={!commentText.trim()}
+                >
+                  Đăng
+                </button>
+              </form>
+            </div>
+          </>
         )}
       </div>
     </div>
