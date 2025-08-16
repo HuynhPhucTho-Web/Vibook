@@ -43,7 +43,8 @@ git commit -m "Setup Firebase Hosting"
 git push origin main
 
 firebase deploy
-
+npm i @cloudinary/url-gen @cloudinary/react
+npm install @cloudinary/react @cloudinary/url-gen
 ## Build and Check
 npm run build
 npm run preview
