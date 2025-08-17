@@ -45,6 +45,9 @@ git push origin main
 firebase deploy
 npm i @cloudinary/url-gen @cloudinary/react
 npm install @cloudinary/react @cloudinary/url-gen
+npm install @cloudinary/react@latest
 ## Build and Check
 npm run build
 npm run preview
+
+

@@ -1,7 +1,7 @@
-// Profile.jsx
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { auth, db } from "../components/firebase";
-import { doc, onSnapshot, query, collection, where } from "firebase/firestore"; // Added query, collection, where
+import { auth, db, storage } from "../components/firebase";
+import { doc, onSnapshot, query, collection, where, updateDoc, getDocs } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { ThemeContext } from "../contexts/ThemeContext";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -17,7 +17,7 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [loggingOut] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [posts, setPosts] = useState([]);
 
   // Fetch user data và posts với real-time listener
@@ -26,7 +26,7 @@ function Profile() {
       setUserDetails(null);
       setPosts([]);
       setLoading(false);
-      return () => { };
+      return () => {};
     }
 
     try {
@@ -45,12 +45,20 @@ function Profile() {
 
       // Fetch user's posts with real-time listener
       const postsQuery = query(collection(db, "Posts"), where("userId", "==", user.uid));
-      const unsubscribePosts = onSnapshot(postsQuery, (querySnapshot) => {
-        const userPosts = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setPosts(userPosts.sort((a, b) => b.createdAt - a.createdAt)); // Sort by latest
+      const unsubscribePosts = onSnapshot(postsQuery, async (querySnapshot) => {
+        const userPosts = await Promise.all(
+          querySnapshot.docs.map(async (postDoc) => {
+            const postData = { id: postDoc.id, ...postDoc.data() };
+            
+            // Fetch comments for each post
+            const commentsQuery = query(collection(db, "Posts", postDoc.id, "comments"));
+            const commentsSnapshot = await getDocs(commentsQuery);
+            const comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
+            
+            return { ...postData, comments };
+          })
+        );
+        setPosts(userPosts.sort((a, b) => b.createdAt - a.createdAt));
       });
 
       return () => {
@@ -61,7 +69,7 @@ function Profile() {
       console.error("Error fetching user data or posts:", error);
       toast.error("Failed to load user data or posts", { position: "top-center" });
       setLoading(false);
-      return () => { };
+      return () => {};
     }
   }, []);
 
@@ -70,7 +78,7 @@ function Profile() {
     let unsubscribeData;
 
     unsubscribeAuth = auth.onAuthStateChanged((user) => {
-      console.log("Auth state changed:", user ? `Users: ${user.email}` : "User logged out");
+      console.log("Auth state changed:", user ? `User: ${user.email}` : "User logged out");
       if (unsubscribeData) unsubscribeData();
 
       if (user) {
@@ -88,15 +96,88 @@ function Profile() {
     };
   }, [fetchUserData]);
 
-  const handleAvatarUpload = () => {
+  // Handle avatar upload
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB", { position: "top-center" });
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only images are allowed", { position: "top-center" });
+      return;
+    }
+
     setUploading(true);
-    // Logic will be handled in a separate component or passed as callback
+
+    try {
+      const storageRef = ref(storage, `avatars/${auth.currentUser.uid}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      const userRef = doc(db, "Users", auth.currentUser.uid);
+      await updateDoc(userRef, { photo: downloadURL });
+      
+      // Update auth profile
+      await auth.currentUser.updateProfile({ photoURL: downloadURL });
+      
+      toast.success("Avatar updated successfully", { position: "top-center" });
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to upload avatar", { position: "top-center" });
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleEditProfile = () => {
+  // Handle edit profile
+  const handleEditProfile = async () => {
     if (editMode) {
+      // Validate required fields
+      if (!editedDetails.firstName?.trim()) {
+        toast.error("First name is required", { position: "top-center" });
+        return;
+      }
+
+      if (!editedDetails.email?.trim()) {
+        toast.error("Email is required", { position: "top-center" });
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editedDetails.email)) {
+        toast.error("Please enter a valid email address", { position: "top-center" });
+        return;
+      }
+
       setUpdating(true);
-      // Logic will be handled in a separate component
+
+      try {
+        const userRef = doc(db, "Users", auth.currentUser.uid);
+        await updateDoc(userRef, {
+          firstName: editedDetails.firstName.trim(),
+          lastName: editedDetails.lastName?.trim() || "",
+          email: editedDetails.email.trim(),
+          bio: editedDetails.bio?.trim() || "",
+        });
+
+        // Update auth profile display name
+        const displayName = `${editedDetails.firstName.trim()} ${editedDetails.lastName?.trim() || ""}`.trim();
+        await auth.currentUser.updateProfile({ displayName });
+
+        setEditMode(false);
+        toast.success("Profile updated successfully", { position: "top-center" });
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        toast.error("Failed to update profile", { position: "top-center" });
+      } finally {
+        setUpdating(false);
+      }
     } else {
       setEditMode(true);
     }
@@ -110,6 +191,7 @@ function Profile() {
 
   // Handle logout
   const handleLogout = async () => {
+    setLoggingOut(true);
     try {
       console.log("Attempting to log out:", auth.currentUser);
       await auth.signOut();
@@ -118,7 +200,17 @@ function Profile() {
     } catch (error) {
       console.error("Error logging out:", error);
       toast.error("Failed to log out: " + error.message, { position: "top-center" });
+    } finally {
+      setLoggingOut(false);
     }
+  };
+
+  // Handle new post created
+  const handlePostCreated = (newPost) => {
+    console.log("New post created:", newPost);
+    // Posts will be updated automatically via the real-time listener
+    // But we can add it immediately for better UX
+    setPosts(prevPosts => [newPost, ...prevPosts]);
   };
 
   if (loading) {
@@ -154,7 +246,11 @@ function Profile() {
                 className="rounded-circle mb-3"
                 style={{ width: "150px", height: "150px", objectFit: "cover" }}
               />
-              <label htmlFor="avatar-upload" className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2 cursor-pointer">
+              <label 
+                htmlFor="avatar-upload" 
+                className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2"
+                style={{ cursor: "pointer" }}
+              >
                 {uploading ? <FaSpinner className="fa-spin" /> : <FaCamera />}
                 <input
                   id="avatar-upload"
@@ -292,8 +388,8 @@ function Profile() {
           </div>
         </div>
 
-        {/* Post Creation */}
-        <PostCreator userDetails={userDetails} />
+        {/* Post Creation - Using existing PostCreator component */}
+        <PostCreator onPostCreated={handlePostCreated} />
 
         {/* User's Posts */}
         <div>
