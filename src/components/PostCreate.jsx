@@ -39,7 +39,7 @@ const PostCreator = ({ onPostCreated }) => {
     } else {
       console.log(`[${currentDateTime}] Cloudinary Config:`, { cloudName, uploadPreset });
     }
-  }, []);
+  }, [currentDateTime]);
 
   // Monitor Firebase auth state
   useEffect(() => {
@@ -48,7 +48,7 @@ const PostCreator = ({ onPostCreated }) => {
       setIsLoadingAuth(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [currentDateTime]);
 
   // Clean up video preview URLs
   useEffect(() => {

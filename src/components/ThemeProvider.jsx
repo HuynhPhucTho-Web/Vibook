@@ -35,30 +35,40 @@ export const ThemeProvider = ({ children }) => {
   };
 
   const style = `
-    .bg-purple-subtle { background-color: #e2d9f3; }
-    .text-purple { color: #6f42c1; }
-    .bg-purple { background-color: #6f42c1; }
-    .bg-pink-subtle { background-color: #f7d6e6; }
-    .text-pink { color: #d63384; }
-    .bg-pink { background-color: #d63384; }
-    .bg-indigo-subtle { background-color: #d6d8f7; }
-    .text-indigo { color: #6610f2; }
-    .bg-indigo { background-color: #6610f2; }
-    .bg-teal-subtle { background-color: #d6f1f0; }
-    .text-teal { color: #20c997; }
-    .bg-teal { background-color: #20c997; }
-    .bg-orange-subtle { background-color: #ffecd5; }
-    .text-orange { color: #fd7e14; }
-    .bg-orange { background-color: #fd7e14; }
-    .bg-cyan-subtle { background-color: #cff4fc; }
-    .text-cyan { color: #0dcaf0; }
-    .bg-cyan { background-color: #0dcaf0; }
+    :root {
+      .bg-purple-subtle { background-color: #e2d9f3 !important; }
+      .text-purple { color: #6f42c1 !important; }
+      .bg-purple { background-color: #6f42c1 !important; }
+      .bg-pink-subtle { background-color: #f7d6e6 !important; }
+      .text-pink { color: #d63384 !important; }
+      .bg-pink { background-color: #d63384 !important; }
+      .bg-indigo-subtle { background-color: #d6d8f7 !important; }
+      .text-indigo { color: #6610f2 !important; }
+      .bg-indigo { background-color: #6610f2 !important; }
+      .bg-teal-subtle { background-color: #d6f1f0 !important; }
+      .text-teal { color: #20c997 !important; }
+      .bg-teal { background-color: #20c997 !important; }
+      .bg-orange-subtle { background-color: #ffecd5 !important; }
+      .text-orange { color: #fd7e14 !important; }
+      .bg-orange { background-color: #fd7e14 !important; }
+      .bg-cyan-subtle { background-color: #cff4fc !important; }
+      .text-cyan { color: #0dcaf0 !important; }
+      .bg-cyan { background-color: #0dcaf0 !important; }
+    }
   `;
 
+  // Log theme changes for debugging
+  const handleSetTheme = (newTheme) => {
+    console.log(`[${new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })}] Changing theme to: ${newTheme}`);
+    setTheme(newTheme);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, themes, headerThemes }}>
+    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme, themes, headerThemes }}>
       <style>{style}</style>
-      {children}
+      <div className={`theme-root ${themes[theme]}`}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 };

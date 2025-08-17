@@ -17,7 +17,7 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
+  const [loggingOut] = useState(false);
   const [posts, setPosts] = useState([]);
 
   // Fetch user data và posts với real-time listener
@@ -26,7 +26,7 @@ function Profile() {
       setUserDetails(null);
       setPosts([]);
       setLoading(false);
-      return () => {};
+      return () => { };
     }
 
     try {
@@ -61,7 +61,7 @@ function Profile() {
       console.error("Error fetching user data or posts:", error);
       toast.error("Failed to load user data or posts", { position: "top-center" });
       setLoading(false);
-      return () => {};
+      return () => { };
     }
   }, []);
 
@@ -70,7 +70,7 @@ function Profile() {
     let unsubscribeData;
 
     unsubscribeAuth = auth.onAuthStateChanged((user) => {
-      console.log("Auth state changed:", user ? `User: ${user.email}` : "User logged out");
+      console.log("Auth state changed:", user ? `Users: ${user.email}` : "User logged out");
       if (unsubscribeData) unsubscribeData();
 
       if (user) {
@@ -108,10 +108,17 @@ function Profile() {
     setEditMode(false);
   };
 
-  // Handle logout (basic implementation)
-  const handleLogout = () => {
-    setLoggingOut(true);
-    // Logic will be handled in a separate component or passed as callback
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      console.log("Attempting to log out:", auth.currentUser);
+      await auth.signOut();
+      console.log("Logout successful");
+      toast.success("Logged out successfully", { position: "top-center" });
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out: " + error.message, { position: "top-center" });
+    }
   };
 
   if (loading) {
