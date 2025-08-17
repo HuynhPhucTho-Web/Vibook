@@ -109,7 +109,15 @@ const PostCreator = ({ onPostCreated }) => {
 
   const handlePostSubmit = async (e) => {
     e.preventDefault();
+
+    // PREVENT DOUBLE SUBMISSION
+    if (isUploading) {
+      console.log(`[${currentDateTime}] Already uploading, ignoring duplicate submission`);
+      return;
+    }
+
     console.log(`[${currentDateTime}] Submitting post:`, { postContent, mediaFile, user: auth.currentUser });
+
     if (!postContent.trim() && !mediaFile) {
       toast.error("Post content or media is required", { position: "top-center" });
       return;
@@ -120,24 +128,19 @@ const PostCreator = ({ onPostCreated }) => {
     }
 
     setIsUploading(true);
+
     try {
       let mediaUrl = null;
       let publicIdResult = null;
-      
+
       // STEP 1: Upload media to Cloudinary first (if exists)
       if (mediaFile) {
         const formData = new FormData();
         formData.append("file", mediaFile);
         formData.append("upload_preset", import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET);
 
-        console.log(`[${currentDateTime}] Uploading to Cloudinary with preset:`, {
-          cloudName: import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME,
-          uploadPreset: import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET,
-          fileName: mediaFile.name,
-          fileSize: mediaFile.size,
-          formDataEntries: Array.from(formData.entries()),
-        });
-        
+        console.log(`[${currentDateTime}] Uploading to Cloudinary...`);
+
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME}/auto/upload`,
           {
@@ -145,36 +148,19 @@ const PostCreator = ({ onPostCreated }) => {
             body: formData,
           }
         );
-        
-        console.log(`[${currentDateTime}] Cloudinary response status:`, response.status);
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           console.error(`[${currentDateTime}] Cloudinary error response:`, errorText);
-          
-          // Parse error để hiểu rõ hơn
-          try {
-            const parsedError = JSON.parse(errorText);
-            if (parsedError.error?.message?.includes("Upload preset must be whitelisted")) {
-              throw new Error("Upload preset chưa được bật 'Unsigned' mode. Vui lòng vào Cloudinary Console và bật 'Unsigned' cho preset này.");
-            }
-            throw new Error(parsedError.error?.message || `Upload failed: ${response.statusText}`);
-          } catch (parseError) {
-            throw new Error(`Upload failed: ${response.statusText} - ${errorText}`);
-          }
+          throw new Error(`Upload failed: ${response.statusText}`);
         }
-        
+
         const result = await response.json();
-        console.log(`[${currentDateTime}] Cloudinary response data:`, result);
-        
-        if (!result.secure_url || !result.public_id) {
-          throw new Error("Invalid response from Cloudinary");
-        }
-        
+        console.log(`[${currentDateTime}] Cloudinary upload success:`, result.public_id);
+
         mediaUrl = result.secure_url;
         publicIdResult = result.public_id;
-        setPublicId(publicIdResult); // Update state for preview
-        console.log(`[${currentDateTime}] Uploaded to Cloudinary:`, mediaUrl);
+        setPublicId(publicIdResult);
       }
 
       // STEP 2: Create post data
@@ -183,32 +169,36 @@ const PostCreator = ({ onPostCreated }) => {
         userName: auth.currentUser.displayName || "Anonymous",
         userPhoto: auth.currentUser.photoURL || "https://via.placeholder.com/40",
         content: postContent,
-        mediaUrl: mediaUrl, // URL from Cloudinary or null
+        mediaUrl: mediaUrl,
         createdAt: Date.now(),
         likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
         reactedBy: {},
         comments: [],
       };
 
-      // STEP 3: Save to Firestore (chỉ 1 lần duy nhất)
-      console.log(`[${currentDateTime}] Saving post to Firestore:`, postData);
-      const postRef = await addDoc(collection(db, "posts"), postData);
-      console.log(`[${currentDateTime}] Post saved to Firestore with ID:`, postRef.id);
+      // STEP 3: Save to Firestore (CHỈ 1 LẦN DUY NHẤT)
+      console.log(`[${currentDateTime}] Saving to Posts collection...`);
+      const postRef = await addDoc(collection(db, "Posts"), postData);
+      console.log(`[${currentDateTime}] Post saved successfully with ID:`, postRef.id);
 
-      // STEP 4: Notify parent component with complete post data
-      const completePostData = {
-        ...postData,
-        id: postRef.id,
-      };
-      await onPostCreated(completePostData);
-
-      // STEP 5: Reset form
+      // STEP 4: Reset form NGAY LẬP TỨC
       setPostContent("");
       setMediaFile(null);
       setMediaPreview(null);
       setPublicId(null);
-      
+
+      // STEP 5: Notify parent component
+      const completePostData = {
+        ...postData,
+        id: postRef.id,
+      };
+
+      if (onPostCreated) {
+        await onPostCreated(completePostData);
+      }
+
       toast.success("Post created successfully", { position: "top-center" });
+
     } catch (error) {
       console.error(`[${currentDateTime}] Error creating post:`, error);
       toast.error(`Failed to create post: ${error.message}`, { position: "top-center" });
@@ -220,9 +210,9 @@ const PostCreator = ({ onPostCreated }) => {
   // Create Cloudinary media object for preview
   const cldMedia = publicId && mediaFile && mediaFile.type
     ? cld[mediaFile.type.startsWith("image/") ? "image" : "video"](publicId)
-        .format("auto")
-        .quality("auto")
-        .resize(auto().gravity(autoGravity()).width(200).height(200))
+      .format("auto")
+      .quality("auto")
+      .resize(auto().gravity(autoGravity()).width(200).height(200))
     : null;
 
   // Show loading state while auth is initializing

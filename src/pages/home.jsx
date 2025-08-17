@@ -70,8 +70,8 @@ function Home() {
 
   // Handle new post from PostCreator
   const handlePostCreated = async (postData) => {
-    const docRef = await addDoc(collection(db, "Posts"), postData);
-    setPosts([{ id: docRef.id, ...postData }, ...posts]);
+    console.log("New post received:", postData);
+    setPosts(prevPosts => [postData, ...prevPosts]);
   };
 
   // Handle reaction
