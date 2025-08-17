@@ -47,7 +47,10 @@ const Header = () => {
       <div className="container py-3">
         <div className="d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center">
-            <h1 className="h3 mb-0 me-4">ViBook</h1>
+            <div class="logo">
+              <h1 className="h3 mb-0 me-4">ViBook</h1>
+              <small class="text-sm text-gray-600">Developed by Phuc-Tho</small>
+            </div>
             <div className="position-relative">
               <FaSearch className="position-absolute top-50 translate-middle-y ms-2 text-secondary" />
               <input
