@@ -208,8 +208,6 @@ function Profile() {
   // Handle new post created
   const handlePostCreated = (newPost) => {
     console.log("New post created:", newPost);
-    // Posts will be updated automatically via the real-time listener
-    // But we can add it immediately for better UX
     setPosts(prevPosts => [newPost, ...prevPosts]);
   };
 
