@@ -51,3 +51,79 @@ npm run build
 npm run preview
 
 
+## Rule
+9:10
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /Users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Posts collection
+    match /Posts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactedBy', 'reactions'])
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update: if request.auth != null && (
+          request.auth.uid == resource.data.userId ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactions', 'reactedBy'])
+        );
+        allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+        
+        // Replies subcollection
+        match /replies/{replyId} {
+          allow read: if true;
+          allow create: if request.auth != null;
+          allow update: if request.auth != null && (
+            request.auth.uid == resource.data.userId ||
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactions', 'reactedBy'])
+          );
+          allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+        }
+        
+        // Comment reactions subcollection
+        match /reactions/{userId} {
+          allow read: if true;
+          allow write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+    
+    // Messages collection
+    match /Messages/{chatId} {
+      allow read: if request.auth != null && (request.auth.uid in chatId.split('_'));
+      allow write: if request.auth != null && (request.auth.uid in chatId.split('_'));
+      
+      match /messages/{messageId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == resource.data.senderId ||
+          request.auth.uid == resource.data.receiverId ||
+          request.auth.uid in chatId.split('_')
+        );
+        allow create: if request.auth != null &&
+          request.auth.uid == request.resource.data.senderId &&
+          request.auth.uid in chatId.split('_') &&
+          request.resource.data.receiverId in chatId.split('_');
+        allow update, delete: if request.auth != null && request.auth.uid == resource.data.senderId;
+      }
+    }
+    
+    // Notifications collection
+    match /Notifications/{notificationId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if request.auth != null;
+    }
+  }
+}
