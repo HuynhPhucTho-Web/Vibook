@@ -221,7 +221,7 @@ const PostCreator = ({ onPostCreated }) => {
   }
 
   return (
-    <div className={`card mb-4 shadow-sm ${theme}`}>
+    <div className={`card mb-2 shadow-sm ${theme}`}>
       <div className="card-body">
         <div className="d-flex align-items-center mb-3">
           <img
