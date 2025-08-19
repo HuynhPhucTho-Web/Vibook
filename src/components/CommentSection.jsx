@@ -36,11 +36,105 @@ const REACTIONS = {
   angry: { icon: FaAngry, color: "#e9710f", label: "Angry" }
 };
 
+const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo, replyTo }) => {
+  const [replyText, setReplyText] = useState("");
+
+  const handleReplySubmit = async (e) => {
+    e.preventDefault();
+
+    if (!replyText.trim()) {
+      toast.error("Reply cannot be left blank", { position: "top-center" });
+      return;
+    }
+
+    if (!auth.currentUser) {
+      toast.error("Please login to reply", { position: "top-center" });
+      return;
+    }
+
+    try {
+      const replyData = {
+        userId: auth.currentUser.uid,
+        userName: userDetails
+          ? `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}`
+          : auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || "User",
+        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
+        content: replyText.trim(),
+        createdAt: serverTimestamp(),
+        reactions: {},
+        reactionCount: 0,
+        replyCount: 0,
+        parentCommentId: commentId
+      };
+
+      const repliesRef = collection(db, "Posts", postId, "comments", commentId, "replies");
+      await addDoc(repliesRef, replyData);
+
+      // Update reply count on parent comment
+      const commentRef = doc(db, "Posts", postId, "comments", commentId);
+      await updateDoc(commentRef, {
+        replyCount: increment(1)
+      });
+
+      setReplyText("");
+      setReplyTo(null);
+      toast.success("💬 Reply added!", {
+        position: "top-center",
+        autoClose: 1000,
+        style: { fontSize: '16px', fontWeight: '500' }
+      });
+    } catch (error) {
+      console.error("Error adding reply:", error);
+      toast.error(`Cannot add reply: ${error.message}`, { position: "top-center" });
+    }
+  };
+
+  return (
+    <form onSubmit={handleReplySubmit} className="mt-3 ms-2">
+      <div className="d-flex gap-2 align-items-start">
+        <img
+          src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
+          alt="Your avatar"
+          className="rounded-circle flex-shrink-0"
+          style={{ width: "30px", height: "30px", objectFit: "cover" }}
+        />
+        <div className="flex-grow-1 position-relative">
+          <textarea
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            placeholder="Write a reply..."
+            className="form-control border-2"
+            rows="2"
+            style={{ resize: "none", borderRadius: '20px', paddingRight: '70px' }}
+            autoFocus
+          />
+          <div className="position-absolute" style={{ right: '8px', top: '50%', transform: 'translateY(-50%)' }}>
+            <button
+              type="button"
+              className="btn btn-sm text-muted me-1"
+              onClick={() => setReplyTo(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm rounded-pill"
+              disabled={!replyText.trim()}
+              style={{ minWidth: '50px' }}
+            >
+              Reply
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+};
+
 const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggleCommentSection }) => {
   const { theme } = useContext(ThemeContext);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
-  const [replyText, setReplyText] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [showReactionPicker, setShowReactionPicker] = useState(null);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -67,6 +161,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                 ...commentDoc.data(),
                 reactions: commentDoc.data().reactions || {},
                 reactionCount: commentDoc.data().reactionCount || 0,
+                replyCount: commentDoc.data().replyCount || 0,
                 replies: []
               };
               
@@ -81,7 +176,8 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                   id: replyDoc.id,
                   ...replyDoc.data(),
                   reactions: replyDoc.data().reactions || {},
-                  reactionCount: replyDoc.data().reactionCount || 0
+                  reactionCount: replyDoc.data().reactionCount || 0,
+                  replyCount: replyDoc.data().replyCount || 0
                 }));
                 
                 commentData.replies = replies;
@@ -156,55 +252,6 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
     }
   };
 
-  const handleReplySubmit = async (e, commentId) => {
-    e.preventDefault();
-
-    if (!replyText.trim()) {
-      toast.error("Reply cannot be left blank", { position: "top-center" });
-      return;
-    }
-
-    if (!auth.currentUser) {
-      toast.error("Please login to reply", { position: "top-center" });
-      return;
-    }
-
-    try {
-      const replyData = {
-        userId: auth.currentUser.uid,
-        userName: userDetails
-          ? `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}`
-          : auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || "User",
-        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
-        content: replyText.trim(),
-        createdAt: serverTimestamp(),
-        reactions: {},
-        reactionCount: 0,
-        parentCommentId: commentId
-      };
-
-      const repliesRef = collection(db, "Posts", postId, "comments", commentId, "replies");
-      await addDoc(repliesRef, replyData);
-
-      // Update reply count on parent comment
-      const commentRef = doc(db, "Posts", postId, "comments", commentId);
-      await updateDoc(commentRef, {
-        replyCount: increment(1)
-      });
-
-      setReplyText("");
-      setReplyTo(null);
-      toast.success("💬 Reply added!", {
-        position: "top-center",
-        autoClose: 1000,
-        style: { fontSize: '16px', fontWeight: '500' }
-      });
-    } catch (error) {
-      console.error("Error adding reply:", error);
-      toast.error(`Cannot add reply: ${error.message}`, { position: "top-center" });
-    }
-  };
-
   const handleReaction = async (targetId, reactionType, isReply = false, parentCommentId = null) => {
     if (!auth.currentUser) {
       toast.error("Please login to react", { position: "top-center" });
@@ -272,6 +319,33 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
     } catch (error) {
       console.error("Error updating reaction:", error);
       toast.error("Cannot react to this comment", { position: "top-center" });
+    }
+  };
+
+  const handleDelete = async (targetId, isReply = false, parentCommentId = null) => {
+    if (!auth.currentUser) {
+      toast.error("Please login to delete", { position: "top-center" });
+      return;
+    }
+
+    try {
+      let targetRef;
+      if (isReply && parentCommentId) {
+        targetRef = doc(db, "Posts", postId, "comments", parentCommentId, "replies", targetId);
+        const commentRef = doc(db, "Posts", postId, "comments", parentCommentId);
+        await updateDoc(commentRef, { replyCount: increment(-1) });
+      } else {
+        targetRef = doc(db, "Posts", postId, "comments", targetId);
+      }
+
+      await deleteDoc(targetRef);
+      toast.success(isReply ? "Reply deleted!" : "Comment deleted!", {
+        position: "top-center",
+        autoClose: 1000
+      });
+    } catch (error) {
+      console.error(`Error deleting ${isReply ? 'reply' : 'comment'}:`, error);
+      toast.error(`Cannot delete ${isReply ? 'reply' : 'comment'}: ${error.message}`, { position: "top-center" });
     }
   };
 
@@ -421,7 +495,17 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                         <div className="bg-light rounded-3 p-3" style={{ maxWidth: '85%' }}>
                           <div className="d-flex justify-content-between align-items-start mb-2">
                             <strong className="text-primary small">{comment.userName}</strong>
-                            <small className="text-muted">{formatTimeAgo(comment.createdAt)}</small>
+                            <div className="d-flex align-items-center gap-2">
+                              <small className="text-muted">{formatTimeAgo(comment.createdAt)}</small>
+                              {auth.currentUser?.uid === comment.userId && (
+                                <button
+                                  className="btn btn-link p-0 text-muted"
+                                  onClick={() => handleDelete(comment.id)}
+                                >
+                                  <FaTimes size={12} />
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <p className="mb-0 small lh-base" style={{ whiteSpace: "pre-wrap", wordBreak: 'break-word' }}>
                             {comment.content}
@@ -440,7 +524,6 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                             className="btn btn-link text-muted p-0 d-flex align-items-center gap-1"
                             onClick={() => {
                               setReplyTo(replyTo === comment.id ? null : comment.id);
-                              setReplyText("");
                             }}
                             style={{ fontSize: '14px' }}
                           >
@@ -454,44 +537,14 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
 
                         {/* Reply Input */}
                         {replyTo === comment.id && (
-                          <form onSubmit={(e) => handleReplySubmit(e, comment.id)} className="mt-3 ms-2">
-                            <div className="d-flex gap-2 align-items-start">
-                              <img
-                                src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
-                                alt="Your avatar"
-                                className="rounded-circle flex-shrink-0"
-                                style={{ width: "30px", height: "30px", objectFit: "cover" }}
-                              />
-                              <div className="flex-grow-1 position-relative">
-                                <textarea
-                                  value={replyText}
-                                  onChange={(e) => setReplyText(e.target.value)}
-                                  placeholder="Write a reply..."
-                                  className="form-control border-2"
-                                  rows="2"
-                                  style={{ resize: "none", borderRadius: '20px', paddingRight: '70px' }}
-                                  autoFocus
-                                />
-                                <div className="position-absolute" style={{ right: '8px', top: '50%', transform: 'translateY(-50%)' }}>
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm text-muted me-1"
-                                    onClick={() => setReplyTo(null)}
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    type="submit"
-                                    className="btn btn-primary btn-sm rounded-pill"
-                                    disabled={!replyText.trim()}
-                                    style={{ minWidth: '50px' }}
-                                  >
-                                    Reply
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </form>
+                          <ReplyComment
+                            commentId={comment.id}
+                            postId={postId}
+                            auth={auth}
+                            userDetails={userDetails}
+                            setReplyTo={setReplyTo}
+                            replyTo={replyTo}
+                          />
                         )}
 
                         {/* Replies */}
@@ -509,7 +562,17 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                                   <div className="bg-light rounded-3 p-2" style={{ maxWidth: '80%' }}>
                                     <div className="d-flex justify-content-between align-items-start mb-1">
                                       <strong className="text-primary small">{reply.userName}</strong>
-                                      <small className="text-muted">{formatTimeAgo(reply.createdAt)}</small>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <small className="text-muted">{formatTimeAgo(reply.createdAt)}</small>
+                                        {auth.currentUser?.uid === reply.userId && (
+                                          <button
+                                            className="btn btn-link p-0 text-muted"
+                                            onClick={() => handleDelete(reply.id, true, comment.id)}
+                                          >
+                                            <FaTimes size={12} />
+                                          </button>
+                                        )}
+                                      </div>
                                     </div>
                                     <p className="mb-0 small lh-base" style={{ whiteSpace: "pre-wrap", wordBreak: 'break-word' }}>
                                       {reply.content}
@@ -524,7 +587,32 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                                       isReply={true}
                                       parentCommentId={comment.id}
                                     />
+                                    <button
+                                      className="btn btn-link text-muted p-0 d-flex align-items-center gap-1"
+                                      onClick={() => {
+                                        setReplyTo(replyTo === reply.id ? null : reply.id);
+                                      }}
+                                      style={{ fontSize: '14px' }}
+                                    >
+                                      <FaReply size={14} />
+                                      <span>Reply</span>
+                                      {reply.replyCount > 0 && (
+                                        <span className="text-muted">({reply.replyCount})</span>
+                                      )}
+                                    </button>
                                   </div>
+
+                                  {/* Nested Reply Input */}
+                                  {replyTo === reply.id && (
+                                    <ReplyComment
+                                      commentId={comment.id}
+                                      postId={postId}
+                                      auth={auth}
+                                      userDetails={userDetails}
+                                      setReplyTo={setReplyTo}
+                                      replyTo={replyTo}
+                                    />
+                                  )}
                                 </div>
                               </div>
                             ))}
