@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { auth, db } from "../components/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { FaImage } from "react-icons/fa";
 import { AdvancedImage, AdvancedVideo } from "@cloudinary/react";
 import { Cloudinary } from "@cloudinary/url-gen";

@@ -25,7 +25,7 @@ import {
   FaEllipsisV,
   FaTimes
 } from "react-icons/fa";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { db } from "../components/firebase";
 
 const REACTIONS = {

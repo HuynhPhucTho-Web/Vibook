@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { 
   FaPaperPlane, 
   FaPhone, 
@@ -30,6 +30,7 @@ import {
   FaSadTear,
   FaAngry
 } from "react-icons/fa";
+import { useWebSocket } from "react-use-websocket";
 
 const Messenger = () => {
   const { theme } = useContext(ThemeContext);

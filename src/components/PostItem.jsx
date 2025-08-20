@@ -3,7 +3,7 @@ import { doc, updateDoc, getDoc, deleteDoc, query, getDocs, onSnapshot, collecti
 import { db } from "../components/firebase";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { FaComment, FaTrash, FaShare, FaLink, FaTimes } from "react-icons/fa";
 import CommentSection from "./CommentSection";
 

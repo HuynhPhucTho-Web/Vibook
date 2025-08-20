@@ -51,6 +51,9 @@ npm run build
 npm run preview
 
 
+# React Websocket
+npm install react-use-websocket
+
 ## Rule
 9:10
 rules_version = '2';

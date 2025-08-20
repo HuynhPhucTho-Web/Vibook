@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { ThemeContext } from './ThemeContext';
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('light');
+  const [bodyBackground, setBodyBackground] = useState('#ffffff');
 
   const themes = {
     light: 'bg-light text-dark',
@@ -34,6 +35,15 @@ export const ThemeProvider = ({ children }) => {
     cyan: 'bg-cyan text-white',
   };
 
+  const colorOptions = [
+    { name: 'White', value: '#ffffff' },
+    { name: 'Light Gray', value: '#f0f2f5' },
+    { name: 'Dark Gray', value: '#333333' },
+    { name: 'Blue', value: '#e3f2fd' },
+    { name: 'Green', value: '#e8f5e9' },
+    { name: 'Purple', value: '#f3e5f5' },
+  ];
+
   const style = `
     :root {
       .bg-purple-subtle { background-color: #e2d9f3 !important; }
@@ -54,6 +64,7 @@ export const ThemeProvider = ({ children }) => {
       .bg-cyan-subtle { background-color: #cff4fc !important; }
       .text-cyan { color: #0dcaf0 !important; }
       .bg-cyan { background-color: #0dcaf0 !important; }
+      body { background-color: ${bodyBackground} !important; }
     }
   `;
 
@@ -63,8 +74,22 @@ export const ThemeProvider = ({ children }) => {
     setTheme(newTheme);
   };
 
+  // Log background color changes for debugging
+  const handleSetBodyBackground = (color) => {
+    console.log(`[${new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' })}] Changing body background to: ${color}`);
+    setBodyBackground(color);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme, themes, headerThemes }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      setTheme: handleSetTheme, 
+      themes, 
+      headerThemes, 
+      bodyBackground, 
+      setBodyBackground: handleSetBodyBackground,
+      colorOptions 
+    }}>
       <style>{style}</style>
       <div className={`theme-root ${themes[theme]}`}>
         {children}

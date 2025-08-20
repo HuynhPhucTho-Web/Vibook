@@ -9,7 +9,6 @@ import {
   updateDoc,
   addDoc,
   getDoc,
-  deleteDoc,
   getDocs,
   orderBy,
   limit,
@@ -17,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { FaCheckCircle, FaTrash } from "react-icons/fa";
 
 const Notifications = () => {

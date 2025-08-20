@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext, useCallback } from "react";
 import { auth, db, storage } from "../components/firebase";
 import { doc, onSnapshot, query, collection, where, updateDoc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaCamera, FaSave, FaEdit, FaSignOutAlt, FaSpinner } from "react-icons/fa";

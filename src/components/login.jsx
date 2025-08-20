@@ -5,7 +5,7 @@ import { auth } from "./firebase";
 import { toast } from "react-toastify";
 import SignInwithGoogle from "./signInWIthGoogle";
 import "../style/login.css";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 
 function Login() {
   const [email, setEmail] = useState("");

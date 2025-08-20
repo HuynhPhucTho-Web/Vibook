@@ -3,7 +3,7 @@ import { auth, db } from "../components/firebase";
 import { doc, getDoc, onSnapshot, collection, query, getDocs } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { FaSignOutAlt } from "react-icons/fa";
 import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
@@ -83,19 +83,6 @@ function Home() {
     };
   }, []);
 
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      console.log("Attempting to log out:", auth.currentUser);
-      await auth.signOut();
-      console.log("Logout successful");
-      toast.success("Logged out successfully", { position: "top-center" });
-    } catch (error) {
-      console.error("Error logging out:", error);
-      toast.error("Failed to log out: " + error.message, { position: "top-center" });
-    }
-  };
-
   // Handle new post from PostCreator
   const handlePostCreated = async (postData) => {
     console.log(
@@ -133,17 +120,7 @@ function Home() {
   }
 
   return (
-    <div className="container py-4">
-      {/* Logout Button */}
-      <div className="d-flex justify-content-end mb-3">
-        <button
-          className="btn btn-outline-danger"
-          onClick={handleLogout}
-          disabled={!auth.currentUser}
-        >
-          <FaSignOutAlt /> Logout
-        </button>
-      </div>
+    <div className="container">
       <PostCreator onPostCreated={handlePostCreated} />
       {/* Posts Feed */}
       <div>
