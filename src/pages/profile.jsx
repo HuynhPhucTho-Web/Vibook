@@ -5,7 +5,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { FaCamera, FaSave, FaEdit, FaSignOutAlt, FaSpinner } from "react-icons/fa";
+import { FaCamera, FaSave, FaEdit, FaSignOutAlt, FaSpinner, FaTimes, FaUser, FaEnvelope } from "react-icons/fa";
 import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
 
@@ -19,6 +19,7 @@ function Profile() {
   const [updating, setUpdating] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [posts, setPosts] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
 
   // Fetch user data và posts với real-time listener
   const fetchUserData = useCallback((user) => {
@@ -26,7 +27,7 @@ function Profile() {
       setUserDetails(null);
       setPosts([]);
       setLoading(false);
-      return () => {};
+      return () => { };
     }
 
     try {
@@ -49,12 +50,12 @@ function Profile() {
         const userPosts = await Promise.all(
           querySnapshot.docs.map(async (postDoc) => {
             const postData = { id: postDoc.id, ...postDoc.data() };
-            
+
             // Fetch comments for each post
             const commentsQuery = query(collection(db, "Posts", postDoc.id, "comments"));
             const commentsSnapshot = await getDocs(commentsQuery);
             const comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
-            
+
             return { ...postData, comments };
           })
         );
@@ -69,7 +70,7 @@ function Profile() {
       console.error("Error fetching user data or posts:", error);
       toast.error("Failed to load user data or posts", { position: "top-center" });
       setLoading(false);
-      return () => {};
+      return () => { };
     }
   }, []);
 
@@ -96,6 +97,47 @@ function Profile() {
     };
   }, [fetchUserData]);
 
+  // Validate form fields
+  const validateForm = () => {
+    const errors = {};
+
+    if (!editedDetails.firstName?.trim()) {
+      errors.firstName = "First name is required";
+    } else if (editedDetails.firstName.trim().length < 2) {
+      errors.firstName = "First name must be at least 2 characters";
+    }
+
+    if (!editedDetails.email?.trim()) {
+      errors.email = "Email is required";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editedDetails.email)) {
+        errors.email = "Please enter a valid email address";
+      }
+    }
+
+    if (editedDetails.lastName && editedDetails.lastName.trim().length > 0 && editedDetails.lastName.trim().length < 2) {
+      errors.lastName = "Last name must be at least 2 characters";
+    }
+
+    if (editedDetails.bio && editedDetails.bio.length > 500) {
+      errors.bio = "Bio must be less than 500 characters";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle input change with validation
+  const handleInputChange = (field, value) => {
+    setEditedDetails(prev => ({ ...prev, [field]: value }));
+
+    // Clear specific field error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
   // Handle avatar upload
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
@@ -118,13 +160,13 @@ function Profile() {
       const storageRef = ref(storage, `avatars/${auth.currentUser.uid}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
-      
+
       const userRef = doc(db, "Users", auth.currentUser.uid);
       await updateDoc(userRef, { photo: downloadURL });
-      
+
       // Update auth profile
       await auth.currentUser.updateProfile({ photoURL: downloadURL });
-      
+
       toast.success("Avatar updated successfully", { position: "top-center" });
     } catch (error) {
       console.error("Error uploading avatar:", error);
@@ -137,21 +179,9 @@ function Profile() {
   // Handle edit profile
   const handleEditProfile = async () => {
     if (editMode) {
-      // Validate required fields
-      if (!editedDetails.firstName?.trim()) {
-        toast.error("First name is required", { position: "top-center" });
-        return;
-      }
-
-      if (!editedDetails.email?.trim()) {
-        toast.error("Email is required", { position: "top-center" });
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(editedDetails.email)) {
-        toast.error("Please enter a valid email address", { position: "top-center" });
+      // Validate form
+      if (!validateForm()) {
+        toast.error("Please fix the errors before saving", { position: "top-center" });
         return;
       }
 
@@ -159,18 +189,22 @@ function Profile() {
 
       try {
         const userRef = doc(db, "Users", auth.currentUser.uid);
-        await updateDoc(userRef, {
+        const updateData = {
           firstName: editedDetails.firstName.trim(),
           lastName: editedDetails.lastName?.trim() || "",
           email: editedDetails.email.trim(),
           bio: editedDetails.bio?.trim() || "",
-        });
+          updatedAt: new Date()
+        };
+
+        await updateDoc(userRef, updateData);
 
         // Update auth profile display name
         const displayName = `${editedDetails.firstName.trim()} ${editedDetails.lastName?.trim() || ""}`.trim();
         await auth.currentUser.updateProfile({ displayName });
 
         setEditMode(false);
+        setFormErrors({});
         toast.success("Profile updated successfully", { position: "top-center" });
       } catch (error) {
         console.error("Error updating profile:", error);
@@ -180,6 +214,7 @@ function Profile() {
       }
     } else {
       setEditMode(true);
+      setEditedDetails({ ...userDetails });
     }
   };
 
@@ -187,6 +222,7 @@ function Profile() {
   const handleCancelEdit = () => {
     setEditedDetails(userDetails || {});
     setEditMode(false);
+    setFormErrors({});
   };
 
   // Handle logout
@@ -236,180 +272,222 @@ function Profile() {
       <div className="container py-4">
         {/* Profile Header */}
         <div className="card mb-4 shadow-sm">
-          <div className="card-body text-center">
-            <div className="position-relative d-inline-block">
-              <img
-                src={userDetails.photo || "https://via.placeholder.com/150"}
-                alt="Profile"
-                className="rounded-circle mb-3"
-                style={{ width: "150px", height: "150px", objectFit: "cover" }}
-              />
-              <label 
-                htmlFor="avatar-upload" 
-                className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2"
-                style={{ cursor: "pointer" }}
-              >
-                {uploading ? <FaSpinner className="fa-spin" /> : <FaCamera />}
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  className="d-none"
-                  onChange={handleAvatarUpload}
-                  disabled={uploading}
+          <div className="card-body">
+            {/* Avatar Section - Centered */}
+            <div className="text-center mb-4">
+              <div className="position-relative d-inline-block">
+                <img
+                  src={userDetails.photo || "https://via.placeholder.com/150"}
+                  alt="Profile"
+                  className="rounded-circle mb-3"
+                  style={{ width: "150px", height: "150px", objectFit: "cover" }}
                 />
-              </label>
+                <label
+                  htmlFor="avatar-upload"
+                  className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2"
+                  style={{ cursor: "pointer" }}
+                >
+                  {uploading ? <FaSpinner className="fa-spin" /> : <FaCamera />}
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="d-none"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
             </div>
 
-            <h3 className="mb-3">
-              Welcome {userDetails.firstName} {userDetails.lastName || ""} 🙏
-            </h3>
+            {/* Profile Information */}
+            <div>
+              <div className="text-center">
+                <h3 className="mb-3">
+                  {userDetails.firstName} {userDetails.lastName || ""}
+                </h3>
 
-            <div className="mb-3">
-              {editMode ? (
-                <div className="row justify-content-center">
-                  <div className="col-md-6">
-                    <div className="mb-2">
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editedDetails.firstName || ""}
-                        onChange={(e) => setEditedDetails({ ...editedDetails, firstName: e.target.value })}
-                        placeholder="First Name *"
-                        required
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editedDetails.lastName || ""}
-                        onChange={(e) => setEditedDetails({ ...editedDetails, lastName: e.target.value })}
-                        placeholder="Last Name"
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <input
-                        type="email"
-                        className="form-control"
-                        value={editedDetails.email || ""}
-                        onChange={(e) => setEditedDetails({ ...editedDetails, email: e.target.value })}
-                        placeholder="Email *"
-                        required
-                      />
-                    </div>
-                    <div className="mb-2">
-                      <textarea
-                        className="form-control"
-                        value={editedDetails.bio || ""}
-                        onChange={(e) => setEditedDetails({ ...editedDetails, bio: e.target.value })}
-                        placeholder="Bio"
-                        rows="3"
-                        maxLength="500"
-                      />
-                      <small className="text-muted">
-                        {(editedDetails.bio || "").length}/500
-                      </small>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-start" style={{ maxWidth: "400px", margin: "0 auto" }}>
-                  <p>
-                    <strong>Email:</strong> {userDetails.email}
-                  </p>
-                  <p>
-                    <strong>First Name:</strong> {userDetails.firstName}
-                  </p>
-                  {userDetails.lastName && (
-                    <p>
-                      <strong>Last Name:</strong> {userDetails.lastName}
-                    </p>
-                  )}
-                  {userDetails.bio && (
-                    <p>
-                      <strong>Bio:</strong> {userDetails.bio}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+                <div className="mb-3">
+                  {editMode ? (
+                    <div className="row justify-content-center">
+                      <div className="col-md-8">
+                        <div className="mb-3">
+                          <label className="form-label fw-bold text-start w-100">
+                            First Name <span className="text-danger">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            className={`form-control ${formErrors.firstName ? 'is-invalid' : ''}`}
+                            value={editedDetails.firstName || ""}
+                            onChange={(e) => handleInputChange('firstName', e.target.value)}
+                            placeholder="Enter your first name"
+                            maxLength="50"
+                          />
+                          {formErrors.firstName && (
+                            <div className="invalid-feedback text-start">{formErrors.firstName}</div>
+                          )}
+                        </div>
 
-            <div className="d-flex justify-content-center gap-2 flex-wrap">
-              {editMode ? (
-                <>
+                        <div className="mb-3">
+                          <label className="form-label fw-bold text-start w-100">Last Name</label>
+                          <input
+                            type="text"
+                            className={`form-control ${formErrors.lastName ? 'is-invalid' : ''}`}
+                            value={editedDetails.lastName || ""}
+                            onChange={(e) => handleInputChange('lastName', e.target.value)}
+                            placeholder="Enter your last name"
+                            maxLength="50"
+                          />
+                          {formErrors.lastName && (
+                            <div className="invalid-feedback text-start">{formErrors.lastName}</div>
+                          )}
+                        </div>
+
+                        <div className="mb-3">
+                          <label className="form-label fw-bold text-start w-100">
+                            <FaEnvelope className="me-1" />
+                            Email <span className="text-danger">*</span>
+                          </label>
+                          <input
+                            type="email"
+                            className={`form-control ${formErrors.email ? 'is-invalid' : ''}`}
+                            value={editedDetails.email || ""}
+                            onChange={(e) => handleInputChange('email', e.target.value)}
+                            placeholder="Enter your email address"
+                          />
+                          {formErrors.email && (
+                            <div className="invalid-feedback text-start">{formErrors.email}</div>
+                          )}
+                        </div>
+
+                        <div className="mb-3">
+                          <label className="form-label fw-bold text-start w-100">Bio</label>
+                          <textarea
+                            className={`form-control ${formErrors.bio ? 'is-invalid' : ''}`}
+                            value={editedDetails.bio || ""}
+                            onChange={(e) => handleInputChange('bio', e.target.value)}
+                            placeholder="Tell us about yourself..."
+                            rows="4"
+                            maxLength="500"
+                            style={{ resize: "vertical" }}
+                          />
+                          <div className="d-flex justify-content-between mt-1">
+                            <small className="text-muted text-start">
+                              Optional - Share something about yourself
+                            </small>
+                            <small className={`${(editedDetails.bio || "").length > 450 ? 'text-warning' : 'text-muted'}`}>
+                              {(editedDetails.bio || "").length}/500
+                            </small>
+                          </div>
+                          {formErrors.bio && (
+                            <div className="invalid-feedback text-start">{formErrors.bio}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-start" style={{ maxWidth: "400px", margin: "0 auto" }}>
+                      <p>
+                        <strong>Email:</strong> {userDetails.email}
+                      </p>
+                      <p>
+                        <strong>First Name:</strong> {userDetails.firstName}
+                      </p>
+                      {userDetails.lastName && (
+                        <p>
+                          <strong>Last Name:</strong> {userDetails.lastName}
+                        </p>
+                      )}
+                      {userDetails.bio && (
+                        <p>
+                          <strong>Bio:</strong> {userDetails.bio}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="d-flex justify-content-center gap-2 flex-wrap">
+                  {editMode ? (
+                    <>
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleEditProfile}
+                        disabled={updating}
+                      >
+                        {updating ? (
+                          <>
+                            <FaSpinner className="fa-spin me-2" /> Saving...
+                          </>
+                        ) : (
+                          <>
+                            <FaSave className="me-2" /> Save Changes
+                          </>
+                        )}
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={handleCancelEdit}
+                        disabled={updating}
+                      >
+                        <FaTimes className="me-2" /> Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button className="btn btn-primary" onClick={handleEditProfile}>
+                      <FaEdit className="me-2" /> Edit Profile
+                    </button>
+                  )}
+
                   <button
-                    className="btn btn-primary"
-                    onClick={handleEditProfile}
-                    disabled={updating}
+                    className="btn btn-outline-danger"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
                   >
-                    {updating ? (
+                    {loggingOut ? (
                       <>
-                        <FaSpinner className="fa-spin me-2" /> Saving...
+                        <FaSpinner className="fa-spin me-2" /> Logging out...
                       </>
                     ) : (
                       <>
-                        <FaSave className="me-2" /> Save
+                        <FaSignOutAlt className="me-2" /> Logout
                       </>
                     )}
                   </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={handleCancelEdit}
-                    disabled={updating}
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button className="btn btn-primary" onClick={handleEditProfile}>
-                  <FaEdit className="me-2" /> Edit Profile
-                </button>
-              )}
-
-              <button
-                className="btn btn-outline-danger"
-                onClick={handleLogout}
-                disabled={loggingOut}
-              >
-                {loggingOut ? (
-                  <>
-                    <FaSpinner className="fa-spin me-2" /> Logging out...
-                  </>
-                ) : (
-                  <>
-                    <FaSignOutAlt className="me-2" /> Logout
-                  </>
-                )}
-              </button>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Post Creation - Using existing PostCreator component */}
+          <PostCreator onPostCreated={handlePostCreated} />
+
+          {/* User's Posts */}
+          <div>
+            {posts.length > 0 ? (
+              posts.map((post) => (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  auth={auth}
+                  userDetails={userDetails}
+                />
+              ))
+            ) : (
+              <div className="text-center py-5">
+                <div className="card shadow-sm">
+                  <div className="card-body">
+                    <h5 className="text-muted mb-3">No posts yet</h5>
+                    <p className="text-muted mb-0">Share your first post above to get started!</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-
-        {/* Post Creation - Using existing PostCreator component */}
-        <PostCreator onPostCreated={handlePostCreated} />
-
-        {/* User's Posts */}
-        <div>
-          {posts.length > 0 ? (
-            posts.map((post) => (
-              <PostItem
-                key={post.id}
-                post={post}
-                auth={auth}
-                userDetails={userDetails}
-              />
-            ))
-          ) : (
-            <div className="text-center py-5">
-              <h5 className="text-muted">No posts yet</h5>
-              <p className="text-muted">Share your first post above!</p>
-            </div>
-          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-export default Profile;
+    );
+  }
+  
+  export default Profile;
