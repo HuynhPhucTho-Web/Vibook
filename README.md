@@ -18,6 +18,7 @@ npm install bootstrap
 npm install -D tailwindcss@3
 npm install react-router-dom react-icons
 npm install react
+npm install bootstrap
 
 ## Short Dependence
 npm install react-router-dom react-icons react-toastify bootstrap firebase

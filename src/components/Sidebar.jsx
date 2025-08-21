@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { auth } from "../components/firebase";
 import { toast } from "react-toastify";
 import '../style/Sidebar.css';
+import { ThemeProvider } from "../context/ThemeProvider";
 
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -145,6 +146,7 @@ const Sidebar = () => {
               const active = isActive(item.path);
               
               return (
+                <ThemeProvider>
                 <li key={index} className="list-group-item border-0 px-0">
                   <Link 
                     to={item.path} 
@@ -172,6 +174,7 @@ const Sidebar = () => {
                     )}
                   </Link>
                 </li>
+                 </ThemeProvider>
               );
             })}
             
@@ -219,7 +222,7 @@ const Sidebar = () => {
           }}
         />
       )}
-    </>
+     </>
   );
 };
 

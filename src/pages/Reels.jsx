@@ -1,5 +1,5 @@
 import React from 'react';
 
-const Notifications = () => <div className="container py-4"><h1>Notifications Page</h1></div>;
+const Storys = () => <div className="container py-4"><h1>Story Page</h1></div>;
 
-export default Notifications;
+export default Storys;

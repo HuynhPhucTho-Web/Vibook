@@ -9,7 +9,7 @@ import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
 
 function Home() {
-  const { theme } = useContext(ThemeContext);
+    const { theme, themes, bodyBackground } = useContext(ThemeContext);
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,7 +120,8 @@ function Home() {
   }
 
   return (
-    <div className="container">
+    
+    <div className="container py-4 ">
       <PostCreator onPostCreated={handlePostCreated} />
       {/* Posts Feed */}
       <div>
