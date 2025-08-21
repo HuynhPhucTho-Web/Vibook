@@ -201,7 +201,9 @@ const Storys = () => {
       v.play().catch(() => {});
     } else {
       v.pause();
-      try { v.currentTime = 0; } catch {}
+      try { v.currentTime = 0; } catch {
+        // Ignore error if unable to reset currentTime
+      }
     }
   };
 
@@ -381,7 +383,7 @@ const Storys = () => {
                       try {
                         await deleteDoc(doc(db, 'Stories', story.id));
                         toast.success('Story deleted', { position: 'top-center' });
-                      } catch (e) {
+                      } catch {
                         toast.error('Failed to delete story', { position: 'top-center' });
                       }
                     }}
