@@ -3,7 +3,7 @@ import React from 'react';
 const Playgame = () => {
     return (
         <div className="container py-4">
-            <h1 className="mb-4">Playgame</h1>
+            <h1 className="mb-4">Play-Game</h1>
 
             <div className="row row-cols-1 row-cols-md-5 g-4">
                 <div className="col">

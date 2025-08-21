@@ -18,8 +18,8 @@ import Messenger from "./pages/Messenger";
 import Notifications from "./pages/Notifications";
 import Groups from "./pages/Groups";
 import Events from "./pages/Events";
-import Reels from "./pages/Reels";
-import Pages from "./pages/Pages";
+import Storys from "./pages/StoryPages";
+import PlayGame from "./pages/PlayGame";
 import PageManagement from "./pages/PageManagement";
 import Inbox from "./pages/Inbox";
 import Insights from "./pages/Insights";
@@ -111,8 +111,8 @@ function App() {
             <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
             <Route path="/groups" element={user ? <Groups /> : <Navigate to="/login" />} />
             <Route path="/events" element={user ? <Events /> : <Navigate to="/login" />} />
-            <Route path="/reels" element={user ? <Reels /> : <Navigate to="/login" />} />
-            <Route path="/pages" element={user ? <Pages /> : <Navigate to="/login" />} />
+            <Route path="/story" element={user ? <Storys /> : <Navigate to="/login" />} />
+            <Route path="/playgame" element={user ? <PlayGame /> : <Navigate to="/login" />} />
             <Route path="/page-management" element={user ? <PageManagement /> : <Navigate to="/login" />} />
             <Route path="/inbox" element={user ? <Inbox /> : <Navigate to="/login" />} />
             <Route path="/insights" element={user ? <Insights /> : <Navigate to="/login" />} />

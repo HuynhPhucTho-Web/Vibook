@@ -4,7 +4,7 @@ import { db } from "../components/firebase";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
-import { FaComment, FaTrash, FaShare, FaLink, FaTimes } from "react-icons/fa";
+import { FaComment, FaTrash, FaShare, FaLink, FaTimes, FaFile } from "react-icons/fa";
 import CommentSection from "./CommentSection";
 
 const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
@@ -19,14 +19,21 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
 
   // Real-time post updates listener
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, "Posts", post.id), (doc) => {
-      if (doc.exists()) {
-        setLocalPost({ ...doc.data(), id: doc.id });
+    if (!post.id) return;
+
+    const unsubscribe = onSnapshot(doc(db, "Posts", post.id), (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const updatedPost = { ...docSnapshot.data(), id: docSnapshot.id };
+        setLocalPost(updatedPost);
+      } else {
+        if (onPostDeleted) {
+          onPostDeleted(post.id);
+        }
       }
     });
 
     return () => unsubscribe();
-  }, [post.id]);
+  }, [post.id, onPostDeleted]);
 
   // Real-time comment count listener
   useEffect(() => {
@@ -47,7 +54,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
       const postSnap = await getDoc(postRef);
 
       if (!postSnap.exists()) {
-        toast.error("Article does not exist", { position: "top-center" });
+        toast.error("Post does not exist", { position: "top-center" });
         return;
       }
 
@@ -63,7 +70,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
 
       if (updatedReactedBy[userId] === reaction) {
         delete updatedReactedBy[userId];
-        toast.success("Emotions removed", { position: "top-center", autoClose: 1000 });
+        toast.success("Reaction removed", { position: "top-center", autoClose: 1000 });
       } else {
         updatedLikes[reaction] = (updatedLikes[reaction] || 0) + 1;
         updatedReactedBy[userId] = reaction;
@@ -89,10 +96,38 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
       setSelectedPostIdForReactions(null);
     } catch (error) {
       console.error("Error reacting to post:", error);
-      toast.error("Unable to drop emotion. Please try again.", { position: "top-center" });
+      toast.error("Unable to react. Please try again.", { position: "top-center" });
     } finally {
       setIsReacting(false);
     }
+  };
+
+  const getMediaFiles = () => {
+    if (localPost.mediaFiles && Array.isArray(localPost.mediaFiles)) {
+      return localPost.mediaFiles;
+    } else if (localPost.mediaUrl) {
+      return [{
+        url: localPost.mediaUrl,
+        category: getMediaCategory(localPost.mediaUrl),
+        originalName: 'media',
+        resourceType: 'auto'
+      }];
+    }
+    return [];
+  };
+
+  const getMediaCategory = (url) => {
+    if (!url) return 'unknown';
+    if (/\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url) || (url.includes('cloudinary.com') && url.includes('/image/'))) {
+      return 'image';
+    }
+    if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(url) || (url.includes('cloudinary.com') && url.includes('/video/'))) {
+      return 'video';
+    }
+    if (/\.(pdf|doc|docx)(\?|$)/i.test(url) || url.includes('/raw/')) {
+      return 'document';
+    }
+    return 'unknown';
   };
 
   const handleDeletePost = async () => {
@@ -104,7 +139,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
       const postSnap = await getDoc(postRef);
 
       if (!postSnap.exists()) {
-        toast.error("Article does not exist", { position: "top-center" });
+        toast.error("Post does not exist", { position: "top-center" });
         return;
       }
 
@@ -122,13 +157,6 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
       });
 
       deletePromises.push(deleteDoc(postRef));
-      try {
-        const PostsRef = doc(db, "Posts", post.id);
-        await deleteDoc(PostsRef);
-      } catch (error) {
-        console.log("Post not found in Posts collection or already deleted:", error);
-      }
-
       await Promise.all(deletePromises);
       toast.success("🗑️ Post deleted successfully", {
         position: "top-center",
@@ -148,7 +176,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
 
   const handleShare = async (type) => {
     const postUrl = `${window.location.origin}/Post/${post.id}`;
-    const shareText = `${post.userName} posted:\n\n"${post.content}"\n\nSee article at: ${postUrl}`;
+    const shareText = `${post.userName} posted:\n\n"${post.content}"\n\nSee post at: ${postUrl}`;
 
     try {
       switch (type) {
@@ -169,7 +197,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
         case 'native':
           if (navigator.share) {
             await navigator.share({
-              title: `Article by ${post.userName}`,
+              title: `Post by ${post.userName}`,
               text: post.content,
               url: postUrl,
             });
@@ -231,21 +259,11 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return "Just finished";
-    if (minutes < 60) return `${minutes} minutes ago`;
-    if (hours < 24) return `${hours} hour ago`;
-    if (days < 7) return `${days} the day before`;
-    return new Date(timestamp).toLocaleDateString("vi-VN");
-  };
-
-  const isImageUrl = (url) => {
-    if (!url) return false;
-    return /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url) || url.includes('cloudinary.com');
-  };
-
-  const isVideoUrl = (url) => {
-    if (!url) return false;
-    return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url) || (url.includes('cloudinary.com') && url.includes('/video/'));
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return new Date(timestamp).toLocaleDateString("en-US");
   };
 
   const getOptimizedImageUrl = (url) => {
@@ -293,65 +311,112 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
                   <span className="visually-hidden">Loading...</span>
                 </div>
               ) : (
-                <><FaTrash className="me-1" /> Xóa</>
+                <><FaTrash className="me-1" /> Delete</>
               )}
             </button>
           )}
         </div>
 
         {/* Post Content */}
-        <div className="mb-3">
-          <p className="mb-0 lh-base" style={{ whiteSpace: "pre-wrap", fontSize: '1rem', wordBreak: 'break-word' }}>
-            {localPost.content}
-          </p>
-        </div>
-
-        {/* Post Media */}
-        {localPost.mediaUrl && (
-          <div className="mb-3 position-relative">
-            <div
-              className="rounded overflow-hidden"
-              style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', maxWidth: '100%', maxHeight: '400px', lineHeight: 0 }}
-            >
-              {isImageUrl(localPost.mediaUrl) ? (
-                <img
-                  src={getOptimizedImageUrl(localPost.mediaUrl)}
-                  alt="Post media"
-                  className="w-100"
-                  style={{ cursor: 'pointer', transition: 'transform 0.2s ease', objectFit: 'contain', maxWidth: '100%', maxHeight: '400px', display: 'block' }}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    console.error('Failed to load image:', localPost.mediaUrl);
-                  }}
-                  onClick={() => window.open(localPost.mediaUrl, '_blank')}
-                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.02)'}
-                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                />
-              ) : isVideoUrl(localPost.mediaUrl) ? (
-                <video
-                  controls
-                  className="w-100"
-                  preload="metadata"
-                  style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain', display: 'block' }}
-                  onError={() => console.error('Failed to load video:', localPost.mediaUrl)}
-                >
-                  <source src={localPost.mediaUrl} type="video/mp4" />
-                  This browser does not support this video.
-                </video>
-              ) : (
-                <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '100px' }}>
-                  <div className="text-center">
-                    <FaLink className="mb-2 text-primary" size={24} />
-                    <br />
-                    <a href={localPost.mediaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-sm">
-                      View attachment
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
+        {localPost.content && (
+          <div className="mb-3">
+            <p className="mb-0" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {localPost.content}
+            </p>
           </div>
         )}
+
+        {/* Post Media - Multiple Files Support */}
+        {(() => {
+          const mediaFiles = getMediaFiles();
+          return mediaFiles.length > 0 && (
+            <div className="mb-3">
+              <div className="d-flex flex-wrap gap-2 justify-content-center">
+                {mediaFiles.map((mediaItem, index) => {
+                  const { url, category, originalName, size } = mediaItem;
+
+                  if (category === 'image') {
+                    return (
+                      <div key={index} className="position-relative">
+                        <img
+                          src={getOptimizedImageUrl(url)}
+                          alt={originalName || `Image ${index + 1}`}
+                          className="rounded"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "400px",
+                            objectFit: "contain",
+                            cursor: "pointer",
+                            transition: "transform 0.2s ease",
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            console.error('Failed to load image:', url);
+                          }}
+                          onClick={() => window.open(url, '_blank')}
+                          onMouseEnter={(e) => e.target.style.transform = 'scale(1.02)'}
+                          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                        />
+                      </div>
+                    );
+                  } else if (category === 'video') {
+                    return (
+                      <div key={index} className="position-relative">
+                        <video
+                          controls
+                          className="rounded"
+                          style={{
+                            maxWidth: "100%",
+                            maxHeight: "400px",
+                            objectFit: "contain",
+                          }}
+                          onError={() => console.error('Failed to load video:', url)}
+                        >
+                          <source src={url} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                        {originalName && originalName !== 'media' && (
+                          <small className="text-muted d-block mt-1 text-center">{originalName}</small>
+                        )}
+                      </div>
+                    );
+                  } else if (category === 'document') {
+                    return (
+                      <div key={index} className="d-flex align-items-center p-3 border rounded bg-light">
+                        <FaFile className="me-3 text-primary" size={24} />
+                        <div className="flex-grow-1 text-center">
+                          <div className="fw-semibold">{originalName || 'Document'}</div>
+                          {size && <small className="text-muted">{(size / 1024 / 1024).toFixed(2)} MB</small>}
+                        </div>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-outline-primary btn-sm"
+                        >
+                          <FaLink className="me-1" size={12} />
+                          View
+                        </a>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div key={index} className="d-flex align-items-center justify-content-center p-4 border rounded bg-light">
+                        <div className="text-center">
+                          <FaLink className="mb-2 text-primary" size={24} />
+                          <br />
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-sm">
+                            View attachment
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Reaction Summary */}
         {totalReactions > 0 && (
@@ -369,7 +434,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
                 ))}
               {totalReactions > 0 && (
                 <span className="ms-2 text-primary fw-semibold">
-                  {totalReactions} {totalReactions === 1 ? 'lượt thích' : 'lượt thích'}
+                  {totalReactions} {totalReactions === 1 ? 'reaction' : 'reactions'}
                 </span>
               )}
             </div>
@@ -379,7 +444,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
                 onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
                 className="text-decoration-underline text-primary fw-semibold"
               >
-                {commentCount} Comment
+                {commentCount} Comment{commentCount > 1 ? 's' : ''}
               </span>
             )}
           </div>
@@ -388,36 +453,37 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
         <hr className="my-3" style={{ opacity: 0.2 }} />
 
         {/* Action Buttons */}
-        <div className="d-flex justify-content-around">
-          <div className="position-relative flex-fill">
+        <div className="flex justify-around items-center border-t border-gray-200 dark:border-gray-700 pt-2">
+          {/* LIKE */}
+          <div className="relative flex-1 text-center">
             <button
-              className={`btn btn-link p-2 w-100 border-0 rounded-pill ${currentUserReaction ? "text-primary fw-bold bg-primary bg-opacity-10" : "text-muted"}`}
               onClick={() => handleReaction(post.id, "Like")}
               onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
               disabled={isReacting}
-              style={{ transition: "all 0.2s", fontSize: '0.9rem' }}
+              className={`flex items-center justify-center w-full py-2 rounded-xl transition ${currentUserReaction
+                  ? "text-blue-600 font-semibold bg-blue-50 dark:bg-blue-900/20"
+                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
             >
-              <span style={{ fontSize: "1.2em", marginRight: "5px" }}>
+              <span className="mr-2 text-lg">
                 {currentUserReaction ? getReactionIcon(currentUserReaction) : "👍"}
               </span>
-              {currentUserReaction ? getReactionText(currentUserReaction) : "Thích"}
+              {currentUserReaction ? getReactionText(currentUserReaction) : "Like"}
             </button>
+
+            {/* Reaction Picker */}
             {selectedPostIdForReactions === post.id && (
               <div
-                className="position-absolute bg-white border rounded-pill shadow-lg p-2 d-flex gap-1"
-                style={{ bottom: "100%", left: "50%", transform: "translateX(-50%)", zIndex: 1000, marginBottom: "8px", border: "2px solid #e9ecef" }}
+                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex bg-white dark:bg-gray-800 rounded-full shadow-lg border p-2 z-50"
                 onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
                 onMouseLeave={() => setTimeout(() => setSelectedPostIdForReactions(null), 200)}
               >
                 {["Like", "Love", "Haha", "Wow", "Sad", "Angry"].map((reaction) => (
                   <button
                     key={reaction}
-                    className="btn btn-link p-2 rounded-circle"
                     onClick={() => handleReaction(post.id, reaction)}
+                    className="mx-1 w-10 h-10 flex items-center justify-center rounded-full text-xl transition-transform hover:scale-125"
                     title={getReactionText(reaction)}
-                    style={{ fontSize: "1.5rem", transition: "transform 0.2s", border: "none", background: "none", width: "45px", height: "45px" }}
-                    onMouseEnter={(e) => e.target.style.transform = "scale(1.3)"}
-                    onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
                     disabled={isReacting}
                   >
                     {getReactionIcon(reaction)}
@@ -427,56 +493,80 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
             )}
           </div>
 
+          {/* COMMENT */}
           <button
-            className={`btn btn-link text-muted p-2 flex-fill border-0 rounded-pill ${selectedPostId === post.id ? 'bg-light' : ''}`}
             onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
-            style={{ fontSize: '0.9rem' }}
+            className={`flex items-center justify-center flex-1 py-2 rounded-xl transition ${selectedPostId === post.id
+                ? "bg-gray-100 dark:bg-gray-700 text-blue-600"
+                : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
           >
-            <FaComment className="me-1" /> Bình luận
+            <FaComment className="mr-2 text-lg" />
+            Comment
           </button>
 
-          <div className="position-relative flex-fill">
+          {/* SHARE */}
+          <div className="relative flex-1 text-center">
             <button
-              className={`btn btn-link text-muted p-2 w-100 border-0 rounded-pill ${showShareMenu ? 'bg-light' : ''}`}
               onClick={() => setShowShareMenu(!showShareMenu)}
-              style={{ fontSize: '0.9rem' }}
+              className={`flex items-center justify-center w-full py-2 rounded-xl transition ${showShareMenu
+                  ? "bg-gray-100 dark:bg-gray-700 text-green-600"
+                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
             >
-              <FaShare className="me-1" /> Share
+              <FaShare className="mr-2 text-lg" />
+              Share
             </button>
+
             {showShareMenu && (
               <>
+                {/* overlay */}
                 <div
-                  className="position-fixed w-100 h-100"
-                  style={{ top: 0, left: 0, zIndex: 999 }}
+                  className="fixed inset-0 z-40"
                   onClick={() => setShowShareMenu(false)}
                 />
-                <div
-                  className="position-absolute bg-white border rounded shadow-lg p-3"
-                  style={{ top: "100%", right: "0", zIndex: 1000, minWidth: "220px", marginTop: "8px", borderRadius: '12px', border: '2px solid #e9ecef' }}
-                >
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <small className="text-muted fw-bold">Share this post</small>
-                    <button className="btn btn-link p-0 text-muted" onClick={() => setShowShareMenu(false)}>
-                      <FaTimes size="14" />
+                {/* menu */}
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 p-3 animate-fadeIn">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">Share this post</span>
+                    <button
+                      className="text-gray-400 hover:text-red-500"
+                      onClick={() => setShowShareMenu(false)}
+                    >
+                      <FaTimes size={14} />
                     </button>
                   </div>
-                  <div className="d-grid gap-1">
-                    <button className="btn btn-light text-start p-2 border-0 rounded" onClick={() => handleShare('copy')}>
-                      <FaLink className="me-2 text-primary" /> Copy link
+                  <div className="space-y-2">
+                    <button
+                      className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      onClick={() => handleShare("copy")}
+                    >
+                      <FaLink className="mr-2 text-blue-500" /> Copy link
                     </button>
-                    <button className="btn btn-light text-start p-2 border-0 rounded" onClick={() => handleShare('copyWithContent')}>
-                      <FaLink className="me-2 text-success" /> Copy content
+                    <button
+                      className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      onClick={() => handleShare("copyWithContent")}
+                    >
+                      <FaLink className="mr-2 text-green-500" /> Copy content
                     </button>
                     {navigator.share && (
-                      <button className="btn btn-light text-start p-2 border-0 rounded" onClick={() => handleShare('native')}>
-                        <FaShare className="me-2 text-info" /> System Sharing
+                      <button
+                        className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                        onClick={() => handleShare("native")}
+                      >
+                        <FaShare className="mr-2 text-purple-500" /> System Sharing
                       </button>
                     )}
-                    <hr className="my-2" />
-                    <button className="btn btn-light text-start p-2 border-0 rounded" onClick={() => handleShare('facebook')}>
+                    <button
+                      className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      onClick={() => handleShare("facebook")}
+                    >
                       📘 Facebook
                     </button>
-                    <button className="btn btn-light text-start p-2 border-0 rounded" onClick={() => handleShare('twitter')}>
+                    <button
+                      className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      onClick={() => handleShare("twitter")}
+                    >
                       🐦 Twitter
                     </button>
                   </div>
@@ -485,6 +575,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
             )}
           </div>
         </div>
+
 
         {/* Comment Section */}
         <CommentSection

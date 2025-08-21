@@ -58,8 +58,8 @@ const Sidebar = () => {
     { path: '/profile', icon: FaUser, label: 'Profile' },
     { path: '/groups', icon: FaUsers, label: 'Groups' },
     { path: '/events', icon: FaCalendarAlt, label: 'Events' },
-    { path: '/reels', icon: FaVideo, label: 'Reels' },
-    { path: '/pages', icon: FaStore, label: 'PlayGame' }
+    { path: '/story', icon: FaVideo, label: 'Story' },
+    { path: '/playgame', icon: FaStore, label: 'Play-Game' }
   ];
 
   const isActive = (path) => location.pathname === path;
