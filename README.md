@@ -17,32 +17,28 @@ npm install react-toastify
 npm install bootstrap
 npm install -D tailwindcss@3
 npm install react-router-dom react-icons
+npm install -D tailwindcss postcss autoprefixer
+npm create vite@latest spotify-profile-demo -- --template vanilla-ts
 npm install react
 npm install bootstrap
-
+npm install emoji-picker-react
+npm install lucide-react
 ## Short Dependence
 npm install react-router-dom react-icons react-toastify bootstrap firebase
 npm install -D eslint eslint-plugin-react eslint-plugin-react-refresh
-
 ## buil run firebase
 npm install -g firebase-tools
 ## Check version 14.11.2
 firebase --version
-
 firebase login
-
 npm run build
-
 firebase init
-
 select 
 ✅ Hosting: Configure files for Firebase Hosting...
 Spacebar
-
 git add .
 git commit -m "Setup Firebase Hosting"
 git push origin main
-
 firebase deploy
 npm i @cloudinary/url-gen @cloudinary/react
 npm install @cloudinary/react @cloudinary/url-gen
@@ -50,11 +46,8 @@ npm install @cloudinary/react@latest
 ## Build and Check
 npm run build
 npm run preview
-
-
 # React Websocket
 npm install react-use-websocket
-
 ## Rule
 9:10
 rules_version = '2';

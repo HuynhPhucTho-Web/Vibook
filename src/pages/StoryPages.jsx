@@ -10,6 +10,7 @@ import {
   doc
 } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import { Smile } from "lucide-react";
 
 const MS_24H = 24 * 60 * 60 * 1000;
 
@@ -19,11 +20,21 @@ const Storys = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const fileInputRef = useRef(null);
+  const [showIcons, setShowIcons] = useState(false);
 
+  const fileInputRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
 
-  // ===== Fetch & auto-delete expired (24h) =====
+  // emoji phổ biến (40 emoji)
+  const icons = [
+    "😀","😃","😄","😁","😆","🥹","😂","🤣",
+    "😊","😇","😍","🥰","😘","😋","😜","🤪",
+    "😎","🤩","🥳","😏","😌","😴","😒","🙄",
+    "😔","😢","😭","😡","🤬","🤯","😱","😳",
+    "🤔","🤨","😐","😶","😇","🤗","🤝","🙏"
+  ];
+
+  // ===== Fetch stories & auto-delete expired (24h) =====
   useEffect(() => {
     const storiesRef = collection(db, 'Stories');
     const q = query(storiesRef, orderBy('createdAt', 'desc'));
@@ -32,21 +43,16 @@ const Storys = () => {
       q,
       async (snapshot) => {
         const now = Date.now();
-
-        // Auto delete expired docs in the background
         const deletePromises = [];
+
         snapshot.docs.forEach((d) => {
           const data = d.data();
           if (typeof data?.createdAt === 'number' && now - data.createdAt > MS_24H) {
-            deletePromises.push(deleteDoc(doc(db, 'Stories', d.id)).catch(() => {}));
+            deletePromises.push(deleteDoc(doc(db, 'Stories', d.id)).catch(() => { }));
           }
         });
-        if (deletePromises.length) {
-          // fire and forget; no await to keep UI snappy
-          Promise.allSettled(deletePromises);
-        }
+        if (deletePromises.length) Promise.allSettled(deletePromises);
 
-        // Keep only non-expired in UI
         const fresh = snapshot.docs
           .map((d) => ({ id: d.id, ...d.data() }))
           .filter((s) => typeof s.createdAt === 'number' && now - s.createdAt <= MS_24H);
@@ -74,6 +80,12 @@ const Storys = () => {
     return { valid: true };
   };
 
+  // thêm icon vào title
+  const handleAddIcon = (icon) => {
+    setNewStory((prev) => ({ ...prev, title: prev.title + " " + icon }));
+    setShowIcons(false);
+  };
+
   // ===== Handle file input =====
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
@@ -94,11 +106,10 @@ const Storys = () => {
         ...validFiles.map((file) => ({ file, id: Date.now() + Math.random() })),
       ],
     }));
-    // reset input so same file can be picked again if removed
+
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // ===== Remove file in form =====
   const removeFile = (fileId) => {
     setNewStory((prev) => ({
       ...prev,
@@ -106,21 +117,16 @@ const Storys = () => {
     }));
   };
 
-  // ===== Upload to Cloudinary (keep logic) =====
+  // ===== Upload video to Cloudinary =====
   const uploadVideoToCloudinary = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append(
-      'upload_preset',
-      import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET
-    );
+    formData.append('upload_preset', import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET);
     formData.append('resource_type', 'video');
 
     try {
       const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${
-          import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME
-        }/video/upload`,
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME}/video/upload`,
         { method: 'POST', body: formData }
       );
       if (!response.ok) throw new Error('Upload failed');
@@ -138,7 +144,7 @@ const Storys = () => {
     }
   };
 
-  // ===== Create Story (keep logic) =====
+  // ===== Create Story =====
   const handleCreateStory = async (e) => {
     e.preventDefault();
     if (!newStory.title.trim() && newStory.mediaFiles.length === 0) {
@@ -167,7 +173,7 @@ const Storys = () => {
         userAvatar: auth.currentUser.photoURL || '',
         title: newStory.title,
         mediaFiles: uploadedMedia,
-        createdAt: Date.now(), // using ms timestamp to simplify 24h checks
+        createdAt: Date.now(),
       };
 
       await addDoc(collection(db, 'Stories'), storyData);
@@ -197,13 +203,10 @@ const Storys = () => {
     const v = e.currentTarget;
     if (!v) return;
     if (action === 'enter') {
-      v.muted = true;
-      v.play().catch(() => {});
+      v.play().catch(() => { });
     } else {
       v.pause();
-      try { v.currentTime = 0; } catch {
-        // Ignore error if unable to reset currentTime
-      }
+      try { v.currentTime = 0; } catch { /* ignore error */ }
     }
   };
 
@@ -222,8 +225,6 @@ const Storys = () => {
           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow"
           onClick={() => removeFile(id)}
           disabled={isUploading}
-          aria-label="Remove file"
-          title="Remove file"
         >
           ×
         </button>
@@ -242,26 +243,53 @@ const Storys = () => {
 
         <button
           onClick={() => setShowCreateForm((s) => !s)}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700 active:scale-[.98] transition"
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700 transition"
         >
-          <span className="text-lg leading-none">＋</span>
+          <span className="text-lg">＋</span>
           {showCreateForm ? 'Close' : 'Create Story'}
         </button>
       </div>
 
-      {/* Create Form (collapsible) */}
+      {/* Create Form */}
       {showCreateForm && (
-        <div className="mb-8 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <form onSubmit={handleCreateStory} className="space-y-4">
-            <input
-              type="text"
-              value={newStory.title}
-              onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
-              placeholder="What's your story title?"
-              className="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isUploading}
-            />
+            {/* Title + Icon Picker */}
+            <div className="relative">
+              <input
+                type="text"
+                value={newStory.title}
+                onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
+                placeholder="What's your story title?"
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isUploading}
+              />
+              {/* Nút mở icon */}
+              <button
+                type="button"
+                onClick={() => setShowIcons(!showIcons)}
+                className="absolute right-3 top-2.5 text-gray-500 hover:text-yellow-500"
+              >
+                <Smile size={22} />
+              </button>
+              {/* Popup emoji */}
+              {showIcons && (
+                <div className="absolute mt-2 right-0 z-50 w-60 max-h-52 overflow-y-auto rounded-xl border bg-white shadow-lg p-2 grid grid-cols-8 gap-1 text-lg">
+                  {icons.map((icon, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleAddIcon(icon)}
+                      className="hover:bg-gray-100 rounded-lg"
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
+            {/* File input */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <input
                 ref={fileInputRef}
@@ -284,9 +312,9 @@ const Storys = () => {
             )}
 
             {isUploading && (
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-blue-600 h-2 rounded-full transition-all"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -294,9 +322,7 @@ const Storys = () => {
 
             <button
               type="submit"
-              className={`w-full rounded-xl bg-blue-600 py-2.5 text-white font-medium shadow hover:bg-blue-700 transition ${
-                isUploading ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className={`w-full rounded-xl bg-blue-600 py-2.5 text-white font-medium shadow hover:bg-blue-700 transition ${isUploading ? 'opacity-60 cursor-not-allowed' : ''}`}
               disabled={isUploading}
             >
               {isUploading ? 'Uploading…' : 'Post Story'}
@@ -305,23 +331,22 @@ const Storys = () => {
         </div>
       )}
 
-      {/* Stories Grid (tall cards) */}
+      {/* Stories Grid */}
       {stories.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-10 text-center text-gray-500">
-          No stories yet. Click <span className="font-semibold text-gray-700">Create Story</span> to post your first one!
+        <div className="rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
+          No stories yet. Click <span className="font-semibold">Create Story</span> to post your first one!
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
           {stories.map((story) => (
             <article
               key={story.id}
-              className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow hover:shadow-lg transition-shadow ring-1 ring-gray-200 dark:ring-gray-800"
+              className="group relative overflow-hidden rounded-2xl bg-white shadow hover:shadow-lg transition ring-1 ring-gray-200"
             >
-              {/* Media (taller) */}
               {story.mediaFiles?.map((media, idx) => (
                 <div key={idx} className="relative">
                   <video
-                    className="w-full h-80 object-cover select-none"
+                    className="w-full h-80 object-cover"
                     poster={
                       media.publicId
                         ? `https://res.cloudinary.com/${import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME}/video/upload/${media.publicId}.jpg`
@@ -331,50 +356,39 @@ const Storys = () => {
                     onMouseLeave={(e) => handleHoverPlay(e, 'leave')}
                     playsInline
                     preload="metadata"
-                    muted
                     controls={false}
                   >
                     <source src={media.url} type="video/mp4" />
-                    Your browser does not support the video tag.
                   </video>
-
-                  {/* top bar: avatar + time left */}
-                  <div className="pointer-events-none absolute top-0 left-0 right-0 flex items-center justify-between p-3">
+                  <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-3">
                     <div className="flex items-center gap-2">
                       <img
                         src={story.userAvatar || '/default-avatar.png'}
                         alt={story.userName || 'User'}
-                        className="h-9 w-9 rounded-full ring-2 ring-white/80 object-cover"
+                        className="h-9 w-9 rounded-full ring-2 ring-white object-cover"
                       />
-                      <div className="hidden sm:block">
-                        <p className="text-white/95 text-sm font-semibold drop-shadow">
-                          {story.userName || 'Anonymous'}
-                        </p>
-                      </div>
+                      <p className="text-white text-sm font-semibold drop-shadow">
+                        {story.userName || 'Anonymous'}
+                      </p>
                     </div>
-                    <span className="text-[11px] px-2 py-1 rounded-full bg-black/60 text-white backdrop-blur">
+                    <span className="text-[11px] px-2 py-1 rounded-full bg-black/60 text-white">
                       {timeLeftText(story.createdAt)}
                     </span>
                   </div>
-
-                  {/* gradient bottom */}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent" />
                 </div>
               ))}
 
-              {/* Body */}
               <div className="relative z-10 -mt-16 px-4 pb-4">
                 <h3 className="text-white text-base font-semibold line-clamp-2 drop-shadow">
                   {story.title || 'Untitled'}
                 </h3>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center justify-between px-4 pb-4">
                 <span className="text-xs text-gray-500">
                   {new Date(story.createdAt).toLocaleString()}
                 </span>
-
                 {story.userId === currentUserId && (
                   <button
                     onClick={async () => {
@@ -388,8 +402,6 @@ const Storys = () => {
                       }
                     }}
                     className="rounded-lg bg-red-50 text-red-600 px-3 py-1 text-sm hover:bg-red-100 transition"
-                    aria-label="Delete story"
-                    title="Delete story"
                   >
                     Delete
                   </button>

@@ -13,12 +13,12 @@ import {
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
-import { 
-  FaPaperPlane, 
-  FaPhone, 
-  FaVideo, 
-  FaSmile, 
-  FaPaperclip, 
+import {
+  FaPaperPlane,
+  FaPhone,
+  FaVideo,
+  FaSmile,
+  FaPaperclip,
   FaSearch,
   FaEllipsisV,
   FaUserCircle,
@@ -44,14 +44,18 @@ const Messenger = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Refs để tránh re-subscription không cần thiết
   const unsubscribeRefs = useRef({});
   const messagesEndRef = useRef(null);
   const lastChatId = useRef(null);
 
   // Emoji reactions
-  const emojiReactions = ['❤️', '👍', '😂', '😮', '😢', '😡', '👏', '🔥'];
+  const emojiReactions = ["😀", "😃", "😄", "😁", "😆", "🥹", "😂", "🤣",
+                          "😊", "😇", "😍", "🥰", "😘", "😋", "😜", "🤪",
+                          "😎", "🤩", "🥳", "😏", "😌", "😴", "😒", "🙄",
+                          "😔", "😢", "😭", "😡", "🤬", "🤯", "😱", "😳",
+                          "🤔", "🤨", "😐", "😶", "😇", "🤗", "🤝", "🙏"];
   const quickEmojis = ['😀', '😂', '😍', '🤔', '👍', '👋', '🎉', '❤️'];
 
   // Memoized function tạo chatId
@@ -62,7 +66,7 @@ const Messenger = () => {
   // Memoized format time
   const formatTimeAgo = useCallback((timestamp) => {
     if (!timestamp) return "";
-    
+
     const now = Date.now();
     const diff = now - timestamp;
     const minutes = Math.floor(diff / 60000);
@@ -73,9 +77,9 @@ const Messenger = () => {
     if (minutes < 60) return `${minutes}p`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
-    return new Date(timestamp).toLocaleDateString("vi-VN", { 
-      day: '2-digit', 
-      month: '2-digit' 
+    return new Date(timestamp).toLocaleDateString("vi-VN", {
+      day: '2-digit',
+      month: '2-digit'
     });
   }, []);
 
@@ -115,7 +119,7 @@ const Messenger = () => {
         setIsLoading(true);
         const usersQuery = query(collection(db, "Users"), limit(50));
         const snapshot = await getDocs(usersQuery);
-        
+
         const userList = snapshot.docs
           .map((doc) => ({
             uid: doc.id,
@@ -127,14 +131,14 @@ const Messenger = () => {
             lastSeen: Date.now() - Math.random() * 3600000,
           }))
           .filter((u) => u.uid !== currentUser.uid);
-        
+
         setUsers(userList);
-        
+
       } catch (error) {
         console.error("Error loading users:", error);
-        toast.error("Không thể tải danh sách người dùng", { 
+        toast.error("Không thể tải danh sách người dùng", {
           position: "top-center",
-          autoClose: 3000 
+          autoClose: 3000
         });
       } finally {
         setIsLoading(false);
@@ -153,10 +157,10 @@ const Messenger = () => {
     }
 
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
-    
+
     // Tránh re-subscribe cho cùng một chat
     if (lastChatId.current === chatId && messages.length > 0) return;
-    
+
     setIsLoadingMessages(true);
     lastChatId.current = chatId;
 
@@ -170,7 +174,7 @@ const Messenger = () => {
       orderBy("createdAt", "asc"),
       limit(50)
     );
-    
+
     unsubscribeRefs.current.messages = onSnapshot(
       messagesQuery,
       (snapshot) => {
@@ -181,10 +185,10 @@ const Messenger = () => {
           content: doc.data().content,
           createdAt: doc.data().createdAt,
         }));
-        
+
         setMessages(messageList);
         setIsLoadingMessages(false);
-        
+
         // Auto scroll to bottom - debounced
         if (messageList.length > 0) {
           setTimeout(() => {
@@ -218,7 +222,7 @@ const Messenger = () => {
 
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
     const messageContent = messageText.trim();
-    
+
     // Clear input immediately for better UX
     setMessageText("");
     setShowEmojiPicker(false);
@@ -235,9 +239,9 @@ const Messenger = () => {
       console.error(`Error sending message:`, error);
       // Restore message text on error
       setMessageText(messageContent);
-      toast.error("Không thể gửi tin nhắn", { 
+      toast.error("Không thể gửi tin nhắn", {
         position: "top-center",
-        autoClose: 3000 
+        autoClose: 3000
       });
     }
   }, [messageText, selectedUser, currentUser, createChatId]);
@@ -254,7 +258,7 @@ const Messenger = () => {
   // Filter users based on search
   const filteredUsers = useMemo(() => {
     if (!searchTerm) return users;
-    return users.filter(user => 
+    return users.filter(user =>
       `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -263,7 +267,7 @@ const Messenger = () => {
   // Component cho avatar với online status
   const UserAvatar = React.memo(({ user, size = 40, showOnline = false }) => {
     const [imageError, setImageError] = useState(false);
-    
+
     const getInitials = (firstName, lastName) => {
       const first = firstName?.charAt(0)?.toUpperCase() || '';
       const last = lastName?.charAt(0)?.toUpperCase() || '';
@@ -298,7 +302,7 @@ const Messenger = () => {
           </div>
         )}
         {showOnline && user.isOnline && (
-          <span 
+          <span
             className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle"
             style={{ width: '12px', height: '12px' }}
           ></span>
@@ -308,16 +312,15 @@ const Messenger = () => {
   });
 
   // Memoized users list với design mới
-  const usersList = useMemo(() => 
+  const usersList = useMemo(() =>
     filteredUsers.map((user) => (
       <div
         key={user.uid}
-        className={`p-3 border-bottom user-item ${
-          selectedUser?.uid === user.uid ? "bg-primary bg-opacity-10 border-primary" : ""
-        }`}
+        className={`p-3 border-bottom user-item ${selectedUser?.uid === user.uid ? "bg-primary bg-opacity-10 border-primary" : ""
+          }`}
         onClick={() => handleUserSelect(user)}
-        style={{ 
-          cursor: 'pointer', 
+        style={{
+          cursor: 'pointer',
           transition: 'all 0.2s ease',
           borderLeft: selectedUser?.uid === user.uid ? '3px solid #0d6efd' : '3px solid transparent'
         }}
@@ -335,7 +338,7 @@ const Messenger = () => {
                 <small className="text-muted text-truncate d-block" style={{ maxWidth: "140px", fontSize: '0.8rem' }}>
                   {user.isOnline ? (
                     <span className="text-success">
-                      <i className="fas fa-circle" style={{fontSize: '8px'}}></i> Đang hoạt động
+                      <i className="fas fa-circle" style={{ fontSize: '8px' }}></i> Đang hoạt động
                     </span>
                   ) : (
                     `Hoạt động ${formatTimeAgo(user.lastSeen)}`
@@ -352,17 +355,16 @@ const Messenger = () => {
     )), [filteredUsers, selectedUser, handleUserSelect, formatTimeAgo]);
 
   // Memoized messages list với design mới
-  const messagesList = useMemo(() => 
+  const messagesList = useMemo(() =>
     messages.map((message, index) => {
       const isOwnMessage = message.senderId === currentUser?.uid;
       const showAvatar = index === 0 || messages[index - 1]?.senderId !== message.senderId;
-      
+
       return (
         <div
           key={message.id}
-          className={`d-flex mb-3 ${
-            isOwnMessage ? "justify-content-end" : "justify-content-start"
-          }`}
+          className={`d-flex mb-3 ${isOwnMessage ? "justify-content-end" : "justify-content-start"
+            }`}
         >
           {!isOwnMessage && showAvatar && (
             <div className="me-2 align-self-end">
@@ -372,15 +374,14 @@ const Messenger = () => {
           {!isOwnMessage && !showAvatar && (
             <div style={{ width: '40px' }}></div>
           )}
-          
+
           <div
-            className={`position-relative shadow-sm ${
-              isOwnMessage 
-                ? "bg-primary text-white" 
+            className={`position-relative shadow-sm ${isOwnMessage
+                ? "bg-primary text-white"
                 : "bg-light text-dark border"
-            }`}
-            style={{ 
-              maxWidth: "75%", 
+              }`}
+            style={{
+              maxWidth: "75%",
               wordBreak: "break-word",
               borderRadius: isOwnMessage ? "20px 20px 6px 20px" : "20px 20px 20px 6px",
               padding: '12px 16px',
@@ -389,10 +390,9 @@ const Messenger = () => {
             }}
           >
             <div className="message-content mb-1">{message.content}</div>
-            <div 
-              className={`d-flex align-items-center justify-content-end mt-2 ${
-                isOwnMessage ? "text-white-50" : "text-muted"
-              }`}
+            <div
+              className={`d-flex align-items-center justify-content-end mt-2 ${isOwnMessage ? "text-white-50" : "text-muted"
+                }`}
               style={{ fontSize: "0.7rem" }}
             >
               <span>{formatTimeAgo(message.createdAt)}</span>
@@ -403,7 +403,7 @@ const Messenger = () => {
               )}
             </div>
           </div>
-          
+
           {isOwnMessage && showAvatar && (
             <div className="ms-2 align-self-end">
               <UserAvatar user={{
@@ -459,7 +459,7 @@ const Messenger = () => {
               <h5 className="mb-0 fw-bold text-primary">Tin nhắn</h5>
               <span className="badge bg-primary rounded-pill">{users.length}</span>
             </div>
-            
+
             {/* Search bar */}
             <div className="position-relative">
               <FaSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
@@ -507,7 +507,7 @@ const Messenger = () => {
                       <small className="text-muted">
                         {selectedUser.isOnline ? (
                           <span className="text-success">
-                            <i className="fas fa-circle me-1" style={{fontSize: '8px'}}></i>
+                            <i className="fas fa-circle me-1" style={{ fontSize: '8px' }}></i>
                             Đang hoạt động
                           </span>
                         ) : (
@@ -516,7 +516,7 @@ const Messenger = () => {
                       </small>
                     </div>
                   </div>
-                  
+
                   {/* Action buttons */}
                   <div className="d-flex gap-2">
                     <button className="btn btn-outline-primary btn-sm rounded-circle p-2" title="Gọi điện">
@@ -533,9 +533,9 @@ const Messenger = () => {
               </div>
 
               {/* Messages area với background pattern */}
-              <div 
-                className="flex-grow-1 overflow-auto px-4 py-3" 
-                style={{ 
+              <div
+                className="flex-grow-1 overflow-auto px-4 py-3"
+                style={{
                   maxHeight: "calc(100vh - 200px)",
                   backgroundColor: '#f8f9fa',
                   backgroundImage: `
@@ -630,7 +630,7 @@ const Messenger = () => {
                         </button>
                       </div>
                     </div>
-                    
+
                     {/* Emoji picker */}
                     {showEmojiPicker && (
                       <div className="position-absolute bottom-100 end-0 mb-2 bg-white border rounded-3 shadow-lg p-3" style={{ zIndex: 1000 }}>
@@ -660,7 +660,7 @@ const Messenger = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <button
                     type="submit"
                     className="btn btn-primary rounded-circle p-3 shadow-sm"
