@@ -1,4 +1,4 @@
-// ThemeProvider.jsx
+//context/ ThemeProvider.jsx
 import React, { useState, useEffect } from 'react';
 import { ThemeContext } from './ThemeContext';
 
@@ -49,6 +49,7 @@ export const ThemeProvider = ({ children }) => {
   ];
 
   // Extended color palette
+
   const extendedColorOptions = [
     { name: 'Pure White', value: '#ffffff' },
     { name: 'Snow White', value: '#fafafa' },
