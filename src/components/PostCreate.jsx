@@ -8,6 +8,7 @@ import { AdvancedImage, AdvancedVideo } from "@cloudinary/react";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { auto } from "@cloudinary/url-gen/actions/resize";
 import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
+import { ThemeProvider } from "../context/ThemeProvider";
 
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
@@ -16,6 +17,7 @@ const PostCreator = ({ onPostCreated }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  
 
   // File size limits (MB)
   const FILE_SIZE_LIMITS = {
@@ -375,6 +377,7 @@ const PostCreator = ({ onPostCreated }) => {
   }
 
   return (
+    <ThemeProvider>
     <div className={`card mb-2 shadow-sm ${theme}`}>
       <div className="card-body">
         <div className="d-flex align-items-center mb-3">
@@ -479,6 +482,7 @@ const PostCreator = ({ onPostCreated }) => {
         </form>
       </div>
     </div>
+    </ThemeProvider>
   );
 };
 

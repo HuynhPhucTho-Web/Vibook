@@ -54,7 +54,7 @@ const Playgame = () => {
                             alt="Caro Online"
                         />
                         <div className="card-body">
-                            <h5 className="card-title">Caro Online</h5>
+                            <h5 className="card-title">Pikachu Online</h5>
                             <p className="card-text">Play Caro online with friends.</p>
                             <button
                                 className="btn btn-primary"

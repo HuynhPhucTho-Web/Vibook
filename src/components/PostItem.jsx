@@ -6,8 +6,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
 import { FaComment, FaTrash, FaShare, FaLink, FaTimes, FaFile } from "react-icons/fa";
 import CommentSection from "./CommentSection";
+import Dropdown from 'react-bootstrap/Dropdown';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import { FaEdit, FaLock } from 'react-icons/fa';
+import { ThemeProvider } from "../context/ThemeProvider";
 
-const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
+const PostItem = ({ post, auth, userDetails, onPostDeleted,handleEditPost, handlePrivatePost }) => {
   const { theme } = useContext(ThemeContext);
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [selectedPostIdForReactions, setSelectedPostIdForReactions] = useState(null);
@@ -300,20 +304,33 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
             )}
           </div>
           {localPost.userId === auth.currentUser?.uid && (
-            <button
-              className="btn btn-outline-danger btn-sm rounded-pill"
-              onClick={handleDeletePost}
-              disabled={isDeleting}
-              style={{ minWidth: '80px' }}
-            >
-              {isDeleting ? (
-                <div className="spinner-border spinner-border-sm" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              ) : (
-                <><FaTrash className="me-1" /> Delete</>
-              )}
-            </button>
+            <Dropdown as={ButtonGroup} align="end">
+              <Dropdown.Toggle
+                variant="outline-danger"
+                className="btn btn-sm rounded-pill"
+                disabled={isDeleting}
+                style={{ minWidth: '80px' }}
+              >
+                {isDeleting ? (
+                  <div className="spinner-border spinner-border-sm" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                ) : (
+                  'Actions'
+                )}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={handleEditPost}>
+                  <FaEdit className="me-1" /> Edit
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleDeletePost}>
+                  <FaTrash className="me-1" /> Delete
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handlePrivatePost}>
+                  <FaLock className="me-1" /> Private
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           )}
         </div>
 
@@ -461,8 +478,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
               onMouseEnter={() => setSelectedPostIdForReactions(post.id)}
               disabled={isReacting}
               className={`flex items-center justify-center w-full py-2 rounded-xl transition ${currentUserReaction
-                  ? "text-blue-600 font-semibold bg-blue-50 dark:bg-blue-900/20"
-                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "text-blue-600 font-semibold bg-blue-50 dark:bg-blue-900/20"
+                : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
             >
               <span className="mr-2 text-lg">
@@ -497,8 +514,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
           <button
             onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
             className={`flex items-center justify-center flex-1 py-2 rounded-xl transition ${selectedPostId === post.id
-                ? "bg-gray-100 dark:bg-gray-700 text-blue-600"
-                : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              ? "bg-gray-100 dark:bg-gray-700 text-blue-600"
+              : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
           >
             <FaComment className="mr-2 text-lg" />
@@ -510,8 +527,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, currentUser }) => {
             <button
               onClick={() => setShowShareMenu(!showShareMenu)}
               className={`flex items-center justify-center w-full py-2 rounded-xl transition ${showShareMenu
-                  ? "bg-gray-100 dark:bg-gray-700 text-green-600"
-                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-gray-100 dark:bg-gray-700 text-green-600"
+                : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
             >
               <FaShare className="mr-2 text-lg" />
