@@ -13,7 +13,7 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
 
-  // Fetch user data + posts
+  
   const fetchUserData = useCallback((user) => {
     if (!user) {
       setUserDetails(null);
@@ -68,7 +68,7 @@ function Profile() {
       <div className="container py-4">
         <div className="card mb-4 shadow-sm">
           <div className="card-body">
-            {/* UpdateProfile component */}
+            
             <UpdateProfile
               userDetails={userDetails}
               onUpdated={(updated) => setUserDetails((prev) => ({ ...prev, ...updated }))}
@@ -76,10 +76,10 @@ function Profile() {
           </div>
         </div>
 
-        {/* Post Creator */}
+        
         <PostCreator onPostCreated={(newPost) => setPosts((prev) => [newPost, ...prev])} />
 
-        {/* Posts */}
+        
         {posts.length > 0 ? (
           posts.map((post) => (
             <PostItem key={post.id} post={post} auth={auth} userDetails={userDetails} />

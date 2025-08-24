@@ -30,7 +30,6 @@ import {
   FaSadTear,
   FaAngry
 } from "react-icons/fa";
-import { useWebSocket } from "react-use-websocket";
 
 const Messenger = () => {
   const { theme } = useContext(ThemeContext);
@@ -42,7 +41,6 @@ const Messenger = () => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Refs để tránh re-subscription không cần thiết
@@ -51,11 +49,6 @@ const Messenger = () => {
   const lastChatId = useRef(null);
 
   // Emoji reactions
-  const emojiReactions = ["😀", "😃", "😄", "😁", "😆", "🥹", "😂", "🤣",
-                          "😊", "😇", "😍", "🥰", "😘", "😋", "😜", "🤪",
-                          "😎", "🤩", "🥳", "😏", "😌", "😴", "😒", "🙄",
-                          "😔", "😢", "😭", "😡", "🤬", "🤯", "😱", "😳",
-                          "🤔", "🤨", "😐", "😶", "😇", "🤗", "🤝", "🙏"];
   const quickEmojis = ['😀', '😂', '😍', '🤔', '👍', '👋', '🎉', '❤️'];
 
   // Memoized function tạo chatId
