@@ -52,6 +52,7 @@ npm run preview
 npm install react-use-websocket
 ## Rule
 9:10
+26/08/2025
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -60,51 +61,59 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create, update: if request.auth != null && request.auth.uid == userId;
     }
-    
+   
     // Posts collection
     match /Posts/{postId} {
       allow read: if true;
       allow create: if request.auth != null;
       allow update: if request.auth != null && (
         request.auth.uid == resource.data.userId ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactedBy', 'reactions'])
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactedBy', 'reactions', 'reactionCount'])
       );
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-      
       // Comments subcollection
       match /comments/{commentId} {
         allow read: if true;
         allow create: if request.auth != null;
         allow update: if request.auth != null && (
           request.auth.uid == resource.data.userId ||
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactions', 'reactedBy'])
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'reactionCount', 'replyCount'])
         );
         allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-        
-        // Replies subcollection
+      
+        // Replies subcollection with unlimited nesting
         match /replies/{replyId} {
           allow read: if true;
           allow create: if request.auth != null;
           allow update: if request.auth != null && (
             request.auth.uid == resource.data.userId ||
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactions', 'reactedBy'])
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'reactionCount', 'replyCount'])
           );
           allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-        }
         
+          // Enable recursive replies (unlimited nesting)
+          match /{document=**} {
+            allow read: if true;
+            allow create: if request.auth != null;
+            allow update: if request.auth != null && (
+              request.auth.uid == resource.data.userId ||
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'reactionCount', 'replyCount'])
+            );
+            allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+          }
+        }
+      
         // Comment reactions subcollection
         match /reactions/{userId} {
           allow read: if true;
-          allow write: if request.auth != null && request.auth.uid == userId;
+          allow write: if request.auth != null;
         }
       }
     }
-    
     // Messages collection
     match /Messages/{chatId} {
       allow read: if request.auth != null && (request.auth.uid in chatId.split('_'));
       allow write: if request.auth != null && (request.auth.uid in chatId.split('_'));
-      
       match /messages/{messageId} {
         allow read: if request.auth != null && (
           request.auth.uid == resource.data.senderId ||
@@ -118,11 +127,108 @@ service cloud.firestore {
         allow update, delete: if request.auth != null && request.auth.uid == resource.data.senderId;
       }
     }
-    
     // Notifications collection
     match /Notifications/{notificationId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
       allow write: if request.auth != null;
     }
+    // Groups collection
+    match /Groups/{groupId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.ownerId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+    // Events collection
+    match /Events/{eventId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.ownerId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees'])
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+    // Stories collection
+    match /Stories/{storyId} {
+      allow read: if true; // Public read access
+      allow create: if request.auth != null; // Any authenticated user can create
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mediaFiles']) // Allow updates to mediaFiles if needed
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId; // Only owner can delete
+    }
+// 🔹 Posts trong Group
+match /Posts/{postId} {
+  allow read: if true;
+
+  // Chỉ cho phép user đăng nhập tạo post của chính mình
+  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+  // Cho phép update:
+  // - Nếu chính chủ post => có thể update title, content, mediaUrls, status
+  // - Hoặc ai cũng có thể update reaction fields
+  allow update: if request.auth != null && (
+    // Chủ post update toàn bộ fields hợp lệ
+    (
+      request.auth.uid == resource.data.userId &&
+      request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['title','content','mediaUrls','status','likes','reactedBy','reactions','reactionCount'])
+    )
+    ||
+    // Người khác chỉ được update reaction fields
+    request.resource.data.diff(resource.data).affectedKeys()
+      .hasOnly(['likes','reactedBy','reactions','reactionCount'])
+  );
+
+  // Chỉ chủ post được xóa
+  allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+
+  // 🔹 Comments trong post
+  match /comments/{commentId} {
+    allow read: if true;
+    allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    allow update: if request.auth != null && (
+      request.auth.uid == resource.data.userId ||
+      request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['reactions','reactionCount','replyCount'])
+    );
+    allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+
+    // Replies lồng nhau
+    match /replies/{replyId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['reactions','reactionCount','replyCount'])
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Cho phép nesting không giới hạn
+      match /{document=**} {
+        allow read: if true;
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow update: if request.auth != null && (
+          request.auth.uid == resource.data.userId ||
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['reactions','reactionCount','replyCount'])
+        );
+        allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      }
+    }
+
+    // Comment reactions
+    match /reactions/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
   }
+}
+}
 }

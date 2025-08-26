@@ -27,8 +27,15 @@ import CommentManagement from "./pages/CommentManagement";
 import FanBadges from "./pages/FanBadges";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
+import GroupPage from "./pages/GroupPage";
 import { auth } from "./components/firebase";
 import { ThemeProvider } from "./context/ThemeProvider";
+import GroupMembers from "./pages/group/GroupMembers";
+import GroupMedia from "./pages/group/GroupMedia";
+import GroupEvents from "./pages/group/GroupEvents";
+import GroupInfo from "./pages/group/GroupInfo";
+import GroupHome from "./pages/group/GroupHome";
+
 
 // Layout for authentication pages
 const AuthLayout = () => (
@@ -56,7 +63,7 @@ const MainLayout = () => {
       <div style={{ height: `${headerHeight}px` }} aria-hidden="true" /> {/* Spacer for header */}
       <div className="d-flex flex-nowrap">
         <Sidebar style={{ width: sidebarWidth }} />
-        <main className="container flex-grow-1">
+        <main className="flex-grow-1">
           <div className="row g-2">
             <section className="col-lg-12 flex-grow-1">
               <Outlet />
@@ -102,7 +109,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<SignUp />} />
           </Route>
-          
+
           {/* Protected Routes with Layout mới */}
           <Route element={<MainLayout />}>
             <Route path="/homevibook" element={user ? <Home /> : <Navigate to="/login" />} />
@@ -118,9 +125,21 @@ function App() {
             <Route path="/insights" element={user ? <Insights /> : <Navigate to="/login" />} />
             <Route path="/comment-management" element={user ? <CommentManagement /> : <Navigate to="/login" />} />
             <Route path="/fan-badges" element={user ? <FanBadges /> : <Navigate to="/login" />} />
+            {/* Group Page with nested routes */}
+
+            <Route path="/groups/:groupId" element={<GroupPage />}>
+              <Route index element={<GroupHome />} />  
+              <Route path="members" element={<GroupMembers />} />
+              <Route path="media" element={<GroupMedia />} />
+              <Route path="events" element={<GroupEvents />} />
+              <Route path="about" element={<GroupInfo />} />
+            </Route>
+
           </Route>
+
+
         </Routes>
-        
+
         {/* Toast Container với style tùy chỉnh */}
         <ToastContainer
           position="top-right"

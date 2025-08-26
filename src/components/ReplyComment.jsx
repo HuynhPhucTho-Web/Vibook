@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { FaTimes } from "react-icons/fa";
 import { db } from "../components/firebase";
 
-const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo, replyTo }) => {
+const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
   const [replyText, setReplyText] = useState("");
 
   const handleReplySubmit = async (e) => {
@@ -29,7 +29,7 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo, replyT
         userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
         content: replyText.trim(),
         createdAt: serverTimestamp(),
-        reactions circ: {},
+        reactions: {},
         reactionCount: 0,
         replyCount: 0,
         parentCommentId: commentId
