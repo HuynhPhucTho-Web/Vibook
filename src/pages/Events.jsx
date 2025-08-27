@@ -13,6 +13,8 @@ import {
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes } from "react-icons/fa";
+import { Dropdown } from "react-bootstrap"; // ⬅️ thêm
+import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa"; // ⬅️ thêm icon
 
 const Events = () => {
   const { theme } = useContext(ThemeContext);
@@ -25,6 +27,8 @@ const Events = () => {
   const [eventLocation, setEventLocation] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const modalRef = useRef(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   // Handle click outside to close modal
   useEffect(() => {
@@ -122,6 +126,30 @@ const Events = () => {
     [eventName, eventDate, eventLocation, eventDescription, currentUser]
   );
 
+
+  const handleUpdateEvent = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!editingEvent || !currentUser) return;
+
+      try {
+        const eventRef = doc(db, "Events", editingEvent.id);
+        await updateDoc(eventRef, {
+          name: eventName.trim(),
+          date: eventDate,
+          location: eventLocation.trim(),
+          description: eventDescription.trim(),
+        });
+        setShowEditModal(false);
+        setEditingEvent(null);
+        toast.success("Cập nhật sự kiện thành công!", { position: "top-center" });
+      } catch (error) {
+        console.error("Error updating event:", error);
+        toast.error("Không thể cập nhật sự kiện", { position: "top-center" });
+      }
+    },
+    [editingEvent, eventName, eventDate, eventLocation, eventDescription, currentUser]
+  );
   // Join event
   const handleJoinEvent = useCallback(
     async (eventId, attendees) => {
@@ -246,9 +274,9 @@ const Events = () => {
 
   return (
     <div className={`min-h-screen p-4 ${theme}`}>
-      <div className="max-w-7xl mx-auto">
+      <div className={`max-w-7xl mx-auto ${theme}`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className={`flex items-center justify-between mb-6${theme}`}>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
             Sự kiện ({events.length})
           </h1>
@@ -352,9 +380,79 @@ const Events = () => {
             </div>
           </div>
         )}
-
+        {/* 🔥 Edit Event Modal */}
+        {showEditModal && (
+          <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${theme}`}>
+            <div
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md"
+              ref={modalRef}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  Chỉnh sửa sự kiện
+                </h3>
+                <button
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleUpdateEvent}>
+                {/* reuse input y chang create */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium">Tên sự kiện</label>
+                  <input
+                    type="text"
+                    value={eventName}
+                    onChange={(e) => setEventName(e.target.value)}
+                    className="w-full p-2 border rounded-lg"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium">Ngày giờ</label>
+                  <input
+                    type="datetime-local"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="w-full p-2 border rounded-lg"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium">Địa điểm</label>
+                  <input
+                    type="text"
+                    value={eventLocation}
+                    onChange={(e) => setEventLocation(e.target.value)}
+                    className="w-full p-2 border rounded-lg"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium">Mô tả</label>
+                  <textarea
+                    value={eventDescription}
+                    onChange={(e) => setEventDescription(e.target.value)}
+                    className="w-full p-2 border rounded-lg"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="px-4 py-2 bg-gray-300 rounded-lg"
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                    Lưu
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
         {/* Events List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${theme}`}>
           {events.length > 0 ? (
             events.map((event) => {
               const isAttendee = event.attendees.includes(currentUser.uid);
@@ -363,7 +461,8 @@ const Events = () => {
               return (
                 <div
                   key={event.id}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+                  className={`p-4 rounded-lg shadow-md ${theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -380,13 +479,31 @@ const Events = () => {
                       </div>
                     </div>
                     {isOwner && (
-                      <button
-                        className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-                        onClick={() => handleDeleteEvent(event.id, event.ownerId)}
-                        title="Xóa sự kiện"
-                      >
-                        <FaTimes size={16} />
-                      </button>
+                      <Dropdown align="end">
+                        <Dropdown.Toggle
+                          variant="light"
+                          className="border-0 bg-transparent text-gray-600 dark:text-gray-300"
+                        >
+                          <FaEllipsisV />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item
+                            onClick={() => {
+                              setEditingEvent(event);
+                              setEventName(event.name);
+                              setEventDate(event.date);
+                              setEventLocation(event.location);
+                              setEventDescription(event.description);
+                              setShowEditModal(true);
+                            }}
+                          >
+                            <FaEdit className="mr-2" /> Edit
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleDeleteEvent(event.id, event.ownerId)}>
+                            <FaTrash className="mr-2 text-red-500" /> Delete
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     )}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -409,11 +526,10 @@ const Events = () => {
                       </a>
                     </div>
                     <button
-                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                        isAttendee
-                          ? "bg-red-500 text-white hover:bg-red-600"
-                          : "bg-blue-500 text-white hover:bg-blue-600"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${isAttendee
+                        ? "bg-red-500 text-white hover:bg-red-600"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
+                        }`}
                       onClick={() =>
                         isAttendee
                           ? handleLeaveEvent(event.id, event.attendees)

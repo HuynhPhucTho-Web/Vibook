@@ -31,14 +31,14 @@ const games = [
     },
     {
         title: "Chess",
-        desc: "Classic chess game online.",
+        desc: "Classic chess master game online.",
         img: "https://www.chess.com/bundles/web/images/social/share-play-og.65416864.png",
         link: "https://www.chess.com/",
     },
 ];
 
 const Playgame = () => {
-    const { theme, bodyBackground } = useContext(ThemeContext);
+    const { theme } = useContext(ThemeContext);
 
     return (
         <div
@@ -69,10 +69,13 @@ const Playgame = () => {
                     {games.map((game, idx) => (
                         <motion.div
                             key={idx}
-                            className="rounded-2xl overflow-hidden shadow-lg hover:shadow-pink-500/30 transition-all duration-300"
+                            className={`
+    rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300
+    border ${theme === "light" ? "border-gray-200" : "border-gray-700"}
+  `}
                             style={{
-                                background: "var(--theme-card, #222)",  // bạn có thể định nghĩa thêm biến cho card
-                                color: "var(--theme-text)",
+                                backgroundColor: theme === "light" ? "#ffffff" : "#1f2937", // light: trắng, dark: xám-800
+                                color: theme === "light" ? "#1f2937" : "#f9fafb", // light: text đen, dark: text sáng
                             }}
                             whileHover={{ scale: 1.05 }}
                             initial={{ opacity: 0, y: 50 }}
@@ -89,7 +92,12 @@ const Playgame = () => {
                             </div>
                             <div className="p-4 text-center">
                                 <h5 className="text-lg font-semibold mb-2">{game.title}</h5>
-                                <p className="text-sm text-gray-400 mb-4">{game.desc}</p>
+                                <p
+                                    className={`text-sm mb-4 ${theme === "light" ? "text-gray-600" : "text-gray-400"
+                                        }`}
+                                >
+                                    {game.desc}
+                                </p>
                                 <a
                                     href={game.link}
                                     target="_blank"
@@ -100,6 +108,7 @@ const Playgame = () => {
                                 </a>
                             </div>
                         </motion.div>
+
                     ))}
                 </div>
             </div>

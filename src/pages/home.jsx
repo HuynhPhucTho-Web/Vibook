@@ -9,7 +9,7 @@ import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
 
 function Home() {
-    const { theme, themes, bodyBackground } = useContext(ThemeContext);
+  const { theme, themes, bodyBackground } = useContext(ThemeContext);
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,9 +120,13 @@ function Home() {
   }
 
   return (
-    
-    <div className="container py-4 ">
+
+    <div
+      className={`container py-4 ${themes[theme]}`}
+      style={{ backgroundColor: bodyBackground, minHeight: "100vh", transition: "all 0.3s ease" }}
+    >
       <PostCreator onPostCreated={handlePostCreated} />
+
       {/* Posts Feed */}
       <div>
         {posts.length > 0 ? (
@@ -143,6 +147,7 @@ function Home() {
         )}
       </div>
     </div>
+
   );
 }
 

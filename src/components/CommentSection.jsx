@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useContext } from "react";
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  onSnapshot, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  orderBy, 
+import {
+  collection,
+  addDoc,
+  query,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  orderBy,
   serverTimestamp,
   increment,
   arrayUnion,
   arrayRemove
 } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { 
-  FaComment, 
-  FaThumbsUp, 
-  FaHeart, 
-  FaLaugh, 
-  FaSadTear, 
+import {
+  FaComment,
+  FaThumbsUp,
+  FaHeart,
+  FaLaugh,
+  FaSadTear,
   FaAngry,
   FaReply,
   FaEllipsisV,
@@ -35,6 +35,8 @@ const REACTIONS = {
   sad: { icon: FaSadTear, color: "#f7b125", label: "Sad" },
   angry: { icon: FaAngry, color: "#e9710f", label: "Angry" }
 };
+
+
 
 const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo, replyTo }) => {
   const [replyText, setReplyText] = useState("");
@@ -139,6 +141,14 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
   const [showReactionPicker, setShowReactionPicker] = useState(null);
   const [loadingComments, setLoadingComments] = useState(false);
 
+
+  const themeClasses = {
+    card: theme === "dark" ? "bg-dark text-light border border-secondary" : "bg-light text-dark",
+    bubble: theme === "dark" ? "bg-secondary text-light" : "bg-light text-dark",
+    textMuted: theme === "dark" ? "text-gray-400" : "text-muted",
+    textPrimary: theme === "dark" ? "text-info" : "text-primary",
+    border: theme === "dark" ? "border-secondary" : "border-light",
+  };
   // Real-time comments listener with replies
   useEffect(() => {
     let unsubscribe;
@@ -151,10 +161,10 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
             collection(db, "Posts", postId, "comments"),
             orderBy("createdAt", "desc")
           );
-          
+
           unsubscribe = onSnapshot(commentsQuery, async (snapshot) => {
             const postComments = [];
-            
+
             for (const commentDoc of snapshot.docs) {
               const commentData = {
                 id: commentDoc.id,
@@ -164,13 +174,13 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                 replyCount: commentDoc.data().replyCount || 0,
                 replies: []
               };
-              
+
               // Fetch replies for each comment
               const repliesQuery = query(
                 collection(db, "Posts", postId, "comments", commentDoc.id, "replies"),
                 orderBy("createdAt", "asc")
               );
-              
+
               const repliesSnapshot = await onSnapshot(repliesQuery, (repliesSnap) => {
                 const replies = repliesSnap.docs.map(replyDoc => ({
                   id: replyDoc.id,
@@ -179,20 +189,20 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                   reactionCount: replyDoc.data().reactionCount || 0,
                   replyCount: replyDoc.data().replyCount || 0
                 }));
-                
+
                 commentData.replies = replies;
-                
+
                 // Update the specific comment in state
-                setComments(prevComments => 
-                  prevComments.map(c => 
+                setComments(prevComments =>
+                  prevComments.map(c =>
                     c.id === commentDoc.id ? { ...c, replies } : c
                   )
                 );
               });
-              
+
               postComments.push(commentData);
             }
-            
+
             setComments(postComments);
             setLoadingComments(false);
           });
@@ -261,7 +271,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
     try {
       const userId = auth.currentUser.uid;
       let targetRef;
-      
+
       if (isReply && parentCommentId) {
         targetRef = doc(db, "Posts", postId, "comments", parentCommentId, "replies", targetId);
       } else {
@@ -269,12 +279,12 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
       }
 
       // Get current reactions
-      const currentTarget = isReply 
+      const currentTarget = isReply
         ? comments.find(c => c.id === parentCommentId)?.replies.find(r => r.id === targetId)
         : comments.find(c => c.id === targetId);
 
       const currentReactions = currentTarget?.reactions || {};
-      const userCurrentReaction = Object.keys(currentReactions).find(type => 
+      const userCurrentReaction = Object.keys(currentReactions).find(type =>
         currentReactions[type]?.includes(userId)
       );
 
@@ -306,7 +316,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
           <div className="d-flex align-items-center">
             <ReactionIcon color={REACTIONS[reactionType].color} className="me-2" />
             {REACTIONS[reactionType].label}
-          </div>, 
+          </div>,
           {
             position: "top-center",
             autoClose: 1000
@@ -350,7 +360,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
   };
 
   const getUserReaction = (reactions, userId) => {
-    return Object.keys(reactions).find(type => 
+    return Object.keys(reactions).find(type =>
       reactions[type]?.includes(userId)
     );
   };
@@ -365,7 +375,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
 
   const formatTimeAgo = (timestamp) => {
     if (!timestamp) return "Just now";
-    
+
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const now = new Date();
     const diff = now - date;
@@ -381,8 +391,8 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
   };
 
   const ReactionPicker = ({ targetId, isReply, parentCommentId, onClose }) => (
-    <div className="position-absolute bg-white rounded-pill shadow-sm border p-2 d-flex gap-1" 
-         style={{ bottom: '100%', left: '0', zIndex: 1000 }}>
+    <div className="position-absolute bg-white rounded-pill shadow-sm border p-2 d-flex gap-1"
+      style={{ bottom: '100%', left: '0', zIndex: 1000 }}>
       {Object.entries(REACTIONS).map(([type, reaction]) => {
         const Icon = reaction.icon;
         return (
@@ -422,9 +432,9 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
           >
             {userReaction ? (
               <>
-                {React.createElement(REACTIONS[userReaction].icon, { 
-                  color: REACTIONS[userReaction].color, 
-                  size: 16 
+                {React.createElement(REACTIONS[userReaction].icon, {
+                  color: REACTIONS[userReaction].color,
+                  size: 16
                 })}
                 <span>{REACTIONS[userReaction].label}</span>
               </>
@@ -435,9 +445,9 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
               </>
             )}
           </button>
-          
+
           {showReactionPicker === targetId && (
-            <ReactionPicker 
+            <ReactionPicker
               targetId={targetId}
               isReply={isReply}
               parentCommentId={parentCommentId}
@@ -492,11 +502,12 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                         style={{ width: "35px", height: "35px", objectFit: "cover" }}
                       />
                       <div className="flex-grow-1">
-                        <div className="bg-light rounded-3 p-3" style={{ maxWidth: '85%' }}>
+                        <div className={`rounded-3 p-3 ${themeClasses.bubble}`} style={{ maxWidth: '85%' }}>
                           <div className="d-flex justify-content-between align-items-start mb-2">
-                            <strong className="text-primary small">{comment.userName}</strong>
+                            <strong className={`${themeClasses.textPrimary} small`}>{comment.userName}</strong>
                             <div className="d-flex align-items-center gap-2">
-                              <small className="text-muted">{formatTimeAgo(comment.createdAt)}</small>
+                              <small className={themeClasses.textMuted}>{formatTimeAgo(comment.createdAt)}</small>
+
                               {auth.currentUser?.uid === comment.userId && (
                                 <button
                                   className="btn btn-link p-0 text-muted"
@@ -511,15 +522,15 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                             {comment.content}
                           </p>
                         </div>
-                        
+
                         {/* Comment Actions */}
                         <div className="d-flex align-items-center gap-3 mt-2 ms-2">
-                          <ReactionDisplay 
+                          <ReactionDisplay
                             reactions={comment.reactions}
                             targetId={comment.id}
                             isReply={false}
                           />
-                          
+
                           <button
                             className="btn btn-link text-muted p-0 d-flex align-items-center gap-1"
                             onClick={() => {
@@ -559,7 +570,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                                   style={{ width: "30px", height: "30px", objectFit: "cover" }}
                                 />
                                 <div className="flex-grow-1">
-                                  <div className="bg-light rounded-3 p-2" style={{ maxWidth: '80%' }}>
+                                  <div className={`rounded-3 p-2 ${themeClasses.bubble}`} style={{ maxWidth: '80%' }}>
                                     <div className="d-flex justify-content-between align-items-start mb-1">
                                       <strong className="text-primary small">{reply.userName}</strong>
                                       <div className="d-flex align-items-center gap-2">
@@ -578,10 +589,10 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                                       {reply.content}
                                     </p>
                                   </div>
-                                  
+
                                   {/* Reply Actions */}
                                   <div className="mt-1 ms-2">
-                                    <ReactionDisplay 
+                                    <ReactionDisplay
                                       reactions={reply.reactions}
                                       targetId={reply.id}
                                       isReply={true}
@@ -629,7 +640,12 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
           {/* Main Comment Input */}
           <div className="mt-4">
             <hr />
-            <form onSubmit={handleCommentSubmit} className="d-flex gap-3 align-items-start">
+            <form onSubmit={handleCommentSubmit} style={{
+              backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.95)' : 'rgba(30,30,30,0.95)',
+              borderRadius: '12px',
+              padding: '20px',
+              transition: 'background-color 0.3s ease'
+            }} className="d-flex gap-3 align-items-start">
               <img
                 src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/35"}
                 alt="Your avatar"
@@ -642,18 +658,11 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Write a comment..."
-                    className="form-control border-2"
+                    className={`form-control border-2 ${themeClasses.border} ${theme === "dark" ? "bg-dark text-light" : "bg-white text-dark"}`}
                     rows="3"
                     style={{ resize: "none", borderRadius: '20px', paddingRight: '70px' }}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        if (commentText.trim()) {
-                          handleCommentSubmit(e);
-                        }
-                      }
-                    }}
                   />
+
                   <button
                     type="submit"
                     className="btn btn-primary btn-sm rounded-pill position-absolute"

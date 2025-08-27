@@ -70,9 +70,9 @@ const PostItem = ({ post }) => {
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
-              <Dropdown.Item onClick={() => setIsEditing(true)}>Sửa</Dropdown.Item>
+              <Dropdown.Item onClick={() => setIsEditing(true)}>Edit</Dropdown.Item>
               <Dropdown.Item onClick={handleDelete} className="text-danger">
-                Xóa
+                Delete
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

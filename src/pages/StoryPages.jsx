@@ -27,11 +27,11 @@ const Storys = () => {
 
   // emoji phổ biến (40 emoji)
   const icons = [
-    "😀","😃","😄","😁","😆","🥹","😂","🤣",
-    "😊","😇","😍","🥰","😘","😋","😜","🤪",
-    "😎","🤩","🥳","😏","😌","😴","😒","🙄",
-    "😔","😢","😭","😡","🤬","🤯","😱","😳",
-    "🤔","🤨","😐","😶","😇","🤗","🤝","🙏"
+    "😀", "😃", "😄", "😁", "😆", "🥹", "😂", "🤣",
+    "😊", "😇", "😍", "🥰", "😘", "😋", "😜", "🤪",
+    "😎", "🤩", "🥳", "😏", "😌", "😴", "😒", "🙄",
+    "😔", "😢", "😭", "😡", "🤬", "🤯", "😱", "😳",
+    "🤔", "🤨", "😐", "😶", "😇", "🤗", "🤝", "🙏"
   ];
 
   // ===== Fetch stories & auto-delete expired (24h) =====
@@ -341,17 +341,13 @@ const Storys = () => {
           {stories.map((story) => (
             <article
               key={story.id}
-              className="group relative overflow-hidden rounded-2xl bg-white shadow hover:shadow-lg transition ring-1 ring-gray-200"
+              className="group relative overflow-hidden rounded-2xl shadow hover:shadow-lg transition aspect-[9/16]" // ✅ story tỉ lệ 9:16
             >
               {story.mediaFiles?.map((media, idx) => (
-                <div key={idx} className="relative">
+                <div key={idx} className="absolute inset-0">
+                  {/* Video chiếm toàn card */}
                   <video
-                    className="w-full h-80 object-cover"
-                    poster={
-                      media.publicId
-                        ? `https://res.cloudinary.com/${import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME}/video/upload/${media.publicId}.jpg`
-                        : undefined
-                    }
+                    className="absolute inset-0 w-full h-full object-cover"
                     onMouseEnter={(e) => handleHoverPlay(e, 'enter')}
                     onMouseLeave={(e) => handleHoverPlay(e, 'leave')}
                     playsInline
@@ -360,7 +356,9 @@ const Storys = () => {
                   >
                     <source src={media.url} type="video/mp4" />
                   </video>
-                  <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-3">
+
+                  {/* Overlay: avatar + name + time */}
+                  <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-3 bg-gradient-to-b from-black/50 to-transparent">
                     <div className="flex items-center gap-2">
                       <img
                         src={story.userAvatar || '/default-avatar.png'}
@@ -375,41 +373,40 @@ const Storys = () => {
                       {timeLeftText(story.createdAt)}
                     </span>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent" />
+
+                  {/* Overlay: gradient + title */}
+                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+                    <h3 className="text-white text-base font-semibold line-clamp-2 drop-shadow">
+                      {story.title || 'Untitled'}
+                    </h3>
+                  </div>
+
+                  {/* Overlay: delete button */}
+                  {story.userId === currentUserId && (
+                    <div className="absolute bottom-4 right-4">
+                      <button
+                        onClick={async () => {
+                          const ok = confirm('Delete this story?');
+                          if (!ok) return;
+                          try {
+                            await deleteDoc(doc(db, 'Stories', story.id));
+                            toast.success('Story deleted', { position: 'top-center' });
+                          } catch {
+                            toast.error('Failed to delete story', { position: 'top-center' });
+                          }
+                        }}
+                        className="rounded-lg bg-red-500/80 text-white px-3 py-1 text-sm hover:bg-red-600 transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
-
-              <div className="relative z-10 -mt-16 px-4 pb-4">
-                <h3 className="text-white text-base font-semibold line-clamp-2 drop-shadow">
-                  {story.title || 'Untitled'}
-                </h3>
-              </div>
-
-              <div className="flex items-center justify-between px-4 pb-4">
-                <span className="text-xs text-gray-500">
-                  {new Date(story.createdAt).toLocaleString()}
-                </span>
-                {story.userId === currentUserId && (
-                  <button
-                    onClick={async () => {
-                      const ok = confirm('Delete this story?');
-                      if (!ok) return;
-                      try {
-                        await deleteDoc(doc(db, 'Stories', story.id));
-                        toast.success('Story deleted', { position: 'top-center' });
-                      } catch {
-                        toast.error('Failed to delete story', { position: 'top-center' });
-                      }
-                    }}
-                    className="rounded-lg bg-red-50 text-red-600 px-3 py-1 text-sm hover:bg-red-100 transition"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
             </article>
           ))}
         </div>
+
       )}
     </div>
   );

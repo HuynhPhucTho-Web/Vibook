@@ -12,14 +12,7 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
-import {
-  FaUsers,
-  FaPlus,
-  FaSignInAlt,
-  FaSignOutAlt,
-  FaComments,
-  FaTimes,
-} from "react-icons/fa";
+import { FaUsers, FaPlus, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { FaHouse } from "react-icons/fa6";
 
@@ -79,10 +72,7 @@ const Groups = () => {
       },
       (error) => {
         console.error("Error fetching groups:", error);
-        toast.error("Không thể tải danh sách nhóm", {
-          position: "top-center",
-          autoClose: 3000,
-        });
+        toast.error("Không thể tải danh sách nhóm");
         setIsLoading(false);
       }
     );
@@ -108,11 +98,11 @@ const Groups = () => {
     async (e) => {
       e.preventDefault();
       if (!groupName.trim()) {
-        toast.error("Tên nhóm không được để trống", { position: "top-center" });
+        toast.error("Tên nhóm không được để trống");
         return;
       }
       if (!currentUser) {
-        toast.error("Vui lòng đăng nhập để tạo nhóm", { position: "top-center" });
+        toast.error("Vui lòng đăng nhập để tạo nhóm");
         return;
       }
 
@@ -129,32 +119,27 @@ const Groups = () => {
         setGroupName("");
         setGroupDescription("");
         setShowCreateModal(false);
-        toast.success("Tạo nhóm thành công!", {
-          position: "top-center",
-          autoClose: 2000,
-        });
+        toast.success("Tạo nhóm thành công!");
       } catch (error) {
         console.error("Error creating group:", error);
-        toast.error("Không thể tạo nhóm", { position: "top-center" });
+        toast.error("Không thể tạo nhóm");
       }
     },
     [groupName, groupDescription, currentUser]
   );
 
-  // Join group
+  // Join / Leave / Delete group
   const handleJoinGroup = async (groupId, members) => {
     if (!currentUser) return;
     try {
       const groupRef = doc(db, "Groups", groupId);
       await updateDoc(groupRef, { members: [...members, currentUser.uid] });
       toast.success("Tham gia nhóm thành công!");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Không thể tham gia nhóm");
     }
   };
 
-  // Leave group
   const handleLeaveGroup = async (groupId, members) => {
     if (!currentUser) return;
     try {
@@ -163,13 +148,11 @@ const Groups = () => {
         members: members.filter((uid) => uid !== currentUser.uid),
       });
       toast.success("Rời nhóm thành công!");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Không thể rời nhóm");
     }
   };
 
-  // Delete group
   const handleDeleteGroup = async (groupId, ownerId) => {
     if (!currentUser || currentUser.uid !== ownerId) {
       toast.error("Chỉ chủ nhóm có thể xóa nhóm");
@@ -178,8 +161,7 @@ const Groups = () => {
     try {
       await deleteDoc(doc(db, "Groups", groupId));
       toast.success("Xóa nhóm thành công!");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Không thể xóa nhóm");
     }
   };
@@ -205,7 +187,11 @@ const Groups = () => {
 
   if (!currentUser) {
     return (
-      <div className={`container mx-auto p-4 ${theme}`}>
+      <div
+        className={`container mx-auto p-4 transition-colors duration-300 ${
+          theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
+        }`}
+      >
         <h5 className="text-center text-gray-500 dark:text-gray-400">
           Vui lòng đăng nhập để xem và tham gia nhóm
         </h5>
@@ -214,7 +200,11 @@ const Groups = () => {
   }
 
   return (
-    <div className={`min-h-screen p-4 ${theme}`}>
+    <div
+      className={`min-h-screen p-4 transition-colors duration-300 ${
+        theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
+      }`}
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
@@ -305,7 +295,6 @@ const Groups = () => {
                   key={group.id}
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                 >
-                  {/* Banner giả */}
                   <div className="h-24 bg-gradient-to-r from-blue-400 to-purple-500"></div>
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">

@@ -8,12 +8,11 @@ import PostItem from "../components/PostItem";
 import UpdateProfile from "../components/UpdateProfile";
 
 function Profile() {
-  const { themes, theme } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
 
-  
   const fetchUserData = useCallback((user) => {
     if (!user) {
       setUserDetails(null);
@@ -64,28 +63,45 @@ function Profile() {
   if (!userDetails) return <p>Please login to see profile</p>;
 
   return (
-    <div className={`min-vh-100 ${themes[theme]}`}>
-      <div className="container py-4">
-        <div className="card mb-4 shadow-sm">
-          <div className="card-body">
-            
+    <div
+      className={`min-h-screen transition-colors duration-300 ${
+        theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
+      }`}
+    >
+      <div className="container mx-auto py-4">
+        {/* Card thông tin user */}
+        <div
+          className={`rounded-2xl shadow-md mb-4 transition-colors duration-300 ${
+            theme === "dark" ? "bg-gray-800 text-gray-200" : "bg-white text-gray-800"
+          }`}
+        >
+          <div className="p-4">
             <UpdateProfile
               userDetails={userDetails}
-              onUpdated={(updated) => setUserDetails((prev) => ({ ...prev, ...updated }))}
+              onUpdated={(updated) =>
+                setUserDetails((prev) => ({ ...prev, ...updated }))
+              }
             />
           </div>
         </div>
 
-        
-        <PostCreator onPostCreated={(newPost) => setPosts((prev) => [newPost, ...prev])} />
+        {/* Form tạo post */}
+        <PostCreator
+          onPostCreated={(newPost) => setPosts((prev) => [newPost, ...prev])}
+        />
 
-        
+        {/* Danh sách post */}
         {posts.length > 0 ? (
           posts.map((post) => (
-            <PostItem key={post.id} post={post} auth={auth} userDetails={userDetails} />
+            <PostItem
+              key={post.id}
+              post={post}
+              auth={auth}
+              userDetails={userDetails}
+            />
           ))
         ) : (
-          <p className="text-center">No posts yet</p>
+          <p className="text-center mt-4">No posts yet</p>
         )}
       </div>
     </div>

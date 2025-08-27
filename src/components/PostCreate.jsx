@@ -3,7 +3,7 @@ import { auth, db } from "../components/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
-import { FaImage, FaVideo, FaFile } from "react-icons/fa";
+import { FaImage, FaVideo, FaFile, FaEdit, FaSmile } from "react-icons/fa";
 import { AdvancedImage, AdvancedVideo } from "@cloudinary/react";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { auto } from "@cloudinary/url-gen/actions/resize";
@@ -13,11 +13,11 @@ import { ThemeProvider } from "../context/ThemeProvider";
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
   const [postContent, setPostContent] = useState("");
-  const [mediaFiles, setMediaFiles] = useState([]); // Hỗ trợ nhiều file
+  const [mediaFiles, setMediaFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  
+  const [isFocused, setIsFocused] = useState(false);
 
   // File size limits (MB)
   const FILE_SIZE_LIMITS = {
@@ -39,10 +39,105 @@ const PostCreator = ({ onPostCreated }) => {
     timeStyle: "long",
   });
 
+  // Theme-based styles - Cải tiến
+  const getThemeStyles = () => {
+    const baseStyles = {
+      card: {
+        backgroundColor: theme === 'light'
+          ? 'rgba(255, 255, 255, 0.95)'
+          : 'rgba(30, 30, 30, 0.95)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: theme === 'light'
+          ? '1px solid rgba(0, 0, 0, 0.1)'
+          : '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '16px',
+        boxShadow: theme === 'light'
+          ? '0 8px 32px rgba(0, 0, 0, 0.1)'
+          : '0 8px 32px rgba(0, 0, 0, 0.3)',
+        color: theme === 'light' ? '#000' : '#fff',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      },
+      textarea: {
+        backgroundColor: theme === 'light'
+          ? 'rgba(248, 250, 252, 0.9)'  // Sáng hơn cho light mode
+          : 'rgba(45, 55, 72, 0.9)',    // Tối hơn cho dark mode
+        border: `2px solid ${isFocused
+          ? (theme === 'light' ? 'rgba(79, 172, 254, 0.6)' : 'rgba(129, 140, 248, 0.6)')
+          : (theme === 'light' ? 'rgba(226, 232, 240, 0.8)' : 'rgba(75, 85, 99, 0.6)')
+          }`,
+        borderRadius: '12px',
+        color: theme === 'light' ? '#1a202c' : '#f7fafc',  // Contrast cao hơn
+        transition: 'all 0.3s ease',
+        padding: '12px 16px 12px 45px',
+        fontSize: '1rem',
+        lineHeight: '1.6',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        // Thêm shadow để nổi bật hơn
+        boxShadow: theme === 'light'
+          ? isFocused
+            ? '0 4px 20px rgba(79, 172, 254, 0.15)'
+            : '0 2px 8px rgba(0, 0, 0, 0.05)'
+          : isFocused
+            ? '0 4px 20px rgba(129, 140, 248, 0.25)'
+            : '0 2px 8px rgba(0, 0, 0, 0.2)'
+      },
+      textareaPlaceholder: {
+        color: theme === 'light' ? 'rgba(107, 114, 128, 0.8)' : 'rgba(156, 163, 175, 0.8)'
+      },
+      button: {
+        backgroundColor: theme === 'light'
+          ? 'linear-gradient(135deg, #667eea, #764ba2)'
+          : 'linear-gradient(135deg, #4facfe, #00f2fe)',
+        border: 'none',
+        borderRadius: '10px',
+        color: '#fff',
+        fontWeight: '600',
+        padding: '8px 24px',
+        transition: 'all 0.3s ease',
+        transform: 'scale(1)',
+        boxShadow: theme === 'light'
+          ? '0 4px 15px rgba(102, 126, 234, 0.4)'
+          : '0 4px 15px rgba(79, 172, 254, 0.4)'
+      },
+      iconButton: {
+        color: theme === 'light' ? 'rgba(55, 65, 81, 0.8)' : 'rgba(229, 231, 235, 0.8)',
+        backgroundColor: theme === 'light'
+          ? 'rgba(249, 250, 251, 0.8)'
+          : 'rgba(55, 65, 81, 0.5)',
+        border: `1px solid ${theme === 'light' ? 'rgba(229, 231, 235, 0.6)' : 'rgba(75, 85, 99, 0.6)'}`,
+        borderRadius: '8px',
+        padding: '8px 12px',
+        transition: 'all 0.3s ease',
+        fontSize: '0.9rem',
+        backdropFilter: 'blur(10px)'
+      },
+      textInput: {
+        color: theme === 'light' ? '#1a202c' : '#f7fafc'
+      },
+      inputIcon: {
+        position: 'absolute',
+        left: '15px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: theme === 'light'
+          ? (isFocused ? 'rgba(79, 172, 254, 0.8)' : 'rgba(107, 114, 128, 0.6)')
+          : (isFocused ? 'rgba(129, 140, 248, 0.8)' : 'rgba(156, 163, 175, 0.6)'),
+        fontSize: '1.1rem',
+        zIndex: 1,
+        transition: 'color 0.3s ease'
+      }
+    };
+
+    return baseStyles;
+  };
+
+  const styles = getThemeStyles();
+
   useEffect(() => {
     const cloudName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
-    
+
     if (!cloudName || !uploadPreset) {
       console.error(`[${currentDateTime}] Missing Cloudinary environment variables`);
       toast.error("Cloudinary configuration is missing. Please check your .env file.", {
@@ -85,16 +180,16 @@ const PostCreator = ({ onPostCreated }) => {
   // Validate file
   const validateFile = (file) => {
     const category = getFileCategory(file.type);
-    
+
     if (category === 'unknown') {
       return { valid: false, error: `File type ${file.type} is not supported` };
     }
 
     const maxSize = FILE_SIZE_LIMITS[category] * 1024 * 1024;
     if (file.size > maxSize) {
-      return { 
-        valid: false, 
-        error: `${category.charAt(0).toUpperCase() + category.slice(1)} file must be less than ${FILE_SIZE_LIMITS[category]}MB` 
+      return {
+        valid: false,
+        error: `${category.charAt(0).toUpperCase() + category.slice(1)} file must be less than ${FILE_SIZE_LIMITS[category]}MB`
       };
     }
 
@@ -105,7 +200,7 @@ const PostCreator = ({ onPostCreated }) => {
   const createFilePreview = (file) => {
     return new Promise((resolve, reject) => {
       const category = getFileCategory(file.type);
-      
+
       if (category === 'image') {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
@@ -115,7 +210,6 @@ const PostCreator = ({ onPostCreated }) => {
         const videoUrl = URL.createObjectURL(file);
         resolve(videoUrl);
       } else {
-        // For documents, use a generic icon or first page preview
         resolve(null);
       }
     });
@@ -124,17 +218,17 @@ const PostCreator = ({ onPostCreated }) => {
   // Handle multiple file uploads
   const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files);
-    
+
     if (mediaFiles.length + files.length > 5) {
       toast.error("Maximum 5 files allowed per post", { position: "top-center" });
       return;
     }
 
     const validFiles = [];
-    
+
     for (const file of files) {
       const validation = validateFile(file);
-      
+
       if (!validation.valid) {
         toast.error(validation.error, { position: "top-center" });
         continue;
@@ -143,7 +237,7 @@ const PostCreator = ({ onPostCreated }) => {
       try {
         const preview = await createFilePreview(file);
         const fileCategory = getFileCategory(file.type);
-        
+
         validFiles.push({
           file,
           preview,
@@ -151,7 +245,7 @@ const PostCreator = ({ onPostCreated }) => {
           type: file.type,
           name: file.name,
           size: file.size,
-          id: Date.now() + Math.random() // Unique ID
+          id: Date.now() + Math.random()
         });
       } catch (error) {
         console.error(`Error creating preview for ${file.name}:`, error);
@@ -178,8 +272,7 @@ const PostCreator = ({ onPostCreated }) => {
     const formData = new FormData();
     formData.append("file", fileData.file);
     formData.append("upload_preset", import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET);
-    
-    // Add resource type based on file category
+
     if (fileData.category === 'document') {
       formData.append("resource_type", "raw");
     } else if (fileData.category === 'video') {
@@ -240,42 +333,36 @@ const PostCreator = ({ onPostCreated }) => {
     try {
       let uploadedMedia = [];
 
-      // Upload all media files
       if (mediaFiles.length > 0) {
         for (let i = 0; i < mediaFiles.length; i++) {
           const uploadResult = await uploadFileToCloudinary(mediaFiles[i], i, mediaFiles.length);
           uploadedMedia.push(uploadResult);
-          
-          // Update progress
+
           const progress = ((i + 1) / mediaFiles.length) * 100;
           setUploadProgress(progress);
         }
       }
 
-      // Create post data
       const postData = {
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || "Anonymous",
         userPhoto: auth.currentUser.photoURL || "https://via.placeholder.com/40",
         content: postContent,
-        mediaFiles: uploadedMedia, // Array of media objects
+        mediaFiles: uploadedMedia,
         createdAt: Date.now(),
         likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
         reactedBy: {},
         comments: [],
       };
 
-      // Save to Firestore
       console.log(`[${currentDateTime}] Saving to Posts collection...`);
       const postRef = await addDoc(collection(db, "Posts"), postData);
       console.log(`[${currentDateTime}] Post saved successfully with ID:`, postRef.id);
 
-      // Reset form
       setPostContent("");
       setMediaFiles([]);
       setUploadProgress(0);
 
-      // Notify parent component
       const completePostData = {
         ...postData,
         id: postRef.id,
@@ -300,20 +387,34 @@ const PostCreator = ({ onPostCreated }) => {
   const renderFilePreview = (fileData) => {
     const { category, preview, name, id, file } = fileData;
 
+    const previewStyle = {
+      backgroundColor: theme === 'light' ? 'rgba(248, 250, 252, 0.9)' : 'rgba(45, 55, 72, 0.9)',
+      border: `1px solid ${theme === 'light' ? 'rgba(226, 232, 240, 0.8)' : 'rgba(75, 85, 99, 0.6)'}`,
+      borderRadius: '12px',
+      overflow: 'hidden',
+      backdropFilter: 'blur(10px)'
+    };
+
     switch (category) {
       case 'image':
         return (
-          <div key={id} className="position-relative d-inline-block me-2 mb-2">
+          <div key={id} className="position-relative d-inline-block me-2 mb-2" style={previewStyle}>
             <img
               src={preview}
               alt={name}
               style={{ maxWidth: "150px", maxHeight: "150px", objectFit: "cover" }}
-              className="img-fluid rounded"
+              className="img-fluid"
             />
             <button
               type="button"
-              className="btn btn-danger btn-sm position-absolute top-0 end-0"
-              style={{ fontSize: "10px", padding: "2px 5px" }}
+              className="btn btn-danger btn-sm position-absolute"
+              style={{
+                top: '5px',
+                right: '5px',
+                fontSize: "10px",
+                padding: "4px 8px",
+                borderRadius: '50%'
+              }}
               onClick={() => removeFile(id)}
               disabled={isUploading}
             >
@@ -324,19 +425,24 @@ const PostCreator = ({ onPostCreated }) => {
 
       case 'video':
         return (
-          <div key={id} className="position-relative d-inline-block me-2 mb-2">
+          <div key={id} className="position-relative d-inline-block me-2 mb-2" style={previewStyle}>
             <video
               controls
               style={{ maxWidth: "150px", maxHeight: "150px" }}
-              className="rounded"
             >
               <source src={preview} type={file.type} />
               Your browser does not support the video tag.
             </video>
             <button
               type="button"
-              className="btn btn-danger btn-sm position-absolute top-0 end-0"
-              style={{ fontSize: "10px", padding: "2px 5px" }}
+              className="btn btn-danger btn-sm position-absolute"
+              style={{
+                top: '5px',
+                right: '5px',
+                fontSize: "10px",
+                padding: "4px 8px",
+                borderRadius: '50%'
+              }}
               onClick={() => removeFile(id)}
               disabled={isUploading}
             >
@@ -347,18 +453,28 @@ const PostCreator = ({ onPostCreated }) => {
 
       case 'document':
         return (
-          <div key={id} className="position-relative d-inline-block me-2 mb-2 p-2 border rounded">
+          <div key={id} className="position-relative d-inline-block me-2 mb-2 p-3" style={previewStyle}>
             <div className="d-flex align-items-center">
-              <FaFile className="me-2 text-primary" />
+              <FaFile className="me-2 text-primary" size={20} />
               <div>
-                <small className="d-block">{name}</small>
-                <small className="text-muted">{(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                <small className="d-block" style={{ color: theme === 'light' ? '#1a202c' : '#f7fafc' }}>
+                  {name}
+                </small>
+                <small style={{ color: theme === 'light' ? 'rgba(107, 114, 128, 0.8)' : 'rgba(156, 163, 175, 0.8)' }}>
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </small>
               </div>
             </div>
             <button
               type="button"
-              className="btn btn-danger btn-sm position-absolute top-0 end-0"
-              style={{ fontSize: "10px", padding: "2px 5px" }}
+              className="btn btn-danger btn-sm position-absolute"
+              style={{
+                top: '5px',
+                right: '5px',
+                fontSize: "10px",
+                padding: "4px 8px",
+                borderRadius: '50%'
+              }}
               onClick={() => removeFile(id)}
               disabled={isUploading}
             >
@@ -373,37 +489,85 @@ const PostCreator = ({ onPostCreated }) => {
   };
 
   if (isLoadingAuth) {
-    return <div>Loading...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center p-4">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <ThemeProvider>
-    <div className={`card mb-2 shadow-sm ${theme}`}>
-      <div className="card-body">
-        <div className="d-flex align-items-center mb-3">
-          <img
-            src={auth.currentUser?.photoURL || "https://via.placeholder.com/40"}
-            alt="Profile"
-            className="rounded-circle me-3"
-            style={{ width: "40px", height: "40px", objectFit: "cover" }}
-          />
-          <h6 className="mb-0">What's on your mind?</h6>
+    <div className="card mb-4 shadow-lg" style={styles.card}>
+      <div className="card-body p-4">
+        <div className="d-flex align-items-center mb-4">
+          <div className="position-relative">
+            <img
+              src={auth.currentUser?.photoURL || "https://via.placeholder.com/40"}
+              alt="Profile"
+              className="rounded-circle me-3"
+              style={{
+                width: "48px",
+                height: "48px",
+                objectFit: "cover",
+                border: `3px solid ${theme === 'light' ? 'rgba(102, 126, 234, 0.3)' : 'rgba(79, 172, 254, 0.3)'}`
+              }}
+            />
+            <div
+              className="position-absolute"
+              style={{
+                bottom: '2px',
+                right: '10px',
+                width: '14px',
+                height: '14px',
+                backgroundColor: '#28a745',
+                borderRadius: '50%',
+                border: `2px solid ${theme === 'light' ? '#fff' : '#1a1a1a'}`
+              }}
+            ></div>
+          </div>
+          <div>
+            <h6 className="mb-1" style={{ color: theme === 'light' ? '#1a202c' : '#f7fafc' }}>
+              {auth.currentUser?.displayName || "User"}
+            </h6>
+            <small style={{ color: theme === 'light' ? 'rgba(107, 114, 128, 0.8)' : 'rgba(156, 163, 175, 0.8)' }}>
+              What's on your mind?
+            </small>
+          </div>
         </div>
 
-        <form onSubmit={handlePostSubmit}>
-          <textarea
-            value={postContent}
-            onChange={(e) => setPostContent(e.target.value)}
-            placeholder="What's happening?"
-            className="form-control mb-3"
-            rows="3"
-            style={{ resize: "none" }}
-            disabled={isUploading}
-          />
+        <form onSubmit={handlePostSubmit} style={{
+          backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.95)' : 'rgba(30,30,30,0.95)',
+          borderRadius: '12px',
+          padding: '20px',
+          transition: 'background-color 0.3s ease'
+        }}>
+          <div className="position-relative mb-4">
+            <FaEdit style={styles.inputIcon} />
+            <textarea
+              value={postContent}
+              onChange={(e) => setPostContent(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder="Share your thoughts, ideas, or experiences..."
+              className="form-control"
+              rows="4"
+              style={{
+                ...styles.textarea,
+                resize: "none"
+              }}
+              disabled={isUploading}
+            />
+          </div>
 
           {/* Media previews */}
           {mediaFiles.length > 0 && (
-            <div className="mb-3">
+            <div className="mb-4">
+              <h6 className="mb-3" style={{ color: theme === 'light' ? '#1a202c' : '#f7fafc' }}>
+                <FaSmile className="me-2" />
+                Media Attachments ({mediaFiles.length}/5)
+              </h6>
               <div className="d-flex flex-wrap">
                 {mediaFiles.map(renderFilePreview)}
               </div>
@@ -412,26 +576,45 @@ const PostCreator = ({ onPostCreated }) => {
 
           {/* Upload progress */}
           {isUploading && uploadProgress > 0 && (
-            <div className="mb-3">
-              <div className="progress">
+            <div className="mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <small style={{ color: theme === 'light' ? '#1a202c' : '#f7fafc' }}>
+                  Uploading files...
+                </small>
+                <small style={{ color: theme === 'light' ? '#1a202c' : '#f7fafc' }}>
+                  {Math.round(uploadProgress)}%
+                </small>
+              </div>
+              <div
+                className="progress"
+                style={{
+                  height: '8px',
+                  borderRadius: '4px',
+                  backgroundColor: theme === 'light' ? 'rgba(226, 232, 240, 0.8)' : 'rgba(75, 85, 99, 0.6)'
+                }}
+              >
                 <div
                   className="progress-bar"
                   role="progressbar"
-                  style={{ width: `${uploadProgress}%` }}
+                  style={{
+                    width: `${uploadProgress}%`,
+                    background: 'linear-gradient(90deg, #667eea, #764ba2)',
+                    borderRadius: '4px',
+                    transition: 'width 0.3s ease'
+                  }}
                   aria-valuenow={uploadProgress}
                   aria-valuemin="0"
                   aria-valuemax="100"
-                >
-                  {Math.round(uploadProgress)}%
-                </div>
+                ></div>
               </div>
             </div>
           )}
 
           <div className="d-flex justify-content-between align-items-center">
-            <div className="d-flex">
-              <label className="btn btn-link text-primary me-2 p-1">
-                <FaImage /> Photo
+            <div className="d-flex align-items-center">
+              <label className="btn me-3" style={styles.iconButton}>
+                <FaImage className="me-2" style={{ color: '#28a745' }} />
+                <span>Photo</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -441,9 +624,10 @@ const PostCreator = ({ onPostCreated }) => {
                   disabled={isUploading || mediaFiles.length >= 5}
                 />
               </label>
-              
-              <label className="btn btn-link text-success me-2 p-1">
-                <FaVideo /> Video
+
+              <label className="btn me-3" style={styles.iconButton}>
+                <FaVideo className="me-2" style={{ color: '#dc3545' }} />
+                <span>Video</span>
                 <input
                   type="file"
                   accept="video/*"
@@ -453,9 +637,10 @@ const PostCreator = ({ onPostCreated }) => {
                   disabled={isUploading || mediaFiles.length >= 5}
                 />
               </label>
-              
-              <label className="btn btn-link text-warning me-2 p-1">
-                <FaFile /> Document
+
+              <label className="btn" style={styles.iconButton}>
+                <FaFile className="me-2" style={{ color: '#ffc107' }} />
+                <span>File</span>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
@@ -466,23 +651,79 @@ const PostCreator = ({ onPostCreated }) => {
                 />
               </label>
             </div>
-            
+
             <button
               type="submit"
-              className="btn btn-primary"
+              className="btn"
+              style={{
+                ...styles.button,
+                background: styles.button.backgroundColor,
+                opacity: (!postContent.trim() && mediaFiles.length === 0) || isUploading ? 0.6 : 1
+              }}
               disabled={(!postContent.trim() && mediaFiles.length === 0) || isUploading}
+              onMouseOver={(e) => {
+                if (!e.target.disabled) {
+                  e.target.style.transform = 'scale(1.05)';
+                  e.target.style.boxShadow = theme === 'light'
+                    ? '0 6px 20px rgba(102, 126, 234, 0.6)'
+                    : '0 6px 20px rgba(79, 172, 254, 0.6)';
+                }
+              }}
+              onMouseOut={(e) => {
+                e.target.style.transform = 'scale(1)';
+                e.target.style.boxShadow = styles.button.boxShadow;
+              }}
             >
-              {isUploading ? "Uploading..." : "Post"}
+              {isUploading ? (
+                <>
+                  <div className="spinner-border spinner-border-sm me-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  Uploading...
+                </>
+              ) : (
+                'Share Post'
+              )}
             </button>
           </div>
-          
+
           {mediaFiles.length >= 5 && (
-            <small className="text-muted">Maximum 5 files per post</small>
+            <div className="mt-3">
+              <small style={{ color: theme === 'light' ? 'rgba(255, 193, 7, 0.8)' : 'rgba(255, 193, 7, 1)' }}>
+                ⚠️ Maximum 5 files per post reached
+              </small>
+            </div>
           )}
         </form>
       </div>
+
+      <style jsx>{`
+        .btn:hover {
+          transform: translateY(-2px);
+        }
+        
+        .form-control:focus {
+          box-shadow: none !important;
+        }
+        
+        .form-control::placeholder {
+          color: ${theme === 'light' ? 'rgba(107, 114, 128, 0.7)' : 'rgba(156, 163, 175, 0.7)'} !important;
+        }
+        
+        .spinner-border-sm {
+          width: 1rem;
+          height: 1rem;
+        }
+        
+        .card {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card:hover {
+          transform: translateY(-2px);
+        }
+      `}</style>
     </div>
-    </ThemeProvider>
   );
 };
 
