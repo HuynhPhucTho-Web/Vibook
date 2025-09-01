@@ -5,14 +5,15 @@ const GroupSidebar = ({ group }) => {
   const { groupId } = useParams();
 
   const linkClass = ({ isActive }) =>
-    `block px-4 py-2 rounded-lg mb-2 ${
-      isActive ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-700"
+    `px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+      isActive
+        ? "bg-blue-600 text-white"
+        : "text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-300"
     }`;
 
   return (
-    <div className="bg-white dark:bg-gray-800 py-4">
-      <h2 className="text-xl font-bold mb-4">{group.name}</h2>
-      <nav className="space-y-2">
+    <div className="bg-white dark:bg-gray-800 shadow-md p-4 mb-4">
+      <nav className="flex flex-wrap gap-2">
         <NavLink to={`/groups/${groupId}`} end className={linkClass}>
           Home
         </NavLink>

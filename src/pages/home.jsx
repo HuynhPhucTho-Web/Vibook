@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useContext } from "react";
 import { auth, db } from "../components/firebase";
-import { doc, getDoc, onSnapshot, collection, query, getDocs } from "firebase/firestore";
+import { doc, onSnapshot, collection, query, getDocs } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
 import { FaSignOutAlt } from "react-icons/fa";
 import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
+import VideoCarousel from "../components/VideoCarousel";
 
 function Home() {
   const { theme, themes, bodyBackground } = useContext(ThemeContext);
@@ -120,11 +121,16 @@ function Home() {
   }
 
   return (
-
     <div
-      className={`container py-4 ${themes[theme]}`}
+      className={`container-fluid py-4 ${themes[theme]}`}
       style={{ backgroundColor: bodyBackground, minHeight: "100vh", transition: "all 0.3s ease" }}
     >
+      {/* Carousel Video */}
+      <div className="mb-4">
+        <VideoCarousel theme={theme} />
+      </div>
+
+      {/* Form tạo bài viết */}
       <PostCreator onPostCreated={handlePostCreated} />
 
       {/* Posts Feed */}
@@ -147,8 +153,8 @@ function Home() {
         )}
       </div>
     </div>
-
   );
+
 }
 
 export default Home;

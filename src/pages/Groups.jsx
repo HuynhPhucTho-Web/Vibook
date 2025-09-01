@@ -72,7 +72,7 @@ const Groups = () => {
       },
       (error) => {
         console.error("Error fetching groups:", error);
-        toast.error("Không thể tải danh sách nhóm");
+        toast.error("Failed to load groups");
         setIsLoading(false);
       }
     );
@@ -98,18 +98,18 @@ const Groups = () => {
     async (e) => {
       e.preventDefault();
       if (!groupName.trim()) {
-        toast.error("Tên nhóm không được để trống");
+        toast.error("Group name cannot be empty");
         return;
       }
       if (!currentUser) {
-        toast.error("Vui lòng đăng nhập để tạo nhóm");
+        toast.error("Please log in to create a group");
         return;
       }
 
       try {
         const groupData = {
           name: groupName.trim(),
-          description: groupDescription.trim() || "Không có mô tả",
+          description: groupDescription.trim() || "No description",
           ownerId: currentUser.uid,
           members: [currentUser.uid],
           createdAt: serverTimestamp(),
@@ -119,10 +119,10 @@ const Groups = () => {
         setGroupName("");
         setGroupDescription("");
         setShowCreateModal(false);
-        toast.success("Tạo nhóm thành công!");
+        toast.success("Group created successfully!");
       } catch (error) {
         console.error("Error creating group:", error);
-        toast.error("Không thể tạo nhóm");
+        toast.error("Failed to create group");
       }
     },
     [groupName, groupDescription, currentUser]
@@ -134,9 +134,9 @@ const Groups = () => {
     try {
       const groupRef = doc(db, "Groups", groupId);
       await updateDoc(groupRef, { members: [...members, currentUser.uid] });
-      toast.success("Tham gia nhóm thành công!");
+      toast.success("Joined group successfully!");
     } catch {
-      toast.error("Không thể tham gia nhóm");
+      toast.error("Failed to join group");
     }
   };
 
@@ -147,30 +147,30 @@ const Groups = () => {
       await updateDoc(groupRef, {
         members: members.filter((uid) => uid !== currentUser.uid),
       });
-      toast.success("Rời nhóm thành công!");
+      toast.success("Left group successfully!");
     } catch {
-      toast.error("Không thể rời nhóm");
+      toast.error("Failed to leave group");
     }
   };
 
   const handleDeleteGroup = async (groupId, ownerId) => {
     if (!currentUser || currentUser.uid !== ownerId) {
-      toast.error("Chỉ chủ nhóm có thể xóa nhóm");
+      toast.error("Only the group owner can delete the group");
       return;
     }
     try {
       await deleteDoc(doc(db, "Groups", groupId));
-      toast.success("Xóa nhóm thành công!");
+      toast.success("Group deleted successfully!");
     } catch {
-      toast.error("Không thể xóa nhóm");
+      toast.error("Failed to delete group");
     }
   };
 
   // Format timestamp
   const formatTimeAgo = (timestamp) => {
-    if (!timestamp) return "Vừa xong";
+    if (!timestamp) return "Just now";
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString("vi-VN", {
+    return date.toLocaleDateString("en-US", {
       day: "2-digit",
       month: "2-digit",
     });
@@ -193,7 +193,7 @@ const Groups = () => {
         }`}
       >
         <h5 className="text-center text-gray-500 dark:text-gray-400">
-          Vui lòng đăng nhập để xem và tham gia nhóm
+          Please log in to view and join groups
         </h5>
       </div>
     );
@@ -209,12 +209,12 @@ const Groups = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            Nhóm ({groups.length})
+            Groups ({groups.length})
           </h1>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <input
               type="text"
-              placeholder="🔍 Tìm kiếm nhóm..."
+              placeholder="🔍 Search groups..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full sm:w-64 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -224,7 +224,7 @@ const Groups = () => {
               onClick={() => setShowCreateModal(true)}
             >
               <FaPlus size={16} />
-              Tạo nhóm
+              Create Group
             </button>
           </div>
         </div>
@@ -238,7 +238,7 @@ const Groups = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  Tạo nhóm mới
+                  Create New Group
                 </h3>
                 <button
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -252,14 +252,14 @@ const Groups = () => {
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="Tên nhóm"
+                  placeholder="Group Name"
                   className="w-full p-2 mb-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                   required
                 />
                 <textarea
                   value={groupDescription}
                   onChange={(e) => setGroupDescription(e.target.value)}
-                  placeholder="Mô tả nhóm"
+                  placeholder="Group Description"
                   className="w-full p-2 mb-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                   rows={3}
                 />
@@ -269,13 +269,13 @@ const Groups = () => {
                     className="px-4 py-2 text-gray-500"
                     onClick={() => setShowCreateModal(false)}
                   >
-                    Hủy
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                   >
-                    Tạo
+                    Create
                   </button>
                 </div>
               </form>
@@ -295,7 +295,17 @@ const Groups = () => {
                   key={group.id}
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                 >
-                  <div className="h-24 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                  <div className="relative h-24">
+                    {group.bannerUrl ? (
+                      <img
+                        src={group.bannerUrl}
+                        alt={`${group.name} banner`}
+                        className="w-full h-24 object-cover"
+                      />
+                    ) : (
+                      <div className="h-24 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                    )}
+                  </div>
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 truncate">
@@ -314,14 +324,14 @@ const Groups = () => {
                       {group.description}
                     </p>
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-2">
-                      <FaUsers /> {group.members.length} thành viên
+                      <FaUsers /> {group.members.length} Members
                     </div>
                     <div className="mt-4 flex items-center justify-between">
                       <Link
                         to={`/groups/${group.id}`}
                         className="flex items-center gap-1 text-blue-500 hover:text-blue-600 dark:text-blue-400"
                       >
-                        <FaHouse /> Xem chi tiết
+                        <FaHouse /> View Details
                       </Link>
                       <button
                         className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
@@ -335,11 +345,11 @@ const Groups = () => {
                             : handleJoinGroup(group.id, group.members)
                         }
                       >
-                        {isMember ? "Rời nhóm" : "Tham gia"}
+                        {isMember ? "Leave Group" : "Join Group"}
                       </button>
                     </div>
                     <div className="text-xs text-gray-400 mt-2">
-                      Tạo: {formatTimeAgo(group.createdAt)}
+                      Created: {formatTimeAgo(group.createdAt)}
                     </div>
                   </div>
                 </div>
@@ -347,7 +357,7 @@ const Groups = () => {
             })
           ) : (
             <div className="col-span-full text-center py-8 text-gray-500">
-              Không tìm thấy nhóm nào
+              No groups found
             </div>
           )}
         </div>

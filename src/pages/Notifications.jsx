@@ -24,7 +24,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [userDetails, setUserDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Refs để theo dõi các listener và tránh duplicate
   const listenersRef = useRef(new Set());
   const processedNotificationsRef = useRef(new Set());
@@ -33,7 +33,7 @@ const Notifications = () => {
   // Component cho avatar với fallback
   const UserAvatar = React.memo(({ src, alt, size = 40 }) => {
     const [imageError, setImageError] = useState(false);
-    
+
     const avatarStyle = {
       width: `${size}px`,
       height: `${size}px`,
@@ -67,20 +67,20 @@ const Notifications = () => {
 
   const formatTimeAgo = useCallback((timestamp) => {
     if (!timestamp) return "";
-    
+
     const now = Date.now();
     const diff = now - timestamp;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return "Vừa xong";
-    if (minutes < 60) return `${minutes}p trước`;
-    if (hours < 24) return `${hours}h trước`;
-    if (days < 7) return `${days}d trước`;
-    return new Date(timestamp).toLocaleDateString("vi-VN", { 
-      day: '2-digit', 
-      month: '2-digit' 
+    if (minutes < 1) return "Just finished";
+    if (minutes < 60) return `${minutes}minutes ago`;
+    if (hours < 24) return `${hours}hour ago`;
+    if (days < 7) return `${days}the day before`;
+    return new Date(timestamp).toLocaleDateString("vi-VN", {
+      day: '2-digit',
+      month: '2-digit'
     });
   }, []);
 
@@ -88,7 +88,7 @@ const Notifications = () => {
   const cleanupOldNotifications = useCallback(async (userId) => {
     const now = Date.now();
     const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
-    
+
     // Chỉ cleanup mỗi 1 giờ để tránh spam
     if (now - lastCleanupRef.current < 3600000) return;
     lastCleanupRef.current = now;
@@ -99,16 +99,16 @@ const Notifications = () => {
         where("userId", "==", userId),
         where("createdAt", "<", sevenDaysAgo)
       );
-      
+
       const snapshot = await getDocs(oldNotificationsQuery);
-      
+
       if (snapshot.empty) return;
 
       const batch = writeBatch(db);
       snapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
       });
-      
+
       await batch.commit();
       console.log(`Deleted ${snapshot.size} old notifications`);
     } catch (error) {
@@ -119,11 +119,11 @@ const Notifications = () => {
   // Tạo thông báo với kiểm tra duplicate
   const createNotificationIfNotExists = useCallback(async (notificationData) => {
     const notificationKey = `${notificationData.type}_${notificationData.actorId}_${notificationData.postId || 'global'}_${Math.floor(notificationData.createdAt / 60000)}`; // Group theo phút
-    
+
     if (processedNotificationsRef.current.has(notificationKey)) {
       return; // Đã xử lý rồi, bỏ qua
     }
-    
+
     processedNotificationsRef.current.add(notificationKey);
 
     try {
@@ -161,7 +161,7 @@ const Notifications = () => {
               orderBy("createdAt", "desc"),
               limit(50) // Giới hạn 50 thông báo
             );
-            
+
             unsubscribeNotifications = onSnapshot(notificationsQuery, (snapshot) => {
               const notificationList = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -181,12 +181,12 @@ const Notifications = () => {
                   if (change.type === "added") {
                     const postData = change.doc.data();
                     const postCreatedAt = postData.createdAt;
-                    
+
                     // Chỉ tạo thông báo cho bài viết mới (trong vòng 5 phút)
-                    if (postData.userId !== user.uid && 
-                        postCreatedAt && 
-                        (Date.now() - postCreatedAt) < 300000) {
-                      
+                    if (postData.userId !== user.uid &&
+                      postCreatedAt &&
+                      (Date.now() - postCreatedAt) < 300000) {
+
                       createNotificationIfNotExists({
                         userId: user.uid,
                         type: "new_post",
@@ -194,7 +194,7 @@ const Notifications = () => {
                         actorName: postData.userName || "Anonymous",
                         actorPhoto: postData.userPhoto || null,
                         postId: change.doc.id,
-                        content: `${postData.userName || "Ai đó"} đã đăng một bài viết mới`,
+                        content: `${postData.userName || "Someone"} posted a new article`,
                         createdAt: Date.now(),
                         read: false,
                       });
@@ -211,7 +211,7 @@ const Notifications = () => {
               where("userId", "==", user.uid),
               limit(10) // Giới hạn theo dõi 10 bài viết gần nhất
             );
-            
+
             const unsubscribeUserPosts = onSnapshot(userPostsQuery, (snapshot) => {
               snapshot.docChanges().forEach((change) => {
                 const postData = change.doc.data();
@@ -221,13 +221,13 @@ const Notifications = () => {
                 if (change.type === "modified") {
                   const newReactedBy = postData.reactedBy || {};
                   const oldReactedBy = change.oldDoc ? (change.oldDoc.data().reactedBy || {}) : {};
-                  
+
                   Object.entries(newReactedBy).forEach(([actorId, reaction]) => {
                     if (actorId !== user.uid && !oldReactedBy[actorId]) {
                       // Get actor info từ reaction object
-                      const actorName = reaction.userName || "Ai đó";
+                      const actorName = reaction.userName || "Someone";
                       const actorPhoto = reaction.userPhoto || null;
-                      
+
                       createNotificationIfNotExists({
                         userId: user.uid,
                         type: "like",
@@ -235,7 +235,7 @@ const Notifications = () => {
                         actorName,
                         actorPhoto,
                         postId,
-                        content: `${actorName} đã thích bài viết của bạn`,
+                        content: `${actorName} liked your post`,
                         createdAt: Date.now(),
                         read: false,
                       });
@@ -247,32 +247,32 @@ const Notifications = () => {
                 const listenerId = `comments_${postId}`;
                 if (!listenersRef.current.has(listenerId)) {
                   listenersRef.current.add(listenerId);
-                  
+
                   const commentsQuery = query(
                     collection(db, "Posts", postId, "comments"),
                     orderBy("createdAt", "desc"),
                     limit(5) // Chỉ theo dõi 5 comments gần nhất
                   );
-                  
+
                   const unsubscribeComments = onSnapshot(commentsQuery, (commentSnapshot) => {
                     commentSnapshot.docChanges().forEach((commentChange) => {
                       if (commentChange.type === "added") {
                         const commentData = commentChange.doc.data();
                         const commentCreatedAt = commentData.createdAt;
-                        
+
                         // Chỉ tạo thông báo cho comment mới (trong vòng 2 phút)
-                        if (commentData.userId !== user.uid && 
-                            commentCreatedAt && 
-                            (Date.now() - commentCreatedAt) < 120000) {
-                          
+                        if (commentData.userId !== user.uid &&
+                          commentCreatedAt &&
+                          (Date.now() - commentCreatedAt) < 120000) {
+
                           createNotificationIfNotExists({
                             userId: user.uid,
                             type: "comment",
                             actorId: commentData.userId,
-                            actorName: commentData.userName || "Ai đó",
+                            actorName: commentData.userName || "Someone",
                             actorPhoto: commentData.userPhoto || null,
                             postId,
-                            content: `${commentData.userName || "Ai đó"} đã bình luận: "${commentData.content.slice(0, 30)}${commentData.content.length > 30 ? "..." : ""}"`,
+                            content: `${commentData.userName || "Someone"} commented: "${commentData.content.slice(0, 30)}${commentData.content.length > 30 ? "..." : ""}"`,
                             createdAt: Date.now(),
                             read: false,
                           });
@@ -280,7 +280,7 @@ const Notifications = () => {
                       }
                     });
                   });
-                  
+
                   activeListeners.add(unsubscribeComments);
                 }
               });
@@ -296,7 +296,7 @@ const Notifications = () => {
 
       } catch (error) {
         console.error("Setup listeners error:", error);
-        toast.error("Không thể tải thông báo", { position: "top-center" });
+        toast.error("Unable to load notification", { position: "top-center" });
         setIsLoading(false);
       }
     };
@@ -317,21 +317,21 @@ const Notifications = () => {
   const handleMarkAsRead = useCallback(async (notificationId) => {
     try {
       await updateDoc(doc(db, "Notifications", notificationId), { read: true });
-      toast.success("Đã đánh dấu là đã đọc", { 
-        position: "top-center", 
-        autoClose: 1000 
+      toast.success("Marked as read", {
+        position: "top-center",
+        autoClose: 1000
       });
-    } catch (error) {
-      toast.error("Không thể đánh dấu thông báo", { position: "top-center" });
+    } catch {
+      toast.error("Cannot mark all notifications", { position: "top-center" });
     }
   }, []);
 
   const handleMarkAllAsRead = useCallback(async () => {
     try {
       const unreadNotifications = notifications.filter((notif) => !notif.read);
-      
+
       if (unreadNotifications.length === 0) {
-        toast.info("Không có thông báo chưa đọc", { position: "top-center" });
+        toast.info("No unread notifications", { position: "top-center" });
         return;
       }
 
@@ -339,19 +339,19 @@ const Notifications = () => {
       unreadNotifications.forEach((notif) => {
         batch.update(doc(db, "Notifications", notif.id), { read: true });
       });
-      
+
       await batch.commit();
-      toast.success(`Đã đánh dấu ${unreadNotifications.length} thông báo là đã đọc`, { 
-        position: "top-center" 
+      toast.success(`Bookmarked ${unreadNotifications.length} notification is read`, {
+        position: "top-center"
       });
-    } catch (error) {
-      toast.error("Không thể đánh dấu tất cả thông báo", { position: "top-center" });
+    } catch {
+      toast.error("Cannot mark all notifications", { position: "top-center" });
     }
   }, [notifications]);
 
   const handleDeleteOldNotifications = useCallback(async () => {
     if (!auth.currentUser) return;
-    
+
     try {
       const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
       const oldNotificationsQuery = query(
@@ -359,11 +359,11 @@ const Notifications = () => {
         where("userId", "==", auth.currentUser.uid),
         where("createdAt", "<", threeDaysAgo)
       );
-      
+
       const snapshot = await getDocs(oldNotificationsQuery);
-      
+
       if (snapshot.empty) {
-        toast.info("Không có thông báo cũ để xóa", { position: "top-center" });
+        toast.info("No old messages to delete", { position: "top-center" });
         return;
       }
 
@@ -371,16 +371,16 @@ const Notifications = () => {
       snapshot.docs.forEach((doc) => {
         batch.delete(doc.ref);
       });
-      
+
       await batch.commit();
-      toast.success(`Đã xóa ${snapshot.size} thông báo cũ`, { position: "top-center" });
-    } catch (error) {
-      toast.error("Không thể xóa thông báo cũ", { position: "top-center" });
+      toast.success(`Deleteda ${snapshot.size} old notice`, { position: "top-center" });
+    } catch {
+      toast.error("Cannot mark all notifications", { position: "top-center" });
     }
   }, []);
 
   // Memoized notifications list
-  const notificationsList = React.useMemo(() => 
+  const notificationsList = React.useMemo(() =>
     notifications.map((notification) => (
       <div
         key={notification.id}
@@ -388,15 +388,15 @@ const Notifications = () => {
         style={{ borderRadius: "12px", overflow: "hidden" }}
       >
         <div className="card-body d-flex align-items-center p-3">
-          <UserAvatar 
-            src={notification.actorPhoto} 
+          <UserAvatar
+            src={notification.actorPhoto}
             alt={notification.actorName}
             size={40}
           />
           <div className="flex-grow-1 ms-3">
-            <p className="mb-0" style={{ 
-              fontSize: "0.9rem", 
-              fontWeight: notification.read ? "normal" : "600" 
+            <p className="mb-0" style={{
+              fontSize: "0.9rem",
+              fontWeight: notification.read ? "normal" : "600"
             }}>
               {notification.content}
             </p>
@@ -408,7 +408,7 @@ const Notifications = () => {
             <button
               className="btn btn-link text-primary p-1 ms-2"
               onClick={() => handleMarkAsRead(notification.id)}
-              title="Đánh dấu là đã đọc"
+              title="Mark as read"
               style={{ fontSize: '14px' }}
             >
               <FaCheckCircle />
@@ -431,7 +431,7 @@ const Notifications = () => {
   if (!userDetails) {
     return (
       <div className={`container py-4 ${theme}`}>
-        <h5 className="text-muted text-center">Vui lòng đăng nhập để xem thông báo</h5>
+        <h5 className="text-muted text-center">Please login to view notifications</h5>
       </div>
     );
   }
@@ -442,10 +442,10 @@ const Notifications = () => {
     <div className={`container py-4 ${theme}`}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h1 className="h3 mb-0">Thông báo</h1>
+          <h1 className="h3 mb-0">Notifications</h1>
           {unreadCount > 0 && (
             <small className="text-muted">
-              {unreadCount} thông báo chưa đọc
+              {unreadCount} unread notification
             </small>
           )}
         </div>
@@ -455,7 +455,7 @@ const Notifications = () => {
               className="btn btn-outline-primary btn-sm"
               onClick={handleMarkAllAsRead}
             >
-              <FaCheckCircle className="me-1" /> Đọc tất cả
+              <FaCheckCircle className="me-1" /> Mark all
             </button>
           )}
           <button
@@ -463,11 +463,11 @@ const Notifications = () => {
             onClick={handleDeleteOldNotifications}
             title="Xóa thông báo cũ hơn 3 ngày"
           >
-            <FaTrash className="me-1" /> Dọn dẹp
+            <FaTrash className="me-1" /> Clear up
           </button>
         </div>
       </div>
-      
+
       {notifications.length > 0 ? (
         <div className="d-flex flex-column gap-3">
           {notificationsList}

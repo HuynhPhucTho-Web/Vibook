@@ -68,7 +68,7 @@ function Profile() {
         theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
       }`}
     >
-      <div className="container mx-auto py-4">
+      <div className="container-fluid mx-auto py-4">
         {/* Card thông tin user */}
         <div
           className={`rounded-2xl shadow-md mb-4 transition-colors duration-300 ${

@@ -10,17 +10,17 @@ const PostItem = ({ post }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content || "");
 
-  // 🗑️ Xóa post
+  // Delete post
   const handleDelete = async () => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa bài viết này?")) return;
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
     try {
       await deleteDoc(doc(db, "Groups", post.groupId, "Posts", post.id));
     } catch (error) {
-      console.error("🔥 Lỗi khi xóa bài:", error);
+      console.error("Error deleting post:", error);
     }
   };
 
-  // ✏️ Cập nhật post
+  // Update post
   const handleUpdate = async () => {
     try {
       await updateDoc(doc(db, "Groups", post.groupId, "Posts", post.id), {
@@ -28,12 +28,12 @@ const PostItem = ({ post }) => {
       });
       setIsEditing(false);
     } catch (error) {
-      console.error("🔥 Lỗi khi cập nhật bài:", error);
+      console.error("Error updating post:", error);
     }
   };
 
   return (
-    <div className="p-4 border rounded-xl bg-white shadow space-y-2">
+    <div className="p-4 border rounded-2xl bg-white dark:bg-gray-800 shadow-md space-y-2">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -49,22 +49,24 @@ const PostItem = ({ post }) => {
             </div>
           )}
           <div>
-            <p className="font-semibold">{post.userName || "Ẩn danh"}</p>
+            <p className="font-semibold text-gray-800 dark:text-gray-200">
+              {post.userName || "Anonymous"}
+            </p>
             {post.createdAt?.toDate && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {post.createdAt.toDate().toLocaleString("vi-VN")}
               </p>
             )}
           </div>
         </div>
 
-        {/* Dropdown chỉ hiện với tác giả */}
+        {/* Dropdown for author */}
         {isAuthor && !isEditing && (
           <Dropdown align="end">
             <Dropdown.Toggle
               variant="light"
               id="dropdown-post-actions"
-              className="border-0 shadow-none"
+              className="border-0 shadow-none text-gray-500 dark:text-gray-400"
             >
               ⋮
             </Dropdown.Toggle>
@@ -83,32 +85,32 @@ const PostItem = ({ post }) => {
       {isEditing ? (
         <>
           <textarea
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
           />
           <div className="flex space-x-2 mt-2">
             <button
               onClick={handleUpdate}
-              className="bg-green-500 text-white px-3 py-1 rounded"
+              className="bg-green-500 text-white px-3 py-1 rounded-xl hover:bg-green-600 transition-colors"
             >
-              Lưu
+              Save
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="bg-gray-400 text-white px-3 py-1 rounded"
+              className="bg-gray-400 text-white px-3 py-1 rounded-xl hover:bg-gray-500 transition-colors"
             >
-              Hủy
+              Cancel
             </button>
           </div>
         </>
       ) : (
-        <p className="text-gray-800">{post.content}</p>
+        <p className="text-gray-800 dark:text-gray-200">{post.content}</p>
       )}
 
       {/* Media */}
       {post.mediaUrls?.length > 0 && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
           {post.mediaUrls.map((url, i) =>
             url.match(/\.(mp4|webm|ogg)$/) ? (
               <video
@@ -123,9 +125,9 @@ const PostItem = ({ post }) => {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 underline"
+                className="text-blue-600 dark:text-blue-400 underline"
               >
-                📄 File đính kèm
+                📄 Attached File
               </a>
             ) : (
               <img

@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, Outlet } from "react-router-dom";
-import { db } from "../components/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { db } from "../components/firebase";
 import { ThemeContext } from "../context/ThemeContext";
-
 import GroupHeader from "../components/group/GroupHeader";
 import GroupSidebar from "../components/group/GroupSidebar";
 
@@ -25,27 +24,36 @@ const GroupPage = () => {
   }, [groupId]);
 
   if (!group) {
-    return <div className="p-4 text-center">Đang tải nhóm...</div>;
+    return (
+      <div
+        className={`p-4 text-center transition-colors duration-300 ${theme === "dark" ? "text-gray-100" : "text-gray-900"
+          }`}
+      >
+        Loading Group...
+      </div>
+    );
   }
 
   return (
-   <div className={`min-h-screen ${theme}`}>
-  {/* Header */}
-  <GroupHeader group={group} />
+    <div
+      className={`min-h-screen w-full px-2 py-4 transition-colors duration-300 ${theme === "dark"
+          ? "bg-gray-900 text-gray-100"
+          : "bg-gray-100 text-gray-900"
+        }`}
+    >
+      <div className="w-full mx-auto h-full flex flex-col">
+        {/* Header */}
+        <GroupHeader group={group} />
 
-  <div className="w-full grid grid-cols-12 gap-4 py-4">
-    {/* Sidebar */}
-    <div className="col-span-12 lg:col-span-3">
-      <GroupSidebar group={group} />
+        {/* Horizontal Navigation */}
+        <GroupSidebar group={group} />
+
+        {/* Main Content */}
+        <div>
+          <Outlet context={{ group, groupId }} />
+        </div>
+      </div>
     </div>
-
-    {/* Nội dung tab */}
-    <div className="col-span-12 lg:col-span-9">
-      <Outlet context={{ group, groupId }} />
-    </div>
-  </div>
-</div>
-
   );
 };
 

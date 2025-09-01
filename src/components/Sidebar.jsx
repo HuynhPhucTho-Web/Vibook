@@ -6,7 +6,7 @@ import {
   FaUsers,
   FaCalendarAlt,
   FaVideo,
-  FaStore,
+  FaGamepad ,
   FaSignOutAlt,
   FaBars,
   FaTimes,
@@ -65,7 +65,7 @@ const Sidebar = () => {
     { path: "/groups", icon: FaUsers, label: "Groups" },
     { path: "/events", icon: FaCalendarAlt, label: "Events" },
     { path: "/story", icon: FaVideo, label: "Story" },
-    { path: "/playgame", icon: FaStore, label: "Play-Game" },
+    { path: "/playgame", icon: FaGamepad, label: "Play-Game" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -73,7 +73,7 @@ const Sidebar = () => {
 
   // Dynamic styles based on theme
   const headerHeight = 80;
-  
+
   const modernSidebarStyles = {
     width: sidebarWidth,
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -81,8 +81,8 @@ const Sidebar = () => {
     top: `${headerHeight}px`,
     left: 0,
     height: `calc(100vh - ${headerHeight}px)`,
-    background: theme === 'light' 
-      ? "rgba(255, 255, 255, 0.95)" 
+    background: theme === 'light'
+      ? "rgba(255, 255, 255, 0.95)"
       : "rgba(0, 0, 0, 0.08)",
     backdropFilter: "blur(20px)",
     WebkitBackdropFilter: "blur(20px)",
@@ -95,8 +95,8 @@ const Sidebar = () => {
   const headerStyles = {
     padding: "1.5rem 1rem",
     borderBottom: `1px solid ${theme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'}`,
-    background: theme === 'light' 
-      ? "rgba(0, 0, 0, 0.03)" 
+    background: theme === 'light'
+      ? "rgba(0, 0, 0, 0.03)"
       : "rgba(255, 255, 255, 0.03)",
     display: "flex",
     alignItems: "center",
@@ -104,8 +104,8 @@ const Sidebar = () => {
   };
 
   const toggleButtonStyles = {
-    background: theme === 'light' 
-      ? "rgba(0, 0, 0, 0.1)" 
+    background: theme === 'light'
+      ? "rgba(0, 0, 0, 0.1)"
       : "rgba(255, 255, 255, 0.1)",
     border: `1px solid ${theme === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'}`,
     borderRadius: "12px",
@@ -143,8 +143,8 @@ const Sidebar = () => {
     display: "flex",
     alignItems: "center",
     textDecoration: "none",
-    color: active 
-      ? (theme === 'light' ? "#000" : "#fff") 
+    color: active
+      ? (theme === 'light' ? "#000" : "#fff")
       : (theme === 'light' ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.8)"),
     transition: "all 0.3s ease",
     fontWeight: active ? "600" : "500",
@@ -174,8 +174,8 @@ const Sidebar = () => {
     top: "1rem",
     left: "1rem",
     zIndex: 1002,
-    background: theme === 'light' 
-      ? "rgba(0, 0, 0, 0.1)" 
+    background: theme === 'light'
+      ? "rgba(0, 0, 0, 0.1)"
       : "rgba(255, 255, 255, 0.1)",
     backdropFilter: "blur(10px)",
     border: `1px solid ${theme === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'}`,
@@ -218,10 +218,10 @@ const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`${isMobile
-            ? isMobileOpen
-              ? "d-block"
-              : "d-none"
-            : "d-block"
+          ? isMobileOpen
+            ? "d-block"
+            : "d-none"
+          : "d-block"
           }`}
         style={modernSidebarStyles}
       >
@@ -231,13 +231,13 @@ const Sidebar = () => {
             style={toggleButtonStyles}
             onClick={isMobile ? closeMobileSidebar : toggleSidebar}
             onMouseOver={(e) => {
-              e.target.style.background = theme === 'light' 
-                ? "rgba(0, 0, 0, 0.2)" 
+              e.target.style.background = theme === 'light'
+                ? "rgba(0, 0, 0, 0.2)"
                 : "rgba(255, 255, 255, 0.2)";
             }}
             onMouseOut={(e) => {
-              e.target.style.background = theme === 'light' 
-                ? "rgba(0, 0, 0, 0.1)" 
+              e.target.style.background = theme === 'light'
+                ? "rgba(0, 0, 0, 0.1)"
                 : "rgba(255, 255, 255, 0.1)";
             }}
           >
@@ -281,8 +281,8 @@ const Sidebar = () => {
                     onMouseOver={(e) => {
                       if (!active) {
                         e.currentTarget.closest("li").style.background =
-                          theme === 'light' 
-                            ? "rgba(0, 0, 0, 0.08)" 
+                          theme === 'light'
+                            ? "rgba(0, 0, 0, 0.08)"
                             : "rgba(255, 255, 255, 0.08)";
                         e.currentTarget.closest("li").style.border =
                           `1px solid ${theme === 'light' ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.15)'}`;
@@ -330,27 +330,16 @@ const Sidebar = () => {
           {/* Logout */}
           <button
             style={logoutButtonStyles}
-            className={`btn w-100 d-flex align-items-center ${isCollapsed && !isMobile
-                ? "justify-content-center"
-                : "justify-content-start"
+            className={`btn w-100 d-flex align-items-center logout-btn ${isCollapsed && !isMobile ? "justify-content-center" : "justify-content-start"
               }`}
             onClick={handleLogout}
             disabled={!auth.currentUser}
             title={isCollapsed && !isMobile ? "Logout" : ""}
-            onMouseOver={(e) => {
-              e.target.style.background = "rgba(220, 53, 69, 0.2)";
-              e.target.style.color = "#dc3545";
-            }}
-            onMouseOut={(e) => {
-              e.target.style.background = "rgba(220, 53, 69, 0.1)";
-              e.target.style.color = "rgba(220, 53, 69, 0.9)";
-            }}
           >
             <FaSignOutAlt style={iconStyles} />
-            {(!isCollapsed || isMobile) && (
-              <span>Logout</span>
-            )}
+            {(!isCollapsed || isMobile) && <span>Logout</span>}
           </button>
+
         </div>
       </aside>
 

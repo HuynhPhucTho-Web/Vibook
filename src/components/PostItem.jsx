@@ -134,18 +134,6 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
     }
     return 'unknown';
   };
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => { }); // tránh lỗi play khi chưa tương tác
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0; // quay lại từ đầu
-    }
-  };
   const handleDeletePost = async () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
 

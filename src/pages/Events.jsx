@@ -13,12 +13,13 @@ import {
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes } from "react-icons/fa";
-import { Dropdown } from "react-bootstrap"; // ⬅️ thêm
-import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa"; // ⬅️ thêm icon
+import { Dropdown } from "react-bootstrap";
+import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 
 const Events = () => {
   const { theme } = useContext(ThemeContext);
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -26,6 +27,7 @@ const Events = () => {
   const [eventDate, setEventDate] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [eventDescription, setEventDescription] = useState("");
+  const [search, setSearch] = useState("");
   const modalRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -35,6 +37,7 @@ const Events = () => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         setShowCreateModal(false);
+        setShowEditModal(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -47,6 +50,7 @@ const Events = () => {
       setCurrentUser(user);
       if (!user) {
         setEvents([]);
+        setFilteredEvents([]);
         setIsLoading(false);
       }
     });
@@ -69,11 +73,12 @@ const Events = () => {
           attendees: doc.data().attendees || [],
         }));
         setEvents(eventList);
+        setFilteredEvents(eventList);
         setIsLoading(false);
       },
       (error) => {
         console.error("Error fetching events:", error);
-        toast.error("Không thể tải danh sách sự kiện", {
+        toast.error("Unable to load events", {
           position: "top-center",
           autoClose: 3000,
         });
@@ -84,16 +89,29 @@ const Events = () => {
     return () => unsubscribe();
   }, [currentUser]);
 
+  // Search filter
+  useEffect(() => {
+    if (!search.trim()) {
+      setFilteredEvents(events);
+    } else {
+      setFilteredEvents(
+        events.filter((e) =>
+          e.name.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+  }, [search, events]);
+
   // Create event
   const handleCreateEvent = useCallback(
     async (e) => {
       e.preventDefault();
       if (!eventName.trim() || !eventDate.trim()) {
-        toast.error("Tên sự kiện và ngày không được để trống", { position: "top-center" });
+        toast.error("Event name and date cannot be empty", { position: "top-center" });
         return;
       }
       if (!currentUser) {
-        toast.error("Vui lòng đăng nhập để tạo sự kiện", { position: "top-center" });
+        toast.error("Please log in to create an event", { position: "top-center" });
         return;
       }
 
@@ -101,8 +119,8 @@ const Events = () => {
         const eventData = {
           name: eventName.trim(),
           date: eventDate,
-          location: eventLocation.trim() || "Không xác định",
-          description: eventDescription.trim() || "Không có mô tả",
+          location: eventLocation.trim() || "Unknown",
+          description: eventDescription.trim() || "No description",
           ownerId: currentUser.uid,
           attendees: [currentUser.uid],
           createdAt: serverTimestamp(),
@@ -114,19 +132,19 @@ const Events = () => {
         setEventLocation("");
         setEventDescription("");
         setShowCreateModal(false);
-        toast.success("Tạo sự kiện thành công!", {
+        toast.success("Event created successfully!", {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error creating event:", error);
-        toast.error("Không thể tạo sự kiện", { position: "top-center" });
+        toast.error("Failed to create event", { position: "top-center" });
       }
     },
     [eventName, eventDate, eventLocation, eventDescription, currentUser]
   );
 
-
+  // Update event
   const handleUpdateEvent = useCallback(
     async (e) => {
       e.preventDefault();
@@ -142,19 +160,24 @@ const Events = () => {
         });
         setShowEditModal(false);
         setEditingEvent(null);
-        toast.success("Cập nhật sự kiện thành công!", { position: "top-center" });
+        setEventName("");
+        setEventDate("");
+        setEventLocation("");
+        setEventDescription("");
+        toast.success("Event updated successfully!", { position: "top-center" });
       } catch (error) {
         console.error("Error updating event:", error);
-        toast.error("Không thể cập nhật sự kiện", { position: "top-center" });
+        toast.error("Failed to update event", { position: "top-center" });
       }
     },
     [editingEvent, eventName, eventDate, eventLocation, eventDescription, currentUser]
   );
+
   // Join event
   const handleJoinEvent = useCallback(
     async (eventId, attendees) => {
       if (!currentUser) {
-        toast.error("Vui lòng đăng nhập để tham gia sự kiện", { position: "top-center" });
+        toast.error("Please log in to join the event", { position: "top-center" });
         return;
       }
 
@@ -163,13 +186,13 @@ const Events = () => {
         await updateDoc(eventRef, {
           attendees: [...attendees, currentUser.uid],
         });
-        toast.success("Tham gia sự kiện thành công!", {
+        toast.success("Joined event successfully!", {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error joining event:", error);
-        toast.error("Không thể tham gia sự kiện", { position: "top-center" });
+        toast.error("Failed to join event", { position: "top-center" });
       }
     },
     [currentUser]
@@ -179,7 +202,7 @@ const Events = () => {
   const handleLeaveEvent = useCallback(
     async (eventId, attendees) => {
       if (!currentUser) {
-        toast.error("Vui lòng đăng nhập để rời sự kiện", { position: "top-center" });
+        toast.error("Please log in to leave the event", { position: "top-center" });
         return;
       }
 
@@ -188,13 +211,13 @@ const Events = () => {
         await updateDoc(eventRef, {
           attendees: attendees.filter((uid) => uid !== currentUser.uid),
         });
-        toast.success("Rời sự kiện thành công!", {
+        toast.success("Left event successfully!", {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error leaving event:", error);
-        toast.error("Không thể rời sự kiện", { position: "top-center" });
+        toast.error("Failed to leave event", { position: "top-center" });
       }
     },
     [currentUser]
@@ -204,20 +227,20 @@ const Events = () => {
   const handleDeleteEvent = useCallback(
     async (eventId, ownerId) => {
       if (!currentUser || currentUser.uid !== ownerId) {
-        toast.error("Chỉ chủ sự kiện có thể xóa sự kiện", { position: "top-center" });
+        toast.error("Only the event owner can delete the event", { position: "top-center" });
         return;
       }
 
       try {
         const eventRef = doc(db, "Events", eventId);
         await deleteDoc(eventRef);
-        toast.success("Xóa sự kiện thành công!", {
+        toast.success("Event deleted successfully!", {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error deleting event:", error);
-        toast.error("Không thể xóa sự kiện", { position: "top-center" });
+        toast.error("Failed to delete event", { position: "top-center" });
       }
     },
     [currentUser]
@@ -225,7 +248,7 @@ const Events = () => {
 
   // Format timestamp
   const formatTimeAgo = useCallback((timestamp) => {
-    if (!timestamp) return "Vừa xong";
+    if (!timestamp) return "Just now";
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const now = new Date();
     const diff = now - date;
@@ -233,17 +256,17 @@ const Events = () => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return "Vừa xong";
-    if (minutes < 60) return `${minutes}p`;
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
-    return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+    return date.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" });
   }, []);
 
   // Format event date
   const formatEventDate = useCallback((dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString("vi-VN", {
+    return date.toLocaleString("en-US", {
       weekday: "long",
       day: "2-digit",
       month: "2-digit",
@@ -264,29 +287,46 @@ const Events = () => {
 
   if (!currentUser) {
     return (
-      <div className={`container mx-auto p-4 ${theme}`}>
+      <div
+        className={`container mx-auto p-4 transition-colors duration-300 ${
+          theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
+        }`}
+      >
         <h5 className="text-center text-gray-500 dark:text-gray-400">
-          Vui lòng đăng nhập để xem và tham gia sự kiện
+          Please log in to view and join events
         </h5>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen p-4 ${theme}`}>
-      <div className={`max-w-7xl mx-auto ${theme}`}>
+    <div
+      className={`min-h-screen p-4 transition-colors duration-300 ${
+        theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className={`flex items-center justify-between mb-6${theme}`}>
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            Sự kiện ({events.length})
+            Events ({events.length})
           </h1>
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <FaPlus size={16} />
-            Tạo sự kiện
-          </button>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="🔍 Search events..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full sm:w-64 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <FaPlus size={16} />
+              Create Event
+            </button>
+          </div>
         </div>
 
         {/* Create Event Modal */}
@@ -298,7 +338,7 @@ const Events = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  Tạo sự kiện mới
+                  Create New Event
                 </h3>
                 <button
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -310,13 +350,13 @@ const Events = () => {
               <form onSubmit={handleCreateEvent}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Tên sự kiện
+                    Event Name
                   </label>
                   <input
                     type="text"
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
-                    placeholder="Nhập tên sự kiện"
+                    placeholder="Enter event name"
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={100}
                     required
@@ -324,7 +364,7 @@ const Events = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Ngày giờ
+                    Date & Time
                   </label>
                   <input
                     type="datetime-local"
@@ -336,25 +376,25 @@ const Events = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Địa điểm
+                    Location
                   </label>
                   <input
                     type="text"
                     value={eventLocation}
                     onChange={(e) => setEventLocation(e.target.value)}
-                    placeholder="Nhập địa điểm (tùy chọn)"
+                    placeholder="Enter location (optional)"
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={200}
                   />
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Mô tả
+                    Description
                   </label>
                   <textarea
                     value={eventDescription}
                     onChange={(e) => setEventDescription(e.target.value)}
-                    placeholder="Nhập mô tả sự kiện (tùy chọn)"
+                    placeholder="Enter event description (optional)"
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={4}
                     maxLength={500}
@@ -366,30 +406,31 @@ const Events = () => {
                     className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => setShowCreateModal(false)}
                   >
-                    Hủy
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-colors"
                     disabled={!eventName.trim() || !eventDate.trim()}
                   >
-                    Tạo
+                    Create
                   </button>
                 </div>
               </form>
             </div>
           </div>
         )}
-        {/* 🔥 Edit Event Modal */}
+
+        {/* Edit Event Modal */}
         {showEditModal && (
-          <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${theme}`}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div
               className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md"
               ref={modalRef}
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  Chỉnh sửa sự kiện
+                  Update Event
                 </h3>
                 <button
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -399,70 +440,92 @@ const Events = () => {
                 </button>
               </div>
               <form onSubmit={handleUpdateEvent}>
-                {/* reuse input y chang create */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium">Tên sự kiện</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Event Name
+                  </label>
                   <input
                     type="text"
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
-                    className="w-full p-2 border rounded-lg"
+                    placeholder="Enter event name"
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    maxLength={100}
+                    required
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium">Ngày giờ</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Date & Time
+                  </label>
                   <input
                     type="datetime-local"
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium">Địa điểm</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Location
+                  </label>
                   <input
                     type="text"
                     value={eventLocation}
                     onChange={(e) => setEventLocation(e.target.value)}
-                    className="w-full p-2 border rounded-lg"
+                    placeholder="Enter location (optional)"
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    maxLength={200}
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium">Mô tả</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Description
+                  </label>
                   <textarea
                     value={eventDescription}
                     onChange={(e) => setEventDescription(e.target.value)}
-                    className="w-full p-2 border rounded-lg"
+                    placeholder="Enter event description (optional)"
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={4}
+                    maxLength={500}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
+                    className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 bg-gray-300 rounded-lg"
                   >
-                    Hủy
+                    Cancel
                   </button>
-                  <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg">
-                    Lưu
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-colors"
+                    disabled={!eventName.trim() || !eventDate.trim()}
+                  >
+                    Save
                   </button>
                 </div>
               </form>
             </div>
           </div>
         )}
+
         {/* Events List */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${theme}`}>
-          {events.length > 0 ? (
-            events.map((event) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => {
               const isAttendee = event.attendees.includes(currentUser.uid);
               const isOwner = event.ownerId === currentUser.uid;
 
               return (
                 <div
                   key={event.id}
-                  className={`p-4 rounded-lg shadow-md ${theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-                    }`}
+                  className={`p-4 rounded-lg shadow-md ${
+                    theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+                  }`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -470,11 +533,14 @@ const Events = () => {
                         <FaCalendarAlt size={24} />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 truncate" style={{ maxWidth: "200px" }}>
+                        <h3
+                          className="text-lg font-semibold text-gray-800 dark:text-gray-200 truncate"
+                          style={{ maxWidth: "200px" }}
+                        >
                           {event.name}
                         </h3>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {event.attendees.length} người tham gia
+                          {event.attendees.length} Participants
                         </div>
                       </div>
                     </div>
@@ -507,10 +573,10 @@ const Events = () => {
                     )}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span className="font-medium">Ngày:</span> {formatEventDate(event.date)}
+                    <span className="font-medium">Date:</span> {formatEventDate(event.date)}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span className="font-medium">Địa điểm:</span> {event.location}
+                    <span className="font-medium">Location:</span> {event.location}
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
                     {event.description}
@@ -520,16 +586,17 @@ const Events = () => {
                       <a
                         href={`#event-chat/${event.id}`}
                         className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="Trò chuyện sự kiện"
+                        title="Event chat"
                       >
                         <FaComments size={20} />
                       </a>
                     </div>
                     <button
-                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${isAttendee
-                        ? "bg-red-500 text-white hover:bg-red-600"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
-                        }`}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        isAttendee
+                          ? "bg-red-500 text-white hover:bg-red-600"
+                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      }`}
                       onClick={() =>
                         isAttendee
                           ? handleLeaveEvent(event.id, event.attendees)
@@ -539,25 +606,25 @@ const Events = () => {
                       {isAttendee ? (
                         <div className="flex items-center gap-1">
                           <FaSignOutAlt size={14} />
-                          Rời sự kiện
+                          Leave Event
                         </div>
                       ) : (
                         <div className="flex items-center gap-1">
                           <FaSignInAlt size={14} />
-                          Tham gia
+                          Join Event
                         </div>
                       )}
                     </button>
                   </div>
                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                    Tạo: {formatTimeAgo(event.createdAt)}
+                    Created: {formatTimeAgo(event.createdAt)}
                   </div>
                 </div>
               );
             })
           ) : (
             <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
-              Chưa có sự kiện nào. Hãy tạo sự kiện đầu tiên!
+              No events found. Create your first event!
             </div>
           )}
         </div>

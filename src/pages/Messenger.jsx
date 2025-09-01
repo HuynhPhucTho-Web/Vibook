@@ -103,7 +103,7 @@ const Messenger = () => {
     };
   }, [cleanup]);
 
-  // Load users - chỉ load một lần và cache
+  // Load users - chỉ load một lần và cache db
   useEffect(() => {
     if (!currentUser) return;
 
@@ -141,7 +141,7 @@ const Messenger = () => {
     loadUsers();
   }, [currentUser]);
 
-  // Messages listener - tối ưu hóa
+  // Messages listener
   useEffect(() => {
     if (!currentUser || !selectedUser) {
       setMessages([]);
@@ -200,7 +200,7 @@ const Messenger = () => {
         unsubscribeRefs.current.messages();
       }
     };
-  }, [currentUser, selectedUser, createChatId]);
+  }, [currentUser, selectedUser, createChatId, messages.length]);
 
   // Handle emoji click
   const handleEmojiClick = useCallback((emoji) => {
@@ -674,7 +674,7 @@ const Messenger = () => {
                   </div>
                   <h4 className="text-dark mb-3">Chào mừng đến với Messenger</h4>
                   <p className="text-muted mb-4">
-                    Chọn một người từ danh sách bên trái để bắt đầu cuộc trò chuyện
+                    Hiện tại đang để Public User để dễ democode, sau này sẽ update lại tính năng kết bạn mới hiện user.
                   </p>
                   <div className="d-flex justify-content-center gap-3">
                     <div className="text-center">
