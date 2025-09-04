@@ -31,6 +31,8 @@ const Events = () => {
   const modalRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   // Handle click outside to close modal
   useEffect(() => {
@@ -288,9 +290,8 @@ const Events = () => {
   if (!currentUser) {
     return (
       <div
-        className={`container mx-auto p-4 transition-colors duration-300 ${
-          theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
-        }`}
+        className={`container mx-auto p-4 transition-colors duration-300 ${theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
+          }`}
       >
         <h5 className="text-center text-gray-500 dark:text-gray-400">
           Please log in to view and join events
@@ -301,9 +302,12 @@ const Events = () => {
 
   return (
     <div
-      className={`min-h-screen p-4 transition-colors duration-300 ${
-        theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
-      }`}
+      className="min-h-screen p-4 transition-colors duration-300"
+      style={{
+        backgroundColor: "var(--theme-background)",
+        color: "var(--theme-text)",
+        transition: "background-color 0.3s ease, color 0.3s ease",
+      }}
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -523,9 +527,11 @@ const Events = () => {
               return (
                 <div
                   key={event.id}
-                  className={`p-4 rounded-lg shadow-md ${
-                    theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-                  }`}
+                  className={`p-4 rounded-lg shadow-md ${theme === "light" ? "border-gray-200" : "border-gray-700"}`}
+                  style={{
+                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
+                    color: theme === "light" ? "#1f2937" : "#f9fafb",
+                  }}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -533,10 +539,7 @@ const Events = () => {
                         <FaCalendarAlt size={24} />
                       </div>
                       <div>
-                        <h3
-                          className="text-lg font-semibold text-gray-800 dark:text-gray-200 truncate"
-                          style={{ maxWidth: "200px" }}
-                        >
+                        <h3 className="text-lg font-semibold text-[var(--theme-text)] truncate max-w-[200px]">
                           {event.name}
                         </h3>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -592,11 +595,10 @@ const Events = () => {
                       </a>
                     </div>
                     <button
-                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                        isAttendee
-                          ? "bg-red-500 text-white hover:bg-red-600"
-                          : "bg-blue-500 text-white hover:bg-blue-600"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${isAttendee
+                        ? "bg-red-500 text-white hover:bg-red-600"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
+                        }`}
                       onClick={() =>
                         isAttendee
                           ? handleLeaveEvent(event.id, event.attendees)

@@ -2,7 +2,7 @@ import Carousel from "react-bootstrap/Carousel";
 
 function VideoCarousel() {
     return (
-        <Carousel data-bs-theme="dark" interval={5000}> {/* interval = 5000ms = 5s */}
+        <Carousel data-bs-theme="dark" interval={10000}>
             <Carousel.Item>
                 <video
                     className="d-block w-100"
@@ -57,7 +57,7 @@ function VideoCarousel() {
                         objectFit: "cover" 
                     }}
                 >
-                    <source src="/videos/intro.mp4" type="video/mp4" />
+                    <source src="/videos/introgroup.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                 </video>
                 <Carousel.Caption>
@@ -78,7 +78,7 @@ function VideoCarousel() {
                         objectFit: "cover" 
                     }}
                 >
-                    <source src="/videos/intro2.mp4" type="video/mp4" />
+                    <source src="/videos/introstory.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                 </video>
                 <Carousel.Caption>
@@ -99,7 +99,7 @@ function VideoCarousel() {
                         objectFit: "cover" 
                     }}
                 >
-                    <source src="/intro1.mp4" type="video/mp4" />
+                    <source src="/videos/introgame.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                 </video>
                 <Carousel.Caption>
@@ -120,7 +120,7 @@ function VideoCarousel() {
                         objectFit: "cover" 
                     }}
                 >
-                    <source src="/videos/intro.mp4" type="video/mp4" />
+                    <source src="/videos/introevent.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                 </video>
                 <Carousel.Caption>

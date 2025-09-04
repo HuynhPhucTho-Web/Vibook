@@ -17,12 +17,12 @@ const firebaseConfig = {
 // Debug log in development
 if (import.meta.env.DEV) {
   console.log('🔥 Firebase Config:', {
-    apiKey: firebaseConfig.apiKey ? 'Present ✅' : 'Missing ❌',
-    authDomain: firebaseConfig.authDomain ? 'Present ✅' : 'Missing ❌',
-    projectId: firebaseConfig.projectId ? 'Present ✅' : 'Missing ❌',
-    storageBucket: firebaseConfig.storageBucket ? 'Present ✅' : 'Missing ❌',
-    messagingSenderId: firebaseConfig.messagingSenderId ? 'Present ✅' : 'Missing ❌',
-    appId: firebaseConfig.appId ? 'Present ✅' : 'Missing ❌'
+    apiKey: firebaseConfig.apiKey ? 'Present ' : 'Missing ',
+    authDomain: firebaseConfig.authDomain ? 'Present ' : 'Missing ',
+    projectId: firebaseConfig.projectId ? 'Present ' : 'Missing ',
+    storageBucket: firebaseConfig.storageBucket ? 'Present ' : 'Missing ',
+    messagingSenderId: firebaseConfig.messagingSenderId ? 'Present ' : 'Missing ',
+    appId: firebaseConfig.appId ? 'Present ' : 'Missing '
   });
 }
 
