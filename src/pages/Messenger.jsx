@@ -309,13 +309,14 @@ const Messenger = () => {
     filteredUsers.map((user) => (
       <div
         key={user.uid}
-        className={`p-3 border-bottom user-item ${selectedUser?.uid === user.uid ? "bg-primary bg-opacity-10 border-primary" : ""
-          }`}
+        className={`p-3 border-bottom user-item ${selectedUser?.uid === user.uid ? "bg-primary bg-opacity-10 border-primary" : ""}`}
         onClick={() => handleUserSelect(user)}
         style={{
           cursor: 'pointer',
           transition: 'all 0.2s ease',
-          borderLeft: selectedUser?.uid === user.uid ? '3px solid #0d6efd' : '3px solid transparent'
+          borderLeft: selectedUser?.uid === user.uid ? '3px solid #0d6efd' : '3px solid transparent',
+          backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff', // Màu nền item
+          color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ
         }}
       >
         <div className="d-flex align-items-center">
@@ -328,9 +329,9 @@ const Messenger = () => {
                 <div className="fw-semibold text-truncate mb-1" style={{ maxWidth: "140px", fontSize: '0.95rem' }}>
                   {user.firstName} {user.lastName}
                 </div>
-                <small className="text-muted text-truncate d-block" style={{ maxWidth: "140px", fontSize: '0.8rem' }}>
+                <small className={theme === 'dark' ? 'text-gray-400' : 'text-muted'} style={{ maxWidth: "140px", fontSize: '0.8rem' }}>
                   {user.isOnline ? (
-                    <span className="text-success">
+                    <span className={theme === 'dark' ? 'text-success' : 'text-success'}>
                       <i className="fas fa-circle" style={{ fontSize: '8px' }}></i> Đang hoạt động
                     </span>
                   ) : (
@@ -338,14 +339,14 @@ const Messenger = () => {
                   )}
                 </small>
               </div>
-              <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+              <small className={theme === 'dark' ? 'text-gray-400' : 'text-muted'} style={{ fontSize: '0.75rem' }}>
                 {formatTimeAgo(Date.now() - Math.random() * 86400000)}
               </small>
             </div>
           </div>
         </div>
       </div>
-    )), [filteredUsers, selectedUser, handleUserSelect, formatTimeAgo]);
+    )), [filteredUsers, selectedUser, handleUserSelect, formatTimeAgo, theme]); // Thêm theme vào dependencies
 
   // Memoized messages list với design mới
   const messagesList = useMemo(() =>
@@ -370,8 +371,8 @@ const Messenger = () => {
 
           <div
             className={`position-relative shadow-sm ${isOwnMessage
-                ? "bg-primary text-white"
-                : "bg-light text-dark border"
+              ? "bg-primary text-white"
+              : "bg-light text-dark border"
               }`}
             style={{
               maxWidth: "75%",
@@ -379,7 +380,9 @@ const Messenger = () => {
               borderRadius: isOwnMessage ? "20px 20px 6px 20px" : "20px 20px 20px 6px",
               padding: '12px 16px',
               fontSize: '0.9rem',
-              lineHeight: '1.4'
+              lineHeight: '1.4',
+              backgroundColor: theme === 'dark' && !isOwnMessage ? '#3a3f44' : undefined,
+              color: theme === 'dark' && !isOwnMessage ? '#ffffff' : undefined,
             }}
           >
             <div className="message-content mb-1">{message.content}</div>
@@ -411,7 +414,7 @@ const Messenger = () => {
           )}
         </div>
       );
-    }), [messages, currentUser, selectedUser, formatTimeAgo]);
+    }), [messages, currentUser, selectedUser, formatTimeAgo, theme]);
 
   // Loading states
   if (isLoading) {
@@ -445,24 +448,54 @@ const Messenger = () => {
     <div className={`${theme}`} style={{ height: "100vh", overflow: "hidden" }}>
       <div className="row g-0 h-100">
         {/* Sidebar - Danh sách users */}
-        <div className="col-md-4 col-lg-3 border-end bg-white" style={{ height: "100vh", overflowY: "auto" }}>
+        <div
+          className="col-md-4 col-lg-3 border-end"
+          style={{
+            height: "100vh",
+            overflowY: "auto",
+            backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff', // Màu nền
+            color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ
+          }}
+        >
           {/* Header sidebar */}
-          <div className="p-3 border-bottom bg-light">
+          <div
+            className="p-3 border-bottom"
+            style={{
+              backgroundColor: theme === 'dark' ? '#25282c' : '#f8f9fa', // Màu nền header
+              color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ chung
+            }}
+          >
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="mb-0 fw-bold text-primary">Tin nhắn</h5>
-              <span className="badge bg-primary rounded-pill">{users.length}</span>
+              <h5 className="mb-0 fw-bold" style={{ color: theme === 'dark' ? '#ffffff' : '#0d6efd' }}>Tin nhắn</h5>
+              <span
+                className="badge rounded-pill"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#0d6efd' : '#0d6efd', // Giữ màu badge
+                  color: '#ffffff', // Chữ trắng trên badge
+                }}
+              >
+                {users.length}
+              </span>
             </div>
 
             {/* Search bar */}
             <div className="position-relative">
-              <FaSearch className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+              <FaSearch
+                className="position-absolute top-50 start-0 translate-middle-y ms-3"
+                style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} // Màu icon search
+              />
               <input
                 type="text"
                 className="form-control ps-5 rounded-pill"
                 placeholder="Tìm kiếm người dùng..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ fontSize: '0.9rem' }}
+                style={{
+                  fontSize: '0.9rem',
+                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
+                  color: theme === 'dark' ? '#fff' : '#000',
+                  borderColor: theme === 'dark' ? '#444' : '#ced4da', // Điều chỉnh viền input
+                }}
               />
             </div>
           </div>
@@ -483,23 +516,35 @@ const Messenger = () => {
         </div>
 
         {/* Main chat area */}
-        <div className="col-md-8 col-lg-9 d-flex flex-column bg-white">
+        <div
+          className="col-md-8 col-lg-9 d-flex flex-column bg-white"
+          style={{
+            backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff',
+            color: theme === 'dark' ? '#ffffff' : '#000000',
+          }}
+        >
           {selectedUser ? (
             <>
               {/* Chat header với các action buttons */}
-              <div className="border-bottom bg-white px-4 py-3 shadow-sm">
+              <div
+                className="border-bottom px-4 py-3 shadow-sm"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#25282c' : '#ffffff', // Màu nền header
+                  color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ chung
+                }}
+              >
                 <div className="d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center">
                     <div className="me-3">
                       <UserAvatar user={selectedUser} size={50} showOnline={true} />
                     </div>
                     <div>
-                      <h5 className="mb-0 fw-semibold">
+                      <h5 className="mb-0 fw-semibold" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
                         {selectedUser.firstName} {selectedUser.lastName}
                       </h5>
-                      <small className="text-muted">
+                      <small className={theme === 'dark' ? 'text-gray-400' : 'text-muted'}>
                         {selectedUser.isOnline ? (
-                          <span className="text-success">
+                          <span className={theme === 'dark' ? 'text-success' : 'text-success'}>
                             <i className="fas fa-circle me-1" style={{ fontSize: '8px' }}></i>
                             Đang hoạt động
                           </span>
@@ -512,13 +557,37 @@ const Messenger = () => {
 
                   {/* Action buttons */}
                   <div className="d-flex gap-2">
-                    <button className="btn btn-outline-primary btn-sm rounded-circle p-2" title="Gọi điện">
+                    <button
+                      className="btn btn-outline-primary btn-sm rounded-circle p-2"
+                      title="Gọi điện"
+                      style={{
+                        borderColor: theme === 'dark' ? '#6c757d' : '#0d6efd',
+                        color: theme === 'dark' ? '#b3b3b3' : '#0d6efd',
+                      }}
+                      onMouseOver={{ backgroundColor: theme === 'dark' ? '#333' : '#e9ecef' }}
+                    >
                       <FaPhone size={14} />
                     </button>
-                    <button className="btn btn-outline-primary btn-sm rounded-circle p-2" title="Gọi video">
+                    <button
+                      className="btn btn-outline-primary btn-sm rounded-circle p-2"
+                      title="Gọi video"
+                      style={{
+                        borderColor: theme === 'dark' ? '#6c757d' : '#0d6efd',
+                        color: theme === 'dark' ? '#b3b3b3' : '#0d6efd',
+                      }}
+                      onMouseOver={{ backgroundColor: theme === 'dark' ? '#333' : '#e9ecef' }}
+                    >
                       <FaVideo size={14} />
                     </button>
-                    <button className="btn btn-outline-secondary btn-sm rounded-circle p-2" title="Tùy chọn">
+                    <button
+                      className="btn btn-outline-secondary btn-sm rounded-circle p-2"
+                      title="Tùy chọn"
+                      style={{
+                        borderColor: theme === 'dark' ? '#6c757d' : '#6c757d',
+                        color: theme === 'dark' ? '#b3b3b3' : '#6c757d',
+                      }}
+                      onMouseOver={{ backgroundColor: theme === 'dark' ? '#333' : '#e9ecef' }}
+                    >
                       <FaEllipsisV size={14} />
                     </button>
                   </div>
@@ -530,12 +599,10 @@ const Messenger = () => {
                 className="flex-grow-1 overflow-auto px-4 py-3"
                 style={{
                   maxHeight: "calc(100vh - 200px)",
-                  backgroundColor: '#f8f9fa',
-                  backgroundImage: `
-                    radial-gradient(circle at 25px 25px, #e9ecef 2px, transparent 0),
-                    radial-gradient(circle at 75px 75px, #e9ecef 2px, transparent 0)
-                  `,
-                  backgroundSize: '50px 50px'
+                  backgroundColor: theme === 'dark' ? '#2c2f33' : '#f8f9fa',
+                  backgroundImage: theme === 'dark' ? '' : 'radial-gradient(circle at 25px 25px, #e9ecef 2px, transparent 0), radial-gradient(circle at 75px 75px, #e9ecef 2px, transparent 0)',
+                  backgroundSize: '50px 50px',
+                  color: theme === 'dark' ? '#ffffff' : '#000000',
                 }}
               >
                 {isLoadingMessages ? (
@@ -557,10 +624,21 @@ const Messenger = () => {
                   </>
                 ) : (
                   <div className="text-center py-5">
-                    <div className="bg-white rounded-4 p-4 shadow-sm mx-auto" style={{ maxWidth: '300px' }}>
-                      <FaUserCircle size={60} className="text-primary mb-3" />
-                      <h6 className="text-dark mb-2">Bắt đầu cuộc trò chuyện</h6>
-                      <p className="text-muted small mb-0">
+                    <div
+                      className="rounded-4 p-4 shadow-sm mx-auto"
+                      style={{
+                        backgroundColor: theme === 'dark' ? '#25282c' : '#ffffff',
+                        maxWidth: '300px',
+                      }}
+                    >
+                      <FaUserCircle
+                        size={60}
+                        style={{ color: theme === 'dark' ? '#ffffff' : '#0d6efd' }}
+                      />
+                      <h6 className="mb-2" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
+                        Bắt đầu cuộc trò chuyện
+                      </h6>
+                      <p className="small mb-0" style={{ color: theme === 'dark' ? '#ffffff' : '#666666' }}>
                         Gửi tin nhắn đầu tiên để bắt đầu trò chuyện với {selectedUser.firstName}
                       </p>
                     </div>
@@ -569,7 +647,7 @@ const Messenger = () => {
               </div>
 
               {/* Message input area với enhanced UI */}
-              <div className="bg-white border-top px-4 py-3">
+              <div className="border-top px-4 py-3" style={{ backgroundColor: theme === 'dark' ? '#25282c' : '#ffffff' }}>
                 {/* Quick emoji reactions */}
                 <div className="d-flex gap-1 mb-2">
                   {quickEmojis.map((emoji, index) => (
@@ -577,7 +655,13 @@ const Messenger = () => {
                       key={index}
                       className="btn btn-outline-light btn-sm rounded-circle p-1"
                       onClick={() => handleEmojiClick(emoji)}
-                      style={{ width: '32px', height: '32px', fontSize: '14px' }}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        fontSize: '14px',
+                        backgroundColor: theme === 'dark' ? '#333' : '#f8f9fa',
+                        color: theme === 'dark' ? '#fff' : '#000',
+                      }}
                     >
                       {emoji}
                     </button>
@@ -585,9 +669,9 @@ const Messenger = () => {
                 </div>
 
                 {/* Message input */}
-                <form onSubmit={handleSendMessage} className="d-flex align-items-end gap-2">
+                <form onSubmit={handleSendMessage} className="d-flex align-items-end gap-2" style={{ backgroundColor: theme === 'dark' ? '#52575cff' : '#ffffff' }}>
                   <div className="flex-grow-1 position-relative">
-                    <div className="d-flex align-items-center bg-light rounded-pill px-3 py-2 border">
+                    <div className="d-flex align-items-center rounded-pill px-3 py-2 border" style={{ backgroundColor: theme === 'dark' ? '#495a6fff' : '#ffffff' }}>
                       <input
                         type="text"
                         value={messageText}
@@ -596,7 +680,7 @@ const Messenger = () => {
                         className="form-control border-0 bg-transparent"
                         autoComplete="off"
                         maxLength={500}
-                        style={{ fontSize: '0.9rem' }}
+                        style={{ fontSize: '0.9rem', color: theme === 'dark' ? '#fff' : '#000' }}
                       />
                       <div className="d-flex gap-1 ms-2">
                         <button
@@ -626,7 +710,7 @@ const Messenger = () => {
 
                     {/* Emoji picker */}
                     {showEmojiPicker && (
-                      <div className="position-absolute bottom-100 end-0 mb-2 bg-white border rounded-3 shadow-lg p-3" style={{ zIndex: 1000 }}>
+                      <div className="position-absolute bottom-100 end-0 mb-2 bg-white border rounded-3 shadow-lg p-3" style={{ backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff', color: theme === 'dark' ? '#fff' : '#000', zIndex: 1000 }}>
                         <div className="d-flex justify-content-between align-items-center mb-2">
                           <small className="text-muted fw-semibold">Emoji</small>
                           <button
@@ -666,34 +750,99 @@ const Messenger = () => {
               </div>
             </>
           ) : (
-            <div className="d-flex align-items-center justify-content-center h-100 bg-light">
+            <div
+              className="d-flex align-items-center justify-content-center h-100"
+              style={{ backgroundColor: theme === 'dark' ? '#484c51ff' : '#ffffff' }}
+            >
               <div className="text-center">
-                <div className="bg-white rounded-4 p-5 shadow-sm mx-auto" style={{ maxWidth: '400px' }}>
-                  <div className="text-primary mb-4">
-                    <FaUserCircle size={80} />
+                <div
+                  className="rounded-4 p-5 shadow-sm mx-auto"
+                  style={{ backgroundColor: theme === 'dark' ? '#222325ff' : '#ffffff', maxWidth: '400px' }}
+                >
+                  <div className="mb-4">
+                    <FaUserCircle
+                      size={80}
+                      style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} // Icon thay đổi theo theme
+                    />
                   </div>
-                  <h4 className="text-dark mb-3">Chào mừng đến với Messenger</h4>
-                  <p className="text-muted mb-4">
+                  <h4
+                    className="mb-3"
+                    style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }} // Tiêu đề thay đổi theo theme
+                  >
+                    Chào mừng đến với Messenger
+                  </h4>
+                  <p
+                    className="mb-4"
+                    style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
+                  >
                     Hiện tại đang để Public User để dễ democode, sau này sẽ update lại tính năng kết bạn mới hiện user.
                   </p>
                   <div className="d-flex justify-content-center gap-3">
                     <div className="text-center">
-                      <div className="bg-light rounded-circle p-3 mb-2 mx-auto" style={{ width: '50px', height: '50px' }}>
-                        <FaPhone className="text-primary" size={20} />
+                      <div
+                        className="bg-light rounded-circle p-3 mb-2 mx-auto"
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          backgroundColor: theme === 'dark' ? '#2c2f33' : '#e9ecef', 
+                        }}
+                      >
+                        <FaPhone
+                          className="text-primary"
+                          size={20}
+                          style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} 
+                        />
                       </div>
-                      <small className="text-muted">Gọi điện</small>
+                      <small
+                        className="text-muted"
+                        style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
+                      >
+                        Gọi điện
+                      </small>
                     </div>
                     <div className="text-center">
-                      <div className="bg-light rounded-circle p-3 mb-2 mx-auto" style={{ width: '50px', height: '50px' }}>
-                        <FaVideo className="text-primary" size={20} />
+                      <div
+                        className="bg-light rounded-circle p-3 mb-2 mx-auto"
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          backgroundColor: theme === 'dark' ? '#2c2f33' : '#e9ecef',
+                        }}
+                      >
+                        <FaVideo
+                          className="text-primary"
+                          size={20}
+                          style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} 
+                        />
                       </div>
-                      <small className="text-muted">Video call</small>
+                      <small
+                        className="text-muted"
+                        style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
+                      >
+                        Video call
+                      </small>
                     </div>
                     <div className="text-center">
-                      <div className="bg-light rounded-circle p-3 mb-2 mx-auto" style={{ width: '50px', height: '50px' }}>
-                        <FaPaperPlane className="text-primary" size={20} />
+                      <div
+                        className="bg-light rounded-circle p-3 mb-2 mx-auto"
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          backgroundColor: theme === 'dark' ? '#2c2f33' : '#e9ecef', 
+                        }}
+                      >
+                        <FaPaperPlane
+                          className="text-primary"
+                          size={20}
+                          style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} 
+                        />
                       </div>
-                      <small className="text-muted">Nhắn tin</small>
+                      <small
+                        className="text-muted"
+                        style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
+                      >
+                        Nhắn tin
+                      </small>
                     </div>
                   </div>
                 </div>
