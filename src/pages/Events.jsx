@@ -13,7 +13,6 @@ import {
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes } from "react-icons/fa";
-import { Dropdown } from "react-bootstrap";
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 
 const Events = () => {
@@ -31,9 +30,8 @@ const Events = () => {
   const modalRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-
+  const [showOptions, setShowOptions] = useState(null);
+  const [setShowUpdateModal] = useState(false);
   // Handle click outside to close modal
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,6 +57,31 @@ const Events = () => {
 
     return () => unsubscribeAuth();
   }, []);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setShowCreateModal(false);
+        setShowUpdateModal(false);
+        setShowEditModal(false); // đóng modal event nếu click ngoài
+      }
+
+      // đóng option menu cho game & event
+      if (
+        showOptions &&
+        !event.target.closest(`[data-game-id="${showOptions}"]`) &&
+        !event.target.closest(`[data-options-id="${showOptions}"]`)
+      ) {
+        setShowOptions(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showOptions]);
+
+
 
   // Load events
   useEffect(() => {
@@ -527,36 +550,26 @@ const Events = () => {
               return (
                 <div
                   key={event.id}
-                  className={`p-4 rounded-lg shadow-md ${theme === "light" ? "border-gray-200" : "border-gray-700"}`}
-                  style={{
-                    backgroundColor: theme === "light" ? "#ffffff" : "#1f2937",
-                    color: theme === "light" ? "#1f2937" : "#f9fafb",
-                  }}
+                  className={`relative w-full mb-6 p-6 rounded-xl shadow-lg border transition-colors duration-300 ${theme === "light"
+                      ? "bg-white border-gray-200 text-gray-900"
+                      : "bg-gray-800 border-gray-700 text-gray-100"
+                    }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-500 text-white rounded-full p-3">
-                        <FaCalendarAlt size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-[var(--theme-text)] truncate max-w-[200px]">
-                          {event.name}
-                        </h3>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {event.attendees.length} Participants
-                        </div>
-                      </div>
-                    </div>
-                    {isOwner && (
-                      <Dropdown align="end">
-                        <Dropdown.Toggle
-                          variant="light"
-                          className="border-0 bg-transparent text-gray-600 dark:text-gray-300"
-                        >
-                          <FaEllipsisV />
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item
+                  {/* Nút Options góc phải */}
+                  {isOwner && (
+                    <div className="absolute top-4 right-4" data-options-id={event.id}>
+                      <button
+                        onClick={() =>
+                          setShowOptions(showOptions === event.id ? null : event.id)
+                        }
+                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                      >
+                        <FaEllipsisV />
+                      </button>
+
+                      {showOptions === event.id && (
+                        <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-700 border rounded-lg shadow-lg z-20">
+                          <button
                             onClick={() => {
                               setEditingEvent(event);
                               setEventName(event.name);
@@ -564,40 +577,64 @@ const Events = () => {
                               setEventLocation(event.location);
                               setEventDescription(event.description);
                               setShowEditModal(true);
+                              setShowOptions(null);
                             }}
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
                           >
-                            <FaEdit className="mr-2" /> Edit
-                          </Dropdown.Item>
-                          <Dropdown.Item onClick={() => handleDeleteEvent(event.id, event.ownerId)}>
-                            <FaTrash className="mr-2 text-red-500" /> Delete
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span className="font-medium">Date:</span> {formatEventDate(event.date)}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span className="font-medium">Location:</span> {event.location}
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-                    {event.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
-                      <a
-                        href={`#event-chat/${event.id}`}
-                        className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="Event chat"
-                      >
-                        <FaComments size={20} />
-                      </a>
+                            <FaEdit className="inline mr-2 " /> Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDeleteEvent(event.id, event.ownerId);
+                              setShowOptions(null);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          >
+                            <FaTrash className="inline mr-2" /> Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
+                  )}
+
+                  {/* Nội dung Event */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="bg-blue-500 text-white rounded-full p-3">
+                      <FaCalendarAlt size={28} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold truncate max-w-[400px]">
+                        {event.name}
+                      </h3>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {event.attendees.length} Participants
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    <div>
+                      <span className="font-medium">Date:</span> {formatEventDate(event.date)}
+                    </div>
+                    <div>
+                      <span className="font-medium">Location:</span> {event.location}
+                    </div>
+                    <p className="line-clamp-3">{event.description}</p>
+                  </div>
+
+                  {/* join / leave */}
+                  <div className="flex items-center justify-between">
+                    <a
+                      href={`#event-chat/${event.id}`}
+                      className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                      title="Event chat"
+                    >
+                      <FaComments size={20} />
+                    </a>
                     <button
-                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${isAttendee
-                        ? "bg-red-500 text-white hover:bg-red-600"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${isAttendee
+                          ? "bg-red-500 text-white hover:bg-red-600"
+                          : "bg-blue-500 text-white hover:bg-blue-600"
                         }`}
                       onClick={() =>
                         isAttendee
@@ -618,11 +655,13 @@ const Events = () => {
                       )}
                     </button>
                   </div>
-                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+
+                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-3">
                     Created: {formatTimeAgo(event.createdAt)}
                   </div>
                 </div>
               );
+
             })
           ) : (
             <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
