@@ -127,12 +127,14 @@ function App() {
             <Route path="/fan-badges" element={user ? <FanBadges /> : <Navigate to="/login" />} />
             {/* Group Page with nested routes */}
 
-            <Route path="/groups/:groupId" element={<GroupPage />}>
-              <Route index element={<GroupHome />} />  
+            <Route path="groups/:groupId" element={<GroupPage />}>
+              <Route index element={<GroupHome />} />
               <Route path="members" element={<GroupMembers />} />
               <Route path="media" element={<GroupMedia />} />
               <Route path="events" element={<GroupEvents />} />
               <Route path="about" element={<GroupInfo />} />
+              {/* Nếu path lạ → quay về Home của nhóm */}
+              <Route path="*" element={<Navigate to="." replace />} />
             </Route>
 
           </Route>

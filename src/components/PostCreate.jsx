@@ -17,7 +17,7 @@ const PostCreator = ({ onPostCreated }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
-
+  
   // Camera
   const [showCamera, setShowCamera] = useState(false);
   const [facingMode, setFacingMode] = useState("environment");
@@ -278,18 +278,55 @@ const PostCreator = ({ onPostCreated }) => {
   const supportMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   const openCamera = async () => {
     if (!supportMedia) return fallbackInputRef.current?.click();
+
     try {
+      // tắt stream cũ nếu có
       if (cameraStream) {
         cameraStream.getTracks().forEach((t) => t.stop());
         setCameraStream(null);
       }
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: false });
+
+      // iOS/Safari nhạy cảm với facingMode, dùng ideal + fallback
+      const primary = { video: { facingMode: { ideal: facingMode } }, audio: false };
+      const fallback = { video: true, audio: false };
+
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(primary);
+      } catch {
+        // nếu camera sau không có → dùng camera trước
+        stream = await navigator.mediaDevices.getUserMedia(fallback);
+        setFacingMode("user");
+      }
+
       setCameraStream(stream);
       setShowCamera(true);
+
+      // gán stream sau khi component render xong
       requestAnimationFrame(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => { });
+        const v = videoRef.current;
+        if (!v) return;
+
+        // đảm bảo attribute có tồn tại ở DOM (đặc biệt iOS)
+        v.setAttribute("playsinline", "");
+        v.setAttribute("autoplay", "");
+        v.muted = true;
+
+        v.srcObject = stream;
+
+        // chờ metadata rồi mới play (fix đen trên iOS)
+        const tryPlay = async () => {
+          try {
+            await v.play();
+          } catch {
+            // ignore – người dùng sẽ bấm nút chụp vẫn OK
+          }
+        };
+
+        if (v.readyState >= 2) {
+          tryPlay();
+        } else {
+          v.onloadedmetadata = tryPlay;
         }
       });
     } catch (err) {
@@ -297,15 +334,18 @@ const PostCreator = ({ onPostCreated }) => {
       toast.error("Không mở được camera. Hãy kiểm tra quyền.", { position: "top-center" });
     }
   };
-  const closeCamera = () => {
-    if (cameraStream) cameraStream.getTracks().forEach((t) => t.stop());
-    setCameraStream(null);
-    setShowCamera(false);
-  };
-  const toggleFacing = () => {
-    setFacingMode((p) => (p === "environment" ? "user" : "environment"));
-    setTimeout(() => openCamera(), 0);
-  };
+
+ const closeCamera = () => {
+  if (cameraStream) cameraStream.getTracks().forEach((t) => t.stop());
+  setCameraStream(null);
+  setShowCamera(false);
+};
+
+ const toggleFacing = () => {
+  setFacingMode((p) => (p === "environment" ? "user" : "environment"));
+  setTimeout(() => openCamera(), 0);
+};
+
   const capturePhoto = () => {
     const v = videoRef.current;
     const c = canvasRef.current;
@@ -655,8 +695,8 @@ const PostCreator = ({ onPostCreated }) => {
                 type="button"
                 onClick={toggleFacing}
                 className={`h-9 px-3 rounded-full text-sm font-medium transition ${isLight
-                    ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
-                    : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
+                  ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                  : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
                   }`}
                 title="Đổi camera"
               >
@@ -666,8 +706,8 @@ const PostCreator = ({ onPostCreated }) => {
                 type="button"
                 onClick={closeCamera}
                 className={`h-9 px-3 rounded-full text-sm font-medium transition ${isLight
-                    ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
-                    : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
+                  ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                  : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
                   }`}
                 title="Đóng"
               >
@@ -680,7 +720,10 @@ const PostCreator = ({ onPostCreated }) => {
           <div className="relative">
             <div className="w-full">
               <div className="aspect-[3/4] sm:aspect-video bg-black">
-                <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
+                <video ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted className="w-full h-full object-cover" />
                 <canvas ref={canvasRef} className="hidden" />
               </div>
             </div>

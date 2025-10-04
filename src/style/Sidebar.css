@@ -45,7 +45,7 @@
 }
 
 /* Mobile slide-in */
-.sidebar.is-mobile { width: 280px !important; transform: translateX(-100%); }
+.sidebar.is-mobile { margin-top: 45.5px ;width: 280px !important; transform: translateX(-100%); }
 .sidebar.is-mobile.is-open { transform: translateX(0); }
 
 /* ========= HEADER ========= */
@@ -185,7 +185,7 @@
 
 /* ========= MOBILE CONTROLS ========= */
 .sidebar__mobile-toggle {
-  margin-top: 15%;
+  margin-top: 30%;
   position: fixed;
   top: 1rem; left: 1rem;
   z-index: 1002;

@@ -148,6 +148,33 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
     Angry: "😠",
   };
 
+  // giữ popup reaction mở khi rê chuột giữa nút và popup
+  const hoverTimerRef = useRef(null);
+
+  const openReactions = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    setShowReactions(true);
+  };
+
+  const closeReactionsDelayed = (delay = 160) => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => {
+      setShowReactions(false);
+      hoverTimerRef.current = null;
+    }, delay);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
+
+
+
   const getMediaFiles = () => {
     if (localPost.mediaFiles?.length) return localPost.mediaFiles;
     if (localPost.mediaUrl) {
@@ -182,8 +209,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
   return (
     <div
       className={`rounded-3xl mb-4 overflow-hidden transition-all ${isLight
-          ? "bg-white border border-gray-100 shadow-sm hover:shadow-md"
-          : "bg-zinc-900 border border-zinc-800 shadow-lg"
+        ? "bg-white border border-gray-100 shadow-sm hover:shadow-md"
+        : "bg-zinc-900 border border-zinc-800 shadow-lg"
         }`}
     >
       {/* Header */}
@@ -279,8 +306,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                     src={item.url}
                     alt={item.originalName || "Image"}
                     className={`w-full cursor-pointer hover:opacity-95 transition-opacity ${getMediaFiles().length === 1
-                        ? "object-contain max-h-[600px]"
-                        : "rounded-xl object-cover aspect-square"
+                      ? "object-contain max-h-[600px]"
+                      : "rounded-xl object-cover aspect-square"
                       }`}
                     onClick={() => window.open(item.url, "_blank")}
                     style={getMediaFiles().length === 1 ? { display: "block" } : {}}
@@ -294,8 +321,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                     ref={videoRef}
                     controls
                     className={`w-full ${getMediaFiles().length === 1
-                        ? "max-h-[600px] object-contain"
-                        : "rounded-xl aspect-video object-cover"
+                      ? "max-h-[600px] object-contain"
+                      : "rounded-xl aspect-video object-cover"
                       }`}
                     onMouseEnter={() => {
                       if (videoRef.current) {
@@ -319,8 +346,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${isLight
-                        ? "bg-gray-50 border-gray-200 hover:bg-gray-100"
-                        : "bg-zinc-800 border-zinc-700 hover:bg-zinc-750"
+                      ? "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                      : "bg-zinc-800 border-zinc-700 hover:bg-zinc-750"
                       }`}
                   >
                     <FaFile className="text-blue-500" size={20} />
@@ -371,10 +398,11 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
       <div className="p-2 flex items-center justify-around">
         {/* Like */}
         {/* Like */}
+        {/* Like (wrapper có delay khi rời chuột) */}
         <div
-          className="relative flex-1"            // wrapper bao cả trigger & popup
-          onMouseEnter={() => setShowReactions(true)}
-          onMouseLeave={() => setShowReactions(false)}
+          className="relative flex-1"
+          onMouseEnter={openReactions}
+          onMouseLeave={() => closeReactionsDelayed(160)}
         >
           <button
             onClick={() => handleReaction(post.id, "Like")}
@@ -392,21 +420,25 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
 
           {showReactions && (
             <div
-              className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex gap-2 px-3 py-2 rounded-full shadow-xl z-30 ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
+              // giữ mở khi rê vào popup; đóng trễ khi rời
+              onMouseEnter={openReactions}
+              onMouseLeave={() => closeReactionsDelayed(160)}
+              className={`absolute left-1/2 -translate-x-1/2 flex gap-2 px-3 py-2 rounded-full shadow-xl z-30 ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
                 }`}
-              style={{ pointerEvents: "auto" }} 
+              style={{ bottom: "calc(100% + 8px)" }}  // tránh khoảng hở thay vì mb-2
             >
               {Object.entries(reactions).map(([key, icon]) => (
                 <button
                   key={key}
                   type="button"
                   onClick={(e) => {
-                    e.stopPropagation();                
+                    e.stopPropagation();
                     handleReaction(post.id, key);
                     setShowReactions(false);
                   }}
                   className="text-2xl hover:scale-125 transition-transform"
                   disabled={isReacting}
+                  aria-label={key}
                 >
                   {icon}
                 </button>
@@ -416,14 +448,15 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
         </div>
 
 
+
         {/* Comment */}
         <button
           onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
           className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${selectedPostId === post.id
-              ? "text-blue-500 font-semibold"
-              : isLight
-                ? "text-gray-600 hover:bg-gray-50"
-                : "text-gray-400 hover:bg-zinc-800"
+            ? "text-blue-500 font-semibold"
+            : isLight
+              ? "text-gray-600 hover:bg-gray-50"
+              : "text-gray-400 hover:bg-zinc-800"
             }`}
         >
           <FaComment />
@@ -435,10 +468,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
           <button
             onClick={() => setShowShareMenu(!showShareMenu)}
             className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${showShareMenu
-                ? "text-blue-500 font-semibold"
-                : isLight
-                  ? "text-gray-600 hover:bg-gray-50"
-                  : "text-gray-400 hover:bg-zinc-800"
+              ? "text-blue-500 font-semibold"
+              : isLight
+                ? "text-gray-600 hover:bg-gray-50"
+                : "text-gray-400 hover:bg-zinc-800"
               }`}
           >
             <FaShare />

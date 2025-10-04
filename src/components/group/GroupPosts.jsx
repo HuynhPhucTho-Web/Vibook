@@ -1,242 +1,168 @@
-import React, { useState, useEffect } from "react";
-import { FaSmile, FaImage, FaVideo, FaFileAlt, FaTimes } from "react-icons/fa";
+import React, { useContext, useRef, useState, useEffect } from "react";
+import { ThemeContext } from "../../context/ThemeContext";
+import { auth, db } from "../../components/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { FaImage, FaVideo, FaFile, FaSmile } from "react-icons/fa";
 import Picker from "emoji-picker-react";
-import { db, auth } from "../../components/firebase";
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  onSnapshot,
-  query,
-  orderBy,
-} from "firebase/firestore";
-import PostItem from "./PostItem";
 
-// Upload to Cloudinary
 const uploadToCloudinary = async (file) => {
-  const cloudName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
-
-  let resourceType = "auto";
-  if (file.type.startsWith("image/")) resourceType = "image";
-  else if (file.type.startsWith("video/")) resourceType = "video";
-  else resourceType = "raw";
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-    { method: "POST", body: formData }
-  );
-
-  if (!res.ok) throw new Error("Upload failed!");
+  const cloud = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
+  const preset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+  let type = "auto";
+  if (file.type.startsWith("image/")) type = "image";
+  else if (file.type.startsWith("video/")) type = "video";
+  else type = "raw";
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", preset);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/${type}/upload`, { method: "POST", body: fd });
+  if (!res.ok) throw new Error("Upload failed");
   const data = await res.json();
   return data.secure_url;
 };
 
-const GroupPosts = ({ groupId }) => {
+export default function GroupPostComposer({ groupId }) {
+  const { theme } = useContext(ThemeContext);
+  const isLight = theme === "light";
+
   const [content, setContent] = useState("");
-  const [media, setMedia] = useState([]);
+  const [media, setMedia] = useState([]); // [{file, preview}]
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [posts, setPosts] = useState([]);
 
-  const user = auth.currentUser;
+  // revoke preview on unmount
+  useEffect(() => () => media.forEach((m) => m.preview && URL.revokeObjectURL(m.preview)), [media]);
 
-  // Fetch posts in real-time
-  useEffect(() => {
-    if (!groupId) return;
-    const q = query(
-      collection(db, "Groups", groupId, "Posts"),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const postsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        groupId,
-      }));
-      setPosts(postsData);
-    });
-
-    return () => unsubscribe();
-  }, [groupId]);
-
-  // Handle file uploads
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files).map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-    setMedia([...media, ...files]);
+  const onPickFiles = (e) => {
+    const files = Array.from(e.target.files || []);
+    const next = files.map((f) => ({ file: f, preview: URL.createObjectURL(f) }));
+    setMedia((p) => [...p, ...next]);
     e.target.value = "";
   };
 
-  const removeMedia = (index) => {
-    const updated = [...media];
-    updated.splice(index, 1);
-    setMedia(updated);
+  const removeAt = (idx) => {
+    setMedia((p) => {
+      const cp = [...p];
+      const [rm] = cp.splice(idx, 1);
+      if (rm?.preview) URL.revokeObjectURL(rm.preview);
+      return cp;
+    });
   };
 
-  const handleEmojiClick = (emojiData) => {
-    setContent(content + emojiData.emoji);
-  };
+  const onEmojiClick = (e) => setContent((s) => s + (e?.emoji || ""));
 
-  // Submit post
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!content && media.length === 0) {
-      alert("Please enter content or add media!");
-      return;
-    }
-
-    if (!user) {
-      alert("You need to log in to post!");
-      return;
-    }
+  const submit = async () => {
+    if (loading) return;
+    if (!content.trim() && media.length === 0) return;
 
     setLoading(true);
     try {
-      // Upload media to Cloudinary
-      const uploadedUrls = await Promise.all(
-        media.map((m) => uploadToCloudinary(m.file))
-      );
-
-      // Save post to Firestore
+      const urls = [];
+      for (const m of media) {
+        urls.push(await uploadToCloudinary(m.file));
+      }
       await addDoc(collection(db, "Groups", groupId, "Posts"), {
-        content,
-        mediaUrls: uploadedUrls,
+        content: content.trim(),
+        mediaUrls: urls,
         createdAt: serverTimestamp(),
-        userId: user.uid,
-        userName: user.displayName || "Anonymous",
-        userPhoto: user.photoURL || null,
-        status: "public",
+        userId: auth.currentUser?.uid,
+        userName: auth.currentUser?.displayName || "Anonymous",
+        userPhoto: auth.currentUser?.photoURL || null,
+        likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
+        reactedBy: {},
       });
-
       setContent("");
       setMedia([]);
       setShowEmoji(false);
-    } catch (err) {
-      console.error("Error posting:", err);
-      alert("Failed to post!");
+    } catch (e) {
+      console.error(e);
+      alert("Đăng bài thất bại");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full py-4">
-      {/* Post Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-800 py-4 px-4 rounded-2xl shadow-md mb-4"
-      >
+    <div
+      className={`rounded-3xl shadow-md transition-all ${isLight ? "bg-white border border-gray-200" : "bg-zinc-900 border border-zinc-800"}`}
+    >
+      <div className="p-4">
+        {/* input */}
         <textarea
           placeholder="What's on your mind?"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full p-3 border rounded-xl mb-2 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={3}
+          className={`w-full rounded-2xl p-3 outline-none resize-y ${isLight ? "bg-gray-50 text-gray-800" : "bg-zinc-800 text-gray-100"}`}
         />
 
-        {showEmoji && <Picker onEmojiClick={handleEmojiClick} />}
-
-        {/* Media Preview */}
+        {/* media preview */}
         {media.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-3">
             {media.map((m, i) => (
-              <div key={i} className="relative">
+              <div key={i} className={`relative rounded-xl overflow-hidden ${isLight ? "bg-white ring-1 ring-gray-200" : "bg-zinc-700 ring-1 ring-gray-600"}`}>
                 {m.file.type.startsWith("video") ? (
-                  <video
-                    src={m.preview}
-                    controls
-                    className="w-full h-28 object-cover rounded-lg"
-                  />
+                  <video src={m.preview} className="w-full h-full object-cover" controls />
                 ) : (
-                  <img
-                    src={m.preview}
-                    alt="preview"
-                    className="w-full h-28 object-cover rounded-lg"
-                  />
+                  <img src={m.preview} className="w-full h-full object-cover" alt="" />
                 )}
                 <button
                   type="button"
-                  onClick={() => removeMedia(i)}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
-                >
-                  <FaTimes size={12} />
-                </button>
+                  onClick={() => removeAt(i)}
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500 text-white grid place-items-center"
+                  aria-label="Remove"
+                >×</button>
               </div>
             ))}
           </div>
         )}
 
-        <div className="flex justify-between items-center mt-2">
-          <div className="flex space-x-4">
+        {/* actions */}
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <label className={`px-3 py-2 rounded-xl cursor-pointer ${isLight ? "bg-emerald-50 text-emerald-700" : "bg-emerald-900/30 text-emerald-400"}`}>
+              <FaImage />
+              <input type="file" hidden accept="image/*" multiple onChange={onPickFiles} />
+            </label>
+            <label className={`px-3 py-2 rounded-xl cursor-pointer ${isLight ? "bg-rose-50 text-rose-700" : "bg-rose-900/30 text-rose-400"}`}>
+              <FaVideo />
+              <input type="file" hidden accept="video/*" multiple onChange={onPickFiles} />
+            </label>
+            <label className={`px-3 py-2 rounded-xl cursor-pointer ${isLight ? "bg-blue-50 text-blue-700" : "bg-blue-900/30 text-blue-400"}`}>
+              <FaFile />
+              <input type="file" hidden accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" multiple onChange={onPickFiles} />
+            </label>
             <button
               type="button"
-              onClick={() => setShowEmoji(!showEmoji)}
-              className="text-yellow-500 hover:text-yellow-600"
+              onClick={() => setShowEmoji((s) => !s)}
+              className={`px-3 py-2 rounded-xl ${isLight ? "bg-amber-50 text-amber-700" : "bg-amber-900/30 text-amber-400"}`}
+              aria-expanded={showEmoji}
             >
-              <FaSmile size={20} />
+              <FaSmile />
             </button>
-            <label className="cursor-pointer text-green-500 hover:text-green-600">
-              <FaImage size={20} />
-              <input
-                type="file"
-                hidden
-                multiple
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-            </label>
-            <label className="cursor-pointer text-red-500 hover:text-red-600">
-              <FaVideo size={20} />
-              <input
-                type="file"
-                hidden
-                multiple
-                accept="video/*"
-                onChange={handleFileChange}
-              />
-            </label>
-            <label className="cursor-pointer text-blue-500 hover:text-blue-600">
-              <FaFileAlt size={20} />
-              <input
-                type="file"
-                hidden
-                multiple
-                accept=".pdf,.doc,.docx"
-                onChange={handleFileChange}
-              />
-            </label>
           </div>
+
           <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-1 rounded-xl hover:bg-blue-700 transition-colors"
-            disabled={loading}
+            type="button"
+            onClick={submit}
+            disabled={loading || (!content.trim() && media.length === 0)}
+            className={`px-5 py-2.5 rounded-xl font-semibold text-white ${loading || (!content.trim() && media.length === 0)
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"}`}
           >
-            {loading ? "Posting..." : "Post"}
+            {loading ? "Posting…" : "Post"}
           </button>
         </div>
-      </form>
-
-      {/* Post List */}
-      <div className="space-y-3">
-        {posts.length === 0 ? (
-          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-            No posts yet. Be the first to post!
-          </div>
-        ) : (
-          posts.map((post) => (
-            <PostItem key={post.id} post={post} />
-          ))
-        )}
       </div>
+
+      {/* Emoji popover */}
+      {showEmoji && (
+        <div className="px-4 pb-4">
+          <div className={`${isLight ? "ring-1 ring-gray-200" : "ring-1 ring-gray-700"} rounded-2xl overflow-hidden`}>
+            <Picker onEmojiClick={(_, e) => onEmojiClick(e)} theme={isLight ? "light" : "dark"} previewConfig={{ showPreview: false }} height={350} width="100%" />
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default GroupPosts;
+}

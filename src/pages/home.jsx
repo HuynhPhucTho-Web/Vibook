@@ -125,15 +125,10 @@ function Home() {
       className={`container-fluid py-4 ${themes[theme]}`}
       style={{ backgroundColor: bodyBackground, minHeight: "100vh", transition: "all 0.3s ease" }}
     >
-      {/* Carousel Video */}
       <div className="mb-4">
         <VideoCarousel theme={theme} />
       </div>
-
-      {/* Form tạo bài viết */}
       <PostCreator onPostCreated={handlePostCreated} />
-
-      {/* Posts Feed */}
       <div>
         {posts.length > 0 ? (
           posts.map((post) => (

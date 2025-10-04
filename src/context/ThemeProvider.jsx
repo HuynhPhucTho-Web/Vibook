@@ -131,7 +131,6 @@ export const ThemeProvider = ({ children }) => {
     }
     
     /* Custom theme colors */
-    .bg-purple-subtle { background-color: #f3e5f5 !important; }
     .text-purple { color: #6f42c1 !important; }
     .bg-purple { background-color: #6f42c1 !important; }
     
