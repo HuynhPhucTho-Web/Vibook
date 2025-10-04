@@ -181,11 +181,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
 
   return (
     <div
-      className={`rounded-3xl mb-4 overflow-hidden transition-all ${
-        isLight
+      className={`rounded-3xl mb-4 overflow-hidden transition-all ${isLight
           ? "bg-white border border-gray-100 shadow-sm hover:shadow-md"
           : "bg-zinc-900 border border-zinc-800 shadow-lg"
-      }`}
+        }`}
     >
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
@@ -208,9 +207,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
             <button
               onClick={() => setShowDropdown(!showDropdown)}
               disabled={isDeleting}
-              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
-                isLight ? "hover:bg-gray-100" : "hover:bg-zinc-800"
-              }`}
+              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${isLight ? "hover:bg-gray-100" : "hover:bg-zinc-800"
+                }`}
             >
               {isDeleting ? (
                 <div className="animate-spin h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full" />
@@ -223,18 +221,16 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)} />
                 <div
-                  className={`absolute right-0 mt-2 w-48 rounded-2xl shadow-xl z-20 py-2 ${
-                    isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
-                  }`}
+                  className={`absolute right-0 mt-2 w-48 rounded-2xl shadow-xl z-20 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
+                    }`}
                 >
                   <button
                     onClick={() => {
                       handleEditPost();
                       setShowDropdown(false);
                     }}
-                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                      isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
-                    }`}
+                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
+                      }`}
                   >
                     <FaEdit /> Chỉnh sửa
                   </button>
@@ -243,9 +239,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                       handlePrivatePost();
                       setShowDropdown(false);
                     }}
-                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                      isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
-                    }`}
+                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
+                      }`}
                   >
                     <FaLock /> Riêng tư
                   </button>
@@ -283,11 +278,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                     key={idx}
                     src={item.url}
                     alt={item.originalName || "Image"}
-                    className={`w-full cursor-pointer hover:opacity-95 transition-opacity ${
-                      getMediaFiles().length === 1 
-                        ? "object-contain max-h-[600px]" 
+                    className={`w-full cursor-pointer hover:opacity-95 transition-opacity ${getMediaFiles().length === 1
+                        ? "object-contain max-h-[600px]"
                         : "rounded-xl object-cover aspect-square"
-                    }`}
+                      }`}
                     onClick={() => window.open(item.url, "_blank")}
                     style={getMediaFiles().length === 1 ? { display: "block" } : {}}
                   />
@@ -299,15 +293,14 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                     key={idx}
                     ref={videoRef}
                     controls
-                    className={`w-full ${
-                      getMediaFiles().length === 1 
-                        ? "max-h-[600px] object-contain" 
+                    className={`w-full ${getMediaFiles().length === 1
+                        ? "max-h-[600px] object-contain"
                         : "rounded-xl aspect-video object-cover"
-                    }`}
+                      }`}
                     onMouseEnter={() => {
                       if (videoRef.current) {
                         videoRef.current.muted = false;
-                        videoRef.current.play().catch(() => {});
+                        videoRef.current.play().catch(() => { });
                       }
                     }}
                     onMouseLeave={() => {
@@ -325,11 +318,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                      isLight
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${isLight
                         ? "bg-gray-50 border-gray-200 hover:bg-gray-100"
                         : "bg-zinc-800 border-zinc-700 hover:bg-zinc-750"
-                    }`}
+                      }`}
                   >
                     <FaFile className="text-blue-500" size={20} />
                     <span className={`text-sm truncate ${isLight ? "text-gray-700" : "text-gray-300"}`}>
@@ -378,19 +370,21 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
       {/* Actions */}
       <div className="p-2 flex items-center justify-around">
         {/* Like */}
-        <div className="relative flex-1">
+        {/* Like */}
+        <div
+          className="relative flex-1"            // wrapper bao cả trigger & popup
+          onMouseEnter={() => setShowReactions(true)}
+          onMouseLeave={() => setShowReactions(false)}
+        >
           <button
-            onMouseEnter={() => setShowReactions(true)}
-            onMouseLeave={() => setTimeout(() => setShowReactions(false), 200)}
             onClick={() => handleReaction(post.id, "Like")}
             disabled={isReacting}
-            className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${
-              currentReaction
+            className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${currentReaction
                 ? "text-blue-500 font-semibold"
                 : isLight
-                ? "text-gray-600 hover:bg-gray-50"
-                : "text-gray-400 hover:bg-zinc-800"
-            }`}
+                  ? "text-gray-600 hover:bg-gray-50"
+                  : "text-gray-400 hover:bg-zinc-800"
+              }`}
           >
             <span className="text-lg">{currentReaction ? reactions[currentReaction] : "👍"}</span>
             <span className="text-sm">{currentReaction || "Thích"}</span>
@@ -398,16 +392,19 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
 
           {showReactions && (
             <div
-              onMouseEnter={() => setShowReactions(true)}
-              onMouseLeave={() => setShowReactions(false)}
-              className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex gap-2 px-3 py-2 rounded-full shadow-xl z-30 ${
-                isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
-              }`}
+              className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex gap-2 px-3 py-2 rounded-full shadow-xl z-30 ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
+                }`}
+              style={{ pointerEvents: "auto" }} 
             >
               {Object.entries(reactions).map(([key, icon]) => (
                 <button
                   key={key}
-                  onClick={() => handleReaction(post.id, key)}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();                
+                    handleReaction(post.id, key);
+                    setShowReactions(false);
+                  }}
                   className="text-2xl hover:scale-125 transition-transform"
                   disabled={isReacting}
                 >
@@ -418,16 +415,16 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
           )}
         </div>
 
+
         {/* Comment */}
         <button
           onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
-          className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${
-            selectedPostId === post.id
+          className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${selectedPostId === post.id
               ? "text-blue-500 font-semibold"
               : isLight
-              ? "text-gray-600 hover:bg-gray-50"
-              : "text-gray-400 hover:bg-zinc-800"
-          }`}
+                ? "text-gray-600 hover:bg-gray-50"
+                : "text-gray-400 hover:bg-zinc-800"
+            }`}
         >
           <FaComment />
           <span className="text-sm">Bình luận</span>
@@ -437,13 +434,12 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
         <div className="relative flex-1">
           <button
             onClick={() => setShowShareMenu(!showShareMenu)}
-            className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${
-              showShareMenu
+            className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${showShareMenu
                 ? "text-blue-500 font-semibold"
                 : isLight
-                ? "text-gray-600 hover:bg-gray-50"
-                : "text-gray-400 hover:bg-zinc-800"
-            }`}
+                  ? "text-gray-600 hover:bg-gray-50"
+                  : "text-gray-400 hover:bg-zinc-800"
+              }`}
           >
             <FaShare />
             <span className="text-sm">Chia sẻ</span>
@@ -453,32 +449,28 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
             <>
               <div className="fixed inset-0 z-20" onClick={() => setShowShareMenu(false)} />
               <div
-                className={`absolute right-0 bottom-full mb-2 w-56 rounded-2xl shadow-xl z-30 py-2 ${
-                  isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
-                }`}
+                className={`absolute right-0 bottom-full mb-2 w-56 rounded-2xl shadow-xl z-30 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
+                  }`}
               >
                 <button
                   onClick={() => handleShare("copy")}
-                  className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                    isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
-                  }`}
+                  className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
+                    }`}
                 >
                   Copy link
                 </button>
                 <button
                   onClick={() => handleShare("copyWithContent")}
-                  className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                    isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
-                  }`}
+                  className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
+                    }`}
                 >
                   Copy nội dung
                 </button>
                 {navigator.share && (
                   <button
                     onClick={() => handleShare("native")}
-                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                      isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
-                    }`}
+                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
+                      }`}
                   >
                     Chia sẻ hệ thống
                   </button>
