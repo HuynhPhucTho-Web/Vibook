@@ -3,39 +3,40 @@ import { auth, db } from "../components/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
-import { FaImage, FaVideo, FaFile, FaEdit, FaSmile, FaCamera } from "react-icons/fa";
-
+import { FaImage, FaVideo, FaFile, FaSmile, FaCamera, FaTimes, FaExpand } from "react-icons/fa";
 import { Cloudinary } from "@cloudinary/url-gen";
-import Picker from "emoji-picker-react"; // <-- emoji-picker-react
+import Picker from "emoji-picker-react";
 
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
+
+  // ----- state -----
   const [postContent, setPostContent] = useState("");
   const [mediaFiles, setMediaFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
+
+  // Camera
   const [showCamera, setShowCamera] = useState(false);
-  const [facingMode, setFacingMode] = useState("environment"); // "user" | "environment"
+  const [facingMode, setFacingMode] = useState("environment");
   const [cameraStream, setCameraStream] = useState(null);
 
-  // Emoji picker
+  // Emoji
   const [showEmoji, setShowEmoji] = useState(false);
+
+  // refs
   const textareaRef = useRef(null);
   const emojiBtnRef = useRef(null);
+  const emojiPopoverRef = useRef(null);
+  const cameraPopoverRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fallbackInputRef = useRef(null);
-  // ở đầu component
-  const emojiPopoverRef = useRef(null);
-  const cameraPopoverRef = useRef(null);
 
-
-  // File size limits (MB)
+  // ----- constants -----
   const FILE_SIZE_LIMITS = { image: 10, video: 50, document: 25 };
-
-  // Supported file types
   const SUPPORTED_TYPES = {
     image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
     video: ["video/mp4", "video/webm", "video/ogg", "video/avi"],
@@ -45,288 +46,32 @@ const PostCreator = ({ onPostCreated }) => {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ],
   };
-
   const currentDateTime = new Date().toLocaleString("en-US", {
     timeZone: "Asia/Ho_Chi_Minh",
     dateStyle: "full",
     timeStyle: "long",
   });
 
-  // Theme styles (giữ nguyên cách bạn đang dùng)
-  const getThemeStyles = () => {
-    const baseStyles = {
-      card: {
-        backgroundColor:
-          theme === "light" ? "rgba(255, 255, 255, 0.95)" : "rgba(30, 30, 30, 0.95)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        border:
-          theme === "light"
-            ? "1px solid rgba(0, 0, 0, 0.1)"
-            : "1px solid rgba(255, 255, 255, 0.1)",
-        borderRadius: "16px",
-        boxShadow:
-          theme === "light"
-            ? "0 8px 32px rgba(0, 0, 0, 0.1)"
-            : "0 8px 32px rgba(0, 0, 0, 0.3)",
-        color: theme === "light" ? "#000" : "#fff",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-      },
-      textarea: {
-        backgroundColor:
-          theme === "light" ? "rgba(248, 250, 252, 0.9)" : "rgba(45, 55, 72, 0.9)",
-        border: `2px solid ${isFocused
-          ? theme === "light"
-            ? "rgba(79, 172, 254, 0.6)"
-            : "rgba(129, 140, 248, 0.6)"
-          : theme === "light"
-            ? "rgba(226, 232, 240, 0.8)"
-            : "rgba(75, 85, 99, 0.6)"
-          }`,
-        borderRadius: "12px",
-        color: theme === "light" ? "#1a202c" : "#f7fafc",
-        transition: "all 0.3s ease",
-        padding: "12px 16px 12px 45px",
-        fontSize: "1rem",
-        lineHeight: "1.6",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        boxShadow:
-          theme === "light"
-            ? isFocused
-              ? "0 4px 20px rgba(79, 172, 254, 0.15)"
-              : "0 2px 8px rgba(0, 0, 0, 0.05)"
-            : isFocused
-              ? "0 4px 20px rgba(129, 140, 248, 0.25)"
-              : "0 2px 8px rgba(0, 0, 0, 0.2)",
-      },
-      button: {
-        backgroundColor:
-          theme === "light"
-            ? "linear-gradient(135deg, #667eea, #764ba2)"
-            : "linear-gradient(135deg, #4facfe, #00f2fe)",
-        border: "none",
-        borderRadius: "10px",
-        color: "#fff",
-        fontWeight: "600",
-        padding: "8px 24px",
-        transition: "all 0.3s ease",
-        transform: "scale(1)",
-        boxShadow:
-          theme === "light"
-            ? "0 4px 15px rgba(102, 126, 234, 0.4)"
-            : "0 4px 15px rgba(79, 172, 254, 0.4)",
-      },
-      iconButton: {
-        color: theme === "light" ? "rgba(55, 65, 81, 0.8)" : "rgba(229, 231, 235, 0.8)",
-        backgroundColor:
-          theme === "light" ? "rgba(249, 250, 251, 0.8)" : "rgba(55, 65, 81, 0.5)",
-        border: `1px solid ${theme === "light" ? "rgba(229, 231, 235, 0.6)" : "rgba(75, 85, 99, 0.6)"
-          }`,
-        borderRadius: "8px",
-        padding: "8px 12px",
-        transition: "all 0.3s ease",
-        fontSize: "0.9rem",
-        backdropFilter: "blur(10px)",
-        cursor: "pointer",
-        userSelect: "none",
-      },
-      inputIcon: {
-        position: "absolute",
-        left: "15px",
-        top: "50%",
-        transform: "translateY(-50%)",
-        color:
-          theme === "light"
-            ? isFocused
-              ? "rgba(79, 172, 254, 0.8)"
-              : "rgba(107, 114, 128, 0.6)"
-            : isFocused
-              ? "rgba(129, 140, 248, 0.8)"
-              : "rgba(156, 163, 175, 0.6)",
-        fontSize: "1.1rem",
-        zIndex: 1,
-        transition: "color 0.3s ease",
-      },
-    };
-    return baseStyles;
-  };
-  const styles = getThemeStyles();
+  // ----- theme helpers -----
+  const isLight = theme === "light";
 
-  const supportMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-
-  // Mở camera
-  const openCamera = async () => {
-    if (!supportMedia) {
-      // Fallback: kích hoạt input file dùng capture (iOS Safari)
-      fallbackInputRef.current?.click();
-      return;
-    }
-    try {
-      // đóng stream cũ nếu có
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(t => t.stop());
-        setCameraStream(null);
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
-        audio: false,
-      });
-      setCameraStream(stream);
-      setShowCamera(true);
-      // gắn stream vào video
-      requestAnimationFrame(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => { });
-        }
-      });
-    } catch (err) {
-      console.error("Open camera error:", err);
-      toast.error("Không mở được camera. Hãy kiểm tra quyền truy cập.", { position: "top-center" });
-    }
-  };
-
-  // Đóng camera
-  const closeCamera = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(t => t.stop());
-      setCameraStream(null);
-    }
-    setShowCamera(false);
-  };
-
-  // Đổi camera trước/sau
-  const toggleFacing = async () => {
-    setFacingMode(prev => (prev === "environment" ? "user" : "environment"));
-    // Mở lại stream theo facing mới
-    setTimeout(() => openCamera(), 0);
-  };
-
-  // Chụp ảnh → thêm vào mediaFiles
-  const capturePhoto = async () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-
-    const w = video.videoWidth || 720;
-    const h = video.videoHeight || 1280;
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, w, h);
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const fileName = `camera-${Date.now()}.png`;
-      const file = new File([blob], fileName, { type: "image/png" });
-
-      // tạo preview dataURL để hiển thị ngay
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const preview = reader.result;
-        const fileData = {
-          file,
-          preview,
-          category: "image",
-          type: "image/png",
-          name: fileName,
-          size: file.size,
-          id: Date.now() + Math.random(),
-        };
-        setMediaFiles(prev => [...prev, fileData]);
-        toast.success("Đã chụp ảnh và thêm vào bài viết.", { position: "top-center" });
-        // giữ camera mở để chụp tiếp; muốn tự đóng thì gọi closeCamera();
-      };
-      reader.readAsDataURL(file);
-    }, "image/png", 0.92);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      // nếu đang mở emoji và click KHÔNG nằm trong popover & KHÔNG nằm trên nút toggle
-      if (
-        showEmoji &&
-        emojiPopoverRef.current &&
-        !emojiPopoverRef.current.contains(e.target) &&
-        emojiBtnRef.current &&
-        !emojiBtnRef.current.contains(e.target)
-      ) {
-        setShowEmoji(false);
-      }
-
-      // nếu đang mở camera
-      if (
-        showCamera &&
-        cameraPopoverRef.current &&
-        !cameraPopoverRef.current.contains(e.target)
-      ) {
-        setShowCamera(false);
-      }
-    };
-
-    const handleEsc = (e) => {
-      if (e.key === "Escape") {
-        if (showEmoji) setShowEmoji(false);
-        if (showCamera) setShowCamera(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, [showEmoji, showCamera]);
-
-
-  // Fallback iOS: chọn trực tiếp từ camera
-  const onFallbackCapture = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    // Tái sử dụng validate/preview sẵn có
-    for (const f of files) {
-      const validation = validateFile(f);
-      if (!validation.valid) {
-        toast.error(validation.error, { position: "top-center" });
-        continue;
-      }
-      const preview = await createFilePreview(f);
-      const fileData = {
-        file: f,
-        preview,
-        category: "image",
-        type: f.type,
-        name: f.name,
-        size: f.size,
-        id: Date.now() + Math.random(),
-      };
-      setMediaFiles(prev => [...prev, fileData]);
-    }
-    // reset input
-    e.target.value = "";
-  };
-
-
-  // Cloudinary config check
+  // ----- env check -----
   useEffect(() => {
     const cloudName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
     if (!cloudName || !uploadPreset) {
-      console.error(`[${currentDateTime}] Missing Cloudinary environment variables`);
-      toast.error("Cloudinary configuration is missing. Please check your .env file.", {
-        position: "top-center",
-      });
+      console.error(`[${currentDateTime}] Missing Cloudinary envs`);
+      toast.error("Thiếu cấu hình Cloudinary trong .env", { position: "top-center" });
     }
   }, []);
 
-  // Auth ready
+  // ----- auth ready -----
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(() => setIsLoadingAuth(false));
-    return () => unsubscribe();
+    const unsub = auth.onAuthStateChanged(() => setIsLoadingAuth(false));
+    return () => unsub();
   }, []);
 
-  // cleanup previews
+  // ----- cleanup video blob preview -----
   useEffect(() => {
     return () => {
       mediaFiles.forEach((f) => {
@@ -335,31 +80,25 @@ const PostCreator = ({ onPostCreated }) => {
     };
   }, [mediaFiles]);
 
-  // Cloudinary (giữ nguyên)
-  const cld = new Cloudinary({
-    cloud: {
-      cloudName: import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME || "fallback_cloud_name",
-    },
+  // ----- Cloudinary client (optional to transform) -----
+  new Cloudinary({
+    cloud: { cloudName: import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME || "fallback" },
   });
 
-  // Helpers
-  const getFileCategory = (fileType) => {
-    if (SUPPORTED_TYPES.image.includes(fileType)) return "image";
-    if (SUPPORTED_TYPES.video.includes(fileType)) return "video";
-    if (SUPPORTED_TYPES.document.includes(fileType)) return "document";
+  // ===== Helpers =====
+  const getFileCategory = (t) => {
+    if (SUPPORTED_TYPES.image.includes(t)) return "image";
+    if (SUPPORTED_TYPES.video.includes(t)) return "video";
+    if (SUPPORTED_TYPES.document.includes(t)) return "document";
     return "unknown";
   };
 
   const validateFile = (file) => {
     const category = getFileCategory(file.type);
-    if (category === "unknown") return { valid: false, error: `File type ${file.type} is not supported` };
-    const maxSize = FILE_SIZE_LIMITS[category] * 1024 * 1024;
-    if (file.size > maxSize) {
-      return {
-        valid: false,
-        error: `${category[0].toUpperCase() + category.slice(1)} file must be less than ${FILE_SIZE_LIMITS[category]
-          }MB`,
-      };
+    if (category === "unknown") return { valid: false, error: `Định dạng ${file.type} không hỗ trợ` };
+    const max = FILE_SIZE_LIMITS[category] * 1024 * 1024;
+    if (file.size > max) {
+      return { valid: false, error: `Tệp ${category} phải nhỏ hơn ${FILE_SIZE_LIMITS[category]}MB` };
     }
     return { valid: true };
   };
@@ -368,108 +107,98 @@ const PostCreator = ({ onPostCreated }) => {
     new Promise((resolve, reject) => {
       const category = getFileCategory(file.type);
       if (category === "image") {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(file);
       } else if (category === "video") {
         resolve(URL.createObjectURL(file));
-      } else {
-        resolve(null);
-      }
+      } else resolve(null);
     });
 
   const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (mediaFiles.length + files.length > 5) {
-      toast.error("Maximum 5 files allowed per post", { position: "top-center" });
+      toast.error("Tối đa 5 tệp mỗi bài viết", { position: "top-center" });
       return;
     }
-    const validFiles = [];
-    for (const file of files) {
-      const validation = validateFile(file);
-      if (!validation.valid) {
-        toast.error(validation.error, { position: "top-center" });
+    const push = [];
+    for (const f of files) {
+      const ok = validateFile(f);
+      if (!ok.valid) {
+        toast.error(ok.error, { position: "top-center" });
         continue;
       }
-      try {
-        const preview = await createFilePreview(file);
-        const fileCategory = getFileCategory(file.type);
-        validFiles.push({
-          file,
-          preview,
-          category: fileCategory,
-          type: file.type,
-          name: file.name,
-          size: file.size,
-          id: Date.now() + Math.random(),
-        });
-      } catch (err) {
-        console.error(`Error creating preview for ${file.name}:`, err);
-        toast.error(`Failed to load preview for ${file.name}`, { position: "top-center" });
-      }
+      const preview = await createFilePreview(f);
+      push.push({
+        file: f,
+        preview,
+        category: getFileCategory(f.type),
+        type: f.type,
+        name: f.name,
+        size: f.size,
+        id: Date.now() + Math.random(),
+      });
     }
-    setMediaFiles((prev) => [...prev, ...validFiles]);
+    setMediaFiles((p) => [...p, ...push]);
+    e.target.value = "";
   };
 
-  const removeFile = (fileId) => {
-    setMediaFiles((prev) => {
-      const f = prev.find((x) => x.id === fileId);
+  const removeFile = (id) => {
+    setMediaFiles((p) => {
+      const f = p.find((x) => x.id === id);
       if (f?.preview && f.category === "video") URL.revokeObjectURL(f.preview);
-      return prev.filter((x) => x.id !== fileId);
+      return p.filter((x) => x.id !== id);
     });
   };
 
-  const uploadFileToCloudinary = async (fileData, index, totalFiles) => {
-    const formData = new FormData();
-    formData.append("file", fileData.file);
-    formData.append("upload_preset", import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET);
-    if (fileData.category === "document") formData.append("resource_type", "raw");
-    else if (fileData.category === "video") formData.append("resource_type", "video");
+  const uploadFileToCloudinary = async (fileData) => {
+    const fd = new FormData();
+    fd.append("file", fileData.file);
+    fd.append("upload_preset", import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET);
+    if (fileData.category === "document") fd.append("resource_type", "raw");
+    else if (fileData.category === "video") fd.append("resource_type", "video");
 
-    const response = await fetch(
+    const res = await fetch(
       `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME
       }/${fileData.category === "document" ? "raw" : "auto"}/upload`,
-      { method: "POST", body: formData }
+      { method: "POST", body: fd }
     );
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[${currentDateTime}] Cloudinary error:`, errorText);
-      throw new Error(`Upload failed for ${fileData.name}: ${response.statusText}`);
+    if (!res.ok) {
+      const t = await res.text();
+      console.error(`[${currentDateTime}] Cloudinary error`, t);
+      throw new Error(`Upload thất bại: ${fileData.name}`);
     }
-    const result = await response.json();
+    const json = await res.json();
     return {
-      url: result.secure_url,
-      publicId: result.public_id,
-      resourceType: result.resource_type,
+      url: json.secure_url,
+      publicId: json.public_id,
+      resourceType: json.resource_type,
       originalName: fileData.name,
       size: fileData.size,
       category: fileData.category,
     };
   };
 
-  const handlePostSubmit = async (e) => {
-    e.preventDefault();
+  const handlePostSubmit = async () => {
     if (isUploading) return;
     if (!postContent.trim() && mediaFiles.length === 0) {
-      toast.error("Post content or media is required", { position: "top-center" });
+      toast.error("Hãy nhập nội dung hoặc đính kèm media", { position: "top-center" });
       return;
     }
     if (!auth.currentUser) {
-      toast.error("You must be logged in to post", { position: "top-center" });
+      toast.error("Bạn cần đăng nhập để đăng bài", { position: "top-center" });
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(0);
     try {
-      let uploadedMedia = [];
-      if (mediaFiles.length > 0) {
-        for (let i = 0; i < mediaFiles.length; i++) {
-          const uploadResult = await uploadFileToCloudinary(mediaFiles[i], i, mediaFiles.length);
-          uploadedMedia.push(uploadResult);
-          setUploadProgress(((i + 1) / mediaFiles.length) * 100);
-        }
+      const uploadedMedia = [];
+      for (let i = 0; i < mediaFiles.length; i++) {
+        const r = await uploadFileToCloudinary(mediaFiles[i]);
+        uploadedMedia.push(r);
+        setUploadProgress(((i + 1) / mediaFiles.length) * 100);
       }
 
       const postData = {
@@ -484,263 +213,267 @@ const PostCreator = ({ onPostCreated }) => {
         comments: [],
       };
 
-      const postRef = await addDoc(collection(db, "Posts"), postData);
-
+      const ref = await addDoc(collection(db, "Posts"), postData);
       setPostContent("");
       setMediaFiles([]);
       setUploadProgress(0);
-      if (onPostCreated) await onPostCreated({ ...postData, id: postRef.id });
-      toast.success("Post created successfully", { position: "top-center" });
-    } catch (error) {
-      console.error(`[${currentDateTime}] Error creating post:`, error);
-      toast.error(`Failed to create post: ${error.message}`, { position: "top-center" });
+      onPostCreated && (await onPostCreated({ ...postData, id: ref.id }));
+      toast.success("Đăng bài thành công", { position: "top-center" });
+    } catch (err) {
+      console.error(`[${currentDateTime}] create post error`, err);
+      toast.error(err.message || "Có lỗi khi đăng bài", { position: "top-center" });
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
     }
   };
 
-  // === EMOJI ===
-  // Chèn emoji tại vị trí con trỏ
-  const insertAtCursor = (emojiStr) => {
+  // ===== Emoji helpers =====
+  const insertAtCursor = (str) => {
     const el = textareaRef.current;
-    if (!el) {
-      setPostContent((prev) => prev + emojiStr);
-      return;
-    }
-    const start = el.selectionStart ?? postContent.length;
-    const end = el.selectionEnd ?? postContent.length;
-    const next = postContent.slice(0, start) + emojiStr + postContent.slice(end);
+    if (!el) return setPostContent((p) => p + str);
+    const s = el.selectionStart ?? postContent.length;
+    const e = el.selectionEnd ?? postContent.length;
+    const next = postContent.slice(0, s) + str + postContent.slice(e);
     setPostContent(next);
-    // set lại con trỏ
     setTimeout(() => {
       el.focus();
-      const pos = start + emojiStr.length;
+      const pos = s + str.length;
       el.setSelectionRange(pos, pos);
     }, 0);
   };
+  const handleEmojiClick = (data) => insertAtCursor(data.emoji);
 
-  // Bạn yêu cầu dùng đúng chữ ký này
-  const handleEmojiClick = (emojiData /* , event */) => {
-    insertAtCursor(emojiData.emoji);
-  };
-
-  // đóng picker khi click ra ngoài
+  // ===== Click outside to close popovers =====
   useEffect(() => {
-    const onClickAway = (ev) => {
-      const picker = document.querySelector(".pc-emoji-popover");
-      if (!picker) return;
-      if (!picker.contains(ev.target) && !emojiBtnRef.current?.contains(ev.target)) {
+    const onDown = (ev) => {
+      if (
+        showEmoji &&
+        emojiPopoverRef.current &&
+        !emojiPopoverRef.current.contains(ev.target) &&
+        emojiBtnRef.current &&
+        !emojiBtnRef.current.contains(ev.target)
+      ) {
         setShowEmoji(false);
       }
+      if (showCamera && cameraPopoverRef.current && !cameraPopoverRef.current.contains(ev.target)) {
+        setShowCamera(false);
+      }
     };
-    document.addEventListener("mousedown", onClickAway);
-    return () => document.removeEventListener("mousedown", onClickAway);
-  }, []);
-
-  // === RENDER PREVIEW ===
-  const renderFilePreview = (fileData) => {
-    const { category, preview, name, id, file } = fileData;
-    const previewStyle = {
-      backgroundColor: theme === "light" ? "rgba(248, 250, 252, 0.9)" : "rgba(45, 55, 72, 0.9)",
-      border: `1px solid ${theme === "light" ? "rgba(226, 232, 240, 0.8)" : "rgba(75, 85, 99, 0.6)"
-        }`,
-      borderRadius: "12px",
-      overflow: "hidden",
-      backdropFilter: "blur(10px)",
+    const onEsc = (e) => {
+      if (e.key === "Escape") {
+        if (showEmoji) setShowEmoji(false);
+        if (showCamera) setShowCamera(false);
+      }
     };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [showEmoji, showCamera]);
 
-    if (category === "image") {
-      return (
-        <div key={id} className="position-relative d-inline-block me-2 mb-2" style={previewStyle}>
-          <img
-            src={preview}
-            alt={name}
-            style={{ maxWidth: "150px", maxHeight: "150px", objectFit: "cover" }}
-            className="img-fluid"
-          />
-          <button
-            type="button"
-            className="btn btn-danger btn-sm position-absolute"
-            style={{ top: "5px", right: "5px", fontSize: "10px", padding: "4px 8px", borderRadius: "50%" }}
-            onClick={() => removeFile(id)}
-            disabled={isUploading}
-          >
-            ×
-          </button>
-        </div>
-      );
+  // ===== Camera =====
+  const supportMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const openCamera = async () => {
+    if (!supportMedia) return fallbackInputRef.current?.click();
+    try {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((t) => t.stop());
+        setCameraStream(null);
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: false });
+      setCameraStream(stream);
+      setShowCamera(true);
+      requestAnimationFrame(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => { });
+        }
+      });
+    } catch (err) {
+      console.error("Open camera error:", err);
+      toast.error("Không mở được camera. Hãy kiểm tra quyền.", { position: "top-center" });
     }
-
-    if (category === "video") {
-      return (
-        <div key={id} className="position-relative d-inline-block me-2 mb-2" style={previewStyle}>
-          <video controls style={{ maxWidth: "150px", maxHeight: "150px" }}>
-            <source src={preview} type={file.type} />
-          </video>
-          <button
-            type="button"
-            className="btn btn-danger btn-sm position-absolute"
-            style={{ top: "5px", right: "5px", fontSize: "10px", padding: "4px 8px", borderRadius: "50%" }}
-            onClick={() => removeFile(id)}
-            disabled={isUploading}
-          >
-            ×
-          </button>
-        </div>
-      );
+  };
+  const closeCamera = () => {
+    if (cameraStream) cameraStream.getTracks().forEach((t) => t.stop());
+    setCameraStream(null);
+    setShowCamera(false);
+  };
+  const toggleFacing = () => {
+    setFacingMode((p) => (p === "environment" ? "user" : "environment"));
+    setTimeout(() => openCamera(), 0);
+  };
+  const capturePhoto = () => {
+    const v = videoRef.current;
+    const c = canvasRef.current;
+    if (!v || !c) return;
+    const w = v.videoWidth || 720;
+    const h = v.videoHeight || 1280;
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d");
+    ctx.drawImage(v, 0, 0, w, h);
+    c.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const name = `camera-${Date.now()}.png`;
+        const file = new File([blob], name, { type: "image/png" });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setMediaFiles((p) => [
+            ...p,
+            {
+              file,
+              preview: reader.result,
+              category: "image",
+              type: "image/png",
+              name,
+              size: file.size,
+              id: Date.now() + Math.random(),
+            },
+          ]);
+          toast.success("Đã chụp ảnh và thêm vào bài viết.", { position: "top-center" });
+          closeCamera();
+        };
+        reader.readAsDataURL(file);
+      },
+      "image/png",
+      0.92
+    );
+  };
+  const onFallbackCapture = async (e) => {
+    const files = Array.from(e.target.files || []);
+    for (const f of files) {
+      const ok = validateFile(f);
+      if (!ok.valid) {
+        toast.error(ok.error, { position: "top-center" });
+        continue;
+      }
+      const preview = await createFilePreview(f);
+      setMediaFiles((p) => [
+        ...p,
+        { file: f, preview, category: "image", type: f.type, name: f.name, size: f.size, id: Date.now() + Math.random() },
+      ]);
     }
-
-    if (category === "document") {
-      return (
-        <div key={id} className="position-relative d-inline-block me-2 mb-2 p-3" style={previewStyle}>
-          <div className="d-flex align-items-center">
-            <FaFile className="me-2 text-primary" size={20} />
-            <div>
-              <small className="d-block" style={{ color: theme === "light" ? "#1a202c" : "#f7fafc" }}>
-                {name}
-              </small>
-              <small style={{ color: theme === "light" ? "rgba(107, 114, 128, 0.8)" : "rgba(156, 163, 175, 0.8)" }}>
-                {(file.size / 1024 / 1024).toFixed(2)} MB
-              </small>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="btn btn-danger btn-sm position-absolute"
-            style={{ top: "5px", right: "5px", fontSize: "10px", padding: "4px 8px", borderRadius: "50%" }}
-            onClick={() => removeFile(id)}
-            disabled={isUploading}
-          >
-            ×
-          </button>
-        </div>
-      );
-    }
-    return null;
+    e.target.value = "";
   };
 
+  // ===== Auto-resize textarea =====
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 112) + "px";
+  }, [postContent]);
+
+  // ===== UI =====
   if (isLoadingAuth) {
     return (
-      <div className="d-flex justify-content-center align-items-center p-4">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="post-card-wrap">
-      <div className="post-card">
-        {/* User row */}
-        <div className="user-row">
-          <div className="avatar-wrap">
+    <div
+      className={`w-full rounded-3xl shadow-xl backdrop-blur-sm transition-all duration-300 my-6 md:my-6 ${isLight
+        ? "bg-white/95 border border-gray-200/50"
+        : "bg-zinc-900/95 border border-white/10"
+        }`}
+    >
+      {/* Header with avatar and input */}
+      <div className="p-6">
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0 group">
             <img
-              src={auth.currentUser?.photoURL || "https://via.placeholder.com/40"}
-              alt="Profile"
-              className="avatar"
+              src={auth.currentUser?.photoURL || "https://via.placeholder.com/48"}
+              alt="avatar"
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-400/50 transition-all group-hover:ring-indigo-500"
             />
-            <span className="status-dot" />
+            <span className="absolute right-0 bottom-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white shadow-sm"></span>
           </div>
-          <div className="user-meta">
-            <h6 className="user-name">{auth.currentUser?.displayName || "User"}</h6>
-            <small className="user-desc">What's on your mind?</small>
+
+          {/* Input Area */}
+          <div className="flex-1">
+            <div
+              className={`relative rounded-2xl transition-all duration-200 ${isFocused
+                ? isLight
+                  ? "ring-2 ring-indigo-400 shadow-lg shadow-indigo-100"
+                  : "ring-2 ring-indigo-500 shadow-lg shadow-indigo-900/20"
+                : isLight
+                  ? "ring-1 ring-gray-200 hover:ring-gray-300"
+                  : "ring-1 ring-gray-700 hover:ring-gray-600"
+                } ${isLight ? "bg-gray-50" : "bg-zinc-800/50"}`}
+            >
+              <textarea
+                ref={textareaRef}
+                value={postContent}
+                onChange={(e) => setPostContent(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder={`${auth.currentUser?.displayName || "Bạn"} ơi, bạn đang nghĩ gì thế?`}
+                className={`w-full px-4 py-3 bg-transparent outline-none resize-none rounded-2xl text-base leading-relaxed ${isLight
+                  ? "text-gray-900 placeholder-gray-400"
+                  : "text-gray-100 placeholder-gray-500"
+                  }`}
+                rows={1}
+                style={{ minHeight: "48px", maxHeight: "112px" }}
+                disabled={isUploading}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handlePostSubmit} className="pc-form">
-          {/* Textarea */}
-          <div className="textarea-wrap">
-            <FaEdit className="input-icon" />
-            <textarea
-              ref={textareaRef}
-              value={postContent}
-              onChange={(e) => setPostContent(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder="Share your thoughts, ideas, or experiences..."
-              className="pc-textarea"
-              rows={4}
+        {/* Action Buttons */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Image/Video */}
+            <label
+              className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all ${isLight
+                ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
+                : "bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400"
+                } ${isUploading || mediaFiles.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <FaImage className="text-lg" />
+              <span className="text-sm font-medium hidden sm:inline">Ảnh/Video</span>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="sr-only"
+                onChange={handleMediaUpload}
+                disabled={isUploading || mediaFiles.length >= 5}
+              />
+            </label>
+
+            {/* Camera */}
+            <button
+              type="button"
+              onClick={openCamera}
               disabled={isUploading}
-            />
-          </div>
+              className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${isLight
+                ? "bg-violet-50 hover:bg-violet-100 text-violet-700"
+                : "bg-violet-900/30 hover:bg-violet-900/50 text-violet-400"
+                } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <FaCamera className="text-lg" />
+              <span className="text-sm font-medium hidden sm:inline">Camera</span>
+            </button>
 
-          {/* Quick emoji bar */}
-          <div className="chip-row">
-            {["😀", "😍", "🔥", "👏", "💯", "🙏", "🎉", "😎"].map((em) => (
-              <button key={em} type="button" className="chip" onClick={() => insertAtCursor(em)}>
-                {em}
-              </button>
-            ))}
-          </div>
-
-          {/* Media previews */}
-          {mediaFiles.length > 0 && (
-            <div className="media-area">
-              <h6 className="media-title">
-                <FaSmile className="me-2" />
-                Media Attachments ({mediaFiles.length}/5)
-              </h6>
-              <div className="media-grid">{mediaFiles.map(renderFilePreview)}</div>
-            </div>
-          )}
-
-          {/* Upload progress */}
-          {isUploading && uploadProgress > 0 && (
-            <div className="progress-wrap">
-              <div className="progress-head">
-                <small>Uploading files...</small>
-                <small>{Math.round(uploadProgress)}%</small>
-              </div>
-              <div className="progress">
-                <div
-                  className="progress-bar"
-                  role="progressbar"
-                  style={{ width: `${uploadProgress}%` }}
-                  aria-valuenow={uploadProgress}
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Actions (auto-fit, luôn thẳng hàng, không vỡ) */}
-          <div className="actions-grid">
-            {/* Photo */}
-            <label className="action-btn">
-              <FaImage className="action-icon" />
-              <span>Photo</span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="sr-only"
-                onChange={handleMediaUpload}
-                disabled={isUploading || mediaFiles.length >= 5}
-              />
-            </label>
-
-            {/* Video */}
-            <label className="action-btn">
-              <FaVideo className="action-icon" />
-              <span>Video</span>
-              <input
-                type="file"
-                accept="video/*"
-                multiple
-                className="sr-only"
-                onChange={handleMediaUpload}
-                disabled={isUploading || mediaFiles.length >= 5}
-              />
-            </label>
-
-            {/* File */}
-            <label className="action-btn">
-              <FaFile className="action-icon" />
-              <span>File</span>
+            {/* Document */}
+            <label
+              className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all ${isLight
+                ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
+                : "bg-blue-900/30 hover:bg-blue-900/50 text-blue-400"
+                } ${isUploading || mediaFiles.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <FaFile className="text-lg" />
+              <span className="text-sm font-medium hidden sm:inline">Tài liệu</span>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
@@ -751,78 +484,235 @@ const PostCreator = ({ onPostCreated }) => {
               />
             </label>
 
-            {/* Emoji toggle */}
+            {/* Emoji */}
             <button
               type="button"
               ref={emojiBtnRef}
               onClick={() => setShowEmoji((s) => !s)}
-              className="action-btn"
               disabled={isUploading}
+              className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${isLight
+                ? "bg-amber-50 hover:bg-amber-100 text-amber-700"
+                : "bg-amber-900/30 hover:bg-amber-900/50 text-amber-400"
+                } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <FaSmile className="action-icon" />
-              <span>Emoji</span>
-            </button>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={(!postContent.trim() && mediaFiles.length === 0) || isUploading}
-              className="submit-btn"
-            >
-              {isUploading ? (
-                <>
-                  <svg className="spin" viewBox="0 0 24 24">
-                    <circle className="c1" cx="12" cy="12" r="10" strokeWidth="4" fill="none" />
-                    <path className="c2" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                  </svg>
-                  Uploading...
-                </>
-              ) : (
-                "Share Post"
-              )}
-            </button>
-
-            {/* Camera */}
-            <button
-              type="button"
-              title="Open camera"
-              onClick={openCamera}
-              disabled={isUploading}
-              className="action-btn"
-            >
-              <FaCamera className="action-icon" />
-              <span>Camera</span>
+              <FaSmile className="text-lg" />
+              <span className="text-sm font-medium hidden sm:inline">Cảm xúc</span>
             </button>
           </div>
 
-          {showEmoji && (
-            <div ref={emojiPopoverRef} className="pc-emoji-popover" style={{ /* ...giữ nguyên... */ }}>
-              <Picker onEmojiClick={handleEmojiClick} theme={theme === "light" ? "light" : "dark"} />
-            </div>
-          )}
-
-          {/* Camera Popover */}
-          {showCamera && (
-            <div className="popover pop-camera">
-              <div className="cam-view">
-                <video ref={videoRef} playsInline muted className="cam-video" />
-                <canvas ref={canvasRef} style={{ display: "none" }} />
-              </div>
-              <div className="cam-ctrl">
-                <button type="button" className="btn-ico" title="Switch" onClick={toggleFacing}>↻</button>
-                <button type="button" className="btn-capture" onClick={capturePhoto}>Capture</button>
-                <button type="button" className="btn-ico" title="Close" onClick={closeCamera}>✕</button>
-              </div>
-            </div>
-          )}
-
-          {mediaFiles.length >= 5 && (
-            <div className="limit-note">
-              <small>⚠️ Maximum 5 files per post reached</small>
-            </div>
-          )}
-        </form>
+          {/* Post Button */}
+          <button
+            type="button"
+            onClick={handlePostSubmit}
+            disabled={(!postContent.trim() && mediaFiles.length === 0) || isUploading}
+            className={`px-6 py-2.5 rounded-xl font-semibold text-white transition-all ${(!postContent.trim() && mediaFiles.length === 0) || isUploading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 shadow-lg hover:shadow-xl"
+              }`}
+          >
+            {isUploading ? (
+              <span className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Đang đăng...
+              </span>
+            ) : (
+              "Đăng bài"
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Media Preview */}
+      {mediaFiles.length > 0 && (
+        <div className="px-6 pb-4">
+          <div className={`rounded-2xl p-4 ${isLight ? "bg-gray-50" : "bg-zinc-800/50"}`}>
+            <div className="flex items-center justify-between mb-3">
+              <span className={`text-sm font-medium ${isLight ? "text-gray-700" : "text-gray-300"}`}>
+                Media đính kèm ({mediaFiles.length}/5)
+              </span>
+              {mediaFiles.length >= 5 && (
+                <span className="text-xs text-amber-600 font-medium">⚠️ Đã đạt giới hạn</span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {mediaFiles.map(({ category, preview, name, id, file, type }) => (
+                <div
+                  key={id}
+                  className={`group relative rounded-xl overflow-hidden transition-all hover:scale-105 ${isLight ? "bg-white ring-1 ring-gray-200" : "bg-zinc-700 ring-1 ring-gray-600"
+                    }`}
+                >
+                  {category === "image" && (
+                    <div className="aspect-square">
+                      <img src={preview} alt={name} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  {category === "video" && (
+                    <div className="aspect-square relative">
+                      <video className="w-full h-full object-cover">
+                        <source src={preview} type={type} />
+                      </video>
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <FaVideo className="text-white text-2xl" />
+                      </div>
+                    </div>
+                  )}
+                  {category === "document" && (
+                    <div className={`aspect-square flex flex-col items-center justify-center p-3 ${isLight ? "bg-gray-100" : "bg-zinc-800"}`}>
+                      <FaFile className="text-3xl text-blue-500 mb-2" />
+                      <span className={`text-xs text-center truncate w-full ${isLight ? "text-gray-700" : "text-gray-300"}`}>
+                        {name}
+                      </span>
+                      <span className="text-xs text-gray-500 mt-1">
+                        {(file.size / 1024 / 1024).toFixed(1)} MB
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeFile(id)}
+                    disabled={isUploading}
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-90"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Progress */}
+      {isUploading && uploadProgress > 0 && (
+        <div className="px-6 pb-4">
+          <div className={`rounded-xl p-4 ${isLight ? "bg-indigo-50" : "bg-indigo-900/20"}`}>
+            <div className="flex justify-between items-center mb-2">
+              <span className={`text-sm font-medium ${isLight ? "text-indigo-700" : "text-indigo-400"}`}>
+                Đang tải lên...
+              </span>
+              <span className={`text-sm font-bold ${isLight ? "text-indigo-700" : "text-indigo-400"}`}>
+                {Math.round(uploadProgress)}%
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300 rounded-full"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Emoji Picker Popover */}
+      {showEmoji && (
+        <div
+          ref={emojiPopoverRef}
+          className="fixed z-50 shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+          style={{
+            bottom: "80px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            maxWidth: "calc(100vw - 2rem)"
+          }}
+        >
+          <div className={`rounded-2xl overflow-hidden ${isLight ? 'ring-1 ring-gray-200' : 'ring-1 ring-gray-700'}`}>
+            <Picker
+              onEmojiClick={handleEmojiClick}
+              theme={isLight ? "light" : "dark"}
+              previewConfig={{ showPreview: false }}
+              searchPlaceHolder="Tìm emoji..."
+              width="350px"
+              height="450px"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Camera Modal */}
+      {showCamera && (
+        <div
+          ref={cameraPopoverRef}
+          className={`mt-4 mx-6 rounded-2xl overflow-hidden border ${isLight ? "border-gray-200 bg-white" : "border-gray-800 bg-zinc-900"
+            } shadow-lg`}
+        >
+          {/* Header */}
+          <div
+            className={`px-4 py-2 flex items-center justify-between ${isLight ? "bg-gray-50 border-b border-gray-200" : "bg-zinc-800/60 border-b border-gray-800"
+              }`}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex h-2 w-2 rounded-full ${isLight ? "bg-emerald-500" : "bg-emerald-400"
+                  } animate-pulse`}
+              />
+              <span className={isLight ? "text-gray-800 font-medium" : "text-gray-100 font-medium"}>
+                Camera đang hoạt động
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleFacing}
+                className={`h-9 px-3 rounded-full text-sm font-medium transition ${isLight
+                    ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                    : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
+                  }`}
+                title="Đổi camera"
+              >
+                Đổi
+              </button>
+              <button
+                type="button"
+                onClick={closeCamera}
+                className={`h-9 px-3 rounded-full text-sm font-medium transition ${isLight
+                    ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                    : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
+                  }`}
+                title="Đóng"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+
+          {/* Video area (inline, responsive) */}
+          <div className="relative">
+            <div className="w-full">
+              <div className="aspect-[3/4] sm:aspect-video bg-black">
+                <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+            </div>
+
+            {/* Bottom controls (luôn thấy vì panel inline) */}
+            <div className="absolute inset-x-0 bottom-3 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={capturePhoto}
+                className="group relative"
+                title="Chụp ảnh"
+              >
+                <div className="h-16 w-16 rounded-full border-4 border-white/90 flex items-center justify-center group-hover:border-white transition">
+                  <div className="h-12 w-12 rounded-full bg-white group-active:scale-90 transition-transform" />
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* iOS fallback */}
+      <input
+        ref={fallbackInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={onFallbackCapture}
+      />
     </div>
   );
 };

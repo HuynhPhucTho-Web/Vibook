@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import {
   collection,
   addDoc,
@@ -14,46 +14,88 @@ import {
   arrayRemove
 } from "firebase/firestore";
 import { toast } from "react-toastify";
-import {
-  FaComment,
-  FaThumbsUp,
-  FaHeart,
-  FaLaugh,
-  FaSadTear,
-  FaAngry,
-  FaReply,
-  FaEllipsisV,
-  FaTimes
-} from "react-icons/fa";
+import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane } from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
 import { db } from "../components/firebase";
+import Picker from "emoji-picker-react";
 
 const REACTIONS = {
-  like: { icon: FaThumbsUp, color: "#1877f2", label: "Like" },
-  love: { icon: FaHeart, color: "#f33e58", label: "Love" },
-  laugh: { icon: FaLaugh, color: "#f7b125", label: "Laugh" },
-  sad: { icon: FaSadTear, color: "#f7b125", label: "Sad" },
-  angry: { icon: FaAngry, color: "#e9710f", label: "Angry" }
+  like: { emoji: "👍", label: "Thích" },
+  love: { emoji: "❤️", label: "Yêu thích" },
+  haha: { emoji: "😂", label: "Haha" },
+  wow: { emoji: "😮", label: "Wow" },
+  sad: { emoji: "😢", label: "Buồn" },
+  angry: { emoji: "😠", label: "Phẫn nộ" }
 };
 
+const ReactionPicker = ({ isOpen, onClose, onSelect, targetRef }) => {
+  const { theme } = useContext(ThemeContext);
+  const isLight = theme === "light";
+  const pickerRef = useRef(null);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target) && 
+          targetRef.current && !targetRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose, targetRef]);
 
-const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo, replyTo }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      ref={pickerRef}
+      className={`absolute bottom-full left-0 mb-2 flex gap-2 px-3 py-2 rounded-full shadow-2xl z-50 ${
+        isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
+      }`}
+      onMouseLeave={onClose}
+    >
+      {Object.entries(REACTIONS).map(([type, reaction]) => (
+        <button
+          key={type}
+          onClick={() => onSelect(type)}
+          className="text-2xl hover:scale-125 transition-transform"
+          title={reaction.label}
+        >
+          {reaction.emoji}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess, replyToName }) => {
+  const { theme } = useContext(ThemeContext);
   const [replyText, setReplyText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const emojiRef = useRef(null);
+  const inputRef = useRef(null);
+  const isLight = theme === "light";
 
-  const handleReplySubmit = async (e) => {
-    e.preventDefault();
-
-    if (!replyText.trim()) {
-      toast.error("Reply cannot be left blank", { position: "top-center" });
-      return;
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+        setShowEmoji(false);
+      }
+    };
+    if (showEmoji) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showEmoji]);
 
-    if (!auth.currentUser) {
-      toast.error("Please login to reply", { position: "top-center" });
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    if (!replyText.trim() || isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       const replyData = {
         userId: auth.currentUser.uid,
@@ -65,225 +107,131 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo, replyT
         createdAt: serverTimestamp(),
         reactions: {},
         reactionCount: 0,
-        replyCount: 0,
-        parentCommentId: commentId
-      };
-
-      const repliesRef = collection(db, "Posts", postId, "comments", commentId, "replies");
-      await addDoc(repliesRef, replyData);
-
-      // Update reply count on parent comment
-      const commentRef = doc(db, "Posts", postId, "comments", commentId);
-      await updateDoc(commentRef, {
-        replyCount: increment(1)
-      });
-
-      setReplyText("");
-      setReplyTo(null);
-      toast.success("💬 Reply added!", {
-        position: "top-center",
-        autoClose: 1000,
-        style: { fontSize: '16px', fontWeight: '500' }
-      });
-    } catch (error) {
-      console.error("Error adding reply:", error);
-      toast.error(`Cannot add reply: ${error.message}`, { position: "top-center" });
-    }
-  };
-
-  return (
-    <form onSubmit={handleReplySubmit} className="mt-3 ms-2">
-      <div className="d-flex gap-2 align-items-start">
-        <img
-          src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
-          alt="Your avatar"
-          className="rounded-circle flex-shrink-0"
-          style={{ width: "30px", height: "30px", objectFit: "cover" }}
-        />
-        <div className="flex-grow-1 position-relative">
-          <textarea
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Write a reply..."
-            className="form-control border-2"
-            rows="2"
-            style={{ resize: "none", borderRadius: '20px', paddingRight: '70px' }}
-            autoFocus
-          />
-          <div className="position-absolute" style={{ right: '8px', top: '50%', transform: 'translateY(-50%)' }}>
-            <button
-              type="button"
-              className="btn btn-sm text-muted me-1"
-              onClick={() => setReplyTo(null)}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary btn-sm rounded-pill"
-              disabled={!replyText.trim()}
-              style={{ minWidth: '50px' }}
-            >
-              Reply
-            </button>
-          </div>
-        </div>
-      </div>
-    </form>
-  );
-};
-
-const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggleCommentSection }) => {
-  const { theme } = useContext(ThemeContext);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState([]);
-  const [replyTo, setReplyTo] = useState(null);
-  const [showReactionPicker, setShowReactionPicker] = useState(null);
-  const [loadingComments, setLoadingComments] = useState(false);
-
-
-  const themeClasses = {
-    card: theme === "dark" ? "bg-dark text-light border border-secondary" : "bg-light text-dark",
-    bubble: theme === "dark" ? "bg-secondary text-light" : "bg-light text-dark",
-    textMuted: theme === "dark" ? "text-gray-400" : "text-muted",
-    textPrimary: theme === "dark" ? "text-info" : "text-primary",
-    border: theme === "dark" ? "border-secondary" : "border-light",
-  };
-  // Real-time comments listener with replies
-  useEffect(() => {
-    let unsubscribe;
-
-    const fetchComments = async () => {
-      if (isCommentSectionOpen) {
-        setLoadingComments(true);
-        try {
-          const commentsQuery = query(
-            collection(db, "Posts", postId, "comments"),
-            orderBy("createdAt", "desc")
-          );
-
-          unsubscribe = onSnapshot(commentsQuery, async (snapshot) => {
-            const postComments = [];
-
-            for (const commentDoc of snapshot.docs) {
-              const commentData = {
-                id: commentDoc.id,
-                ...commentDoc.data(),
-                reactions: commentDoc.data().reactions || {},
-                reactionCount: commentDoc.data().reactionCount || 0,
-                replyCount: commentDoc.data().replyCount || 0,
-                replies: []
-              };
-
-              // Fetch replies for each comment
-              const repliesQuery = query(
-                collection(db, "Posts", postId, "comments", commentDoc.id, "replies"),
-                orderBy("createdAt", "asc")
-              );
-
-              const repliesSnapshot = await onSnapshot(repliesQuery, (repliesSnap) => {
-                const replies = repliesSnap.docs.map(replyDoc => ({
-                  id: replyDoc.id,
-                  ...replyDoc.data(),
-                  reactions: replyDoc.data().reactions || {},
-                  reactionCount: replyDoc.data().reactionCount || 0,
-                  replyCount: replyDoc.data().replyCount || 0
-                }));
-
-                commentData.replies = replies;
-
-                // Update the specific comment in state
-                setComments(prevComments =>
-                  prevComments.map(c =>
-                    c.id === commentDoc.id ? { ...c, replies } : c
-                  )
-                );
-              });
-
-              postComments.push(commentData);
-            }
-
-            setComments(postComments);
-            setLoadingComments(false);
-          });
-        } catch (error) {
-          console.error("Error fetching comments:", error);
-          toast.error("Failed to load comments");
-          setLoadingComments(false);
-        }
-      }
-    };
-
-    fetchComments();
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [isCommentSectionOpen, postId]);
-
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!commentText.trim()) {
-      toast.error("Comments cannot be left blank", { position: "top-center" });
-      return;
-    }
-
-    if (!auth.currentUser) {
-      toast.error("Please login to comment", { position: "top-center" });
-      return;
-    }
-
-    try {
-      const commentData = {
-        userId: auth.currentUser.uid,
-        userName: userDetails
-          ? `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}`
-          : auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || "User",
-        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
-        content: commentText.trim(),
-        createdAt: serverTimestamp(),
-        reactions: {},
-        reactionCount: 0,
         replyCount: 0
       };
 
-      const commentsRef = collection(db, "Posts", postId, "comments");
-      await addDoc(commentsRef, commentData);
+      await addDoc(collection(db, "Posts", postId, "comments", commentId, "replies"), replyData);
+      await updateDoc(doc(db, "Posts", postId, "comments", commentId), { replyCount: increment(1) });
 
-      setCommentText("");
-      toast.success("💬 Comment added!", {
-        position: "top-center",
-        autoClose: 1000,
-        style: { fontSize: '16px', fontWeight: '500' }
-      });
+      setReplyText("");
+      toast.success("Đã thêm phản hồi!");
+      onSuccess();
     } catch (error) {
-      console.error("Error adding comment:", error);
-      toast.error(`Cannot add comments: ${error.message}`, { position: "top-center" });
+      console.error(error);
+      toast.error("Không thể thêm phản hồi");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleReaction = async (targetId, reactionType, isReply = false, parentCommentId = null) => {
+  const handleEmojiClick = (emojiData) => {
+    const cursorPosition = inputRef.current?.selectionStart || replyText.length;
+    const newText = replyText.slice(0, cursorPosition) + emojiData.emoji + replyText.slice(cursorPosition);
+    setReplyText(newText);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      const newPosition = cursorPosition + emojiData.emoji.length;
+      inputRef.current?.setSelectionRange(newPosition, newPosition);
+    }, 0);
+  };
+
+  return (
+    <div className="mt-2 ml-12">
+      <div className="flex gap-2 items-end">
+        <img
+          src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
+          alt="Avatar"
+          className="w-8 h-8 rounded-full object-cover"
+        />
+        <div className="flex-1 relative">
+          <input
+            ref={inputRef}
+            type="text"
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            placeholder={replyToName ? `Phản hồi ${replyToName}...` : "Viết phản hồi..."}
+            className={`w-full rounded-full pl-4 pr-24 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isLight ? "bg-gray-100" : "bg-zinc-800"
+            }`}
+            onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSubmit(e)}
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowEmoji(!showEmoji)}
+              className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors ${
+                isLight ? "text-gray-600" : "text-gray-400"
+              }`}
+            >
+              <FaRegSmile size={16} />
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!replyText.trim() || isSubmitting}
+              className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full disabled:opacity-50 transition-colors"
+            >
+              <FaPaperPlane size={14} />
+            </button>
+          </div>
+
+          {showEmoji && (
+            <div
+              ref={emojiRef}
+              className="fixed z-50 shadow-2xl rounded-2xl overflow-hidden"
+              style={{
+                bottom: "80px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                maxWidth: "calc(100vw - 2rem)"
+              }}
+            >
+              <div className={`rounded-2xl overflow-hidden ${isLight ? 'ring-1 ring-gray-200' : 'ring-1 ring-gray-700'}`}>
+                <Picker
+                  onEmojiClick={handleEmojiClick}
+                  theme={isLight ? "light" : "dark"}
+                  previewConfig={{ showPreview: false }}
+                  searchPlaceHolder="Tìm emoji..."
+                  width="350px"
+                  height="450px"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={onCancel}
+          className={`px-3 py-1.5 rounded-lg text-xs ${
+            isLight ? "hover:bg-gray-200 text-gray-600" : "hover:bg-zinc-700 text-gray-400"
+          }`}
+        >
+          Hủy
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, parentCommentId = null, depth = 0 }) => {
+  const { theme } = useContext(ThemeContext);
+  const [showReplies, setShowReplies] = useState(false);
+  const [showReplyInput, setShowReplyInput] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const likeButtonRef = useRef(null);
+  const isLight = theme === "light";
+
+  const handleReaction = async (reactionType) => {
     if (!auth.currentUser) {
-      toast.error("Please login to react", { position: "top-center" });
+      toast.error("Vui lòng đăng nhập");
       return;
     }
 
     try {
       const userId = auth.currentUser.uid;
-      let targetRef;
+      let targetRef = isReply
+        ? doc(db, "Posts", postId, "comments", parentCommentId, "replies", comment.id)
+        : doc(db, "Posts", postId, "comments", comment.id);
 
-      if (isReply && parentCommentId) {
-        targetRef = doc(db, "Posts", postId, "comments", parentCommentId, "replies", targetId);
-      } else {
-        targetRef = doc(db, "Posts", postId, "comments", targetId);
-      }
-
-      // Get current reactions
-      const currentTarget = isReply
-        ? comments.find(c => c.id === parentCommentId)?.replies.find(r => r.id === targetId)
-        : comments.find(c => c.id === targetId);
-
-      const currentReactions = currentTarget?.reactions || {};
+      const currentReactions = comment.reactions || {};
       const userCurrentReaction = Object.keys(currentReactions).find(type =>
         currentReactions[type]?.includes(userId)
       );
@@ -291,393 +239,386 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen, toggl
       let updateData = {};
 
       if (userCurrentReaction === reactionType) {
-        // Remove reaction if clicking the same one
         updateData = {
           [`reactions.${reactionType}`]: arrayRemove(userId),
           reactionCount: increment(-1)
         };
-        toast.success(`Removed ${REACTIONS[reactionType].label}`, {
-          position: "top-center",
-          autoClose: 1000
-        });
       } else {
-        // Add new reaction and remove old one if exists
         updateData = {
           [`reactions.${reactionType}`]: arrayUnion(userId),
           reactionCount: increment(userCurrentReaction ? 0 : 1)
         };
-
         if (userCurrentReaction) {
           updateData[`reactions.${userCurrentReaction}`] = arrayRemove(userId);
         }
-
-        const ReactionIcon = REACTIONS[reactionType].icon;
-        toast.success(
-          <div className="d-flex align-items-center">
-            <ReactionIcon color={REACTIONS[reactionType].color} className="me-2" />
-            {REACTIONS[reactionType].label}
-          </div>,
-          {
-            position: "top-center",
-            autoClose: 1000
-          }
-        );
       }
 
       await updateDoc(targetRef, updateData);
-      setShowReactionPicker(null);
+      setShowReactionPicker(false);
     } catch (error) {
-      console.error("Error updating reaction:", error);
-      toast.error("Cannot react to this comment", { position: "top-center" });
+      console.error(error);
+      toast.error("Không thể thả cảm xúc");
     }
   };
 
-  const handleDelete = async (targetId, isReply = false, parentCommentId = null) => {
-    if (!auth.currentUser) {
-      toast.error("Please login to delete", { position: "top-center" });
-      return;
-    }
+  const handleDelete = async () => {
+    if (!window.confirm("Xóa bình luận này?")) return;
 
     try {
-      let targetRef;
-      if (isReply && parentCommentId) {
-        targetRef = doc(db, "Posts", postId, "comments", parentCommentId, "replies", targetId);
-        const commentRef = doc(db, "Posts", postId, "comments", parentCommentId);
-        await updateDoc(commentRef, { replyCount: increment(-1) });
-      } else {
-        targetRef = doc(db, "Posts", postId, "comments", targetId);
+      let targetRef = isReply
+        ? doc(db, "Posts", postId, "comments", parentCommentId, "replies", comment.id)
+        : doc(db, "Posts", postId, "comments", comment.id);
+
+      if (isReply) {
+        await updateDoc(doc(db, "Posts", postId, "comments", parentCommentId), { replyCount: increment(-1) });
       }
 
       await deleteDoc(targetRef);
-      toast.success(isReply ? "Reply deleted!" : "Comment deleted!", {
-        position: "top-center",
-        autoClose: 1000
-      });
+      toast.success("Đã xóa!");
     } catch (error) {
-      console.error(`Error deleting ${isReply ? 'reply' : 'comment'}:`, error);
-      toast.error(`Cannot delete ${isReply ? 'reply' : 'comment'}: ${error.message}`, { position: "top-center" });
+      console.error(error);
+      toast.error("Không thể xóa");
     }
   };
 
-  const getUserReaction = (reactions, userId) => {
+  const formatTimeAgo = (timestamp) => {
+    if (!timestamp) return "Vừa xong";
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const diff = Date.now() - date;
+    const mins = Math.floor(diff / 60000);
+    const hrs = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (mins < 1) return "Vừa xong";
+    if (mins < 60) return `${mins} phút`;
+    if (hrs < 24) return `${hrs} giờ`;
+    if (days < 7) return `${days} ngày`;
+    return date.toLocaleDateString("vi-VN");
+  };
+
+  const getUserReaction = () => {
+    const reactions = comment.reactions || {};
     return Object.keys(reactions).find(type =>
-      reactions[type]?.includes(userId)
+      reactions[type]?.includes(auth.currentUser?.uid)
     );
   };
 
-  const getTopReactions = (reactions) => {
+  const getTopReactions = () => {
+    const reactions = comment.reactions || {};
     return Object.entries(reactions)
       .map(([type, users]) => ({ type, count: users?.length || 0 }))
-      .filter(reaction => reaction.count > 0)
+      .filter(r => r.count > 0)
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
   };
 
-  const formatTimeAgo = (timestamp) => {
-    if (!timestamp) return "Just now";
+  const userReaction = getUserReaction();
+  const topReactions = getTopReactions();
+  const totalReactions = Object.values(comment.reactions || {}).reduce((sum, users) => sum + (users?.length || 0), 0);
 
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString("vi-VN");
-  };
-
-  const ReactionPicker = ({ targetId, isReply, parentCommentId, onClose }) => (
-    <div className="position-absolute bg-white rounded-pill shadow-sm border p-2 d-flex gap-1"
-      style={{ bottom: '100%', left: '0', zIndex: 1000 }}>
-      {Object.entries(REACTIONS).map(([type, reaction]) => {
-        const Icon = reaction.icon;
-        return (
-          <button
-            key={type}
-            className="btn p-1 rounded-circle"
-            style={{ fontSize: '18px' }}
-            onClick={() => {
-              handleReaction(targetId, type, isReply, parentCommentId);
-              onClose();
-            }}
-            onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
-            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-          >
-            <Icon color={reaction.color} />
-          </button>
-        );
-      })}
-      <button className="btn p-1" onClick={onClose}>
-        <FaTimes size={12} />
-      </button>
-    </div>
-  );
-
-  const ReactionDisplay = ({ reactions, targetId, isReply, parentCommentId }) => {
-    const topReactions = getTopReactions(reactions);
-    const userReaction = getUserReaction(reactions, auth.currentUser?.uid);
-    const totalCount = Object.values(reactions).reduce((sum, users) => sum + (users?.length || 0), 0);
-
-    return (
-      <div className="d-flex align-items-center gap-2">
-        <div className="position-relative">
-          <button
-            className={`btn btn-link p-1 d-flex align-items-center gap-1 ${userReaction ? 'text-primary' : 'text-muted'}`}
-            onClick={() => setShowReactionPicker(showReactionPicker === targetId ? null : targetId)}
-            style={{ fontSize: '14px' }}
-          >
-            {userReaction ? (
-              <>
-                {React.createElement(REACTIONS[userReaction].icon, {
-                  color: REACTIONS[userReaction].color,
-                  size: 16
-                })}
-                <span>{REACTIONS[userReaction].label}</span>
-              </>
-            ) : (
-              <>
-                <FaThumbsUp size={16} />
-                <span>React</span>
-              </>
-            )}
-          </button>
-
-          {showReactionPicker === targetId && (
-            <ReactionPicker
-              targetId={targetId}
-              isReply={isReply}
-              parentCommentId={parentCommentId}
-              onClose={() => setShowReactionPicker(null)}
-            />
-          )}
-        </div>
-
-        {totalCount > 0 && (
-          <div className="d-flex align-items-center gap-1">
-            <div className="d-flex" style={{ marginLeft: '-2px' }}>
-              {topReactions.map(({ type }) => {
-                const Icon = REACTIONS[type].icon;
-                return (
-                  <div key={type} className="bg-white rounded-circle p-1" style={{ marginLeft: '-2px' }}>
-                    <Icon color={REACTIONS[type].color} size={12} />
-                  </div>
-                );
-              })}
-            </div>
-            <small className="text-muted">{totalCount}</small>
-          </div>
-        )}
-      </div>
-    );
-  };
+  const marginLeft = depth > 0 ? "ml-12" : "";
 
   return (
-    <>
-      {isCommentSectionOpen && (
-        <>
-          {loadingComments && (
-            <div className="text-center py-3">
-              <div className="spinner-border spinner-border-sm" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+    <div className={`${depth > 0 ? marginLeft + " mt-2" : "mb-3"}`}>
+      <div className="flex gap-2">
+        <img
+          src={comment.userPhoto || "https://via.placeholder.com/40"}
+          alt="Avatar"
+          className={`${depth > 0 ? "w-8 h-8" : "w-10 h-10"} rounded-full object-cover flex-shrink-0`}
+        />
+        <div className="flex-1 min-w-0">
+          <div className={`inline-block rounded-2xl px-3 py-2 ${
+            isLight ? "bg-gray-100" : "bg-zinc-800"
+          }`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`font-semibold text-sm ${isLight ? "text-gray-900" : "text-white"}`}>
+                {comment.userName}
+              </span>
+              <span className="text-xs text-gray-500">{formatTimeAgo(comment.createdAt)}</span>
+              {auth.currentUser?.uid === comment.userId && (
+                <button onClick={handleDelete} className="text-gray-400 hover:text-red-500 ml-auto">
+                  <FaTimes size={12} />
+                </button>
+              )}
             </div>
-          )}
+            <p className={`text-sm whitespace-pre-wrap break-words ${isLight ? "text-gray-800" : "text-gray-200"}`}>
+              {comment.content}
+            </p>
+          </div>
 
-          {comments.length > 0 && (
-            <div className="mt-4">
-              <hr />
-              <div style={{ maxHeight: "500px", overflowY: "auto" }} className="pe-2">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="mb-4">
-                    {/* Main Comment */}
-                    <div className="d-flex align-items-start">
-                      <img
-                        src={comment.userPhoto || "https://via.placeholder.com/35"}
-                        alt="Commenter"
-                        className="rounded-circle me-2 flex-shrink-0"
-                        style={{ width: "35px", height: "35px", objectFit: "cover" }}
-                      />
-                      <div className="flex-grow-1">
-                        <div className={`rounded-3 p-3 ${themeClasses.bubble}`} style={{ maxWidth: '85%' }}>
-                          <div className="d-flex justify-content-between align-items-start mb-2">
-                            <strong className={`${themeClasses.textPrimary} small`}>{comment.userName}</strong>
-                            <div className="d-flex align-items-center gap-2">
-                              <small className={themeClasses.textMuted}>{formatTimeAgo(comment.createdAt)}</small>
+          <div className="flex items-center gap-3 mt-1 ml-2">
+            <div className="relative">
+              <button
+                ref={likeButtonRef}
+                onMouseEnter={() => setShowReactionPicker(true)}
+                onClick={() => !userReaction && handleReaction("like")}
+                className={`flex items-center gap-1 transition-colors ${
+                  userReaction ? "text-blue-500" : isLight ? "text-gray-600 hover:text-blue-500" : "text-gray-400 hover:text-blue-400"
+                }`}
+              >
+                <span className="text-base">{userReaction ? REACTIONS[userReaction].emoji : "👍"}</span>
+              </button>
 
-                              {auth.currentUser?.uid === comment.userId && (
-                                <button
-                                  className="btn btn-link p-0 text-muted"
-                                  onClick={() => handleDelete(comment.id)}
-                                >
-                                  <FaTimes size={12} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <p className="mb-0 small lh-base" style={{ whiteSpace: "pre-wrap", wordBreak: 'break-word' }}>
-                            {comment.content}
-                          </p>
-                        </div>
-
-                        {/* Comment Actions */}
-                        <div className="d-flex align-items-center gap-3 mt-2 ms-2">
-                          <ReactionDisplay
-                            reactions={comment.reactions}
-                            targetId={comment.id}
-                            isReply={false}
-                          />
-
-                          <button
-                            className="btn btn-link text-muted p-0 d-flex align-items-center gap-1"
-                            onClick={() => {
-                              setReplyTo(replyTo === comment.id ? null : comment.id);
-                            }}
-                            style={{ fontSize: '14px' }}
-                          >
-                            <FaReply size={14} />
-                            <span>Reply</span>
-                            {comment.replyCount > 0 && (
-                              <span className="text-muted">({comment.replyCount})</span>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Reply Input */}
-                        {replyTo === comment.id && (
-                          <ReplyComment
-                            commentId={comment.id}
-                            postId={postId}
-                            auth={auth}
-                            userDetails={userDetails}
-                            setReplyTo={setReplyTo}
-                            replyTo={replyTo}
-                          />
-                        )}
-
-                        {/* Replies */}
-                        {comment.replies.length > 0 && (
-                          <div className="ms-4 mt-3">
-                            {comment.replies.map((reply) => (
-                              <div key={reply.id} className="d-flex align-items-start mb-3">
-                                <img
-                                  src={reply.userPhoto || "https://via.placeholder.com/30"}
-                                  alt="Replier"
-                                  className="rounded-circle me-2 flex-shrink-0"
-                                  style={{ width: "30px", height: "30px", objectFit: "cover" }}
-                                />
-                                <div className="flex-grow-1">
-                                  <div className={`rounded-3 p-2 ${themeClasses.bubble}`} style={{ maxWidth: '80%' }}>
-                                    <div className="d-flex justify-content-between align-items-start mb-1">
-                                      <strong className="text-primary small">{reply.userName}</strong>
-                                      <div className="d-flex align-items-center gap-2">
-                                        <small className="text-muted">{formatTimeAgo(reply.createdAt)}</small>
-                                        {auth.currentUser?.uid === reply.userId && (
-                                          <button
-                                            className="btn btn-link p-0 text-muted"
-                                            onClick={() => handleDelete(reply.id, true, comment.id)}
-                                          >
-                                            <FaTimes size={12} />
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <p className="mb-0 small lh-base" style={{ whiteSpace: "pre-wrap", wordBreak: 'break-word' }}>
-                                      {reply.content}
-                                    </p>
-                                  </div>
-
-                                  {/* Reply Actions */}
-                                  <div className="mt-1 ms-2">
-                                    <ReactionDisplay
-                                      reactions={reply.reactions}
-                                      targetId={reply.id}
-                                      isReply={true}
-                                      parentCommentId={comment.id}
-                                    />
-                                    <button
-                                      className="btn btn-link text-muted p-0 d-flex align-items-center gap-1"
-                                      onClick={() => {
-                                        setReplyTo(replyTo === reply.id ? null : reply.id);
-                                      }}
-                                      style={{ fontSize: '14px' }}
-                                    >
-                                      <FaReply size={14} />
-                                      <span>Reply</span>
-                                      {reply.replyCount > 0 && (
-                                        <span className="text-muted">({reply.replyCount})</span>
-                                      )}
-                                    </button>
-                                  </div>
-
-                                  {/* Nested Reply Input */}
-                                  {replyTo === reply.id && (
-                                    <ReplyComment
-                                      commentId={comment.id}
-                                      postId={postId}
-                                      auth={auth}
-                                      userDetails={userDetails}
-                                      setReplyTo={setReplyTo}
-                                      replyTo={replyTo}
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Main Comment Input */}
-          <div className="mt-4">
-            <hr />
-            <form onSubmit={handleCommentSubmit} style={{
-              backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.95)' : 'rgba(30,30,30,0.95)',
-              borderRadius: '12px',
-              padding: '20px',
-              transition: 'background-color 0.3s ease'
-            }} className="d-flex gap-3 align-items-start">
-              <img
-                src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/35"}
-                alt="Your avatar"
-                className="rounded-circle flex-shrink-0"
-                style={{ width: "35px", height: "35px", objectFit: "cover" }}
+              <ReactionPicker
+                isOpen={showReactionPicker}
+                onClose={() => setShowReactionPicker(false)}
+                onSelect={handleReaction}
+                targetRef={likeButtonRef}
               />
-              <div className="flex-grow-1">
-                <div className="position-relative">
-                  <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Write a comment..."
-                    className={`form-control border-2 ${themeClasses.border} ${theme === "dark" ? "bg-dark text-light" : "bg-white text-dark"}`}
-                    rows="3"
-                    style={{ resize: "none", borderRadius: '20px', paddingRight: '70px' }}
-                  />
+            </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-primary btn-sm rounded-pill position-absolute"
-                    style={{ right: '12px', top: '50%', transform: 'translateY(-50%)', minWidth: '60px' }}
-                    disabled={!commentText.trim()}
-                  >
-                    Comment
-                  </button>
+            <button
+              onClick={() => setShowReplyInput(!showReplyInput)}
+              className={`text-xs font-medium flex items-center gap-1 ${
+                isLight ? "text-gray-600 hover:text-blue-500" : "text-gray-400 hover:text-blue-400"
+              }`}
+            >
+              <FaReply size={12} />
+              <span>Phản hồi</span>
+            </button>
+
+            {totalReactions > 0 && (
+              <div className="flex items-center gap-1 ml-auto">
+                {topReactions.map(({ type }) => (
+                  <span key={type} className="text-sm">{REACTIONS[type].emoji}</span>
+                ))}
+                <span className="text-xs text-gray-500">{totalReactions}</span>
+              </div>
+            )}
+          </div>
+
+          {showReplyInput && (
+            <ReplyInput
+              commentId={isReply ? parentCommentId : comment.id}
+              postId={postId}
+              auth={auth}
+              userDetails={userDetails}
+              replyToName={comment.userName}
+              onCancel={() => setShowReplyInput(false)}
+              onSuccess={() => {
+                setShowReplyInput(false);
+                setShowReplies(true);
+              }}
+            />
+          )}
+
+          {comment.replyCount > 0 && (
+            <>
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className={`text-xs font-medium flex items-center gap-1 mt-2 ml-2 ${
+                  isLight ? "text-blue-600 hover:text-blue-700" : "text-blue-400 hover:text-blue-300"
+                }`}
+              >
+                {showReplies ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}
+                <span>{showReplies ? "Ẩn" : "Xem"} {comment.replyCount} phản hồi</span>
+              </button>
+
+              {showReplies && comment.replies?.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  postId={postId}
+                  auth={auth}
+                  userDetails={userDetails}
+                  isReply={true}
+                  parentCommentId={isReply ? parentCommentId : comment.id}
+                  depth={depth + 1}
+                />
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => {
+  const { theme } = useContext(ThemeContext);
+  const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [totalCommentCount, setTotalCommentCount] = useState(0);
+  const emojiRef = useRef(null);
+  const inputRef = useRef(null);
+  const isLight = theme === "light";
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+        setShowEmoji(false);
+      }
+    };
+    if (showEmoji) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showEmoji]);
+
+  useEffect(() => {
+    if (!isCommentSectionOpen) return;
+
+    setLoading(true);
+    const unsubscribe = onSnapshot(
+      query(collection(db, "Posts", postId, "comments"), orderBy("createdAt", "desc")),
+      async (snapshot) => {
+        const commentsData = [];
+        let totalCount = snapshot.docs.length;
+
+        for (const commentDoc of snapshot.docs) {
+          const commentData = { id: commentDoc.id, ...commentDoc.data(), replies: [] };
+          totalCount += commentData.replyCount || 0;
+
+          onSnapshot(
+            query(collection(db, "Posts", postId, "comments", commentDoc.id, "replies"), orderBy("createdAt", "asc")),
+            (repliesSnap) => {
+              commentData.replies = repliesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+              setComments(prev => prev.map(c => c.id === commentDoc.id ? { ...c, replies: commentData.replies } : c));
+            }
+          );
+
+          commentsData.push(commentData);
+        }
+        setComments(commentsData);
+        setTotalCommentCount(totalCount);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isCommentSectionOpen, postId]);
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    if (!commentText.trim()) return;
+
+    try {
+      await addDoc(collection(db, "Posts", postId, "comments"), {
+        userId: auth.currentUser.uid,
+        userName: userDetails
+          ? `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}`
+          : auth.currentUser.displayName || "User",
+        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/40",
+        content: commentText.trim(),
+        createdAt: serverTimestamp(),
+        reactions: {},
+        reactionCount: 0,
+        replyCount: 0
+      });
+
+      setCommentText("");
+      toast.success("Đã thêm bình luận!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể thêm bình luận");
+    }
+  };
+
+  const handleEmojiClick = (emojiData) => {
+    const cursorPosition = inputRef.current?.selectionStart || commentText.length;
+    const newText = commentText.slice(0, cursorPosition) + emojiData.emoji + commentText.slice(cursorPosition);
+    setCommentText(newText);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      const newPosition = cursorPosition + emojiData.emoji.length;
+      inputRef.current?.setSelectionRange(newPosition, newPosition);
+    }, 0);
+  };
+
+  if (!isCommentSectionOpen) return null;
+
+  return (
+    <div className={`border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`}>
+      {totalCommentCount > 0 && (
+        <div className={`px-4 pt-3 pb-2 text-sm font-semibold ${isLight ? "text-gray-700" : "text-gray-300"}`}>
+          {totalCommentCount} bình luận
+        </div>
+      )}
+
+      {loading ? (
+        <div className="py-8 text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-r-transparent" />
+        </div>
+      ) : (
+        <div className="p-4 max-h-[400px] overflow-y-auto">
+          {comments.map(comment => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              postId={postId}
+              auth={auth}
+              userDetails={userDetails}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className={`p-4 border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`}>
+        <div className="flex gap-2 items-end">
+          <img
+            src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/40"}
+            alt="Avatar"
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
+              placeholder="Viết bình luận..."
+              className={`w-full rounded-full pl-4 pr-24 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isLight ? "bg-gray-100" : "bg-zinc-800"
+              }`}
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setShowEmoji(!showEmoji)}
+                className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors ${
+                  isLight ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
+                <FaRegSmile size={18} />
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!commentText.trim()}
+                className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full disabled:opacity-50 transition-colors"
+              >
+                <FaPaperPlane size={16} />
+              </button>
+            </div>
+
+            {showEmoji && (
+              <div
+                ref={emojiRef}
+                className="fixed z-50 shadow-2xl rounded-2xl overflow-hidden"
+                style={{
+                  bottom: "80px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  maxWidth: "calc(100vw - 2rem)"
+                }}
+              >
+                <div className={`rounded-2xl overflow-hidden ${isLight ? 'ring-1 ring-gray-200' : 'ring-1 ring-gray-700'}`}>
+                  <Picker
+                    onEmojiClick={handleEmojiClick}
+                    theme={isLight ? "light" : "dark"}
+                    previewConfig={{ showPreview: false }}
+                    searchPlaceHolder="Tìm emoji..."
+                    width="350px"
+                    height="450px"
+                  />
                 </div>
               </div>
-            </form>
+            )}
           </div>
-        </>
-      )}
-    </>
+        </div>
+      </div>
+    </div>
   );
 };
 
