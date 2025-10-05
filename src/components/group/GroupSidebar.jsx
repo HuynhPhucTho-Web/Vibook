@@ -17,11 +17,11 @@ export default function GroupSidebar() {
       <nav className="max-w-5xl mx-auto px-3 md:px-4 py-2">
         {/* scroll ngang trên mobile nếu chật */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          <NavLink to={`/groups/${groupId}`} end className={getClass}>Home</NavLink>
-          <NavLink to={`/groups/${groupId}/members`} className={getClass}>Members</NavLink>
-          <NavLink to={`/groups/${groupId}/media`} className={getClass}>Media</NavLink>
-          <NavLink to={`/groups/${groupId}/events`} className={getClass}>Events</NavLink>
-          <NavLink to={`/groups/${groupId}/about`} className={getClass}>About</NavLink>
+          <NavLink to={`/groups/${groupId}`} end className={getClass} style={{ textDecoration: 'none' }}>Home</NavLink>
+          <NavLink to={`/groups/${groupId}/members`} className={getClass} style={{ textDecoration: 'none' }}>Members</NavLink>
+          <NavLink to={`/groups/${groupId}/media`} className={getClass} style={{ textDecoration: 'none' }}>Media</NavLink>
+          <NavLink to={`/groups/${groupId}/events`} className={getClass} style={{ textDecoration: 'none' }}>Events</NavLink>
+          <NavLink to={`/groups/${groupId}/about`} className={getClass} style={{ textDecoration: 'none' }}>About</NavLink>
         </div>
       </nav>
     </div>

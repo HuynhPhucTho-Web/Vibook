@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { doc, updateDoc, getDoc, deleteDoc, query, getDocs, onSnapshot, collection } from "firebase/firestore";
+import { addDoc, doc, updateDoc, getDoc, deleteDoc, query, getDocs, onSnapshot, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../components/firebase";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { FaComment, FaTrash, FaShare, FaFile, FaTimes, FaEllipsisH, FaEdit, FaLock } from "react-icons/fa";
 import CommentSection from "./CommentSection";
+import { Link } from "react-router-dom";
 
 const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, handlePrivatePost }) => {
   const { theme } = useContext(ThemeContext);
@@ -17,6 +18,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
   const [localPost, setLocalPost] = useState(post);
   const [commentCount, setCommentCount] = useState(post.comments?.length || 0);
   const videoRef = useRef(null);
+  const [authorName, setAuthorName] = useState(localPost.userName || "");
+  const [authorPhoto, setAuthorPhoto] = useState(localPost.userPhoto || "");
 
   const isLight = theme === "light";
 
@@ -39,6 +42,74 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
     });
     return () => unsubComments();
   }, [post.id]);
+
+
+  const handleRepostToTimeline = async () => {
+    if (!auth?.currentUser) {
+      toast.error("Bạn cần đăng nhập để chia sẻ");
+      return;
+    }
+    try {
+      const me = auth.currentUser;
+      // Tạo post mới thuộc về người đang share
+      await addDoc(collection(db, "Posts"), {
+        userId: me.uid,
+        userName: me.displayName || "Anonymous",
+        userPhoto: me.photoURL || null,
+        type: "share",
+        content: "",             // cho phép người dùng chỉnh nội dung ở chỗ khác nếu muốn
+        createdAt: Date.now(),   // hoặc serverTimestamp(), miễn rules không chặn
+        likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
+        reactedBy: {},
+        comments: [],
+        // Trỏ về bài gốc để UI có thể hiển thị “đây là bài chia sẻ từ…”
+        sharedFrom: {
+          postId: localPost.id,
+          userId: localPost.userId,
+          userName: authorName || localPost.userName || "Anonymous",
+        },
+        // Nếu post gốc dùng mediaFiles:
+        mediaFiles: Array.isArray(localPost.mediaFiles) ? localPost.mediaFiles : undefined,
+        // Nếu post gốc dùng mediaUrls:
+        mediaUrls: Array.isArray(localPost.mediaUrls) ? localPost.mediaUrls : undefined,
+        status: "public",
+      });
+      toast.success("Đã chia sẻ lên trang cá nhân!");
+      setShowShareMenu(false);
+    } catch (e) {
+      console.error("repost error", e);
+      toast.error("Chia sẻ thất bại");
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        // Nếu đã có sẵn trong post thì dùng luôn
+        if (localPost.userName && localPost.userPhoto) {
+          if (mounted) {
+            setAuthorName(localPost.userName);
+            setAuthorPhoto(localPost.userPhoto);
+          }
+          return;
+        }
+        // Fetch từ Users/{userId} nếu thiếu
+        if (localPost.userId) {
+          const snap = await getDoc(doc(db, "Users", localPost.userId));
+          if (mounted && snap.exists()) {
+            const u = snap.data();
+            setAuthorName(u.displayName || u.name || "Anonymous");
+            setAuthorPhoto(u.photoURL || "");
+          }
+        }
+      } catch (e) {
+        // bỏ qua lỗi: fallback phía dưới sẽ hiển thị "Anonymous"
+        console.log("fetch author error", e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [localPost.userId, localPost.userName, localPost.userPhoto]);
 
   // Handlers
   const handleReaction = async (postId, reaction) => {
@@ -216,15 +287,20 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img
-            src={localPost.userPhoto || "https://via.placeholder.com/48"}
-            alt={localPost.userName}
-            className="w-12 h-12 rounded-full object-cover ring-2 ring-offset-2 ring-gray-200"
-          />
+          <Link to={`/profile/${localPost.userId}`} className="no-underline hover:no-underline">
+            <img
+              src={localPost.userPhoto || "https://via.placeholder.com/48"}
+              alt={localPost.userName}
+              className="w-12 h-12 rounded-full object-cover ring-2 ring-offset-2 ring-gray-200"
+            />
+          </Link>
+
           <div>
-            <p className={`font-semibold text-base ${isLight ? "text-gray-900" : "text-white"}`}>
-              {localPost.userName}
-            </p>
+            <Link to={`/profile/${localPost.userId}`} className="no-underline hover:no-underline">
+              <p className={`font-semibold text-base ${isLight ? "text-gray-900" : "text-white"}`}>
+                {localPost.userName}
+              </p>
+            </Link>
             <p className="text-sm text-gray-500">{formatTimeAgo(localPost.createdAt)}</p>
           </div>
         </div>
@@ -408,10 +484,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
             onClick={() => handleReaction(post.id, "Like")}
             disabled={isReacting}
             className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${currentReaction
-                ? "text-blue-500 font-semibold"
-                : isLight
-                  ? "text-gray-600 hover:bg-gray-50"
-                  : "text-gray-400 hover:bg-zinc-800"
+              ? "text-blue-500 font-semibold"
+              : isLight
+                ? "text-gray-600 hover:bg-gray-50"
+                : "text-gray-400 hover:bg-zinc-800"
               }`}
           >
             <span className="text-lg">{currentReaction ? reactions[currentReaction] : "👍"}</span>
@@ -481,10 +557,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
           {showShareMenu && (
             <>
               <div className="fixed inset-0 z-20" onClick={() => setShowShareMenu(false)} />
-              <div
-                className={`absolute right-0 bottom-full mb-2 w-56 rounded-2xl shadow-xl z-30 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
-                  }`}
-              >
+              <div className={`absolute right-0 bottom-full mb-2 w-56 rounded-2xl shadow-xl z-30 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
+                }`}>
                 <button
                   onClick={() => handleShare("copy")}
                   className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
@@ -492,6 +566,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                 >
                   Copy link
                 </button>
+
                 <button
                   onClick={() => handleShare("copyWithContent")}
                   className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
@@ -499,6 +574,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                 >
                   Copy nội dung
                 </button>
+
                 {navigator.share && (
                   <button
                     onClick={() => handleShare("native")}
@@ -508,9 +584,18 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
                     Chia sẻ hệ thống
                   </button>
                 )}
+
+                {/* 👉 Thêm item share lên trang cá nhân */}
+                <button
+                  onClick={handleRepostToTimeline}
+                  className="w-full px-4 py-2.5 flex items-center gap-3 transition-colors text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  Chia sẻ lên trang cá nhân
+                </button>
               </div>
             </>
           )}
+
         </div>
       </div>
 

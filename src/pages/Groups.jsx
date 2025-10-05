@@ -409,7 +409,7 @@ export default function Groups() {
                     <div className="mt-4 flex items-center justify-between">
                       <Link
                         to={`/groups/${g.id}`}
-                        className="flex items-center gap-1 text-blue-500 hover:text-blue-600 dark:text-blue-400"
+                        className="text-decoration-none flex items-center gap-1 text-blue-500 hover:text-blue-600 dark:text-blue-400"
                       >
                         <FaHouse /> View Details
                       </Link>

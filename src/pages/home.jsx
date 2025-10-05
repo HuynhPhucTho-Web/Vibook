@@ -10,7 +10,7 @@ import PostItem from "../components/PostItem";
 import VideoCarousel from "../components/VideoCarousel";
 
 function Home() {
-  const { theme, themes, bodyBackground } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,10 +121,7 @@ function Home() {
   }
 
   return (
-    <div
-      className={`container-fluid py-4 ${themes[theme]}`}
-      style={{ backgroundColor: bodyBackground, minHeight: "100vh", transition: "all 0.3s ease" }}
-    >
+    <div className="container-fluid py-4" style={{ minHeight: "100vh" }}>
       <div className="mb-4">
         <VideoCarousel theme={theme} />
       </div>

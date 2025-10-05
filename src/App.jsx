@@ -114,6 +114,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/homevibook" element={user ? <Home /> : <Navigate to="/login" />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+            <Route path="/profile/:uid" element={user ? <Profile /> : <Navigate to="/login" />} />
             <Route path="/messenger" element={user ? <Messenger /> : <Navigate to="/login" />} />
             <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
             <Route path="/groups" element={user ? <Groups /> : <Navigate to="/login" />} />

@@ -20,6 +20,8 @@ import {
   FaEdit,
   FaLock,
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
+
 
 /** helpers */
 const isVideo = (url = "") =>
@@ -243,22 +245,24 @@ export default function GroupPostItem({
     >
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
+
         <div className="flex items-center gap-3 min-w-0">
-          {localPost.userPhoto ? (
-            <img
-              src={localPost.userPhoto}
-              alt={localPost.userName || "user"}
-              className="w-12 h-12 rounded-full object-cover ring-2 ring-offset-2 ring-gray-200 dark:ring-gray-700"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white grid place-items-center font-bold">
-              {(localPost.userName?.[0] || "?").toUpperCase()}
-            </div>
-          )}
+          <Link to={`/profile/${localPost.userId}`} className="no-underline hover:no-underline">
+            {localPost.userPhoto ? (
+              <img src={localPost.userPhoto} alt={localPost.userName || "user"} className="w-12 h-12 rounded-full object-cover ring-2 ring-offset-2 ring-gray-200 dark:ring-gray-700" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white grid place-items-center font-bold">
+                {(localPost.userName?.[0] || "?").toUpperCase()}
+              </div>
+            )}
+          </Link>
+
           <div className="min-w-0">
-            <p className={`font-semibold text-base truncate ${isLight ? "text-gray-900" : "text-white"}`}>
-              {localPost.userName || "Anonymous"}
-            </p>
+            <Link to={`/profile/${localPost.userId}`} className="no-underline hover:no-underline">
+              <p className={`font-semibold text-base truncate ${isLight ? "text-gray-900" : "text-white"}`}>
+                {localPost.userName || "Anonymous"}
+              </p>
+            </Link>
             <p className="text-sm text-gray-500">{timeAgo(localPost.createdAt)}</p>
           </div>
         </div>
@@ -539,10 +543,8 @@ export default function GroupPostItem({
         </div>
       </div>
 
-      {/* Comments (nếu bạn có component comment cho group, render ở đây) */}
       {openComments && (
         <div className="px-4 pb-4 text-sm text-gray-500 dark:text-gray-400">
-          {/* TODO: gắn CommentSection của group vào đây nếu có */}
           Bình luận nhóm sẽ hiển thị ở đây.
         </div>
       )}
