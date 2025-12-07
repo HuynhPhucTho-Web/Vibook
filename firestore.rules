@@ -1,0 +1,359 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ========= HELPERS ========= */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /* ========= USERS ========= */
+    match /Users/{userId} {
+      // Cho phép tất cả user đã login đọc (để dùng FindFriends)
+      allow read: if isSignedIn();
+
+      // Chỉ chủ tài khoản được tạo/update doc Users của chính mình
+      allow create, update: if isSignedIn() && request.auth.uid == userId;
+
+      // Cho xoá: chỉ chủ
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    /* ========= FRIEND REQUESTS ========= */
+    match /FriendRequests/{requestId} {
+      // Tạo lời mời kết bạn
+      allow create: if isSignedIn()
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.resource.data.toUserId != request.auth.uid;
+
+      // Chỉ 2 người trong request được xem
+      allow read: if isSignedIn()
+        && (request.auth.uid == resource.data.fromUserId
+            || request.auth.uid == resource.data.toUserId);
+
+      // Cập nhật status (accept / reject / cancel): cả sender & receiver
+      allow update: if isSignedIn()
+        && (request.auth.uid == resource.data.toUserId
+            || request.auth.uid == resource.data.fromUserId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'updatedAt']);
+
+      // Huỷ / xoá lời mời: cả 2 bên đều được
+      allow delete: if isSignedIn()
+        && (request.auth.uid == resource.data.fromUserId
+            || request.auth.uid == resource.data.toUserId);
+    }
+
+    /* ========= FRIENDSHIPS (BẠN BÈ) ========= */
+    // documentId = "uidA_uidB" (2 uid đã sort sẵn)
+    // fields: participants: [uidA, uidB], status: "accepted", createdAt, updatedAt
+    match /Friendships/{chatId} {
+      // helper dùng resource (đã tồn tại)
+      function isFriendshipParticipant() {
+        return isSignedIn()
+          && (request.auth.uid in resource.data.participants);
+      }
+
+      // Đọc / sửa / xoá: chỉ 2 người trong mối quan hệ này
+      allow read, update, delete: if isFriendshipParticipant();
+
+      // Tạo doc friendship sau khi accept friend-request
+      // dùng request.resource (vì create chưa có resource)
+      allow create: if isSignedIn()
+        && (request.auth.uid in request.resource.data.participants)
+        && request.resource.data.participants.size() == 2
+        && request.resource.data.status == 'accepted';
+    }
+
+    /* ========= GLOBAL POSTS ========= */
+    match /Posts/{postId} {
+      allow read: if true;
+
+      // Chỉ user đăng nhập mới tạo được post
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+
+      // Update:
+      // - Chủ post: title, content, mediaUrls, status
+      // - Người khác: chỉ reactions
+      allow update: if isSignedIn() && (
+        (request.auth.uid == resource.data.userId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'title',
+              'content',
+              'mediaUrls',
+              'status',
+              'likes',
+              'reactedBy',
+              'reactions',
+              'reactionCount'
+            ])
+        )
+        ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likes', 'reactedBy', 'reactions', 'reactionCount'])
+      );
+
+      // Xóa: chỉ chủ post
+      allow delete: if isSignedIn()
+        && request.auth.uid == resource.data.userId;
+
+      /* ----- Comments ----- */
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn()
+          && request.resource.data.userId == request.auth.uid;
+
+        allow update: if isSignedIn() && (
+          request.auth.uid == resource.data.userId ||
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['reactions', 'reactionCount', 'replyCount'])
+        );
+
+        allow delete: if isSignedIn()
+          && request.auth.uid == resource.data.userId;
+
+        /* ----- Replies (lồng nhau) ----- */
+        match /replies/{replyId} {
+          allow read: if true;
+          allow create: if isSignedIn()
+            && request.resource.data.userId == request.auth.uid;
+          allow update: if isSignedIn() && (
+            request.auth.uid == resource.data.userId ||
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['reactions', 'reactionCount', 'replyCount'])
+          );
+          allow delete: if isSignedIn()
+            && request.auth.uid == resource.data.userId;
+
+          // Cho phép nesting không giới hạn
+          match /{document=**} {
+            allow read: if true;
+            allow create: if isSignedIn()
+              && request.resource.data.userId == request.auth.uid;
+            allow update: if isSignedIn() && (
+              request.auth.uid == resource.data.userId ||
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['reactions', 'reactionCount', 'replyCount'])
+            );
+            allow delete: if isSignedIn()
+              && request.auth.uid == resource.data.userId;
+          }
+        }
+
+        // Comment reactions
+        match /reactions/{userId} {
+          allow read: if true;
+          allow write: if isSignedIn();
+        }
+      }
+    }
+
+    /* ========= PRIVATE MESSAGES ========= */
+    // Collection: Messages/{chatId}/messages/{messageId}
+    // chatId = "uidA_uidB" (2 uid đã sort)
+    match /Messages/{chatId} {
+
+      function isParticipant() {
+        return isSignedIn()
+          && (request.auth.uid in chatId.split('_'));
+      }
+
+      // Đã là bạn bè?
+      function isFriend() {
+        return isParticipant()
+          && exists(/databases/$(database)/documents/Friendships/$(chatId))
+          && get(/databases/$(database)/documents/Friendships/$(chatId)).data.status == 'accepted';
+      }
+
+      // Chỉ bạn bè mới thấy conversation
+      allow read: if isFriend();
+      // Không cho ghi trực tiếp vào doc này, chỉ vào subcollection messages
+      allow write: if false;
+
+      match /messages/{messageId} {
+        // Chỉ bạn bè mới đọc được tin nhắn
+        allow read: if isFriend();
+
+        // Gửi tin nhắn:
+        // - đã là bạn
+        // - auth.uid là sender
+        // - receiver nằm trong chatId
+        allow create: if isFriend()
+          && request.auth.uid == request.resource.data.senderId
+          && request.resource.data.receiverId in chatId.split('_');
+
+        // Edit / xoá: chỉ cho phép sender và phải là bạn
+        allow update, delete: if isFriend()
+          && request.auth.uid == resource.data.senderId;
+      }
+    }
+
+    /* ========= NOTIFICATIONS ========= */
+    match /Notifications/{notificationId} {
+      // Chỉ chủ notification được đọc
+      allow read: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+
+      // Tạo notification cho chính mình
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+
+      // Cho phép user tự xoá / update trạng thái (đã đọc…)
+      allow update, delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    /* ========= GROUPS ========= */
+    match /Groups/{groupId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+
+      // Chủ group sửa mọi thứ, member khác chỉ có thể update members
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.ownerId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+      );
+
+      allow delete: if isSignedIn()
+        && request.auth.uid == resource.data.ownerId;
+
+      // Group posts
+      match /Posts/{postId} {
+        function isGroupMember() {
+          // giả sử Group có field members: array<string>
+          return isSignedIn()
+            && (request.auth.uid in get(/databases/$(database)/documents/Groups/$(groupId)).data.members);
+        }
+
+        // Nếu group public: ai cũng đọc; nếu private: chỉ member
+        allow read: if
+          get(/databases/$(database)/documents/Groups/$(groupId)).data.isPublic == true
+          || isGroupMember();
+
+        // Chỉ member mới post
+        allow create: if isGroupMember()
+          && request.resource.data.userId == request.auth.uid;
+
+        allow update: if isGroupMember() && (
+          (request.auth.uid == resource.data.userId &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'title',
+                'content',
+                'mediaUrls',
+                'status',
+                'likes',
+                'reactedBy',
+                'reactions',
+                'reactionCount'
+              ])
+          )
+          ||
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likes', 'reactedBy', 'reactions', 'reactionCount'])
+        );
+
+        allow delete: if isGroupMember()
+          && request.auth.uid == resource.data.userId;
+
+        // Comments trong group post
+        match /comments/{commentId} {
+          allow read: if true; // hoặc isGroupMember() nếu muốn kín hoàn toàn
+          allow create: if isGroupMember()
+            && request.resource.data.userId == request.auth.uid;
+
+          allow update: if isGroupMember() && (
+            request.auth.uid == resource.data.userId ||
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['reactions', 'reactionCount', 'replyCount'])
+          );
+
+          allow delete: if isGroupMember()
+            && request.auth.uid == resource.data.userId;
+
+          // Replies
+          match /replies/{replyId} {
+            allow read: if true; // hoặc isGroupMember()
+            allow create: if isGroupMember()
+              && request.resource.data.userId == request.auth.uid;
+
+            allow update: if isGroupMember() && (
+              request.auth.uid == resource.data.userId ||
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['reactions', 'reactionCount', 'replyCount'])
+            );
+
+            allow delete: if isGroupMember()
+              && request.auth.uid == resource.data.userId;
+
+            // Unlimited nesting
+            match /{document=**} {
+              allow read: if true; // hoặc isGroupMember()
+              allow create: if isGroupMember()
+                && request.resource.data.userId == request.auth.uid;
+
+              allow update: if isGroupMember() && (
+                request.auth.uid == resource.data.userId ||
+                request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['reactions', 'reactionCount', 'replyCount'])
+              );
+
+              allow delete: if isGroupMember()
+                && request.auth.uid == resource.data.userId;
+            }
+          }
+
+          // Comment reactions
+          match /reactions/{userId} {
+            allow read: if true;
+            allow write: if isGroupMember();
+          }
+        }
+      }
+    }
+
+    /* ========= EVENTS ========= */
+    match /Events/{eventId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.ownerId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees'])
+      );
+      allow delete: if isSignedIn()
+        && request.auth.uid == resource.data.ownerId;
+    }
+
+    /* ========= STORIES ========= */
+    match /Stories/{storyId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.userId ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mediaFiles'])
+      );
+      allow delete: if isSignedIn()
+        && request.auth.uid == resource.data.userId;
+    }
+
+    /* ========= GAMES ========= */
+    match /Games/{gameId} {
+      allow read: if true;
+
+      // Chỉ user đăng nhập mới tạo được game
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+
+      // Update/Delete: chỉ chủ game, và không phải game mặc định
+      allow update, delete: if isSignedIn()
+        && request.auth.uid == resource.data.ownerId
+        && !gameId.startsWith("default-");
+    }
+  }
+}

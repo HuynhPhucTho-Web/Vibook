@@ -1,0 +1,239 @@
+/* Friends Page Styles */
+.friends-page {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.friends-page.light {
+  --bg-color: #f8f9fa;
+  --text-color: #212529;
+  --card-bg: #ffffff;
+  --border-color: #dee2e6;
+}
+
+.friends-page.dark {
+  --bg-color: #1a1a1a;
+  --text-color: #ffffff;
+  --card-bg: #2d2d2d;
+  --border-color: #404040;
+}
+
+/* Tab Navigation */
+.friends-page .nav-tabs {
+  border-bottom: 2px solid var(--border-color);
+}
+
+.friends-page .nav-tabs .nav-link {
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-color);
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.friends-page .nav-tabs .nav-link:hover {
+  border-bottom-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.friends-page .nav-tabs .nav-link.active {
+  border-bottom-color: #007bff;
+  background-color: transparent;
+  color: #007bff;
+}
+
+/* Cards */
+.friends-page .card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.friends-page .card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Friend Request Cards */
+.friend-requests .card-body {
+  padding: 1.25rem;
+}
+
+.friend-requests .card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.friend-requests .btn {
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.friend-requests .btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Find Friends */
+.find-friends .input-group {
+  max-width: 400px;
+  margin-bottom: 2rem;
+}
+
+.find-friends .input-group-text {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.find-friends .form-control {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.find-friends .form-control:focus {
+  background-color: var(--card-bg);
+  border-color: #007bff;
+  color: var(--text-color);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.find-friends .form-control::placeholder {
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+/* Friends List */
+.friends-list .card {
+  height: 100%;
+}
+
+.friends-list .card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+}
+
+.friends-list .card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.friends-list .card-title a {
+  transition: color 0.2s ease;
+}
+
+.friends-list .card-title a:hover {
+  color: #007bff !important;
+}
+
+.friends-list .btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.friends-list .btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Avatar Styles */
+.friends-page .rounded-circle {
+  border: 2px solid var(--border-color);
+}
+
+/* Empty States */
+.friends-page .text-center {
+  color: var(--text-color);
+}
+
+.friends-page .text-muted {
+  color: var(--text-color) !important;
+  opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .friends-page .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .friends-page .nav-tabs .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .friends-page .card {
+    margin-bottom: 1rem;
+  }
+
+  .find-friends .input-group {
+    max-width: 100%;
+  }
+}
+
+/* Loading States */
+.friends-page .spinner-border {
+  color: #007bff;
+}
+
+/* Button Groups */
+.friends-page .d-flex.gap-2 .btn {
+  flex: 1;
+}
+
+/* Status Badges */
+.friends-page .badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.friends-page .badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.friends-page .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.friends-page .badge.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+/* Animation for new items */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.friends-page .card {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Hover effects for interactive elements */
+.friends-page .btn-outline-primary:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.friends-page .btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}

@@ -32,6 +32,7 @@ import GroupInfo from "./pages/group/GroupInfo";
 import GroupHome from "./pages/group/GroupHome";
 import PostDetail from "./pages/PostDetail";
 import UserDetailPage from "./pages/UserDetailPage";
+import Friends from "./pages/friends";
 
 // Layout for authentication pages
 const AuthLayout = () => (
@@ -115,6 +116,7 @@ function App() {
             <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
             <Route path="/groups" element={user ? <Groups /> : <Navigate to="/login" />} />
             <Route path="/events" element={user ? <Events /> : <Navigate to="/login" />} />
+            <Route path="/friends" element={user ? <Friends /> : <Navigate to="/login" />} />
             <Route path="/story" element={user ? <Storys /> : <Navigate to="/login" />} />
             <Route path="/playgame" element={user ? <PlayGame /> : <Navigate to="/login" />} />
             <Route path="/post/:postId" element={user ? <PostDetail /> : <Navigate to="/login" />} />

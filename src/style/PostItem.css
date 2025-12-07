@@ -3,6 +3,7 @@
 .post-item-container {
   overflow: hidden;
   transition: all 0.3s;
+  border-radius: 1.5rem;
 }
 
 .post-item-container.light {

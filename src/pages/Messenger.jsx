@@ -8,7 +8,9 @@ import {
   orderBy,
   serverTimestamp,
   limit,
-  getDocs,
+  where,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -28,7 +30,6 @@ const Messenger = () => {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -67,48 +68,88 @@ const Messenger = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    const loadUsers = async () => {
+    const loadFriends = async () => {
       try {
         setIsLoading(true);
-        const usersQuery = query(collection(db, "Users"), limit(50));
-        const snapshot = await getDocs(usersQuery);
+        const friendshipsQuery = query(
+          collection(db, "Friendships"),
+          where("participants", "array-contains", currentUser.uid),
+          where("status", "==", "accepted")
+        );
 
-        const userList = snapshot.docs
-          .map((doc) => ({
-            uid: doc.id,
-            firstName: doc.data().firstName || 'Unknown',
-            lastName: doc.data().lastName || '',
-            email: doc.data().email || '',
-            photo: doc.data().photo || null,
-            isOnline: Math.random() > 0.5,
-            lastSeen: Date.now() - Math.random() * 3600000,
-          }))
-          .filter((u) => u.uid !== currentUser.uid);
+        const unsubscribe = onSnapshot(
+          friendshipsQuery,
+          async (snapshot) => {
+            try {
+              if (snapshot.empty) {
+                // No friends, set empty list without error
+                setUsers([]);
+                setIsLoading(false);
+                return;
+              }
 
-        setUsers(userList);
+              const friendPromises = snapshot.docs.map(async (docSnap) => {
+                const data = docSnap.data();
+                const participants = data.participants || [];
+                const friendId = participants.find((id) => id !== currentUser.uid);
+                if (!friendId) return null;
 
+                const userRef = doc(db, "Users", friendId);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists()) return null;
+
+                return {
+                  uid: friendId,
+                  friendshipId: docSnap.id,
+                  firstName: userSnap.data().firstName || 'Unknown',
+                  lastName: userSnap.data().lastName || '',
+                  email: userSnap.data().email || '',
+                  photo: userSnap.data().photo || null,
+                  isOnline: Math.random() > 0.5,
+                  lastSeen: Date.now() - Math.random() * 3600000,
+                };
+              });
+
+              const friendsData = (await Promise.all(friendPromises)).filter(Boolean);
+              setUsers(friendsData);
+              setIsLoading(false);
+            } catch (error) {
+              console.error("Error loading friends:", error);
+              toast.error("Failed to load friends.");
+              setIsLoading(false);
+            }
+          },
+          (error) => {
+            console.error("Error listening to friendships:", error);
+            // Only show error for actual permission issues, not empty results
+            if (error.code !== 'permission-denied' || error.message.includes('insufficient')) {
+              toast.error("Failed to load friends.");
+            }
+            setUsers([]);
+            setIsLoading(false);
+          }
+        );
+
+        unsubscribeRefs.current.friends = unsubscribe;
       } catch (error) {
-        console.error("Error loading users:", error);
-        toast.error("Could not load users.", { position: "top-center" });
-      } finally {
+        console.error("Error setting up friends listener:", error);
+        toast.error("Could not load friends.", { position: "top-center" });
         setIsLoading(false);
       }
     };
 
-    loadUsers();
+    loadFriends();
   }, [currentUser]);
 
   useEffect(() => {
     if (!currentUser || !selectedUser) {
       setMessages([]);
-      setIsLoadingMessages(false);
       return;
     }
 
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
     if (lastChatId.current === chatId && messages.length > 0) return;
 
-    setIsLoadingMessages(true);
     lastChatId.current = chatId;
 
     if (unsubscribeRefs.current.messages) {
@@ -129,11 +170,9 @@ const Messenger = () => {
           ...doc.data(),
         }));
         setMessages(messageList);
-        setIsLoadingMessages(false);
       },
       (error) => {
         console.error(`Error fetching messages:`, error);
-        setIsLoadingMessages(false);
       }
     );
 

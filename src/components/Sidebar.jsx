@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  FaHome, FaUser, FaUsers, FaCalendarAlt, FaVideo, FaGamepad,
+  FaHome, FaUser, FaUserPlus, FaUsers, FaCalendarAlt, FaVideo, FaGamepad,
   FaSignOutAlt, FaBars, FaTimes
 } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -19,6 +19,7 @@ const MOBILE_BREAKPOINT = 768;
 const MENU = [
   { path: "/homevibook", icon: FaHome, label: "Home" },
   { path: "/profile",    icon: FaUser, label: "Profile" },
+  { path: "/friends",    icon: FaUserPlus, label: "Friends" },
   { path: "/groups",     icon: FaUsers, label: "Groups" },
   { path: "/events",     icon: FaCalendarAlt, label: "Events" },
   { path: "/story",      icon: FaVideo, label: "Story" },

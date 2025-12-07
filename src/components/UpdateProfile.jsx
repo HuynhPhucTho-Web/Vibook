@@ -24,6 +24,9 @@ export default function ProfileHeader({
   postCount = 0,
   friendCount = 0,
   followerCount = 0,
+  isFriend = false,
+  hasSentRequest = false,
+  onSendRequest,
   onUpdated,
 }) {
   const { theme } = useContext(ThemeContext);
@@ -121,7 +124,6 @@ export default function ProfileHeader({
   const bgCard = isDark ? "bg-[#111318]" : "bg-white";
   const textPrimary = isDark ? "text-white" : "text-gray-900";
   const textSecondary = isDark ? "text-gray-200" : "text-gray-700";
-  const textMuted = isDark ? "text-gray-300" : "text-gray-600";
   const borderColor = isDark ? "border-gray-700" : "border-gray-200";
   const bgInput = isDark ? "bg-gray-800" : "bg-gray-50";
   const bgButton = isDark ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-100 hover:bg-gray-200";
@@ -187,9 +189,22 @@ export default function ProfileHeader({
                   </button>
                 ) : (
                   <>
-                    <button className="px-5 py-2.5 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition">
-                      Follow
-                    </button>
+                    {isFriend ? (
+                      <button className="px-5 py-2.5 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition">
+                        Friends
+                      </button>
+                    ) : hasSentRequest ? (
+                      <button className="px-5 py-2.5 rounded-lg font-semibold bg-gray-500 text-white cursor-not-allowed">
+                        Request Sent
+                      </button>
+                    ) : (
+                      <button
+                        onClick={onSendRequest}
+                        className="px-5 py-2.5 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition"
+                      >
+                        Add Friend
+                      </button>
+                    )}
                     <button className={`px-5 py-2.5 rounded-lg font-semibold transition ${bgButton} ${textPrimary}`}>
                       Message
                     </button>

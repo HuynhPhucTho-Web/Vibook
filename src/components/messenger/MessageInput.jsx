@@ -14,9 +14,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
     // File attachment states and refs
     const [attachedFiles, setAttachedFiles] = useState([]);
     const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
     const fileInputRef = useRef(null);
-    const videoRef = useRef(null); // For video previews in attachments
 
     // Voice recording states and refs
     const [isRecording, setIsRecording] = useState(false);
@@ -54,7 +52,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
           console.error(`[${currentDateTime}] Missing Cloudinary envs`);
           toast.error("Cloudinary configuration missing in .env", { position: "top-center" });
         }
-      }, []);
+      }, [currentDateTime]);
 
     // Cleanup video preview blobs
     useEffect(() => {
@@ -281,46 +279,6 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
         setShowEmojiPicker(false);
     };
 
-    const handleFileInputChange = async (e) => {
-        const files = Array.from(e.target.files || []);
-        if (attachedFiles.length + files.length > 5) {
-            toast.error("Maximum 5 files per message", { position: "top-center" });
-            return;
-        }
-
-        const newFiles = [];
-        for (const f of files) {
-            const ok = validateFile(f);
-            if (!ok.valid) {
-                toast.error(ok.error, { position: "top-center" });
-                continue;
-            }
-            const preview = await createFilePreview(f);
-            newFiles.push({
-                id: Date.now() + Math.random(), // Unique ID for key and removal
-                file: f,
-                preview,
-                category: getFileCategory(f.type),
-                type: f.type,
-                name: f.name,
-                size: f.size,
-                progress: 0, // For upload progress tracking
-            });
-        }
-        setAttachedFiles((prev) => [...prev, ...newFiles]);
-        e.target.value = ""; // Clear input for re-selection of same file
-    };
-
-    const removeAttachedFile = (id) => {
-        setAttachedFiles((prev) => {
-            const fileToRemove = prev.find(f => f.id === id);
-            if (fileToRemove?.preview && fileToRemove.category === "video") {
-                URL.revokeObjectURL(fileToRemove.preview);
-            }
-            return prev.filter((f) => f.id !== id);
-        });
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!messageText.trim() && attachedFiles.length === 0) return;
@@ -329,9 +287,9 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
         if (attachedFiles.length > 0) {
             setIsUploadingAttachments(true);
             try {
-                const uploadPromises = attachedFiles.map((fileData) => 
-                    uploadFileToCloudinary(fileData, (id, percent) => {
-                        setAttachedFiles(prev => prev.map(f => f.id === id ? { ...f, progress: percent } : f));
+                const uploadPromises = attachedFiles.map((fileData) =>
+                    uploadFileToCloudinary(fileData, (_id, _percent) => {
+                        setAttachedFiles(prev => prev.map(f => f.id === _id ? { ...f, progress: _percent } : f));
                     })
                 );
                 uploadedMedia = await Promise.all(uploadPromises);
@@ -347,7 +305,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
         if (recordedBlob) {
             setIsUploadingAttachments(true); // Re-use this state for recording upload
             try {
-                const audioUploadResult = await uploadFileToCloudinary(recordedBlob, (id, percent) => {
+                const audioUploadResult = await uploadFileToCloudinary(recordedBlob, () => {
                     // Update progress for recorded blob if needed, though typically it's one file
                     // setRecordedBlob(prev => prev ? {...prev, progress: percent} : null);
                 });
