@@ -151,7 +151,7 @@ export default function ProfileHeader({
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <img
-              src={user.photo || "https://via.placeholder.com/128"}
+              src={user.photo || "/default-avatar.png"}
               alt="avatar"
               className={`w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ${isDark ? 'ring-gray-800' : 'ring-white'} object-cover shadow-xl`}
             />

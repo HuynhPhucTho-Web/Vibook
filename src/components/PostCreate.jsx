@@ -6,6 +6,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { FaImage, FaVideo, FaFile, FaSmile, FaCamera, FaTimes, FaExpand } from "react-icons/fa";
 import { Cloudinary } from "@cloudinary/url-gen";
 import Picker from "emoji-picker-react";
+import "../style/PostCreate.css";
 
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
@@ -204,7 +205,7 @@ const PostCreator = ({ onPostCreated }) => {
       const postData = {
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || "Anonymous",
-        userPhoto: auth.currentUser.photoURL || "https://via.placeholder.com/40",
+        userPhoto: auth.currentUser.photoURL || "/default-avatar.png",
         content: postContent,
         mediaFiles: uploadedMedia,
         createdAt: Date.now(),
@@ -419,19 +420,14 @@ const PostCreator = ({ onPostCreated }) => {
   }
 
   return (
-    <div
-      className={`w-full rounded-3xl shadow-xl backdrop-blur-sm transition-all duration-300 my-6 md:my-6 ${isLight
-        ? "bg-white/95 border border-gray-200/50"
-        : "bg-zinc-900/95 border border-white/10"
-        }`}
-    >
+    <div className={`post-creator-container ${isLight ? 'light' : 'dark'}`}>
       {/* Header with avatar and input */}
-      <div className="p-6">
+      <div className="post-creator-header">
         <div className="flex items-start gap-4">
           {/* Avatar */}
           <div className="relative flex-shrink-0 group">
             <img
-              src={auth.currentUser?.photoURL || "https://via.placeholder.com/48"}
+              src={auth.currentUser?.photoURL || "/default-avatar.png"}
               alt="avatar"
               className="h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-400/50 transition-all group-hover:ring-indigo-500"
             />
@@ -470,8 +466,8 @@ const PostCreator = ({ onPostCreated }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="post-creator-actions-container">
+          <div className="post-creator-action-buttons">
             {/* Image/Video */}
             <label
               className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all ${isLight
@@ -545,7 +541,7 @@ const PostCreator = ({ onPostCreated }) => {
             type="button"
             onClick={handlePostSubmit}
             disabled={(!postContent.trim() && mediaFiles.length === 0) || isUploading}
-            className={`px-6 py-2.5 rounded-xl font-semibold text-white transition-all ${(!postContent.trim() && mediaFiles.length === 0) || isUploading
+            className={`post-creator-submit-btn ${(!postContent.trim() && mediaFiles.length === 0) || isUploading
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 shadow-lg hover:shadow-xl"
               }`}

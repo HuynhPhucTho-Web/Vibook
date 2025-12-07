@@ -1,0 +1,33 @@
+/* src/style/VideoCarousel.css */
+
+.video-carousel-item-video {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px; /* Add some rounded corners */
+}
+
+.carousel-caption h5 {
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.carousel-caption p {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+
+/* On smaller screens, reduce the height of the carousel video */
+@media (max-width: 768px) {
+  .video-carousel-item-video {
+    height: 200px;
+  }
+
+  .carousel-caption h5 {
+    font-size: 1rem;
+  }
+
+  .carousel-caption p {
+    font-size: 0.8rem;
+  }
+}

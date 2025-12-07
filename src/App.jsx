@@ -20,11 +20,6 @@ import Groups from "./pages/Groups";
 import Events from "./pages/Events";
 import Storys from "./pages/StoryPages";
 import PlayGame from "./pages/PlayGame";
-import PageManagement from "./pages/PageManagement";
-import Inbox from "./pages/Inbox";
-import Insights from "./pages/Insights";
-import CommentManagement from "./pages/CommentManagement";
-import FanBadges from "./pages/FanBadges";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import GroupPage from "./pages/GroupPage";
@@ -35,7 +30,8 @@ import GroupMedia from "./pages/group/GroupMedia";
 import GroupEvents from "./pages/group/GroupEvents";
 import GroupInfo from "./pages/group/GroupInfo";
 import GroupHome from "./pages/group/GroupHome";
-
+import PostDetail from "./pages/PostDetail";
+import UserDetailPage from "./pages/UserDetailPage";
 
 // Layout for authentication pages
 const AuthLayout = () => (
@@ -48,10 +44,9 @@ const AuthLayout = () => (
   </div>
 );
 
-// Layout for protected pages
 const MainLayout = () => {
-  const [sidebarWidth, setSidebarWidth] = useState('250px'); // Default width when expanded
-  const headerHeight = 0; // Height of the header in pixels
+  const [sidebarWidth, setSidebarWidth] = useState('250px');
+  const headerHeight = 0; 
 
   const handleSidebarToggle = () => {
     setSidebarWidth((prev) => (prev === '250px' ? '60px' : '250px'));
@@ -60,7 +55,7 @@ const MainLayout = () => {
   return (
     <div className="App">
       <Header onSidebarToggle={handleSidebarToggle} />
-      <div style={{ height: `${headerHeight}px` }} aria-hidden="true" /> {/* Spacer for header */}
+      <div style={{ height: `${headerHeight}px` }} aria-hidden="true" /> 
       <div className="d-flex flex-nowrap">
         <Sidebar style={{ width: sidebarWidth }} />
         <main className="flex-grow-1">
@@ -115,17 +110,14 @@ function App() {
             <Route path="/homevibook" element={user ? <Home /> : <Navigate to="/login" />} />
             <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
             <Route path="/profile/:uid" element={user ? <Profile /> : <Navigate to="/login" />} />
+            <Route path="/user/:uid" element={user ? <UserDetailPage /> : <Navigate to="/login" />} />
             <Route path="/messenger" element={user ? <Messenger /> : <Navigate to="/login" />} />
             <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
             <Route path="/groups" element={user ? <Groups /> : <Navigate to="/login" />} />
             <Route path="/events" element={user ? <Events /> : <Navigate to="/login" />} />
             <Route path="/story" element={user ? <Storys /> : <Navigate to="/login" />} />
             <Route path="/playgame" element={user ? <PlayGame /> : <Navigate to="/login" />} />
-            <Route path="/page-management" element={user ? <PageManagement /> : <Navigate to="/login" />} />
-            <Route path="/inbox" element={user ? <Inbox /> : <Navigate to="/login" />} />
-            <Route path="/insights" element={user ? <Insights /> : <Navigate to="/login" />} />
-            <Route path="/comment-management" element={user ? <CommentManagement /> : <Navigate to="/login" />} />
-            <Route path="/fan-badges" element={user ? <FanBadges /> : <Navigate to="/login" />} />
+            <Route path="/post/:postId" element={user ? <PostDetail /> : <Navigate to="/login" />} />
             {/* Group Page with nested routes */}
 
             <Route path="groups/:groupId" element={<GroupPage />}>
@@ -134,16 +126,12 @@ function App() {
               <Route path="media" element={<GroupMedia />} />
               <Route path="events" element={<GroupEvents />} />
               <Route path="about" element={<GroupInfo />} />
-              {/* Nếu path lạ → quay về Home của nhóm */}
+          
               <Route path="*" element={<Navigate to="." replace />} />
             </Route>
-
           </Route>
-
-
         </Routes>
 
-        {/* Toast Container với style tùy chỉnh */}
         <ToastContainer
           position="top-right"
           autoClose={3000}

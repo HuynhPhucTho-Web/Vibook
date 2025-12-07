@@ -1,0 +1,62 @@
+/* src/style/Messenger.css */
+.messenger-container {
+  height: calc(100vh - 78px); /* Full height minus header */
+  display: flex;
+  background-color: #f8f9fa;
+  color: #212529;
+  padding: 13px;
+}
+
+.messenger-container.dark {
+  background-color: #212529;
+  color: #f8f9fa;
+}
+
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 320px;
+  border-right: 1px solid #dee2e6;
+  flex-shrink: 0;
+}
+.sidebar-container.dark {
+  border-right: 1px solid #343a40;
+}
+
+.chat-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar-container {
+    width: 100%;
+    border-right: none;
+  }
+  .chat-container {
+    display: none; /* Hide chat view on mobile by default */
+  }
+  .messenger-container {
+    height: calc(100vh - 60px); /* Adjust for mobile header if different */
+  }
+}
+
+/* Special class to show chat view on mobile when a user is selected */
+@media (max-width: 768px) {
+    .sidebar-container.chat-active {
+        display: none;
+    }
+    .chat-container.chat-active {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 60px; /* Or header height */
+        left: 0;
+        z-index: 100;
+    }
+}

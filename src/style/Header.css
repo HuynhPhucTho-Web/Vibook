@@ -1,32 +1,63 @@
-.nav-icon-container {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px; /* thay vì tròn */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  transition: all 0.3s ease;
+.header-content{
+  padding: clamp(6px, 1.5vw, 12px) clamp(10px, 2vw, 16px);
+  display:flex; align-items:center; justify-content:space-between;
+  gap: clamp(4px, 1vw, 8px);
+  flex-wrap:wrap;
 }
 
-.nav-icon-container:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
+.header-left{ min-width:0; flex:1 1 auto; }
+.header-right{ min-width:auto; flex:0 0 auto; }
+
+.logo-title{
+  font-size: clamp(1rem, 2.2vw, 1.5rem) !important;
+}
+.logo-subtitle{
+  font-size: clamp(.55rem, 1.2vw, .75rem);
+}
+.search-container{
+  position:relative;
+  flex: 1 1 260px;         
+  min-width: 160px;
+  max-width: 560px;
+}
+@media (max-width: 992px){ 
+  .search-container{ flex-basis: 200px; }
+}
+@media (max-width: 820px){ 
+  .search-container{ flex-basis: 160px; }
+}
+@media (max-width: 640px){ 
+  .search-container{ display:none; }
 }
 
-.search-input {
-  border-radius: 12px; /* đồng bộ bo góc */
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+
+.search-input{
+  width:100%;
+  padding: clamp(6px, 1.2vw, 8px) clamp(28px, 3vw, 40px) clamp(6px, 1.2vw, 8px) clamp(26px, 2.5vw, 35px);
+  font-size: clamp(.85rem, 1.6vw, .9rem);
+}
+.search-icon{ left: 10px; font-size: clamp(.9rem, 1.6vw, 1rem); }
+.search-clear{ right: 8px; font-size: clamp(1rem, 2vw, 1.2rem); }
+
+.nav-icon-container{
+  width: clamp(32px, 4.5vw, 40px);
+  height: clamp(32px, 4.5vw, 40px);
+}
+.nav-icon{ font-size: clamp(1rem, 2vw, 1.1rem); }
+
+.user-avatar .avatar-img{
+  width: clamp(34px, 4.6vw, 40px);
+  height: clamp(34px, 4.6vw, 40px);
+}
+.online-indicator{
+  width: clamp(9px, 1.4vw, 12px);
+  height: clamp(9px, 1.4vw, 12px);
 }
 
 
-.header {
-  position: fixed;
-  top: 0;
-  left: 250px; /* đẩy sang phải bằng chiều rộng sidebar */
-  width: calc(100% - 250px);
-  height: 60px;
-  background: #1e293b;
+@media (max-width: 900px){
+  .logo-subtitle{ display:none; }
+  .theme-text{ display:none !important; }
 }
+
+.search-dropdown{ width:100%; max-height:300px; overflow-y:auto; z-index:1000; }

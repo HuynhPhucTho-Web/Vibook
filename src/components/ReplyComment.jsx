@@ -26,7 +26,7 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
         userName: userDetails
           ? `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}`
           : auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || "User",
-        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
+        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "/default-avatar.png",
         content: replyText.trim(),
         createdAt: serverTimestamp(),
         reactions: {},
@@ -61,7 +61,7 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
     <form onSubmit={handleReplySubmit} className="mt-3 ms-2">
       <div className="d-flex gap-2 align-items-start">
         <img
-          src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
+          src={userDetails?.photo || auth.currentUser?.photoURL || "/default-avatar.png"}
           alt="Your avatar"
           className="rounded-circle flex-shrink-0"
           style={{ width: "30px", height: "30px", objectFit: "cover" }}

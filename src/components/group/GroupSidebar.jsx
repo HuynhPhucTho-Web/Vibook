@@ -14,9 +14,9 @@ export default function GroupSidebar() {
 
   return (
     <div className="bg-white/95 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
-      <nav className="max-w-5xl mx-auto px-3 md:px-4 py-2">
+      <nav className="max-w-5xl mx-auto px-2 sm:px-3 md:px-4 py-2">
         {/* scroll ngang trên mobile nếu chật */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar scrollbar-hide">
           <NavLink to={`/groups/${groupId}`} end className={getClass} style={{ textDecoration: 'none' }}>Home</NavLink>
           <NavLink to={`/groups/${groupId}/members`} className={getClass} style={{ textDecoration: 'none' }}>Members</NavLink>
           <NavLink to={`/groups/${groupId}/media`} className={getClass} style={{ textDecoration: 'none' }}>Media</NavLink>

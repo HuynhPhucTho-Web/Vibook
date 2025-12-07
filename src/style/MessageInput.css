@@ -1,0 +1,72 @@
+/* src/style/MessageInput.css */
+.message-input-container {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+  background-color: #ffffff;
+}
+.message-input-container.dark {
+  background-color: #2c2f33;
+  border-top: 1px solid #343a40;
+}
+
+.message-input-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.message-input-wrapper {
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #f1f3f5;
+  border-radius: 9999px;
+  padding: 0 0.5rem;
+}
+.message-input-wrapper.dark {
+  background-color: #3a3f44;
+}
+
+.message-input-field {
+  width: 100%;
+  border: none;
+  background-color: transparent;
+  padding: 0.75rem 1rem;
+  outline: none;
+  font-size: 0.9rem;
+}
+.message-input-field.dark {
+    color: #f8f9fa;
+}
+
+.message-input-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.message-input-actions .btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+.message-input-actions .btn:hover {
+    color: #212529;
+    background-color: #e9ecef;
+}
+.message-input-actions.dark .btn {
+    color: #adb5bd;
+}
+.message-input-actions.dark .btn:hover {
+    color: #f8f9fa;
+    background-color: #495057;
+}
+
+.message-send-btn {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}

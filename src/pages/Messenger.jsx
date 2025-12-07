@@ -13,23 +13,13 @@ import {
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
-import {
-  FaPaperPlane,
-  FaPhone,
-  FaVideo,
-  FaSmile,
-  FaPaperclip,
-  FaSearch,
-  FaEllipsisV,
-  FaUserCircle,
-  FaTimes,
-  FaMicrophone,
-  FaHeart,
-  FaThumbsUp,
-  FaLaugh,
-  FaSadTear,
-  FaAngry
-} from "react-icons/fa";
+
+import UserList from "../components/messenger/UserList";
+import ChatHeader from "../components/messenger/ChatHeader";
+import MessageList from "../components/messenger/MessageList";
+import MessageInput from "../components/messenger/MessageInput";
+import WelcomeScreen from "../components/messenger/WelcomeScreen";
+import "../style/Messenger.css";
 
 const Messenger = () => {
   const { theme } = useContext(ThemeContext);
@@ -40,43 +30,15 @@ const Messenger = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Refs để tránh re-subscription không cần thiết
   const unsubscribeRefs = useRef({});
-  const messagesEndRef = useRef(null);
   const lastChatId = useRef(null);
 
-  // Emoji reactions
-  const quickEmojis = ['😀', '😂', '😍', '🤔', '👍', '👋', '🎉', '❤️'];
-
-  // Memoized function tạo chatId
   const createChatId = useCallback((uid1, uid2) => {
     return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
   }, []);
 
-  // Memoized format time
-  const formatTimeAgo = useCallback((timestamp) => {
-    if (!timestamp) return "";
-
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return "Vừa xong";
-    if (minutes < 60) return `${minutes}p`;
-    if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}d`;
-    return new Date(timestamp).toLocaleDateString("vi-VN", {
-      day: '2-digit',
-      month: '2-digit'
-    });
-  }, []);
-
-  // Cleanup function
   const cleanup = useCallback(() => {
     Object.values(unsubscribeRefs.current).forEach(unsubscribe => {
       if (typeof unsubscribe === 'function') unsubscribe();
@@ -84,7 +46,6 @@ const Messenger = () => {
     unsubscribeRefs.current = {};
   }, []);
 
-  // Auth listener - chỉ setup một lần
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
@@ -103,7 +64,6 @@ const Messenger = () => {
     };
   }, [cleanup]);
 
-  // Load users - chỉ load một lần và cache db
   useEffect(() => {
     if (!currentUser) return;
 
@@ -120,7 +80,7 @@ const Messenger = () => {
             lastName: doc.data().lastName || '',
             email: doc.data().email || '',
             photo: doc.data().photo || null,
-            isOnline: Math.random() > 0.5, // Mock online status
+            isOnline: Math.random() > 0.5,
             lastSeen: Date.now() - Math.random() * 3600000,
           }))
           .filter((u) => u.uid !== currentUser.uid);
@@ -129,10 +89,7 @@ const Messenger = () => {
 
       } catch (error) {
         console.error("Error loading users:", error);
-        toast.error("Không thể tải danh sách người dùng", {
-          position: "top-center",
-          autoClose: 3000
-        });
+        toast.error("Could not load users.", { position: "top-center" });
       } finally {
         setIsLoading(false);
       }
@@ -141,7 +98,6 @@ const Messenger = () => {
     loadUsers();
   }, [currentUser]);
 
-  // Messages listener
   useEffect(() => {
     if (!currentUser || !selectedUser) {
       setMessages([]);
@@ -150,14 +106,11 @@ const Messenger = () => {
     }
 
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
-
-    // Tránh re-subscribe cho cùng một chat
     if (lastChatId.current === chatId && messages.length > 0) return;
 
     setIsLoadingMessages(true);
     lastChatId.current = chatId;
 
-    // Cleanup previous messages listener
     if (unsubscribeRefs.current.messages) {
       unsubscribeRefs.current.messages();
     }
@@ -173,21 +126,10 @@ const Messenger = () => {
       (snapshot) => {
         const messageList = snapshot.docs.map((doc) => ({
           id: doc.id,
-          senderId: doc.data().senderId,
-          receiverId: doc.data().receiverId,
-          content: doc.data().content,
-          createdAt: doc.data().createdAt,
+          ...doc.data(),
         }));
-
         setMessages(messageList);
         setIsLoadingMessages(false);
-
-        // Auto scroll to bottom - debounced
-        if (messageList.length > 0) {
-          setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
-        }
       },
       (error) => {
         console.error(`Error fetching messages:`, error);
@@ -202,53 +144,33 @@ const Messenger = () => {
     };
   }, [currentUser, selectedUser, createChatId, messages.length]);
 
-  // Handle emoji click
-  const handleEmojiClick = useCallback((emoji) => {
-    setMessageText(prev => prev + emoji);
-    setShowEmojiPicker(false);
-  }, []);
-
-  // Optimized send message
-  const handleSendMessage = useCallback(async (e) => {
-    e.preventDefault();
-    if (!messageText.trim() || !selectedUser || !currentUser) return;
+  const handleSendMessage = useCallback(async (content, mediaFiles = []) => {
+    if (!content.trim() && mediaFiles.length === 0) return;
 
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
-    const messageContent = messageText.trim();
-
-    // Clear input immediately for better UX
-    setMessageText("");
-    setShowEmojiPicker(false);
 
     try {
       await addDoc(collection(db, "Messages", chatId, "messages"), {
         senderId: currentUser.uid,
         receiverId: selectedUser.uid,
-        content: messageContent,
+        content: content,
+        mediaFiles: mediaFiles, // Include mediaFiles here
         createdAt: Date.now(),
         timestamp: serverTimestamp(),
       });
     } catch (error) {
       console.error(`Error sending message:`, error);
-      // Restore message text on error
-      setMessageText(messageContent);
-      toast.error("Không thể gửi tin nhắn", {
-        position: "top-center",
-        autoClose: 3000
-      });
+      toast.error("Could not send message.", { position: "top-center" });
     }
-  }, [messageText, selectedUser, currentUser, createChatId]);
+  }, [selectedUser, currentUser, createChatId]); // Removed messageText from dependencies as it's passed as content
 
-  // Memoized user selection handler
   const handleUserSelect = useCallback((user) => {
     if (selectedUser?.uid === user.uid) return;
     setSelectedUser(user);
     setMessages([]);
     lastChatId.current = null;
-    setShowEmojiPicker(false);
   }, [selectedUser]);
 
-  // Filter users based on search
   const filteredUsers = useMemo(() => {
     if (!searchTerm) return users;
     return users.filter(user =>
@@ -257,600 +179,53 @@ const Messenger = () => {
     );
   }, [users, searchTerm]);
 
-  // Component cho avatar với online status
-  const UserAvatar = React.memo(({ user, size = 40, showOnline = false }) => {
-    const [imageError, setImageError] = useState(false);
-
-    const getInitials = (firstName, lastName) => {
-      const first = firstName?.charAt(0)?.toUpperCase() || '';
-      const last = lastName?.charAt(0)?.toUpperCase() || '';
-      return first + last || '?';
-    };
-
-    const avatarStyle = {
-      width: `${size}px`,
-      height: `${size}px`,
-      backgroundColor: '#0d6efd',
-      color: 'white',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: `${size * 0.35}px`,
-      fontWeight: '600',
-    };
-
-    return (
-      <div className="position-relative">
-        {user.photo && !imageError ? (
-          <img
-            src={user.photo}
-            alt={user.firstName}
-            className="rounded-circle border"
-            style={{ width: `${size}px`, height: `${size}px`, objectFit: "cover" }}
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <div className="rounded-circle shadow-sm" style={avatarStyle}>
-            {getInitials(user.firstName, user.lastName)}
-          </div>
-        )}
-        {showOnline && user.isOnline && (
-          <span
-            className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle"
-            style={{ width: '12px', height: '12px' }}
-          ></span>
-        )}
-      </div>
-    );
-  });
-
-  // Memoized users list với design mới
-  const usersList = useMemo(() =>
-    filteredUsers.map((user) => (
-      <div
-        key={user.uid}
-        className={`p-3 border-bottom user-item ${selectedUser?.uid === user.uid ? "bg-primary bg-opacity-10 border-primary" : ""}`}
-        onClick={() => handleUserSelect(user)}
-        style={{
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          borderLeft: selectedUser?.uid === user.uid ? '3px solid #0d6efd' : '3px solid transparent',
-          backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff', // Màu nền item
-          color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ
-        }}
-      >
-        <div className="d-flex align-items-center">
-          <div className="me-3">
-            <UserAvatar user={user} size={46} showOnline={true} />
-          </div>
-          <div className="flex-grow-1 text-start">
-            <div className="d-flex justify-content-between align-items-start">
-              <div>
-                <div className="fw-semibold text-truncate mb-1" style={{ maxWidth: "140px", fontSize: '0.95rem' }}>
-                  {user.firstName} {user.lastName}
-                </div>
-                <small className={theme === 'dark' ? 'text-gray-400' : 'text-muted'} style={{ maxWidth: "140px", fontSize: '0.8rem' }}>
-                  {user.isOnline ? (
-                    <span className={theme === 'dark' ? 'text-success' : 'text-success'}>
-                      <i className="fas fa-circle" style={{ fontSize: '8px' }}></i> Đang hoạt động
-                    </span>
-                  ) : (
-                    `Hoạt động ${formatTimeAgo(user.lastSeen)}`
-                  )}
-                </small>
-              </div>
-              <small className={theme === 'dark' ? 'text-gray-400' : 'text-muted'} style={{ fontSize: '0.75rem' }}>
-                {formatTimeAgo(Date.now() - Math.random() * 86400000)}
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-    )), [filteredUsers, selectedUser, handleUserSelect, formatTimeAgo, theme]); // Thêm theme vào dependencies
-
-  // Memoized messages list với design mới
-  const messagesList = useMemo(() =>
-    messages.map((message, index) => {
-      const isOwnMessage = message.senderId === currentUser?.uid;
-      const showAvatar = index === 0 || messages[index - 1]?.senderId !== message.senderId;
-
-      return (
-        <div
-          key={message.id}
-          className={`d-flex mb-3 ${isOwnMessage ? "justify-content-end" : "justify-content-start"
-            }`}
-        >
-          {!isOwnMessage && showAvatar && (
-            <div className="me-2 align-self-end">
-              <UserAvatar user={selectedUser} size={32} />
-            </div>
-          )}
-          {!isOwnMessage && !showAvatar && (
-            <div style={{ width: '40px' }}></div>
-          )}
-
-          <div
-            className={`position-relative shadow-sm ${isOwnMessage
-              ? "bg-primary text-white"
-              : "bg-light text-dark border"
-              }`}
-            style={{
-              maxWidth: "75%",
-              wordBreak: "break-word",
-              borderRadius: isOwnMessage ? "20px 20px 6px 20px" : "20px 20px 20px 6px",
-              padding: '12px 16px',
-              fontSize: '0.9rem',
-              lineHeight: '1.4',
-              backgroundColor: theme === 'dark' && !isOwnMessage ? '#3a3f44' : undefined,
-              color: theme === 'dark' && !isOwnMessage ? '#ffffff' : undefined,
-            }}
-          >
-            <div className="message-content mb-1">{message.content}</div>
-            <div
-              className={`d-flex align-items-center justify-content-end mt-2 ${isOwnMessage ? "text-white-50" : "text-muted"
-                }`}
-              style={{ fontSize: "0.7rem" }}
-            >
-              <span>{formatTimeAgo(message.createdAt)}</span>
-              {isOwnMessage && (
-                <span className="ms-1">
-                  <i className="fas fa-check-double"></i>
-                </span>
-              )}
-            </div>
-          </div>
-
-          {isOwnMessage && showAvatar && (
-            <div className="ms-2 align-self-end">
-              <UserAvatar user={{
-                firstName: currentUser.displayName?.split(' ')[0] || 'You',
-                lastName: currentUser.displayName?.split(' ')[1] || '',
-                photo: currentUser.photoURL
-              }} size={32} />
-            </div>
-          )}
-          {isOwnMessage && !showAvatar && (
-            <div style={{ width: '40px' }}></div>
-          )}
-        </div>
-      );
-    }), [messages, currentUser, selectedUser, formatTimeAgo, theme]);
-
-  // Loading states
   if (isLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "70vh" }}>
-        <div className="text-center">
-          <div className="spinner-border text-primary mb-3" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="text-muted">Đang tải danh sách người dùng...</p>
-        </div>
+        <div className="spinner-border text-primary" role="status"></div>
       </div>
     );
   }
 
   if (!currentUser) {
-    return (
-      <div className={`container py-5 text-center ${theme}`}>
-        <div className="row justify-content-center">
-          <div className="col-md-6">
-            <FaUserCircle size={80} className="text-muted mb-3" />
-            <h4 className="text-muted mb-3">Chưa đăng nhập</h4>
-            <p className="text-muted">Vui lòng đăng nhập để sử dụng tính năng nhắn tin</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <WelcomeScreen theme={theme} />;
   }
 
+  const isChatActive = !!selectedUser;
+
   return (
-    <div className={`${theme}`} style={{ height: "100vh", overflow: "hidden" }}>
-      <div className="row g-0 h-100">
-        {/* Sidebar - Danh sách users */}
-        <div
-          className="col-md-4 col-lg-3 border-end"
-          style={{
-            height: "100vh",
-            overflowY: "auto",
-            backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff', // Màu nền
-            color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ
-          }}
-        >
-          {/* Header sidebar */}
-          <div
-            className="p-3 border-bottom"
-            style={{
-              backgroundColor: theme === 'dark' ? '#25282c' : '#f8f9fa', // Màu nền header
-              color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ chung
-            }}
-          >
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="mb-0 fw-bold" style={{ color: theme === 'dark' ? '#ffffff' : '#0d6efd' }}>Tin nhắn</h5>
-              <span
-                className="badge rounded-pill"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#0d6efd' : '#0d6efd', // Giữ màu badge
-                  color: '#ffffff', // Chữ trắng trên badge
-                }}
-              >
-                {users.length}
-              </span>
-            </div>
-
-            {/* Search bar */}
-            <div className="position-relative">
-              <FaSearch
-                className="position-absolute top-50 start-0 translate-middle-y ms-3"
-                style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} // Màu icon search
-              />
-              <input
-                type="text"
-                className="form-control ps-5 rounded-pill"
-                placeholder="Tìm kiếm người dùng..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  fontSize: '0.9rem',
-                  backgroundColor: theme === 'dark' ? '#333' : '#fff',
-                  color: theme === 'dark' ? '#fff' : '#000',
-                  borderColor: theme === 'dark' ? '#444' : '#ced4da', // Điều chỉnh viền input
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Users list */}
-          <div className="users-list" style={{ height: "calc(100vh - 140px)", overflowY: "auto" }}>
-            {filteredUsers.length > 0 ? (
-              usersList
-            ) : (
-              <div className="text-center p-4">
-                <FaUserCircle size={50} className="text-muted mb-3" />
-                <p className="text-muted mb-0">
-                  {searchTerm ? "Không tìm thấy người dùng" : "Không có người dùng nào"}
-                </p>
-              </div>
-            )}
-          </div>
+    <div className={`messenger-container ${theme}`}>
+        <div className={`sidebar-container ${isChatActive ? 'chat-active' : ''}`}>
+            <UserList 
+                users={filteredUsers}
+                selectedUser={selectedUser}
+                onUserSelect={handleUserSelect}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                theme={theme}
+            />
         </div>
-
-        {/* Main chat area */}
-        <div
-          className="col-md-8 col-lg-9 d-flex flex-column bg-white"
-          style={{
-            backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff',
-            color: theme === 'dark' ? '#ffffff' : '#000000',
-          }}
-        >
-          {selectedUser ? (
-            <>
-              {/* Chat header với các action buttons */}
-              <div
-                className="border-bottom px-4 py-3 shadow-sm"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#25282c' : '#ffffff', // Màu nền header
-                  color: theme === 'dark' ? '#ffffff' : '#000000', // Màu chữ chung
-                }}
-              >
-                <div className="d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center">
-                    <div className="me-3">
-                      <UserAvatar user={selectedUser} size={50} showOnline={true} />
-                    </div>
-                    <div>
-                      <h5 className="mb-0 fw-semibold" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-                        {selectedUser.firstName} {selectedUser.lastName}
-                      </h5>
-                      <small className={theme === 'dark' ? 'text-gray-400' : 'text-muted'}>
-                        {selectedUser.isOnline ? (
-                          <span className={theme === 'dark' ? 'text-success' : 'text-success'}>
-                            <i className="fas fa-circle me-1" style={{ fontSize: '8px' }}></i>
-                            Đang hoạt động
-                          </span>
-                        ) : (
-                          `Hoạt động ${formatTimeAgo(selectedUser.lastSeen)}`
-                        )}
-                      </small>
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="d-flex gap-2">
-                    <button
-                      className="btn btn-outline-primary btn-sm rounded-circle p-2"
-                      title="Gọi điện"
-                      style={{
-                        borderColor: theme === 'dark' ? '#6c757d' : '#0d6efd',
-                        color: theme === 'dark' ? '#b3b3b3' : '#0d6efd',
-                      }}
-                      onMouseOver={{ backgroundColor: theme === 'dark' ? '#333' : '#e9ecef' }}
-                    >
-                      <FaPhone size={14} />
-                    </button>
-                    <button
-                      className="btn btn-outline-primary btn-sm rounded-circle p-2"
-                      title="Gọi video"
-                      style={{
-                        borderColor: theme === 'dark' ? '#6c757d' : '#0d6efd',
-                        color: theme === 'dark' ? '#b3b3b3' : '#0d6efd',
-                      }}
-                      onMouseOver={{ backgroundColor: theme === 'dark' ? '#333' : '#e9ecef' }}
-                    >
-                      <FaVideo size={14} />
-                    </button>
-                    <button
-                      className="btn btn-outline-secondary btn-sm rounded-circle p-2"
-                      title="Tùy chọn"
-                      style={{
-                        borderColor: theme === 'dark' ? '#6c757d' : '#6c757d',
-                        color: theme === 'dark' ? '#b3b3b3' : '#6c757d',
-                      }}
-                      onMouseOver={{ backgroundColor: theme === 'dark' ? '#333' : '#e9ecef' }}
-                    >
-                      <FaEllipsisV size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Messages area với background pattern */}
-              <div
-                className="flex-grow-1 overflow-auto px-4 py-3"
-                style={{
-                  maxHeight: "calc(100vh - 200px)",
-                  backgroundColor: theme === 'dark' ? '#2c2f33' : '#f8f9fa',
-                  backgroundImage: theme === 'dark' ? '' : 'radial-gradient(circle at 25px 25px, #e9ecef 2px, transparent 0), radial-gradient(circle at 75px 75px, #e9ecef 2px, transparent 0)',
-                  backgroundSize: '50px 50px',
-                  color: theme === 'dark' ? '#ffffff' : '#000000',
-                }}
-              >
-                {isLoadingMessages ? (
-                  <div className="text-center py-5">
-                    <div className="spinner-border spinner-border-sm text-primary mb-2" role="status">
-                      <span className="visually-hidden">Loading messages...</span>
-                    </div>
-                    <p className="text-muted small mb-0">Đang tải tin nhắn...</p>
-                  </div>
-                ) : messages.length > 0 ? (
-                  <>
-                    <div className="text-center py-3">
-                      <small className="text-muted bg-white px-3 py-1 rounded-pill shadow-sm">
-                        Hôm nay
-                      </small>
-                    </div>
-                    {messagesList}
-                    <div ref={messagesEndRef} />
-                  </>
-                ) : (
-                  <div className="text-center py-5">
-                    <div
-                      className="rounded-4 p-4 shadow-sm mx-auto"
-                      style={{
-                        backgroundColor: theme === 'dark' ? '#25282c' : '#ffffff',
-                        maxWidth: '300px',
-                      }}
-                    >
-                      <FaUserCircle
-                        size={60}
-                        style={{ color: theme === 'dark' ? '#ffffff' : '#0d6efd' }}
-                      />
-                      <h6 className="mb-2" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-                        Bắt đầu cuộc trò chuyện
-                      </h6>
-                      <p className="small mb-0" style={{ color: theme === 'dark' ? '#ffffff' : '#666666' }}>
-                        Gửi tin nhắn đầu tiên để bắt đầu trò chuyện với {selectedUser.firstName}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Message input area với enhanced UI */}
-              <div className="border-top px-4 py-3" style={{ backgroundColor: theme === 'dark' ? '#25282c' : '#ffffff' }}>
-                {/* Quick emoji reactions */}
-                <div className="d-flex gap-1 mb-2">
-                  {quickEmojis.map((emoji, index) => (
-                    <button
-                      key={index}
-                      className="btn btn-outline-light btn-sm rounded-circle p-1"
-                      onClick={() => handleEmojiClick(emoji)}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        fontSize: '14px',
-                        backgroundColor: theme === 'dark' ? '#333' : '#f8f9fa',
-                        color: theme === 'dark' ? '#fff' : '#000',
-                      }}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Message input */}
-                <form onSubmit={handleSendMessage} className="d-flex align-items-end gap-2" style={{ backgroundColor: theme === 'dark' ? '#52575cff' : '#ffffff' }}>
-                  <div className="flex-grow-1 position-relative">
-                    <div className="d-flex align-items-center rounded-pill px-3 py-2 border" style={{ backgroundColor: theme === 'dark' ? '#495a6fff' : '#ffffff' }}>
-                      <input
-                        type="text"
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
-                        placeholder="Nhập tin nhắn..."
-                        className="form-control border-0 bg-transparent"
-                        autoComplete="off"
-                        maxLength={500}
-                        style={{ fontSize: '0.9rem', color: theme === 'dark' ? '#fff' : '#000' }}
-                      />
-                      <div className="d-flex gap-1 ms-2">
-                        <button
-                          type="button"
-                          className="btn btn-sm p-1"
-                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          title="Emoji"
-                        >
-                          <FaSmile className="text-muted" size={18} />
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm p-1"
-                          title="Đính kèm"
-                        >
-                          <FaPaperclip className="text-muted" size={18} />
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm p-1"
-                          title="Ghi âm"
-                        >
-                          <FaMicrophone className="text-muted" size={18} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Emoji picker */}
-                    {showEmojiPicker && (
-                      <div className="position-absolute bottom-100 end-0 mb-2 bg-white border rounded-3 shadow-lg p-3" style={{ backgroundColor: theme === 'dark' ? '#2c2f33' : '#ffffff', color: theme === 'dark' ? '#fff' : '#000', zIndex: 1000 }}>
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <small className="text-muted fw-semibold">Emoji</small>
-                          <button
-                            type="button"
-                            className="btn btn-sm p-0"
-                            onClick={() => setShowEmojiPicker(false)}
-                          >
-                            <FaTimes className="text-muted" size={12} />
-                          </button>
-                        </div>
-                        <div className="d-flex flex-wrap gap-1" style={{ maxWidth: '250px' }}>
-                          {['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥'].map((emoji, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              className="btn btn-sm p-1 rounded"
-                              onClick={() => handleEmojiClick(emoji)}
-                              style={{ width: '30px', height: '30px', fontSize: '16px' }}
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="btn btn-primary rounded-circle p-3 shadow-sm"
-                    disabled={!messageText.trim()}
-                    style={{ width: '48px', height: '48px' }}
-                  >
-                    <FaPaperPlane size={16} />
-                  </button>
-                </form>
-              </div>
-            </>
-          ) : (
-            <div
-              className="d-flex align-items-center justify-content-center h-100"
-              style={{ backgroundColor: theme === 'dark' ? '#484c51ff' : '#ffffff' }}
-            >
-              <div className="text-center">
-                <div
-                  className="rounded-4 p-5 shadow-sm mx-auto"
-                  style={{ backgroundColor: theme === 'dark' ? '#222325ff' : '#ffffff', maxWidth: '400px' }}
-                >
-                  <div className="mb-4">
-                    <FaUserCircle
-                      size={80}
-                      style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} // Icon thay đổi theo theme
+        <div className={`chat-container ${isChatActive ? 'chat-active' : ''}`}>
+            {selectedUser ? (
+                <>
+                    <ChatHeader user={selectedUser} theme={theme} />
+                    <MessageList 
+                        messages={messages}
+                        currentUser={currentUser}
+                        selectedUser={selectedUser}
+                        theme={theme}
                     />
-                  </div>
-                  <h4
-                    className="mb-3"
-                    style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }} // Tiêu đề thay đổi theo theme
-                  >
-                    Chào mừng đến với Messenger
-                  </h4>
-                  <p
-                    className="mb-4"
-                    style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
-                  >
-                    Hiện tại đang để Public User để dễ democode, sau này sẽ update lại tính năng kết bạn mới hiện user.
-                  </p>
-                  <div className="d-flex justify-content-center gap-3">
-                    <div className="text-center">
-                      <div
-                        className="bg-light rounded-circle p-3 mb-2 mx-auto"
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          backgroundColor: theme === 'dark' ? '#2c2f33' : '#e9ecef', 
-                        }}
-                      >
-                        <FaPhone
-                          className="text-primary"
-                          size={20}
-                          style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} 
-                        />
-                      </div>
-                      <small
-                        className="text-muted"
-                        style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
-                      >
-                        Gọi điện
-                      </small>
-                    </div>
-                    <div className="text-center">
-                      <div
-                        className="bg-light rounded-circle p-3 mb-2 mx-auto"
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          backgroundColor: theme === 'dark' ? '#2c2f33' : '#e9ecef',
-                        }}
-                      >
-                        <FaVideo
-                          className="text-primary"
-                          size={20}
-                          style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} 
-                        />
-                      </div>
-                      <small
-                        className="text-muted"
-                        style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
-                      >
-                        Video call
-                      </small>
-                    </div>
-                    <div className="text-center">
-                      <div
-                        className="bg-light rounded-circle p-3 mb-2 mx-auto"
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          backgroundColor: theme === 'dark' ? '#2c2f33' : '#e9ecef', 
-                        }}
-                      >
-                        <FaPaperPlane
-                          className="text-primary"
-                          size={20}
-                          style={{ color: theme === 'dark' ? '#b3b3b3' : '#0d6efd' }} 
-                        />
-                      </div>
-                      <small
-                        className="text-muted"
-                        style={{ color: theme === 'dark' ? '#b3b3b3' : '#666666' }} 
-                      >
-                        Nhắn tin
-                      </small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+                    <MessageInput 
+                        messageText={messageText}
+                        onMessageChange={setMessageText}
+                        onSendMessage={handleSendMessage}
+                        theme={theme}
+                    />
+                </>
+            ) : (
+                <WelcomeScreen theme={theme} />
+            )}
         </div>
-      </div>
     </div>
   );
 };

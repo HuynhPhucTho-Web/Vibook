@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { ThemeContext } from "../../context/ThemeContext";
 import { auth, db } from "../../components/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -98,7 +98,7 @@ export default function GroupPostComposer({ groupId }) {
 
         {/* media preview */}
         {media.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mt-3">
             {media.map((m, i) => (
               <div key={i} className={`relative rounded-xl overflow-hidden ${isLight ? "bg-white ring-1 ring-gray-200" : "bg-zinc-700 ring-1 ring-gray-600"}`}>
                 {m.file.type.startsWith("video") ? (
@@ -109,7 +109,7 @@ export default function GroupPostComposer({ groupId }) {
                 <button
                   type="button"
                   onClick={() => removeAt(i)}
-                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500 text-white grid place-items-center"
+                  className="absolute top-1 sm:top-2 right-1 sm:right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-red-500 text-white grid place-items-center text-xs sm:text-sm"
                   aria-label="Remove"
                 >×</button>
               </div>

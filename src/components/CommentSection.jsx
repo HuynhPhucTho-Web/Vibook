@@ -102,7 +102,7 @@ const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess,
         userName: userDetails
           ? `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}`
           : auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || "User",
-        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/30",
+        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "/default-avatar.png",
         content: replyText.trim(),
         createdAt: serverTimestamp(),
         reactions: {},
@@ -139,7 +139,7 @@ const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess,
     <div className="mt-2 ml-12">
       <div className="flex gap-2 items-end">
         <img
-          src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/30"}
+          src={userDetails?.photo || auth.currentUser?.photoURL || "/default-avatar.png"}
           alt="Avatar"
           className="w-8 h-8 rounded-full object-cover"
         />
@@ -321,7 +321,7 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
     <div className={`${depth > 0 ? marginLeft + " mt-2" : "mb-3"}`}>
       <div className="flex gap-2">
         <img
-          src={comment.userPhoto || "https://via.placeholder.com/40"}
+          src={comment.userPhoto || "/default-avatar.png"}
           alt="Avatar"
           className={`${depth > 0 ? "w-8 h-8" : "w-10 h-10"} rounded-full object-cover flex-shrink-0`}
         />
@@ -499,7 +499,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
         userName: userDetails
           ? `${userDetails.firstName}${userDetails.lastName ? " " + userDetails.lastName : ""}`
           : auth.currentUser.displayName || "User",
-        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "https://via.placeholder.com/40",
+        userPhoto: userDetails?.photo || auth.currentUser.photoURL || "/default-avatar.png",
         content: commentText.trim(),
         createdAt: serverTimestamp(),
         reactions: {},
@@ -557,7 +557,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
       <div className={`p-4 border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`}>
         <div className="flex gap-2 items-end">
           <img
-            src={userDetails?.photo || auth.currentUser?.photoURL || "https://via.placeholder.com/40"}
+            src={userDetails?.photo || auth.currentUser?.photoURL || "/default-avatar.png"}
             alt="Avatar"
             className="w-10 h-10 rounded-full object-cover"
           />

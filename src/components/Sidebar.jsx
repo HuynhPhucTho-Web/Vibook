@@ -11,9 +11,9 @@ import "../style/Sidebar.css";
 import { ThemeContext } from "../context/ThemeContext";
 
 // ======= constants =======
-const HEADER_HEIGHT = 80;
-const COLLAPSED_WIDTH = 72;   // width khi thu nhỏ (desktop)
-const EXPANDED_WIDTH  = 280;  // width khi mở
+const HEADER_HEIGHT = 78;
+const COLLAPSED_WIDTH = 72;   
+const EXPANDED_WIDTH  = 200; 
 const MOBILE_BREAKPOINT = 768;
 
 const MENU = [
@@ -81,6 +81,16 @@ export default function Sidebar() {
     }
   };
 
+  const menuItems = useMemo(() => {
+    const isOnProfilePage = location.pathname.startsWith('/profile/');
+    return MENU.map(item => {
+      if (item.label === "Profile") {
+        return { ...item, path: isOnProfilePage ? location.pathname : '/profile' };
+      }
+      return item;
+    });
+  }, [location.pathname]);
+
   // ======= render =======
   return (
     <>
@@ -115,7 +125,7 @@ export default function Sidebar() {
           isMobileOpen ? "is-open" : "",
           isCollapsed && !isMobile ? "is-collapsed" : ""
         ].join(" ").replace(/\s+/g, " ").trim()}
-        style={{ top: HEADER_HEIGHT, height: `calc(100vh - ${HEADER_HEIGHT}px)`, width: sidebarWidth }}
+        style={{ top: HEADER_HEIGHT, height: `calc(100vh - ${HEADER_HEIGHT}px)`, width: sidebarWidth, zIndex: isMobile && isMobileOpen ? 1002 : 1001 }}
       >
         {/* Header */}
         <div className="sidebar__header">
@@ -131,17 +141,18 @@ export default function Sidebar() {
           </button>
 
           {(!isCollapsed || isMobile) && (
-            <h5 className="sidebar__brand" title="ViBook">ViBook</h5>
+            <h5 className="sidebar__brand" title="ViBook"></h5>
           )}
         </div>
 
         {/* Menu */}
         <nav id="sidebar-menu" className="sidebar__menu" aria-label="Primary">
           <ul>
-            {MENU.map(({ path, icon: Icon, label }) => (
+            {menuItems.map(({ path, icon: Icon, label }) => (
               <li key={path}>
                 <NavLink
                   to={path}
+                  end={path === "/profile"} // Add this to avoid parent route matching
                   className={({ isActive }) =>
                     "sidebar__link" +
                     (isActive ? " is-active" : "") +

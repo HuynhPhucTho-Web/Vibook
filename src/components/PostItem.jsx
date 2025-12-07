@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
-import { addDoc, doc, updateDoc, getDoc, deleteDoc, query, getDocs, onSnapshot, collection, serverTimestamp } from "firebase/firestore";
+ import React, { useState, useEffect, useContext, useRef } from "react";
+import { addDoc, doc, updateDoc, getDoc, deleteDoc, query, getDocs, onSnapshot, collection } from "firebase/firestore";
 import { db } from "../components/firebase";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { FaComment, FaTrash, FaShare, FaFile, FaTimes, FaEllipsisH, FaEdit, FaLock } from "react-icons/fa";
 import CommentSection from "./CommentSection";
 import { Link } from "react-router-dom";
+import "../style/PostItem.css";
 
-const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, handlePrivatePost }) => {
+const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, handlePrivatePost, isDetailView = false, customBgColor = '' }) => {
   const { theme } = useContext(ThemeContext);
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [showReactions, setShowReactions] = useState(false);
@@ -19,7 +20,6 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
   const [commentCount, setCommentCount] = useState(post.comments?.length || 0);
   const videoRef = useRef(null);
   const [authorName, setAuthorName] = useState(localPost.userName || "");
-  const [authorPhoto, setAuthorPhoto] = useState(localPost.userPhoto || "");
 
   const isLight = theme === "light";
 
@@ -90,7 +90,6 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
         if (localPost.userName && localPost.userPhoto) {
           if (mounted) {
             setAuthorName(localPost.userName);
-            setAuthorPhoto(localPost.userPhoto);
           }
           return;
         }
@@ -100,7 +99,6 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
           if (mounted && snap.exists()) {
             const u = snap.data();
             setAuthorName(u.displayName || u.name || "Anonymous");
-            setAuthorPhoto(u.photoURL || "");
           }
         }
       } catch (e) {
@@ -279,19 +277,18 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
 
   return (
     <div
-      className={`rounded-3xl mb-4 overflow-hidden transition-all ${isLight
-        ? "bg-white border border-gray-100 shadow-sm hover:shadow-md"
-        : "bg-zinc-900 border border-zinc-800 shadow-lg"
-        }`}
+      id={`post-${post.id}`}
+      className={`post-item-container ${isLight ? 'light' : 'dark'} ${!isDetailView ? "mb-3 sm:mb-4" : ""}`}
+      style={customBgColor ? { backgroundColor: customBgColor } : {}}
     >
       {/* Header */}
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="post-item-header">
+        <div className="post-item-author">
           <Link to={`/profile/${localPost.userId}`} className="no-underline hover:no-underline">
             <img
-              src={localPost.userPhoto || "https://via.placeholder.com/48"}
+              src={localPost.userPhoto || "/default-avatar.png"}
               alt={localPost.userName}
-              className="w-12 h-12 rounded-full object-cover ring-2 ring-offset-2 ring-gray-200"
+              className="post-item-avatar"
             />
           </Link>
 
@@ -324,7 +321,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)} />
                 <div
-                  className={`absolute right-0 mt-2 w-48 rounded-2xl shadow-xl z-20 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
+                  className={`absolute right-0 mt-2 w-48 max-w-[90vw] rounded-2xl shadow-xl z-20 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
                     }`}
                 >
                   <button
@@ -365,8 +362,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
 
       {/* Content */}
       {localPost.content && (
-        <div className={`px-4 pb-3 ${isLight ? "text-gray-800" : "text-gray-100"}`}>
-          <p className="whitespace-pre-wrap break-words leading-relaxed">{localPost.content}</p>
+        <div className={`post-item-content ${isLight ? "text-gray-800" : "text-gray-100"}`}>
+          <p>{localPost.content}</p>
         </div>
       )}
 
@@ -471,10 +468,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
       <div className={`mx-4 border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`} />
 
       {/* Actions */}
-      <div className="p-2 flex items-center justify-around">
+      <div className="post-item-actions">
         {/* Like */}
-        {/* Like */}
-        {/* Like (wrapper có delay khi rời chuột) */}
         <div
           className="relative flex-1"
           onMouseEnter={openReactions}
@@ -483,7 +478,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
           <button
             onClick={() => handleReaction(post.id, "Like")}
             disabled={isReacting}
-            className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${currentReaction
+            className={`post-item-action-btn ${currentReaction
               ? "text-blue-500 font-semibold"
               : isLight
                 ? "text-gray-600 hover:bg-gray-50"
@@ -496,12 +491,11 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
 
           {showReactions && (
             <div
-              // giữ mở khi rê vào popup; đóng trễ khi rời
               onMouseEnter={openReactions}
               onMouseLeave={() => closeReactionsDelayed(160)}
-              className={`absolute left-1/2 -translate-x-1/2 flex gap-2 px-3 py-2 rounded-full shadow-xl z-30 ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
+              className={`absolute left-1/2 -translate-x-1/2 flex gap-2 px-3 py-2 rounded-full shadow-xl z-30 max-w-[calc(100vw-2rem)] ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
                 }`}
-              style={{ bottom: "calc(100% + 8px)" }}  // tránh khoảng hở thay vì mb-2
+              style={{ bottom: "calc(100% + 8px)" }}
             >
               {Object.entries(reactions).map(([key, icon]) => (
                 <button
@@ -523,12 +517,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
           )}
         </div>
 
-
-
         {/* Comment */}
         <button
           onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
-          className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${selectedPostId === post.id
+          className={`post-item-action-btn ${selectedPostId === post.id
             ? "text-blue-500 font-semibold"
             : isLight
               ? "text-gray-600 hover:bg-gray-50"
@@ -543,7 +535,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
         <div className="relative flex-1">
           <button
             onClick={() => setShowShareMenu(!showShareMenu)}
-            className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${showShareMenu
+            className={`post-item-action-btn ${showShareMenu
               ? "text-blue-500 font-semibold"
               : isLight
                 ? "text-gray-600 hover:bg-gray-50"
@@ -557,7 +549,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handleEditPost, hand
           {showShareMenu && (
             <>
               <div className="fixed inset-0 z-20" onClick={() => setShowShareMenu(false)} />
-              <div className={`absolute right-0 bottom-full mb-2 w-56 rounded-2xl shadow-xl z-30 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
+              <div className={`absolute right-0 bottom-full mb-2 w-56 max-w-[calc(100vw-2rem)] rounded-2xl shadow-xl z-30 py-2 ${isLight ? "bg-white border border-gray-100" : "bg-zinc-800 border border-zinc-700"
                 }`}>
                 <button
                   onClick={() => handleShare("copy")}

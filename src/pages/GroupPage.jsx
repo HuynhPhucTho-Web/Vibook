@@ -6,8 +6,8 @@ import { ThemeContext } from "../context/ThemeContext";
 
 import GroupHeader from "../components/group/GroupHeader";
 import GroupSidebar from "../components/group/GroupSidebar";
-import GroupPostComposer from "../components/group/GroupPosts"; // (ở mục 2)
-import GroupPostItem from "../components/group/PostItem";          // (file mình đã gửi ở bước trước)
+import GroupPostComposer from "../components/group/GroupPosts";
+import GroupPostItem from "../components/group/PostItem";
 
 export default function GroupHome() {
   const { groupId } = useParams();
@@ -51,19 +51,19 @@ export default function GroupHome() {
   }
 
   return (
-    <div className={`min-h-screen w-full ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
+    <div className={`min-h-screen w-full overflow-x-hidden ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
       {/* Header thấp, dính trên */}
       <div className="sticky top-0 z-[30]">
         <GroupHeader group={group} />
       </div>
 
       {/* Tabs ngay dưới header, cũng sticky */}
-      <div className="sticky top-[64px] md:top-[72px] z-[25]">
+      <div className="sticky top-[64px] sm:top-[68px] md:top-[72px] lg:top-[76px] z-[25]">
         <GroupSidebar group={group} />
       </div>
 
       {/* Nội dung full chiều ngang – giống feed trang Home */}
-      <main className="w-full  mx-auto px-2 sm:px-3 md:px-4 py-4">
+      <main className="w-full mx-auto px-2 sm:px-3 md:px-4 lg:px-6 py-4 overflow-x-hidden max-w-4xl">
         {/* Composer (tạo bài) kéo ngang full như PostCreator ở home */}
         {canPost && (
           <div className="mb-4">
@@ -79,14 +79,16 @@ export default function GroupHome() {
         ) : posts.length === 0 ? (
           <div className="text-center py-10 text-gray-500">Chưa có bài viết nào trong nhóm.</div>
         ) : (
-          posts.map((p) => (
-            <GroupPostItem
-              key={p.id}
-              post={p}
-              groupId={groupId}
-              auth={auth}
-            />
-          ))
+          <div className="space-y-4">
+            {posts.map((p) => (
+              <GroupPostItem
+                key={p.id}
+                post={p}
+                groupId={groupId}
+                auth={auth}
+              />
+            ))}
+          </div>
         )}
       </main>
     </div>

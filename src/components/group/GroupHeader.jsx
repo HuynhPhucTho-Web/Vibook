@@ -73,7 +73,6 @@ export default function GroupHeader({ group }) {
 
   return (
     <header className="bg-white/95 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
-      {/* Banner gọn: thấp hơn (h-16 ~ 64px mobile, md:h-20) */}
       <div className="relative">
         {bannerPreview ? (
           <img
