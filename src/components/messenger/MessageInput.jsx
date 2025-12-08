@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { FaPaperPlane, FaSmile, FaPaperclip, FaMicrophone, FaTimes, FaFile, FaVideo, FaImage } from "react-icons/fa";
 import Picker from "emoji-picker-react";
+import { LanguageContext } from "../../context/LanguageContext";
 import "../../style/MessageInput.css";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { toast } from "react-toastify"; // Ensure toast is imported
 
 const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) => {
+    const { t } = useContext(LanguageContext);
     const isLight = theme === "light";
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef(null);
@@ -120,7 +122,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
             setRecordingTime(0);
         } catch (error) {
             console.error("Error starting recording:", error);
-            toast.error("Failed to start recording. Please check microphone permissions.", { position: "top-center" });
+            toast.error(t("failedToStartRecording"), { position: "top-center" });
         }
     };
 
@@ -399,7 +401,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
                         type="text"
                         value={messageText}
                         onChange={(e) => onMessageChange(e.target.value)}
-                        placeholder="Type a message..."
+                        placeholder={t("typeAMessage")}
                         className={`message-input-field ${isLight ? 'light' : 'dark'}`}
                         autoComplete="off"
                         disabled={isUploadingAttachments || isRecording}

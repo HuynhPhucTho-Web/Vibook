@@ -9,6 +9,7 @@ import { auth } from "../components/firebase";
 import { toast } from "react-toastify";
 import "../style/Sidebar.css";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 
 // ======= constants =======
 const HEADER_HEIGHT = 78;
@@ -17,17 +18,18 @@ const EXPANDED_WIDTH  = 200;
 const MOBILE_BREAKPOINT = 768;
 
 const MENU = [
-  { path: "/homevibook", icon: FaHome, label: "Home" },
-  { path: "/profile",    icon: FaUser, label: "Profile" },
-  { path: "/friends",    icon: FaUserPlus, label: "Friends" },
-  { path: "/groups",     icon: FaUsers, label: "Groups" },
-  { path: "/events",     icon: FaCalendarAlt, label: "Events" },
-  { path: "/story",      icon: FaVideo, label: "Story" },
-  { path: "/playgame",   icon: FaGamepad, label: "Play-Game" },
+  { path: "/homevibook", icon: FaHome, labelKey: "home" },
+  { path: "/profile",    icon: FaUser, labelKey: "profile" },
+  { path: "/friends",    icon: FaUserPlus, labelKey: "friends" },
+  { path: "/groups",     icon: FaUsers, labelKey: "groups" },
+  { path: "/events",     icon: FaCalendarAlt, labelKey: "events" },
+  { path: "/story",      icon: FaVideo, labelKey: "story" },
+  { path: "/playgame",   icon: FaGamepad, labelKey: "playGame" },
 ];
 
 export default function Sidebar() {
   const { theme } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
   const location = useLocation();
 
   // ======= state =======
@@ -85,7 +87,7 @@ export default function Sidebar() {
   const menuItems = useMemo(() => {
     const isOnProfilePage = location.pathname.startsWith('/profile/');
     return MENU.map(item => {
-      if (item.label === "Profile") {
+      if (item.labelKey === "profile") {
         return { ...item, path: isOnProfilePage ? location.pathname : '/profile' };
       }
       return item;
@@ -99,7 +101,7 @@ export default function Sidebar() {
       {isMobile && !isMobileOpen && (
         <button
           className={`sidebar__mobile-toggle sidebar--${theme === "light" ? "light" : "dark"}`}
-          aria-label="Open menu"
+          aria-label={t("openMenu")}
           onClick={toggleSidebar}
         >
           <FaBars />
@@ -110,7 +112,7 @@ export default function Sidebar() {
       {isMobile && isMobileOpen && (
         <button
           className="sidebar__backdrop"
-          aria-label="Close menu"
+          aria-label={t("closeMenu")}
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -133,8 +135,8 @@ export default function Sidebar() {
           <button
             className="sidebar__toggle"
             onClick={toggleSidebar}
-            aria-label={isMobile ? (isMobileOpen ? "Close menu" : "Open menu")
-                                 : (isCollapsed ? "Expand sidebar" : "Collapse sidebar")}
+            aria-label={isMobile ? (isMobileOpen ? t("closeMenu") : t("openMenu"))
+                                 : (isCollapsed ? t("expandSidebar") : t("collapseSidebar"))}
             aria-expanded={isMobile ? isMobileOpen : !isCollapsed}
             aria-controls="sidebar-menu"
           >
@@ -149,7 +151,7 @@ export default function Sidebar() {
         {/* Menu */}
         <nav id="sidebar-menu" className="sidebar__menu" aria-label="Primary">
           <ul>
-            {menuItems.map(({ path, icon: Icon, label }) => (
+            {menuItems.map(({ path, icon: Icon, labelKey }) => (
               <li key={path}>
                 <NavLink
                   to={path}
@@ -160,11 +162,11 @@ export default function Sidebar() {
                     (isCollapsed && !isMobile ? " is-icon" : "")
                   }
                   aria-current={({ isActive }) => (isActive ? "page" : undefined)}
-                  title={isCollapsed && !isMobile ? label : undefined}
+                  title={isCollapsed && !isMobile ? t(labelKey) : undefined}
                 >
                   <Icon className="sidebar__icon" />
                   {(!isCollapsed || isMobile) && (
-                    <span className="sidebar__label">{label}</span>
+                    <span className="sidebar__label">{t(labelKey)}</span>
                   )}
                   {({ isActive }) =>
                     isActive && (!isCollapsed || isMobile) ? (
@@ -180,10 +182,10 @@ export default function Sidebar() {
             className={"sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")}
             onClick={handleLogout}
             disabled={!auth.currentUser}
-            title={isCollapsed && !isMobile ? "Logout" : undefined}
+            title={isCollapsed && !isMobile ? t("logout") : undefined}
           >
             <FaSignOutAlt className="sidebar__icon" />
-            {(!isCollapsed || isMobile) && <span className="sidebar__label">Logout</span>}
+            {(!isCollapsed || isMobile) && <span className="sidebar__label">{t("logout")}</span>}
           </button>
         </nav>
       </aside>

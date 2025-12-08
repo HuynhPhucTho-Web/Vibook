@@ -3,6 +3,7 @@ import { auth, db } from "../components/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 import { FaImage, FaVideo, FaFile, FaSmile, FaCamera, FaTimes, FaExpand } from "react-icons/fa";
 import { Cloudinary } from "@cloudinary/url-gen";
 import Picker from "emoji-picker-react";
@@ -10,6 +11,7 @@ import "../style/PostCreate.css";
 
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
 
   // ----- state -----
   const [postContent, setPostContent] = useState("");
@@ -62,7 +64,7 @@ const PostCreator = ({ onPostCreated }) => {
     const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
     if (!cloudName || !uploadPreset) {
       console.error(`[${currentDateTime}] Missing Cloudinary envs`);
-      toast.error("Thiếu cấu hình Cloudinary trong .env", { position: "top-center" });
+      toast.error(t("missingCloudinaryConfig"), { position: "top-center" });
     }
   }, []);
 
@@ -96,10 +98,10 @@ const PostCreator = ({ onPostCreated }) => {
 
   const validateFile = (file) => {
     const category = getFileCategory(file.type);
-    if (category === "unknown") return { valid: false, error: `Định dạng ${file.type} không hỗ trợ` };
+    if (category === "unknown") return { valid: false, error: `${t("unsupportedFormat")}${file.type}` };
     const max = FILE_SIZE_LIMITS[category] * 1024 * 1024;
     if (file.size > max) {
-      return { valid: false, error: `Tệp ${category} phải nhỏ hơn ${FILE_SIZE_LIMITS[category]}MB` };
+      return { valid: false, error: `${t("fileTooLarge")}${category} ${FILE_SIZE_LIMITS[category]}MB` };
     }
     return { valid: true };
   };
@@ -120,7 +122,7 @@ const PostCreator = ({ onPostCreated }) => {
   const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (mediaFiles.length + files.length > 5) {
-      toast.error("Tối đa 5 tệp mỗi bài viết", { position: "top-center" });
+      toast.error(t("maxFilesError"), { position: "top-center" });
       return;
     }
     const push = [];
@@ -166,9 +168,9 @@ const PostCreator = ({ onPostCreated }) => {
       { method: "POST", body: fd }
     );
     if (!res.ok) {
-      const t = await res.text();
-      console.error(`[${currentDateTime}] Cloudinary error`, t);
-      throw new Error(`Upload thất bại: ${fileData.name}`);
+      const errorText = await res.text();
+      console.error(`[${currentDateTime}] Cloudinary error`, errorText);
+      throw new Error(`${t("uploadFailed")}${fileData.name}`);
     }
     const json = await res.json();
     return {
@@ -184,11 +186,11 @@ const PostCreator = ({ onPostCreated }) => {
   const handlePostSubmit = async () => {
     if (isUploading) return;
     if (!postContent.trim() && mediaFiles.length === 0) {
-      toast.error("Hãy nhập nội dung hoặc đính kèm media", { position: "top-center" });
+      toast.error(t("contentOrMediaRequired"), { position: "top-center" });
       return;
     }
     if (!auth.currentUser) {
-      toast.error("Bạn cần đăng nhập để đăng bài", { position: "top-center" });
+      toast.error(t("loginRequired"), { position: "top-center" });
       return;
     }
 
@@ -219,10 +221,10 @@ const PostCreator = ({ onPostCreated }) => {
       setMediaFiles([]);
       setUploadProgress(0);
       onPostCreated && (await onPostCreated({ ...postData, id: ref.id }));
-      toast.success("Đăng bài thành công", { position: "top-center" });
+      toast.success(t("postSuccess"), { position: "top-center" });
     } catch (err) {
       console.error(`[${currentDateTime}] create post error`, err);
-      toast.error(err.message || "Có lỗi khi đăng bài", { position: "top-center" });
+      toast.error(err.message || t("postError"), { position: "top-center" });
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -332,7 +334,7 @@ const PostCreator = ({ onPostCreated }) => {
       });
     } catch (err) {
       console.error("Open camera error:", err);
-      toast.error("Không mở được camera. Hãy kiểm tra quyền.", { position: "top-center" });
+      toast.error(t("cameraError"), { position: "top-center" });
     }
   };
 
@@ -376,7 +378,7 @@ const PostCreator = ({ onPostCreated }) => {
               id: Date.now() + Math.random(),
             },
           ]);
-          toast.success("Đã chụp ảnh và thêm vào bài viết.", { position: "top-center" });
+          toast.success(t("photoCaptured"), { position: "top-center" });
           closeCamera();
         };
         reader.readAsDataURL(file);
@@ -452,7 +454,7 @@ const PostCreator = ({ onPostCreated }) => {
                 onChange={(e) => setPostContent(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={`${auth.currentUser?.displayName || "Bạn"} ơi, bạn đang nghĩ gì thế?`}
+                placeholder={`${auth.currentUser?.displayName || t("anonymous")} ${t("whatsOnYourMind")}`}
                 className={`w-full px-4 py-3 bg-transparent outline-none resize-none rounded-2xl text-base leading-relaxed ${isLight
                   ? "text-gray-900 placeholder-gray-400"
                   : "text-gray-100 placeholder-gray-500"
@@ -476,7 +478,7 @@ const PostCreator = ({ onPostCreated }) => {
                 } ${isUploading || mediaFiles.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <FaImage className="text-lg" />
-              <span className="text-sm font-medium hidden sm:inline">Ảnh/Video</span>
+              <span className="text-sm font-medium hidden sm:inline">{t("photoVideo")}</span>
               <input
                 type="file"
                 accept="image/*,video/*"
@@ -498,7 +500,7 @@ const PostCreator = ({ onPostCreated }) => {
                 } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <FaCamera className="text-lg" />
-              <span className="text-sm font-medium hidden sm:inline">Camera</span>
+              <span className="text-sm font-medium hidden sm:inline">{t("camera")}</span>
             </button>
 
             {/* Document */}
@@ -509,7 +511,7 @@ const PostCreator = ({ onPostCreated }) => {
                 } ${isUploading || mediaFiles.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <FaFile className="text-lg" />
-              <span className="text-sm font-medium hidden sm:inline">Tài liệu</span>
+              <span className="text-sm font-medium hidden sm:inline">{t("document")}</span>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
@@ -532,7 +534,7 @@ const PostCreator = ({ onPostCreated }) => {
                 } ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <FaSmile className="text-lg" />
-              <span className="text-sm font-medium hidden sm:inline">Cảm xúc</span>
+              <span className="text-sm font-medium hidden sm:inline">{t("emoji")}</span>
             </button>
           </div>
 
@@ -549,10 +551,10 @@ const PostCreator = ({ onPostCreated }) => {
             {isUploading ? (
               <span className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Đang đăng...
+                {t("posting")}
               </span>
             ) : (
-              "Đăng bài"
+              t("post")
             )}
           </button>
         </div>
@@ -564,10 +566,10 @@ const PostCreator = ({ onPostCreated }) => {
           <div className={`rounded-2xl p-4 ${isLight ? "bg-gray-50" : "bg-zinc-800/50"}`}>
             <div className="flex items-center justify-between mb-3">
               <span className={`text-sm font-medium ${isLight ? "text-gray-700" : "text-gray-300"}`}>
-                Media đính kèm ({mediaFiles.length}/5)
+                {t("attachedMedia")} ({mediaFiles.length}/5)
               </span>
               {mediaFiles.length >= 5 && (
-                <span className="text-xs text-amber-600 font-medium">⚠️ Đã đạt giới hạn</span>
+                <span className="text-xs text-amber-600 font-medium">⚠️ {t("limitReached")}</span>
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -624,7 +626,7 @@ const PostCreator = ({ onPostCreated }) => {
           <div className={`rounded-xl p-4 ${isLight ? "bg-indigo-50" : "bg-indigo-900/20"}`}>
             <div className="flex justify-between items-center mb-2">
               <span className={`text-sm font-medium ${isLight ? "text-indigo-700" : "text-indigo-400"}`}>
-                Đang tải lên...
+                {t("uploading")}
               </span>
               <span className={`text-sm font-bold ${isLight ? "text-indigo-700" : "text-indigo-400"}`}>
                 {Math.round(uploadProgress)}%
@@ -657,7 +659,7 @@ const PostCreator = ({ onPostCreated }) => {
               onEmojiClick={handleEmojiClick}
               theme={isLight ? "light" : "dark"}
               previewConfig={{ showPreview: false }}
-              searchPlaceHolder="Tìm emoji..."
+              searchPlaceHolder={t("searchEmoji")}
               width="350px"
               height="450px"
             />
@@ -683,7 +685,7 @@ const PostCreator = ({ onPostCreated }) => {
                   } animate-pulse`}
               />
               <span className={isLight ? "text-gray-800 font-medium" : "text-gray-100 font-medium"}>
-                Camera đang hoạt động
+                {t("cameraActive")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -694,9 +696,9 @@ const PostCreator = ({ onPostCreated }) => {
                   ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
                   : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
                   }`}
-                title="Đổi camera"
+                title={t("switchCamera")}
               >
-                Đổi
+                {t("switch")}
               </button>
               <button
                 type="button"
@@ -705,9 +707,9 @@ const PostCreator = ({ onPostCreated }) => {
                   ? "bg-gray-200 hover:bg-gray-300 text-gray-800"
                   : "bg-zinc-700 hover:bg-zinc-600 text-gray-100"
                   }`}
-                title="Đóng"
+                title={t("close")}
               >
-                Đóng
+                {t("close")}
               </button>
             </div>
           </div>
@@ -730,7 +732,7 @@ const PostCreator = ({ onPostCreated }) => {
                 type="button"
                 onClick={capturePhoto}
                 className="group relative"
-                title="Chụp ảnh"
+                title={t("takePhoto")}
               >
                 <div className="h-16 w-16 rounded-full border-4 border-white/90 flex items-center justify-center group-hover:border-white transition">
                   <div className="h-12 w-12 rounded-full bg-white group-active:scale-90 transition-transform" />

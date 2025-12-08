@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import UserAvatar from "./UserAvatar";
 import { FaPhone, FaVideo, FaEllipsisV } from "react-icons/fa";
+import { LanguageContext } from "../../context/LanguageContext";
 import "../../style/ChatHeader.css";
 
 const ChatHeader = ({ user, theme }) => {
+    const { t } = useContext(LanguageContext);
     if (!user) return null;
     const isLight = theme === "light";
 
@@ -14,7 +16,7 @@ const ChatHeader = ({ user, theme }) => {
                 <div>
                     <h5 className="chat-header-name">{user.firstName} {user.lastName}</h5>
                     <small className={`chat-header-status ${user.isOnline ? 'online' : ''} ${isLight ? 'light' : 'dark'}`}>
-                        {user.isOnline ? "Online" : "Offline"}
+                        {user.isOnline ? t("online") : t("offline")}
                     </small>
                 </div>
             </div>

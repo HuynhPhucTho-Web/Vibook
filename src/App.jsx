@@ -10,7 +10,7 @@ import {
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Login from "./components/Login";
+import Login from "./components/login";
 import SignUp from "./components/register";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
@@ -25,6 +25,7 @@ import Sidebar from "./components/Sidebar";
 import GroupPage from "./pages/GroupPage";
 import { auth } from "./components/firebase";
 import { ThemeProvider } from "./context/ThemeProvider";
+import { LanguageProvider } from "./context/LanguageContext";
 import GroupMembers from "./pages/group/GroupMembers";
 import GroupMedia from "./pages/group/GroupMedia";
 import GroupEvents from "./pages/group/GroupEvents";
@@ -96,60 +97,62 @@ function App() {
   }
 
   return (
-    <ThemeProvider>
-      <Router>
-        <Routes>
-          {/* Auth Routes */}
-          <Route element={<AuthLayout />}>
-            <Route path="/" element={user ? <Navigate to="/homevibook" /> : <Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<SignUp />} />
-          </Route>
-
-          {/* Protected Routes with Layout mới */}
-          <Route element={<MainLayout />}>
-            <Route path="/homevibook" element={user ? <Home /> : <Navigate to="/login" />} />
-            <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
-            <Route path="/profile/:uid" element={user ? <Profile /> : <Navigate to="/login" />} />
-            <Route path="/user/:uid" element={user ? <UserDetailPage /> : <Navigate to="/login" />} />
-            <Route path="/messenger" element={user ? <Messenger /> : <Navigate to="/login" />} />
-            <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
-            <Route path="/groups" element={user ? <Groups /> : <Navigate to="/login" />} />
-            <Route path="/events" element={user ? <Events /> : <Navigate to="/login" />} />
-            <Route path="/friends" element={user ? <Friends /> : <Navigate to="/login" />} />
-            <Route path="/story" element={user ? <Storys /> : <Navigate to="/login" />} />
-            <Route path="/playgame" element={user ? <PlayGame /> : <Navigate to="/login" />} />
-            <Route path="/post/:postId" element={user ? <PostDetail /> : <Navigate to="/login" />} />
-            {/* Group Page with nested routes */}
-
-            <Route path="groups/:groupId" element={<GroupPage />}>
-              <Route index element={<GroupHome />} />
-              <Route path="members" element={<GroupMembers />} />
-              <Route path="media" element={<GroupMedia />} />
-              <Route path="events" element={<GroupEvents />} />
-              <Route path="about" element={<GroupInfo />} />
-          
-              <Route path="*" element={<Navigate to="." replace />} />
+    <LanguageProvider>
+      <ThemeProvider>
+        <Router>
+          <Routes>
+            {/* Auth Routes */}
+            <Route element={<AuthLayout />}>
+              <Route path="/" element={user ? <Navigate to="/homevibook" /> : <Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<SignUp />} />
             </Route>
-          </Route>
-        </Routes>
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-          toastClassName="custom-toast"
-          bodyClassName="custom-toast-body"
-        />
-      </Router>
-    </ThemeProvider>
+            {/* Protected Routes with Layout mới */}
+            <Route element={<MainLayout />}>
+              <Route path="/homevibook" element={user ? <Home /> : <Navigate to="/login" />} />
+              <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+              <Route path="/profile/:uid" element={user ? <Profile /> : <Navigate to="/login" />} />
+              <Route path="/user/:uid" element={user ? <UserDetailPage /> : <Navigate to="/login" />} />
+              <Route path="/messenger" element={user ? <Messenger /> : <Navigate to="/login" />} />
+              <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
+              <Route path="/groups" element={user ? <Groups /> : <Navigate to="/login" />} />
+              <Route path="/events" element={user ? <Events /> : <Navigate to="/login" />} />
+              <Route path="/friends" element={user ? <Friends /> : <Navigate to="/login" />} />
+              <Route path="/story" element={user ? <Storys /> : <Navigate to="/login" />} />
+              <Route path="/playgame" element={user ? <PlayGame /> : <Navigate to="/login" />} />
+              <Route path="/post/:postId" element={user ? <PostDetail /> : <Navigate to="/login" />} />
+              {/* Group Page with nested routes */}
+
+              <Route path="groups/:groupId" element={<GroupPage />}>
+                <Route index element={<GroupHome />} />
+                <Route path="members" element={<GroupMembers />} />
+                <Route path="media" element={<GroupMedia />} />
+                <Route path="events" element={<GroupEvents />} />
+                <Route path="about" element={<GroupInfo />} />
+
+                <Route path="*" element={<Navigate to="." replace />} />
+              </Route>
+            </Route>
+          </Routes>
+
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+            toastClassName="custom-toast"
+            bodyClassName="custom-toast-body"
+          />
+        </Router>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }
 

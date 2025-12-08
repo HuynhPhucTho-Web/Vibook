@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, useRef } from "react";
+                                                                                                                             import React, { useState, useEffect, useContext, useCallback, useMemo, useRef } from "react";
 import { auth, db } from "../components/firebase";
 import {
   collection,
@@ -15,6 +15,7 @@ import {
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 
 import UserList from "../components/messenger/UserList";
 import ChatHeader from "../components/messenger/ChatHeader";
@@ -25,6 +26,7 @@ import "../style/Messenger.css";
 
 const Messenger = () => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -123,7 +125,7 @@ const Messenger = () => {
             console.error("Error listening to friendships:", error);
             // Only show error for actual permission issues, not empty results
             if (error.code !== 'permission-denied' || error.message.includes('insufficient')) {
-              toast.error("Failed to load friends.");
+              toast.error(t("failedToLoadFriends"));
             }
             setUsers([]);
             setIsLoading(false);
@@ -133,13 +135,13 @@ const Messenger = () => {
         unsubscribeRefs.current.friends = unsubscribe;
       } catch (error) {
         console.error("Error setting up friends listener:", error);
-        toast.error("Could not load friends.", { position: "top-center" });
+        toast.error(t("couldNotLoadFriends"), { position: "top-center" });
         setIsLoading(false);
       }
     };
 
     loadFriends();
-  }, [currentUser]);
+  }, [currentUser, t]);
 
   useEffect(() => {
     if (!currentUser || !selectedUser) {
@@ -199,9 +201,9 @@ const Messenger = () => {
       });
     } catch (error) {
       console.error(`Error sending message:`, error);
-      toast.error("Could not send message.", { position: "top-center" });
+      toast.error(t("couldNotSendMessage"), { position: "top-center" });
     }
-  }, [selectedUser, currentUser, createChatId]); // Removed messageText from dependencies as it's passed as content
+  }, [selectedUser, currentUser, createChatId, t]); // Removed messageText from dependencies as it's passed as content
 
   const handleUserSelect = useCallback((user) => {
     if (selectedUser?.uid === user.uid) return;

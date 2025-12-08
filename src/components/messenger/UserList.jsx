@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useContext } from "react";
 import UserAvatar from "./UserAvatar";
 import { FaSearch } from "react-icons/fa";
+import { LanguageContext } from "../../context/LanguageContext";
 import "../../style/UserList.css";
 
 const UserList = ({ users, selectedUser, onUserSelect, searchTerm, onSearchChange, theme }) => {
+    const { t } = useContext(LanguageContext);
     const isLight = theme === "light";
 
     return (
         <div className={`sidebar-container ${isLight ? 'light' : 'dark'}`}>
             <div className={`user-list-header ${isLight ? 'light' : 'dark'}`}>
-                <h5 className="mb-3 fw-bold">Messages</h5>
+                <h5 className="mb-3 fw-bold">{t("messages")}</h5>
                 <div className="position-relative">
                     <FaSearch
                         className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
@@ -17,7 +19,7 @@ const UserList = ({ users, selectedUser, onUserSelect, searchTerm, onSearchChang
                     <input
                         type="text"
                         className={`user-search-input ${isLight ? 'light' : 'dark'}`}
-                        placeholder="Search users..."
+                        placeholder={t("searchUsers")}
                         value={searchTerm}
                         onChange={(e) => onSearchChange(e.target.value)}
                     />
@@ -38,7 +40,7 @@ const UserList = ({ users, selectedUser, onUserSelect, searchTerm, onSearchChang
                                     {/* <small className="text-muted">12m</small> */}
                                 </div>
                                 <p className={`user-item-last-message ${isLight ? 'light' : 'dark'}`}>
-                                    Last message here...
+                                    {t("lastMessageHere")}
                                 </p>
                             </div>
                         </div>
