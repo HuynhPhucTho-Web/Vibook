@@ -12,11 +12,13 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes } from "react-icons/fa";
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 
 const Events = () => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -103,7 +105,7 @@ const Events = () => {
       },
       (error) => {
         console.error("Error fetching events:", error);
-        toast.error("Unable to load events", {
+        toast.error(t("unableToLoadEvents"), {
           position: "top-center",
           autoClose: 3000,
         });
@@ -132,11 +134,11 @@ const Events = () => {
     async (e) => {
       e.preventDefault();
       if (!eventName.trim() || !eventDate.trim()) {
-        toast.error("Event name and date cannot be empty", { position: "top-center" });
+        toast.error(t("eventNameRequired"), { position: "top-center" });
         return;
       }
       if (!currentUser) {
-        toast.error("Please log in to create an event", { position: "top-center" });
+        toast.error(t("loginToCreateEvent"), { position: "top-center" });
         return;
       }
 
@@ -157,13 +159,13 @@ const Events = () => {
         setEventLocation("");
         setEventDescription("");
         setShowCreateModal(false);
-        toast.success("Event created successfully!", {
+        toast.success(t("eventCreated"), {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error creating event:", error);
-        toast.error("Failed to create event", { position: "top-center" });
+        toast.error(t("eventCreateFailed"), { position: "top-center" });
       }
     },
     [eventName, eventDate, eventLocation, eventDescription, currentUser]
@@ -189,10 +191,10 @@ const Events = () => {
         setEventDate("");
         setEventLocation("");
         setEventDescription("");
-        toast.success("Event updated successfully!", { position: "top-center" });
+        toast.success(t("eventUpdated"), { position: "top-center" });
       } catch (error) {
         console.error("Error updating event:", error);
-        toast.error("Failed to update event", { position: "top-center" });
+        toast.error(t("eventUpdateFailed"), { position: "top-center" });
       }
     },
     [editingEvent, eventName, eventDate, eventLocation, eventDescription, currentUser]
@@ -202,7 +204,7 @@ const Events = () => {
   const handleJoinEvent = useCallback(
     async (eventId, attendees) => {
       if (!currentUser) {
-        toast.error("Please log in to join the event", { position: "top-center" });
+        toast.error(t("loginToJoinEvent"), { position: "top-center" });
         return;
       }
 
@@ -211,13 +213,13 @@ const Events = () => {
         await updateDoc(eventRef, {
           attendees: [...attendees, currentUser.uid],
         });
-        toast.success("Joined event successfully!", {
+        toast.success(t("joinedEvent"), {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error joining event:", error);
-        toast.error("Failed to join event", { position: "top-center" });
+        toast.error(t("joinEventFailed"), { position: "top-center" });
       }
     },
     [currentUser]
@@ -227,7 +229,7 @@ const Events = () => {
   const handleLeaveEvent = useCallback(
     async (eventId, attendees) => {
       if (!currentUser) {
-        toast.error("Please log in to leave the event", { position: "top-center" });
+        toast.error(t("loginToLeaveEvent"), { position: "top-center" });
         return;
       }
 
@@ -236,13 +238,13 @@ const Events = () => {
         await updateDoc(eventRef, {
           attendees: attendees.filter((uid) => uid !== currentUser.uid),
         });
-        toast.success("Left event successfully!", {
+        toast.success(t("leftEvent"), {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error leaving event:", error);
-        toast.error("Failed to leave event", { position: "top-center" });
+        toast.error(t("leaveEventFailed"), { position: "top-center" });
       }
     },
     [currentUser]
@@ -252,20 +254,20 @@ const Events = () => {
   const handleDeleteEvent = useCallback(
     async (eventId, ownerId) => {
       if (!currentUser || currentUser.uid !== ownerId) {
-        toast.error("Only the event owner can delete the event", { position: "top-center" });
+        toast.error(t("onlyOwnerCanDeleteEvent"), { position: "top-center" });
         return;
       }
 
       try {
         const eventRef = doc(db, "Events", eventId);
         await deleteDoc(eventRef);
-        toast.success("Event deleted successfully!", {
+        toast.success(t("eventDeleted"), {
           position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error deleting event:", error);
-        toast.error("Failed to delete event", { position: "top-center" });
+        toast.error(t("eventDeleteFailed"), { position: "top-center" });
       }
     },
     [currentUser]
@@ -317,7 +319,7 @@ const Events = () => {
           }`}
       >
         <h5 className="text-center text-gray-500 dark:text-gray-400">
-          Please log in to view and join events
+          {t("loginToViewEvents")}
         </h5>
       </div>
     );
@@ -336,12 +338,12 @@ const Events = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            Events ({events.length})
+            {t("eventsTitle")} ({events.length})
           </h1>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <input
               type="text"
-              placeholder="🔍 Search events..."
+              placeholder={`🔍 ${t("searchEvents")}`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full sm:w-64 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -351,7 +353,7 @@ const Events = () => {
               onClick={() => setShowCreateModal(true)}
             >
               <FaPlus size={16} />
-              Create Event
+              {t("createEvent")}
             </button>
           </div>
         </div>
@@ -365,7 +367,7 @@ const Events = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  Create New Event
+                  {t("createNewEvent")}
                 </h3>
                 <button
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -377,13 +379,13 @@ const Events = () => {
               <form onSubmit={handleCreateEvent}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Event Name
+                    {t("eventName")}
                   </label>
                   <input
                     type="text"
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
-                    placeholder="Enter event name"
+                    placeholder={t("enterEventName")}
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={100}
                     required
@@ -391,7 +393,7 @@ const Events = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Date & Time
+                    {t("dateAndTime")}
                   </label>
                   <input
                     type="datetime-local"
@@ -403,25 +405,25 @@ const Events = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Location
+                    {t("location")}
                   </label>
                   <input
                     type="text"
                     value={eventLocation}
                     onChange={(e) => setEventLocation(e.target.value)}
-                    placeholder="Enter location (optional)"
+                    placeholder={t("enterLocationOptional")}
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={200}
                   />
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Description
+                    {t("description")}
                   </label>
                   <textarea
                     value={eventDescription}
                     onChange={(e) => setEventDescription(e.target.value)}
-                    placeholder="Enter event description (optional)"
+                    placeholder={t("enterEventDescriptionOptional")}
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={4}
                     maxLength={500}
@@ -433,7 +435,7 @@ const Events = () => {
                     className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => setShowCreateModal(false)}
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -457,7 +459,7 @@ const Events = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  Update Event
+                  {t("updateEvent")}
                 </h3>
                 <button
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -469,13 +471,13 @@ const Events = () => {
               <form onSubmit={handleUpdateEvent}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Event Name
+                    {t("eventName")}
                   </label>
                   <input
                     type="text"
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
-                    placeholder="Enter event name"
+                    placeholder={t("enterEventName")}
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={100}
                     required
@@ -483,7 +485,7 @@ const Events = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Date & Time
+                    {t("dateAndTime")}
                   </label>
                   <input
                     type="datetime-local"
@@ -495,25 +497,25 @@ const Events = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Location
+                    {t("location")}
                   </label>
                   <input
                     type="text"
                     value={eventLocation}
                     onChange={(e) => setEventLocation(e.target.value)}
-                    placeholder="Enter location (optional)"
+                    placeholder={t("enterLocationOptional")}
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={200}
                   />
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Description
+                    {t("description")}
                   </label>
                   <textarea
                     value={eventDescription}
                     onChange={(e) => setEventDescription(e.target.value)}
-                    placeholder="Enter event description (optional)"
+                    placeholder={t("enterEventDescriptionOptional")}
                     className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={4}
                     maxLength={500}
@@ -525,7 +527,7 @@ const Events = () => {
                     className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => setShowEditModal(false)}
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                   <button
                     type="submit"

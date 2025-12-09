@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import { doc, onSnapshot, query, collection, where, getDocs, addDoc } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from "../context/LanguageContext";
 import { toast } from "react-toastify";
 import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
@@ -10,6 +11,7 @@ import ProfileHeader from "../components/UpdateProfile";
 
 function Profile() {
   const { theme } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
   const { uid: routeUid } = useParams();
   const [currentUid, setCurrentUid] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
@@ -17,6 +19,7 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [isFriend, setIsFriend] = useState(false);
   const [hasSentRequest, setHasSentRequest] = useState(false);
+  const [friendCount, setFriendCount] = useState(0);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setCurrentUid(u?.uid || null));
@@ -30,7 +33,7 @@ function Profile() {
 
     const unsubUser = onSnapshot(doc(db, "Users", targetUid), (snap) => {
       if (snap.exists()) setUserDetails({ id: targetUid, ...snap.data() });
-      else toast.error("User not found");
+      else toast.error(t("userNotFound"));
       setLoading(false);
     });
 
@@ -79,6 +82,29 @@ function Profile() {
     return () => unsubscribe();
   }, [currentUid, userDetails, isOwner]);
 
+  // Fetch friend count for the viewed user
+  useEffect(() => {
+    if (!userDetails) return;
+
+    const friendCountQuery = query(
+      collection(db, "Friendships"),
+      where("participants", "array-contains", userDetails.id),
+      where("status", "==", "accepted")
+    );
+
+    const unsubscribe = onSnapshot(
+      friendCountQuery,
+      (snapshot) => {
+        setFriendCount(snapshot.docs.length);
+      },
+      (error) => {
+        console.error("Error fetching friend count:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [userDetails]);
+
   // Check if current user has sent a friend request to viewed user
   useEffect(() => {
     if (!currentUid || !userDetails || isOwner) return;
@@ -118,10 +144,10 @@ function Profile() {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      toast.success(`Friend request sent to ${userDetails.firstName || userDetails.lastName || userDetails.email}!`);
+      toast.success(t("friendRequestSentTo", { name: userDetails.firstName || userDetails.lastName || userDetails.email }));
     } catch (error) {
       console.error("Error sending friend request:", error);
-      toast.error("Failed to send friend request.");
+      toast.error(t("failedToSendFriendRequest"));
     }
   };
 
@@ -157,7 +183,7 @@ function Profile() {
           {posts.length ? posts.map(p => (
             <PostItem key={p.id} post={p} auth={auth} userDetails={userDetails} />
           )) : (
-            <p className="text-center opacity-75">{isOwner ? "You haven't posted yet" : "No posts yet"}</p>
+            <p className="text-center opacity-75">{isOwner ? t("youHaventPostedYet") : t("noPostsYet")}</p>
           )}
         </div>
       </div>

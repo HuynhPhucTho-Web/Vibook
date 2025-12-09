@@ -10,7 +10,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
-import { FaUserPlus, FaSearch } from "react-icons/fa";
+import { FaUserPlus, FaSearch, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const FindFriends = ({ currentUser, theme }) => {
@@ -194,17 +194,41 @@ const FindFriends = ({ currentUser, theme }) => {
               >
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-3">
-                    <img
-                      src={user.photo || "/default-avatar.png"}
-                      alt={`${user.firstName || ""} ${user.lastName || ""}`}
-                      className="rounded-circle me-3"
-                      style={{ width: "50px", height: "50px", objectFit: "cover" }}
-                    />
+                    <div
+                      className="rounded-circle me-3 d-flex align-items-center justify-content-center"
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        backgroundColor: theme === "light" ? "#e9ecef" : "#495057",
+                        color: theme === "light" ? "#6c757d" : "#adb5bd",
+                        position: "relative",
+                      }}
+                    >
+                      {user.photo ? (
+                        <img
+                          src={user.photo}
+                          alt={`${user.firstName || ""} ${user.lastName || ""}`}
+                          className="rounded-circle"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            objectFit: "cover",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                      ) : null}
+                      <FaUser size={24} style={{ display: user.photo ? "none" : "block" }} />
+                    </div>
                     <div>
                       <h6 className="card-title mb-0">
                         {user.firstName} {user.lastName}
                       </h6>
-                      <small className="text-muted">{user.email}</small>
+                      {/* <small className="text-muted">{user.email}</small> */}
                     </div>
                   </div>
                   <div className="d-flex justify-content-between align-items-center">

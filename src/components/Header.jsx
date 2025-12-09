@@ -69,16 +69,14 @@ const ThemeDropdown = () => {
           )}
         </div>
         <span
-          className={`capitalize mr-1 hidden md:block ${
-            isLight ? "text-black" : "text-white"
-          }`}
+          className={`capitalize mr-1 hidden md:block ${isLight ? "text-black" : "text-white"
+            }`}
         >
           {theme}
         </span>
         <FaChevronDown
-          className={`text-[10px] sm:text-xs ${
-            isLight ? "text-black" : "text-white"
-          } transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`text-[10px] sm:text-xs ${isLight ? "text-black" : "text-white"
+            } transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -95,11 +93,10 @@ const ThemeDropdown = () => {
               {themeOptions.map((option) => (
                 <button
                   key={option}
-                  className={`btn-sm w-full flex items-center justify-start text-xs px-3 py-2 rounded ${
-                    theme === option
+                  className={`btn-sm w-full flex items-center justify-start text-xs px-3 py-2 rounded ${theme === option
                       ? "bg-blue-500 text-white"
                       : "bg-gray-100 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
+                    }`}
                   onClick={() => {
                     setTheme(option);
                     setIsOpen(false);
@@ -153,23 +150,20 @@ const LanguageDropdown = () => {
       >
         <div className="mr-1 sm:mr-2">
           <FaGlobe
-            className={`text-lg sm:text-xl ${
-              isLight ? "text-black" : "text-white"
-            }`}
+            className={`text-lg sm:text-xl ${isLight ? "text-black" : "text-white"
+              }`}
           />
         </div>
         <span
-          className={`capitalize mr-1 hidden md:block ${
-            isLight ? "text-black" : "text-white"
-          }`}
+          className={`capitalize mr-1 hidden md:block ${isLight ? "text-black" : "text-white"
+            }`}
         >
           {languageOptions.find((lang) => lang.code === language)?.flag ||
             language.toUpperCase()}
         </span>
         <FaChevronDown
-          className={`text-[10px] sm:text-xs ${
-            isLight ? "text-black" : "text-white"
-          } transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`text-[10px] sm:text-xs ${isLight ? "text-black" : "text-white"
+            } transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -186,11 +180,10 @@ const LanguageDropdown = () => {
               {languageOptions.map((option) => (
                 <button
                   key={option.code}
-                  className={`btn-sm w-full flex items-center justify-start text-xs px-3 py-2 rounded ${
-                    language === option.code
+                  className={`btn-sm w-full flex items-center justify-start text-xs px-3 py-2 rounded ${language === option.code
                       ? "bg-blue-500 text-white"
                       : "bg-gray-100 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
+                    }`}
                   onClick={() => {
                     setLanguage(option.code);
                     setIsOpen(false);
@@ -223,16 +216,12 @@ const Header = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const userMenuRef = useRef(null);
   const searchRef = useRef(null);
-
-  const languageOptions = [
-    { code: "vi", name: "Tiếng Việt", flag: "🇻🇳" },
-    { code: "en", name: "English", flag: "🇺🇸" },
-    { code: "ja", name: "日本語", flag: "🇯🇵" },
-  ];
-  const themeOptions = ["light", "dark"];
+  const mobileSearchTimeoutRef = useRef(null);
+  const userMenuTimeoutRef = useRef(null);
 
   /* ----- unread notifications ----- */
   useEffect(() => {
@@ -259,6 +248,7 @@ const Header = () => {
       }
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setSearchFocused(false);
+        setMobileSearchOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -329,13 +319,51 @@ const Header = () => {
     return () => clearTimeout(debounceTimer);
   }, [searchValue]);
 
+  /* ----- auto-close mobile search after 5 seconds ----- */
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      mobileSearchTimeoutRef.current = setTimeout(() => {
+        setMobileSearchOpen(false);
+      }, 5000);
+    } else {
+      if (mobileSearchTimeoutRef.current) {
+        clearTimeout(mobileSearchTimeoutRef.current);
+        mobileSearchTimeoutRef.current = null;
+      }
+    }
+    return () => {
+      if (mobileSearchTimeoutRef.current) {
+        clearTimeout(mobileSearchTimeoutRef.current);
+      }
+    };
+  }, [mobileSearchOpen]);
+
+  /* ----- auto-close user menu after 5 seconds ----- */
+  useEffect(() => {
+    if (userMenuOpen) {
+      userMenuTimeoutRef.current = setTimeout(() => {
+        setUserMenuOpen(false);
+        setMobileSettingsOpen(false);
+      }, 5000);
+    } else {
+      if (userMenuTimeoutRef.current) {
+        clearTimeout(userMenuTimeoutRef.current);
+        userMenuTimeoutRef.current = null;
+      }
+    }
+    return () => {
+      if (userMenuTimeoutRef.current) {
+        clearTimeout(userMenuTimeoutRef.current);
+      }
+    };
+  }, [userMenuOpen]);
+
   return (
     <header
-      className={`sticky top-0 z-[1001] transition-all duration-300 ease-out backdrop-blur-[20px] ${
-        theme === "light"
+      className={`sticky top-0 z-[998] transition-all duration-300 ease-out backdrop-blur-[20px] ${theme === "light"
           ? "bg-white/95 border-b border-black/10 shadow-[0_8px_32px_rgba(0,0,0,0.1)]"
           : "bg-black/80 border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-      }`}
+        }`}
     >
       {/* Giữ kích thước header như ban đầu */}
       <div className="px-4 py-4 flex items-center justify-between max-w-full">
@@ -353,33 +381,29 @@ const Header = () => {
           {/* Search (desktop / tablet, ẩn trên mobile) */}
           <div
             ref={searchRef}
-            className={`relative hidden md:block w-64 lg:w-72 ${
-              searchFocused ? "focused" : ""
-            }`}
+            className={`relative hidden md:block w-64 lg:w-72 ${searchFocused ? "focused" : ""
+              }`}
           >
             <div className="relative flex items-center">
               <FaSearch
-                className={`absolute left-3 z-10 text-sm lg:text-base ${
-                  theme === "light" ? "text-black/70" : "text-white/70"
-                }`}
+                className={`absolute left-3 z-10 text-sm lg:text-base ${theme === "light" ? "text-black/70" : "text-white/70"
+                  }`}
               />
               <input
                 type="text"
                 placeholder={t("searchPlaceholder")}
-                className={`w-full py-2 pl-9 pr-9 rounded-full border-none text-sm focus:outline-none focus:ring-2 ${
-                  theme === "light"
+                className={`w-full py-2 pl-9 pr-9 rounded-full border-none text-sm focus:outline-none focus:ring-2 ${theme === "light"
                     ? "bg-black/10 text-black placeholder-black/70 focus:bg-black/15 focus:ring-black/20"
                     : "bg-white/10 text-white placeholder-white/70 focus:bg-white/15 focus:ring-white/30"
-                }`}
+                  }`}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
               />
               {searchValue && (
                 <button
-                  className={`absolute right-2 w-5 h-5 flex items-center justify-center text-lg cursor-pointer bg-transparent border-none ${
-                    theme === "light" ? "text-black/70" : "text-white/70"
-                  }`}
+                  className={`absolute right-2 w-5 h-5 flex items-center justify-center text-lg cursor-pointer bg-transparent border-none ${theme === "light" ? "text-black/70" : "text-white/70"
+                    }`}
                   onClick={() => setSearchValue("")}
                 >
                   ×
@@ -390,22 +414,20 @@ const Header = () => {
             {/* SEARCH DROPDOWN */}
             {searchFocused && (searchValue || searchResults.length > 0) && (
               <div
-                className={`absolute top-full left-0 w-full min-w-72 max-h-72 overflow-y-auto rounded-lg shadow-lg border mt-1 z-50 ${
-                  theme === "light"
+                className={`absolute top-full left-0 w-full min-w-72 max-h-72 overflow-y-auto rounded-lg shadow-lg border mt-1 z-50 ${theme === "light"
                     ? "bg-white border-gray-200"
                     : "bg-gray-800 border-gray-700"
-                }`}
+                  }`}
               >
                 <div className="p-3">
                   {isSearching ? (
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-spin h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full mr-2" />
                       <span
-                        className={`text-sm ${
-                          theme === "light"
+                        className={`text-sm ${theme === "light"
                             ? "text-gray-600"
                             : "text-gray-300"
-                        }`}
+                          }`}
                       >
                         {t("searching")}
                       </span>
@@ -415,14 +437,193 @@ const Header = () => {
                       {/* Users Section */}
                       {searchResults.filter((r) => r.type === "user").length >
                         0 && (
+                          <>
+                            <h6
+                              className={`text-xs font-bold uppercase mb-2 ${theme === "light"
+                                  ? "text-gray-600"
+                                  : "text-gray-300"
+                                }`}
+                            >
+                              {t("users")}
+                            </h6>
+                            {searchResults
+                              .filter((r) => r.type === "user")
+                              .map((user) => (
+                                <Link
+                                  key={user.id}
+                                  to={`/user/${user.id}`}
+                                  className="block no-underline"
+                                  onClick={() => {
+                                    setTimeout(() => {
+                                      setSearchValue("");
+                                      setSearchFocused(false);
+                                    }, 0);
+                                  }}
+                                >
+                                  <div
+                                    className={`flex items-center py-2 px-2 cursor-pointer transition-colors rounded hover:${theme === "light"
+                                        ? "bg-gray-100"
+                                        : "bg-white/10"
+                                      }`}
+                                  >
+                                    <FaUser className={`w-8 h-8 rounded-full mr-3 flex-shrink-0 ${theme === "light" ? "text-gray-500" : "text-gray-400"}`} />
+                                    <div className="min-w-0 flex-1">
+                                      <p
+                                        className={`text-sm font-semibold truncate ${theme === "light"
+                                            ? "text-gray-900"
+                                            : "text-white"
+                                          }`}
+                                      >
+                                        {user.displayName || t("anonymous")}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              ))}
+                          </>
+                        )}
+
+                      {/* Posts Section */}
+                      {searchResults.filter((r) => r.type === "post").length >
+                        0 && (
+                          <>
+                            <h6
+                              className={`text-xs font-bold uppercase mt-3 mb-2 ${theme === "light"
+                                  ? "text-gray-600"
+                                  : "text-gray-300"
+                                }`}
+                            >
+                              {t("posts")}
+                            </h6>
+                            {searchResults
+                              .filter((r) => r.type === "post")
+                              .map((post) => (
+                                <Link
+                                  key={post.id}
+                                  to={`/post/${post.id}`}
+                                  className="block no-underline"
+                                  onClick={() => {
+                                    setTimeout(() => {
+                                      setSearchValue("");
+                                      setSearchFocused(false);
+                                    }, 0);
+                                  }}
+                                >
+                                  <div
+                                    className={`flex items-start py-2 px-2 cursor-pointer transition-colors rounded hover:${theme === "light"
+                                        ? "bg-gray-100"
+                                        : "bg-white/10"
+                                      }`}
+                                  >
+                                    <FaUser className={`w-8 h-8 rounded-full mr-3 flex-shrink-0 ${theme === "light" ? "text-gray-500" : "text-gray-400"}`} />
+                                    <div className="min-w-0 flex-1">
+                                      <p
+                                        className={`text-sm font-semibold truncate ${theme === "light"
+                                            ? "text-gray-900"
+                                            : "text-white"
+                                          }`}
+                                      >
+                                        {post.userName || t("anonymous")}
+                                      </p>
+                                      <p
+                                        className={`text-xs truncate ${theme === "light"
+                                            ? "text-gray-600"
+                                            : "text-gray-300"
+                                          }`}
+                                      >
+                                        {post.content?.substring(0, 50) ||
+                                          t("noContent")}
+                                        ...
+                                      </p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              ))}
+                          </>
+                        )}
+                    </>
+                  ) : searchValue ? (
+                    <div className="text-center py-4">
+                      <span
+                        className={`text-sm ${theme === "light"
+                            ? "text-gray-500"
+                            : "text-gray-400"
+                          }`}
+                      >
+                        {t("noResults")} "{searchValue}"
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT: Notifications + Avatar + (desktop theme/lang) */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Mobile Search Icon */}
+          <button
+            className={`md:hidden w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${theme === "light"
+                ? "bg-black/10 hover:bg-black/20"
+                : "bg-white/10 hover:bg-white/20"
+              }`}
+            onClick={() => {
+              setMobileSearchOpen(!mobileSearchOpen);
+              setUserMenuOpen(false);
+              setMobileSettingsOpen(false);
+            }}
+            title="Search"
+          >
+            <FaSearch
+              className={`text-lg ${theme === "light" ? "text-black" : "text-white"}`}
+            />
+          </button>
+
+          {/* Mobile Search Input */}
+          {mobileSearchOpen && (
+            <div className="md:hidden absolute top-full left-0 right-0 z-50 p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg">
+              <div className="relative flex items-center">
+                <FaSearch
+                  className={`absolute left-3 z-10 text-sm ${theme === "light" ? "text-black/70" : "text-white/70"}`}
+                />
+                <input
+                  type="text"
+                  placeholder={t("searchPlaceholder")}
+                  className={`w-full py-3 pl-9 pr-9 rounded-full border-none text-sm focus:outline-none focus:ring-2 ${theme === "light"
+                      ? "bg-black/10 text-black placeholder-black/70 focus:bg-black/15 focus:ring-black/20"
+                      : "bg-white/10 text-white placeholder-white/70 focus:bg-white/15 focus:ring-white/30"
+                    }`}
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  autoFocus
+                />
+                {searchValue && (
+                  <button
+                    className={`absolute right-2 w-6 h-6 flex items-center justify-center text-lg cursor-pointer bg-transparent border-none ${theme === "light" ? "text-black/70" : "text-white/70"}`}
+                    onClick={() => setSearchValue("")}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Mobile Search Results */}
+              {(searchValue || searchResults.length > 0) && (
+                <div className="mt-3 max-h-60 overflow-y-auto">
+                  {isSearching ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full mr-2" />
+                      <span className={`text-sm ${theme === "light" ? "text-gray-600" : "text-gray-300"}`}>
+                        {t("searching")}
+                      </span>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <>
+                      {/* Users Section */}
+                      {searchResults.filter((r) => r.type === "user").length > 0 && (
                         <>
-                          <h6
-                            className={`text-xs font-bold uppercase mb-2 ${
-                              theme === "light"
-                                ? "text-gray-600"
-                                : "text-gray-300"
-                            }`}
-                          >
+                          <h6 className={`text-xs font-bold uppercase mb-2 ${theme === "light" ? "text-gray-600" : "text-gray-300"}`}>
                             {t("users")}
                           </h6>
                           {searchResults
@@ -435,32 +636,18 @@ const Header = () => {
                                 onClick={() => {
                                   setTimeout(() => {
                                     setSearchValue("");
-                                    setSearchFocused(false);
+                                    setMobileSearchOpen(false);
                                   }, 0);
                                 }}
                               >
-                                <div
-                                  className={`flex items-center py-2 px-2 cursor-pointer transition-colors rounded hover:${
-                                    theme === "light"
-                                      ? "bg-gray-100"
-                                      : "bg-white/10"
-                                  }`}
-                                >
+                                <div className={`flex items-center py-2 px-2 cursor-pointer transition-colors rounded hover:${theme === "light" ? "bg-gray-100" : "bg-white/10"}`}>
                                   <img
-                                    src={
-                                      user.photoURL || "/default-avatar.png"
-                                    }
+                                    src={user.photoURL || "/default-avatar.png"}
                                     alt={user.displayName}
                                     className="w-8 h-8 rounded-full object-cover mr-3 flex-shrink-0"
                                   />
                                   <div className="min-w-0 flex-1">
-                                    <p
-                                      className={`text-sm font-semibold truncate ${
-                                        theme === "light"
-                                          ? "text-gray-900"
-                                          : "text-white"
-                                      }`}
-                                    >
+                                    <p className={`text-sm font-semibold truncate ${theme === "light" ? "text-gray-900" : "text-white"}`}>
                                       {user.displayName || t("anonymous")}
                                     </p>
                                   </div>
@@ -471,16 +658,9 @@ const Header = () => {
                       )}
 
                       {/* Posts Section */}
-                      {searchResults.filter((r) => r.type === "post").length >
-                        0 && (
+                      {searchResults.filter((r) => r.type === "post").length > 0 && (
                         <>
-                          <h6
-                            className={`text-xs font-bold uppercase mt-3 mb-2 ${
-                              theme === "light"
-                                ? "text-gray-600"
-                                : "text-gray-300"
-                            }`}
-                          >
+                          <h6 className={`text-xs font-bold uppercase mt-3 mb-2 ${theme === "light" ? "text-gray-600" : "text-gray-300"}`}>
                             {t("posts")}
                           </h6>
                           {searchResults
@@ -493,44 +673,18 @@ const Header = () => {
                                 onClick={() => {
                                   setTimeout(() => {
                                     setSearchValue("");
-                                    setSearchFocused(false);
+                                    setMobileSearchOpen(false);
                                   }, 0);
                                 }}
                               >
-                                <div
-                                  className={`flex items-start py-2 px-2 cursor-pointer transition-colors rounded hover:${
-                                    theme === "light"
-                                      ? "bg-gray-100"
-                                      : "bg-white/10"
-                                  }`}
-                                >
-                                  <img
-                                    src={
-                                      post.userPhoto || "/default-avatar.png"
-                                    }
-                                    alt={post.userName}
-                                    className="w-8 h-8 rounded-full object-cover mr-3 flex-shrink-0"
-                                  />
+                                <div className={`flex items-start py-2 px-2 cursor-pointer transition-colors rounded hover:${theme === "light" ? "bg-gray-100" : "bg-white/10"}`}>
+                                  <FaUser className={`w-8 h-8 rounded-full mr-3 flex-shrink-0 ${theme === "light" ? "text-gray-500" : "text-gray-400"}`} />
                                   <div className="min-w-0 flex-1">
-                                    <p
-                                      className={`text-sm font-semibold truncate ${
-                                        theme === "light"
-                                          ? "text-gray-900"
-                                          : "text-white"
-                                      }`}
-                                    >
+                                    <p className={`text-sm font-semibold truncate ${theme === "light" ? "text-gray-900" : "text-white"}`}>
                                       {post.userName || t("anonymous")}
                                     </p>
-                                    <p
-                                      className={`text-xs truncate ${
-                                        theme === "light"
-                                          ? "text-gray-600"
-                                          : "text-gray-300"
-                                      }`}
-                                    >
-                                      {post.content?.substring(0, 50) ||
-                                        t("noContent")}
-                                      ...
+                                    <p className={`text-xs truncate ${theme === "light" ? "text-gray-600" : "text-gray-300"}`}>
+                                      {post.content?.substring(0, 50) || t("noContent")}...
                                     </p>
                                   </div>
                                 </div>
@@ -541,42 +695,46 @@ const Header = () => {
                     </>
                   ) : searchValue ? (
                     <div className="text-center py-4">
-                      <span
-                        className={`text-sm ${
-                          theme === "light"
-                            ? "text-gray-500"
-                            : "text-gray-400"
-                        }`}
-                      >
+                      <span className={`text-sm ${theme === "light" ? "text-gray-500" : "text-gray-400"}`}>
                         {t("noResults")} "{searchValue}"
                       </span>
                     </div>
                   ) : null}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
+              )}
+            </div>
+          )}
 
-                {/* RIGHT: Notifications + Avatar + (desktop theme/lang) */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Notifications icon: luôn hiển thị trên header */}
+          {/* Messenger icon - hidden on mobile */}
+          <Link to="/messenger" title="Messenger" className="hidden md:block">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${theme === "light"
+                  ? "bg-black/10 hover:bg-black/20"
+                  : "bg-white/10 hover:bg-white/20"
+                }`}
+            >
+              <FaFacebookMessenger
+                className={`text-lg ${theme === "light" ? "text-black" : "text-white"
+                  }`}
+              />
+            </div>
+          </Link>
+
+          {/* Notifications icon */}
           <Link
             to="/notifications"
-            className="relative mr-1"
+            className="relative"
             title="Notifications"
           >
             <div
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
-                theme === "light"
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${theme === "light"
                   ? "bg-black/5 hover:bg-black/10"
                   : "bg-white/10 hover:bg-white/20"
-              }`}
+                }`}
             >
               <FaBell
-                className={`text-base sm:text-lg ${
-                  theme === "light" ? "text-black" : "text-white"
-                }`}
+                className={`text-lg ${theme === "light" ? "text-black" : "text-white"
+                  }`}
               />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
@@ -595,136 +753,133 @@ const Header = () => {
               onClick={() => {
                 setUserMenuOpen((v) => !v);
                 setMobileSettingsOpen(false);
+                setMobileSearchOpen(false);
               }}
             >
               <div className="relative">
                 <img
                   src={auth.currentUser?.photoURL || "/default-avatar.png"}
                   alt="User Avatar"
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
+                  className="w-10 h-10 rounded-full object-cover"
                 />
                 <div
-                  className={`absolute bottom-0.5 right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 ${
-                    theme === "light" ? "border-white" : "border-black"
-                  }`}
+                  className={`absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 ${theme === "light" ? "border-white" : "border-black"
+                    }`}
                 />
               </div>
             </button>
 
-              {userMenuOpen && (
-  <div className="absolute right-0 top-full mt-3 md:hidden">
-    <div
-      className={`relative w-36 h-36 rounded-full shadow-xl border ${
-        theme === "light"
-          ? "bg-white border-gray-200"
-          : "bg-gray-900 border-gray-700"
-      }`}
-    >
-      {/* Avatar middle */}
-      <div className="absolute inset-[30%] rounded-full overflow-hidden border border-gray-300/40">
-        <img
-          src={auth.currentUser?.photoURL || "/default-avatar.png"}
-          alt="User Avatar"
-          className="w-full h-full object-cover"
-        />
-      </div>
+            {userMenuOpen && (
+              <div className="absolute right-0 top-full mt-3 md:hidden">
+                <div
+                  className={`relative w-36 h-36 rounded-full shadow-xl border ${theme === "light"
+                      ? "bg-white border-gray-200"
+                      : "bg-gray-900 border-gray-700"
+                    }`}
+                >
+                  {/* Avatar middle */}
+                  <div className="absolute inset-[30%] rounded-full overflow-hidden border border-gray-300/40">
+                    <img
+                      src={auth.currentUser?.photoURL || "/default-avatar.png"}
+                      alt="User Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-      {/* Profile – TOP */}
-      <Link
-        to="/profile"
-        onClick={() => setUserMenuOpen(false)}
-        className="absolute top-1 left-1/2 -translate-x-1/2"
-      >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
-          <FaUser className="text-lg text-black dark:text-white" />
-        </div>
-      </Link>
+                  {/* Profile – TOP */}
+                  <Link
+                    to="/profile"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="absolute top-1 left-1/2 -translate-x-1/2"
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
+                      <FaUser className="text-lg text-black dark:text-white" />
+                    </div>
+                  </Link>
 
-      {/* Messenger – LEFT */}
-      <Link
-        to="/messenger"
-        onClick={() => setUserMenuOpen(false)}
-        className="absolute top-1/2 -translate-y-1/2 left-1"
-      >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
-          <FaFacebookMessenger className="text-lg text-blue-500" />
-        </div>
-      </Link>
+                  {/* Messenger – LEFT */}
+                  <Link
+                    to="/messenger"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="absolute top-1/2 -translate-y-1/2 left-1"
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
+                      <FaFacebookMessenger className="text-lg text-blue-500" />
+                    </div>
+                  </Link>
 
-      {/* Theme – RIGHT */}
-      <button
-        type="button"
-        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-        className="absolute top-1/2 -translate-y-1/2 right-1"
-      >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
-          {theme === "light" ? (
-            <CiSun className="text-xl text-yellow-500" />
-          ) : (
-            <GiMoon className="text-xl text-blue-300" />
-          )}
-        </div>
-      </button>
+                  {/* Theme – RIGHT */}
+                  <button
+                    type="button"
+                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                    className="absolute top-1/2 -translate-y-1/2 right-1"
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
+                      {theme === "light" ? (
+                        <CiSun className="text-xl text-yellow-500" />
+                      ) : (
+                        <GiMoon className="text-xl text-blue-300" />
+                      )}
+                    </div>
+                  </button>
 
-      {/* Language – BOTTOM */}
-      <button
-        type="button"
-        onClick={() => setMobileSettingsOpen((v) => !v)}
-        className="absolute bottom-1 left-1/2 -translate-x-1/2"
-      >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
-          <FaGlobe className="text-lg text-blue-500 dark:text-blue-300" />
-        </div>
-      </button>
+                  {/* Language – BOTTOM */}
+                  <button
+                    type="button"
+                    onClick={() => setMobileSettingsOpen((v) => !v)}
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2"
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 shadow">
+                      <FaGlobe className="text-lg text-blue-500 dark:text-blue-300" />
+                    </div>
+                  </button>
 
-      {/* Language Select Panel */}
-      {mobileSettingsOpen && (
-        <div
-          className={`absolute left-1/2 -translate-x-1/2 top-full mt-3 w-60 rounded-2xl shadow-xl border p-3 text-sm ${
-            theme === "light"
-              ? "bg-white border-gray-200 text-gray-800"
-              : "bg-gray-900 border-gray-700 text-gray-100"
-          }`}
-        >
-          <div className="flex items-center mb-2">
-            <FaGlobe className="mr-2 text-blue-400" />
-            <span className="font-semibold text-xs uppercase tracking-wide">
-              Language
-            </span>
-          </div>
+                  {/* Language Select Panel */}
+                  {mobileSettingsOpen && (
+                    <div
+                      className={`absolute left-1/2 -translate-x-1/2 top-full mt-3 w-48 max-w-[calc(100vw-2rem)] rounded-2xl shadow-xl border p-3 text-sm ${theme === "light"
+                          ? "bg-white border-gray-200 text-gray-800"
+                          : "bg-gray-900 border-gray-700 text-gray-100"
+                        }`}
+                    >
+                      <div className="flex items-center mb-2">
+                        <FaGlobe className="mr-2 text-blue-400" />
+                        <span className="font-semibold text-xs uppercase tracking-wide">
+                          Language
+                        </span>
+                      </div>
 
-          <div className="space-y-1">
-            {[
-              { code: "vi", name: "Tiếng Việt", flag: "🇻🇳" },
-              { code: "en", name: "English", flag: "🇺🇸" },
-              { code: "ja", name: "日本語", flag: "🇯🇵" },
-            ].map((option) => (
-              <button
-                key={option.code}
-                className={`w-full flex items-center justify-start px-3 py-2 rounded-lg text-xs border ${
-                  language === option.code
-                    ? "bg-blue-500 text-white border-blue-500"
-                    : "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100"
-                }`}
-                onClick={() => {
-                  setLanguage(option.code);
-                  setMobileSettingsOpen(false);
-                  setUserMenuOpen(false);
-                }}
-              >
-                <span className="mr-2">{option.flag}</span>
-                <span>{option.name}</span>
-                {language === option.code && (
-                  <FaCheck className="ml-auto text-[10px]" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+                      <div className="space-y-1">
+                        {[
+                          { code: "vi", name: "Tiếng Việt", flag: "🇻🇳" },
+                          { code: "en", name: "English", flag: "🇺🇸" },
+                          { code: "ja", name: "日本語", flag: "🇯🇵" },
+                        ].map((option) => (
+                          <button
+                            key={option.code}
+                            className={`w-full flex items-center justify-start px-3 py-2 rounded-lg text-xs border ${language === option.code
+                                ? "bg-blue-500 text-white border-blue-500"
+                                : "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100"
+                              }`}
+                            onClick={() => {
+                              setLanguage(option.code);
+                              setMobileSettingsOpen(false);
+                              setUserMenuOpen(false);
+                            }}
+                          >
+                            <span className="mr-2">{option.flag}</span>
+                            <span>{option.name}</span>
+                            {language === option.code && (
+                              <FaCheck className="ml-auto text-[10px]" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
 
             {/* DESKTOP: dropdown vuông thông tin user */}
@@ -741,18 +896,16 @@ const Header = () => {
                     />
                     <div className="min-w-0 flex-1">
                       <h6
-                        className={`mb-0 text-sm font-semibold truncate ${
-                          theme === "light" ? "text-black" : "text-white"
-                        }`}
+                        className={`mb-0 text-sm font-semibold truncate ${theme === "light" ? "text-black" : "text-white"
+                          }`}
                       >
                         {auth.currentUser?.displayName || "User"}
                       </h6>
                       <small
-                        className={`text-xs ${
-                          theme === "light"
+                        className={`text-xs ${theme === "light"
                             ? "text-gray-600"
                             : "text-gray-300"
-                        }`}
+                          }`}
                       >
                         {auth.currentUser?.email}
                       </small>

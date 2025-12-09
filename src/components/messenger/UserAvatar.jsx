@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaUser } from "react-icons/fa";
 
 const UserAvatar = React.memo(({ user, size = 40, showOnline = false }) => {
     const [imageError, setImageError] = useState(false);
@@ -17,13 +18,12 @@ const UserAvatar = React.memo(({ user, size = 40, showOnline = false }) => {
     const avatarStyle = {
         width: `${size}px`,
         height: `${size}px`,
-        backgroundColor: '#0d6efd',
-        color: 'white',
+        backgroundColor: '#e5e7eb',
+        color: '#6b7280',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: `${size * 0.4}px`,
-        fontWeight: '600',
+        fontSize: `${size * 0.6}px`,
     };
 
     console.log("UserAvatar: user.photo =", user.photo, "imageError =", imageError, "user =", user); // Added log
@@ -43,7 +43,7 @@ const UserAvatar = React.memo(({ user, size = 40, showOnline = false }) => {
                 />
             ) : (
                 <div className="rounded-circle shadow-sm" style={avatarStyle}>
-                    {getInitials(user.firstName, user.lastName)}
+                    <FaUser />
                 </div>
             )}
             {showOnline && user.isOnline && (

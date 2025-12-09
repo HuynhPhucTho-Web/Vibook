@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../components/firebase";
-import { FaEllipsisH, FaEdit, FaLock, FaTrash } from "react-icons/fa";
+import { FaEllipsisH, FaEdit, FaLock, FaTrash, FaUser } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const PostHeader = ({
@@ -53,11 +53,37 @@ const PostHeader = ({
     <div className="post-item-header">
       <div className="post-item-author">
         <Link to={`/profile/${post.userId}`} className="no-underline hover:no-underline">
-          <img
-            src={post.userPhoto || "/default-avatar.png"}
-            alt={post.userName}
-            className="post-item-avatar"
-          />
+          <div
+            className="post-item-avatar d-flex align-items-center justify-content-center"
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              backgroundColor: isLight ? "#e9ecef" : "#495057",
+              color: isLight ? "#6c757d" : "#adb5bd",
+              position: "relative",
+            }}
+          >
+            {post.userPhoto ? (
+              <img
+                src={post.userPhoto}
+                alt={post.userName}
+                className="rounded-circle"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  objectFit: "cover",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                }}
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            ) : null}
+            <FaUser size={20} style={{ display: post.userPhoto ? "none" : "block" }} />
+          </div>
         </Link>
 
         <div>

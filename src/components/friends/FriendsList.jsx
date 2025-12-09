@@ -10,7 +10,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { toast } from "react-toastify";
-import { FaComments, FaUserMinus } from "react-icons/fa";
+import { FaComments, FaUserMinus, FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const FriendsList = ({ currentUser, theme }) => {
@@ -138,7 +138,7 @@ const FriendsList = ({ currentUser, theme }) => {
                     <h6 className="card-title mb-0">
                       {friend.displayName || "Unknown User"}
                     </h6>
-                    <small className="text-muted">{friend.email}</small>
+                    {/* <small className="text-muted">{friend.email}</small> */}
                   </div>
                 </div>
 

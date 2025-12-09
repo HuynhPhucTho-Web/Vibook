@@ -14,21 +14,44 @@
 .logo-subtitle{
   font-size: clamp(.55rem, 1.2vw, .75rem);
 }
+/* LUÔN HIỆN SEARCH Ở MỌI KÍCH THƯỚC */
 .search-container{
   position:relative;
-  flex: 1 1 260px;         
-  min-width: 160px;
+  flex: 1 1 220px;         
+  min-width: 120px;
   max-width: 560px;
 }
+
+/* Mobile: thu nhỏ */
+@media (max-width: 640px){ 
+  .search-container{
+    flex: 1 1 140px;
+    max-width: 180px;
+  }
+
+  .search-input{
+    font-size: 0.75rem;
+    padding: 6px 28px 6px 28px;
+  }
+
+  .search-icon{
+    left: 8px;
+    font-size: 0.9rem;
+  }
+
+  .search-clear{
+    right: 6px;
+    font-size: 1rem;
+  }
+}
+
 @media (max-width: 992px){ 
   .search-container{ flex-basis: 200px; }
 }
 @media (max-width: 820px){ 
   .search-container{ flex-basis: 160px; }
 }
-@media (max-width: 640px){ 
-  .search-container{ display:none; }
-}
+
 
 
 .search-input{
@@ -61,3 +84,9 @@
 }
 
 .search-dropdown{ width:100%; max-height:300px; overflow-y:auto; z-index:1000; }
+
+@media (max-width: 768px) {
+  header {
+    min-height: 64px;
+  }
+}
