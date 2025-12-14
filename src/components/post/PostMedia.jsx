@@ -1,8 +1,11 @@
-import React, { useRef } from "react";
-import { FaFile } from "react-icons/fa";
+import React, { useRef, useEffect, useState } from "react";
+import { FaFile, FaEye } from "react-icons/fa";
 
 const PostMedia = ({ post, isLight }) => {
   const videoRef = useRef(null);
+  const [isInView, setIsInView] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
+  const [hasPlayed, setHasPlayed] = useState(false);
 
   const getMediaFiles = () => {
     if (post.mediaFiles?.length) return post.mediaFiles;
@@ -21,6 +24,35 @@ const PostMedia = ({ post, isLight }) => {
   };
 
   const mediaFiles = getMediaFiles();
+
+  // Intersection Observer for mobile autoplay
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.5 }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-play video on mobile when in view
+  useEffect(() => {
+    if (isInView && !hasPlayed && window.innerWidth <= 768) {
+      if (videoRef.current) {
+        videoRef.current.muted = true;
+        videoRef.current.play().then(() => {
+          setHasPlayed(true);
+          setViewCount(prev => prev + 1);
+        }).catch(() => {});
+      }
+    }
+  }, [isInView, hasPlayed]);
 
   if (mediaFiles.length === 0) return null;
 
@@ -45,26 +77,32 @@ const PostMedia = ({ post, isLight }) => {
           }
           if (item.category === "video") {
             return (
-              <video
-                key={idx}
-                ref={videoRef}
-                controls
-                className={`w-full ${mediaFiles.length === 1
-                  ? "max-h-[600px] object-contain"
-                  : "rounded-xl aspect-video object-cover"
-                  }`}
-                onMouseEnter={() => {
-                  if (videoRef.current) {
-                    videoRef.current.muted = false;
-                    videoRef.current.play().catch(() => { });
-                  }
-                }}
-                onMouseLeave={() => {
-                  if (videoRef.current) videoRef.current.pause();
-                }}
-              >
-                <source src={item.url} type="video/mp4" />
-              </video>
+              <div key={idx} className="relative">
+                <video
+                  ref={videoRef}
+                  controls
+                  className={`w-full ${mediaFiles.length === 1
+                    ? "max-h-[600px] object-contain"
+                    : "rounded-xl aspect-video object-cover"
+                    }`}
+                  onMouseEnter={() => {
+                    if (videoRef.current) {
+                      videoRef.current.muted = false;
+                      videoRef.current.play().catch(() => { });
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (videoRef.current) videoRef.current.pause();
+                  }}
+                >
+                  <source src={item.url} type="video/mp4" />
+                </video>
+                {/* View count overlay */}
+                <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded-md text-sm flex items-center gap-1">
+                  <FaEye size={12} />
+                  <span>{viewCount}</span>
+                </div>
+              </div>
             );
           }
           if (item.category === "document") {

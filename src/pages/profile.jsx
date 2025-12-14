@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { auth, db } from "../components/firebase";
-import { doc, onSnapshot, query, collection, where, getDocs, addDoc } from "firebase/firestore";
+import { doc, onSnapshot, query, collection, where, getDocs, addDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 import { toast } from "react-toastify";
@@ -20,6 +20,8 @@ function Profile() {
   const [isFriend, setIsFriend] = useState(false);
   const [hasSentRequest, setHasSentRequest] = useState(false);
   const [friendCount, setFriendCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setCurrentUid(u?.uid || null));
@@ -129,6 +131,51 @@ function Profile() {
     return () => unsubscribe();
   }, [currentUid, userDetails, isOwner]);
 
+  // Check if current user is following the viewed user
+  useEffect(() => {
+    if (!currentUid || !userDetails || isOwner) return;
+
+    const followQuery = query(
+      collection(db, "Follows"),
+      where("fromUserId", "==", currentUid),
+      where("toUserId", "==", userDetails.id)
+    );
+
+    const unsubscribe = onSnapshot(
+      followQuery,
+      (snapshot) => {
+        setIsFollowing(snapshot.docs.length > 0);
+      },
+      (error) => {
+        console.error("Error checking follow status:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUid, userDetails, isOwner]);
+
+  // Fetch follower count for the viewed user
+  useEffect(() => {
+    if (!userDetails) return;
+
+    const followerQuery = query(
+      collection(db, "Follows"),
+      where("toUserId", "==", userDetails.id)
+    );
+
+    const unsubscribe = onSnapshot(
+      followerQuery,
+      (snapshot) => {
+        setFollowerCount(snapshot.docs.length);
+      },
+      (error) => {
+        console.error("Error fetching follower count:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [userDetails]);
+
   const handleSendRequest = async () => {
     if (!currentUid || !userDetails) return;
 
@@ -151,6 +198,32 @@ function Profile() {
     }
   };
 
+  const handleFollow = async () => {
+    if (!currentUid || !userDetails) return;
+
+    try {
+      const followDocId = `${currentUid}_${userDetails.id}`;
+      const followDocRef = doc(db, "Follows", followDocId);
+
+      if (isFollowing) {
+        // Unfollow: delete the follow document
+        await deleteDoc(followDocRef);
+        toast.success(t("unfollowed", { name: userDetails.firstName || userDetails.lastName || userDetails.email }));
+      } else {
+        // Follow: create a new follow document with specific ID
+        await setDoc(followDocRef, {
+          fromUserId: currentUid,
+          toUserId: userDetails.id,
+          createdAt: new Date(),
+        });
+        toast.success(t("followed", { name: userDetails.firstName || userDetails.lastName || userDetails.email }));
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      toast.error(t("failedToToggleFollow"));
+    }
+  };
+
   useEffect(() => {
     const target = routeUid || auth.currentUser?.uid || null;
     const cleanup = fetchUserData(target);
@@ -167,9 +240,13 @@ function Profile() {
           user={userDetails}
           isOwner={isOwner}
           postCount={posts.length}
+          friendCount={friendCount}
+          followerCount={followerCount}
           isFriend={isFriend}
           hasSentRequest={hasSentRequest}
+          isFollowing={isFollowing}
           onSendRequest={handleSendRequest}
+          onFollow={handleFollow}
           onUpdated={(partial) => setUserDetails(prev => ({ ...prev, ...partial }))}
         />
 
