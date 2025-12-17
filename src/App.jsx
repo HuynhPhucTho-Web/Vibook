@@ -48,7 +48,7 @@ const AuthLayout = () => (
 
 const MainLayout = () => {
   const [sidebarWidth, setSidebarWidth] = useState('250px');
-  const headerHeight = 0; 
+  const headerHeight = 0;
 
   const handleSidebarToggle = () => {
     setSidebarWidth((prev) => (prev === '250px' ? '60px' : '250px'));
@@ -57,16 +57,17 @@ const MainLayout = () => {
   return (
     <div className="App">
       <Header onSidebarToggle={handleSidebarToggle} />
-      <div style={{ height: `${headerHeight}px` }} aria-hidden="true" /> 
+      <div style={{ height: `${headerHeight}px` }} aria-hidden="true" />
       <div className="d-flex flex-nowrap">
         <Sidebar style={{ width: sidebarWidth }} />
-        <main className="flex-grow-1">
-          <div className="row g-2">
-            <section className="col-lg-12 flex-grow-1">
+        <main className="flex-grow-1 overflow-hidden">
+          <div className="row g-0 m-0">
+            <section className="col-12 p-0 flex-grow-1">
               <Outlet />
             </section>
           </div>
         </main>
+
       </div>
     </div>
   );

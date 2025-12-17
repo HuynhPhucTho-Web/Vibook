@@ -4,6 +4,7 @@ import { auth, db } from "../../components/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { FaImage, FaVideo, FaFile, FaSmile } from "react-icons/fa";
 import Picker from "emoji-picker-react";
+import "../../style/GroupPost.css";
 
 const uploadToCloudinary = async (file) => {
   const cloud = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
@@ -30,7 +31,6 @@ export default function GroupPostComposer({ groupId }) {
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // revoke preview on unmount
   useEffect(() => () => media.forEach((m) => m.preview && URL.revokeObjectURL(m.preview)), [media]);
 
   const onPickFiles = (e) => {
@@ -58,9 +58,8 @@ export default function GroupPostComposer({ groupId }) {
     setLoading(true);
     try {
       const urls = [];
-      for (const m of media) {
-        urls.push(await uploadToCloudinary(m.file));
-      }
+      for (const m of media) urls.push(await uploadToCloudinary(m.file));
+
       await addDoc(collection(db, "Groups", groupId, "Posts"), {
         content: content.trim(),
         mediaUrls: urls,
@@ -71,6 +70,7 @@ export default function GroupPostComposer({ groupId }) {
         likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
         reactedBy: {},
       });
+
       setContent("");
       setMedia([]);
       setShowEmoji(false);
@@ -83,61 +83,46 @@ export default function GroupPostComposer({ groupId }) {
   };
 
   return (
-    <div
-      className={`rounded-3xl shadow-md transition-all ${isLight ? "bg-white border border-gray-200" : "bg-zinc-900 border border-zinc-800"}`}
-    >
-      <div className="p-4">
-        {/* input */}
+    <div className={`gpc-card ${isLight ? "is-light" : "is-dark"}`}>
+      <div className="gpc-top">
         <textarea
-          placeholder="What's on your mind?"
+          placeholder="Bạn đang nghĩ gì?"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={3}
-          className={`w-full rounded-2xl p-3 outline-none resize-y ${isLight ? "bg-gray-50 text-gray-800" : "bg-zinc-800 text-gray-100"}`}
+          className="gpc-textarea"
         />
 
-        {/* media preview */}
         {media.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mt-3">
+          <div className="gpc-mediaGrid">
             {media.map((m, i) => (
-              <div key={i} className={`relative rounded-xl overflow-hidden ${isLight ? "bg-white ring-1 ring-gray-200" : "bg-zinc-700 ring-1 ring-gray-600"}`}>
+              <div key={i} className="gpc-mediaItem">
                 {m.file.type.startsWith("video") ? (
-                  <video src={m.preview} className="w-full h-full object-cover" controls />
+                  <video src={m.preview} className="gpc-media" controls />
                 ) : (
-                  <img src={m.preview} className="w-full h-full object-cover" alt="" />
+                  <img src={m.preview} className="gpc-media" alt="" />
                 )}
-                <button
-                  type="button"
-                  onClick={() => removeAt(i)}
-                  className="absolute top-1 sm:top-2 right-1 sm:right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-red-500 text-white grid place-items-center text-xs sm:text-sm"
-                  aria-label="Remove"
-                >×</button>
+                <button type="button" onClick={() => removeAt(i)} className="gpc-remove" aria-label="Remove">×</button>
               </div>
             ))}
           </div>
         )}
 
-        {/* actions */}
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <label className={`px-3 py-2 rounded-xl cursor-pointer ${isLight ? "bg-emerald-50 text-emerald-700" : "bg-emerald-900/30 text-emerald-400"}`}>
+        <div className="gpc-actions">
+          <div className="gpc-tools">
+            <label className="gpc-tool gpc-toolImg">
               <FaImage />
               <input type="file" hidden accept="image/*" multiple onChange={onPickFiles} />
             </label>
-            <label className={`px-3 py-2 rounded-xl cursor-pointer ${isLight ? "bg-rose-50 text-rose-700" : "bg-rose-900/30 text-rose-400"}`}>
+            <label className="gpc-tool gpc-toolVid">
               <FaVideo />
               <input type="file" hidden accept="video/*" multiple onChange={onPickFiles} />
             </label>
-            <label className={`px-3 py-2 rounded-xl cursor-pointer ${isLight ? "bg-blue-50 text-blue-700" : "bg-blue-900/30 text-blue-400"}`}>
+            <label className="gpc-tool gpc-toolFile">
               <FaFile />
               <input type="file" hidden accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" multiple onChange={onPickFiles} />
             </label>
-            <button
-              type="button"
-              onClick={() => setShowEmoji((s) => !s)}
-              className={`px-3 py-2 rounded-xl ${isLight ? "bg-amber-50 text-amber-700" : "bg-amber-900/30 text-amber-400"}`}
-              aria-expanded={showEmoji}
-            >
+            <button type="button" onClick={() => setShowEmoji((s) => !s)} className="gpc-tool gpc-toolEmoji" aria-expanded={showEmoji}>
               <FaSmile />
             </button>
           </div>
@@ -146,20 +131,23 @@ export default function GroupPostComposer({ groupId }) {
             type="button"
             onClick={submit}
             disabled={loading || (!content.trim() && media.length === 0)}
-            className={`px-5 py-2.5 rounded-xl font-semibold text-white ${loading || (!content.trim() && media.length === 0)
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"}`}
+            className={`gpc-postBtn ${loading || (!content.trim() && media.length === 0) ? "is-disabled" : ""}`}
           >
-            {loading ? "Posting…" : "Post"}
+            {loading ? "Đang đăng…" : "Đăng"}
           </button>
         </div>
       </div>
 
-      {/* Emoji popover */}
       {showEmoji && (
-        <div className="px-4 pb-4">
-          <div className={`${isLight ? "ring-1 ring-gray-200" : "ring-1 ring-gray-700"} rounded-2xl overflow-hidden`}>
-            <Picker onEmojiClick={(_, e) => onEmojiClick(e)} theme={isLight ? "light" : "dark"} previewConfig={{ showPreview: false }} height={350} width="100%" />
+        <div className="gpc-emoji">
+          <div className="gpc-emojiInner">
+            <Picker
+              onEmojiClick={(_, e) => onEmojiClick(e)}
+              theme={isLight ? "light" : "dark"}
+              previewConfig={{ showPreview: false }}
+              height={340}
+              width="100%"
+            />
           </div>
         </div>
       )}

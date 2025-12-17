@@ -1,0 +1,180 @@
+.gpc-card {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow2);
+  overflow: hidden;
+}
+
+.gpc-top { padding: 12px; }
+
+@media (min-width: 768px) {
+  .gpc-top { padding: 14px; }
+}
+
+.gpc-textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  color: var(--text);
+  border-radius: 16px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.35;
+  outline: none;
+  resize: vertical;
+  min-height: 84px;
+}
+
+.gpc-textarea::placeholder { color: var(--muted); }
+
+.gpc-mediaGrid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .gpc-mediaGrid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+@media (min-width: 1024px) {
+  .gpc-mediaGrid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+
+.gpc-mediaItem {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+}
+
+.gpc-media {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.gpc-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  height: 28px;
+  width: 28px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(239,68,68,.95);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.gpc-actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gpc-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gpc-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: rgba(127,127,127,.10);
+  color: var(--text);
+  transition: transform .08s ease, background .15s ease;
+}
+.gpc-tool:active { transform: scale(0.98); }
+
+.gpc-toolImg { background: rgba(16,185,129,.14); }
+.gpc-toolVid { background: rgba(244,63,94,.14); }
+.gpc-toolFile { background: rgba(59,130,246,.14); }
+.gpc-toolEmoji { background: rgba(245,158,11,.14); }
+
+.gpc-postBtn {
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  background: linear-gradient(90deg, rgba(79,70,229,1), rgba(124,58,237,1));
+  color: #fff;
+  min-width: 92px;
+}
+
+.gpc-postBtn.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.15);
+}
+
+.gpc-emoji {
+  padding: 0 12px 12px;
+}
+
+.gpc-emojiInner {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+
+/* Chống overflow ở composer */
+.gpc-card, .gpc-top { min-width: 0; }
+
+.gpc-actions {
+  flex-wrap: wrap;            /* quan trọng */
+  align-items: stretch;
+}
+
+.gpc-tools {
+  flex-wrap: wrap;            /* quan trọng */
+  min-width: 0;
+}
+
+/* Nút Đăng không đẩy layout, tự xuống dòng */
+.gpc-postBtn { flex: 0 0 auto; }
+@media (max-width: 360px) {
+  .gpc-top { padding: 10px; }
+  .gpc-textarea { padding: 10px; border-radius: 14px; }
+
+  .gpc-tool {
+    width: 40px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .gpc-actions { gap: 8px; }
+  .gpc-postBtn {
+    width: 100%;              /* cho nó nằm 1 hàng riêng cho gọn */
+    min-width: unset;
+    border-radius: 14px;
+  }
+}
+
+/* Media item: giảm height để khỏi dài quá khi màn hẹp */
+@media (max-width: 360px) {
+  .gpc-media { height: 130px; }
+  .gpc-mediaGrid { gap: 8px; }
+}
+
+.gpc-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}

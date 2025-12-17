@@ -1,28 +1,20 @@
 import React from "react";
 import { NavLink, useParams } from "react-router-dom";
-
-const baseTab =
-  "px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors";
-const activeTab = "bg-blue-600 text-white shadow-sm";
-const idleTab =
-  "text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-700 dark:hover:text-blue-200";
+import "../../style/GroupSidebar.css";
 
 export default function GroupSidebar() {
   const { groupId } = useParams();
 
-  const getClass = ({ isActive }) => [baseTab, isActive ? activeTab : idleTab].join(" ");
+  const cls = ({ isActive }) => `gst-tab ${isActive ? "is-active" : ""}`;
 
   return (
-    <div className="bg-white/95 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
-      <nav className="max-w-5xl mx-auto px-2 sm:px-3 md:px-4 py-2">
-        {/* scroll ngang trên mobile nếu chật */}
-        <div className="flex gap-1 sm:gap-2 overflow-x-auto no-scrollbar scrollbar-hide">
-          <NavLink to={`/groups/${groupId}`} end className={getClass} style={{ textDecoration: 'none' }}>Home</NavLink>
-          <NavLink to={`/groups/${groupId}/members`} className={getClass} style={{ textDecoration: 'none' }}>Members</NavLink>
-          <NavLink to={`/groups/${groupId}/media`} className={getClass} style={{ textDecoration: 'none' }}>Media</NavLink>
-          <NavLink to={`/groups/${groupId}/events`} className={getClass} style={{ textDecoration: 'none' }}>Events</NavLink>
-          <NavLink to={`/groups/${groupId}/about`} className={getClass} style={{ textDecoration: 'none' }}>About</NavLink>
-        </div>
+    <div className="gst-wrap">
+      <nav className="gst-nav" aria-label="Group tabs">
+        <NavLink to={`/groups/${groupId}`} end className={cls}>Home</NavLink>
+        <NavLink to={`/groups/${groupId}/members`} className={cls}>Members</NavLink>
+        <NavLink to={`/groups/${groupId}/media`} className={cls}>Media</NavLink>
+        <NavLink to={`/groups/${groupId}/events`} className={cls}>Events</NavLink>
+        <NavLink to={`/groups/${groupId}/about`} className={cls}>About</NavLink>
       </nav>
     </div>
   );

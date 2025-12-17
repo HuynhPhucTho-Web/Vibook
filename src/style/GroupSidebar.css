@@ -1,38 +1,52 @@
-/* D:\Project-Company\Vibook\src\style\GroupSidebar.css */
-
-.sidebar-wrapper {
-    background-color: rgba(255, 255, 255, 0.95); /* bg-white/95 */
-    border-bottom: 1px solid #e5e7eb; /* border-b border-gray-200 */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-.sidebar-wrapper.dark {
-    background-color: rgba(31, 41, 55, 0.9); /* dark:bg-gray-800/90 */
-    border-bottom-color: #374151; /* dark:border-gray-700 */
+.gst-wrap {
+  width: 100%;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
 }
 
-.nav-container {
-    max-width: 80rem; /* max-w-5xl */
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 0.5rem; /* py-2 */
-    padding-bottom: 0.5rem; /* py-2 */
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+.gst-nav {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  padding: 10px 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.gst-nav::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) {
+  .gst-nav { padding: 10px 16px; }
 }
 
-.nav-links {
-    display: flex;
-    gap: 0.25rem; /* gap-1 */
-    overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+.gst-tab {
+  flex: 0 0 auto;
+  text-decoration: none;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(127,127,127,.08);
+  color: var(--text);
+  font-weight: 900;
+  font-size: 13px;
+  transition: transform .08s ease, background .15s ease;
 }
-.nav-links::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+
+.gst-tab:active { transform: scale(0.98); }
+
+.gst-tab:hover {
+  background: rgba(79,70,229,.12);
 }
-@media (min-width: 640px) {
-    .nav-links {
-        gap: 0.5rem; /* sm:gap-2 */
-    }
+
+.gst-tab.is-active {
+  background: var(--accent);
+  border-color: rgba(0,0,0,0);
+  color: #fff;
+}
+
+@media (max-width: 360px) {
+  .gst-nav { padding: 8px 8px; gap: 6px; }
+  .gst-tab { padding: 8px 10px; font-size: 12px; }
 }

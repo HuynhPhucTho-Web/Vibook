@@ -1,91 +1,194 @@
-/* D:\Project-Company\Vibook\src\style\GroupHome.css */
-
-/* Dark/Light Mode Base Container */
-.group-home-container {
-    min-height: 100vh;
-    width: 100%;
-    overflow-x: hidden;
+/* ===== Root theme tokens ===== */
+.gh-root {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.group-home-container.light {
-    background-color: #f3f4f6; /* bg-gray-100 */
-    color: #111827; /* text-gray-900 */
+.gh-root.is-light {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --panel2: #fbfbfc;
+  --text: #121826;
+  --muted: #6b7280;
+  --border: rgba(17, 24, 39, 0.08);
+  --shadow: 0 10px 30px rgba(0,0,0,.06);
+  --shadow2: 0 6px 16px rgba(0,0,0,.06);
+  --accent: #4f46e5;
 }
 
-.group-home-container.dark {
-    background-color: #111827; /* bg-gray-900 */
-    color: #f3f4f6; /* text-gray-100 */
+.gh-root.is-dark {
+  --bg: #0b1220;
+  --panel: #0f172a;
+  --panel2: #111c33;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --border: rgba(255,255,255,0.08);
+  --shadow: 0 10px 30px rgba(0,0,0,.40);
+  --shadow2: 0 6px 16px rgba(0,0,0,.35);
+  --accent: #7c3aed;
 }
 
-/* Sticky Header Wrapper */
-.header-sticky-wrapper {
-    position: sticky;
-    top: 0;
-    z-index: 30;
+/* ===== Sticky layers ===== */
+.gh-sticky { position: sticky; z-index: 30; }
+.gh-stickyHeader { top: 0; }
+.gh-stickyTabs { top: var(--headerH, 64px); z-index: 25; }
+
+/* Mobile header height map (match GroupHeader CSS height) */
+@media (min-width: 0px) { .gh-root { --headerH: 64px; } }
+@media (min-width: 640px) { .gh-root { --headerH: 68px; } }
+@media (min-width: 768px) { .gh-root { --headerH: 72px; } }
+@media (min-width: 1024px){ .gh-root { --headerH: 76px; } }
+
+/* ===== Loading ===== */
+.gh-loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 600;
 }
 
-/* Sticky Tabs/Sidebar Wrapper */
-.sidebar-sticky-wrapper {
-    position: sticky;
-    z-index: 25;
+/* ===== Main layout =====
+   FULL WIDTH: không max-width, dùng grid theo breakpoint
+*/
+.gh-body {
+  width: 100%;
+  padding: 12px 12px 28px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
-/* Kích thước top cho Sidebar để dính ngay dưới Header */
-@media (min-width: 1024px) { /* lg */
-    .sidebar-sticky-wrapper { top: 76px; }
-}
-@media (min-width: 768px) and (max-width: 1023px) { /* md */
-    .sidebar-sticky-wrapper { top: 72px; }
-}
-@media (min-width: 640px) and (max-width: 767px) { /* sm */
-    .sidebar-sticky-wrapper { top: 68px; }
-}
-@media (max-width: 639px) { /* default/mobile */
-    .sidebar-sticky-wrapper { top: 64px; }
+/* === Ultra small devices (280-360px) === */
+@media (max-width: 360px) {
+  .gh-body { padding: 10px 8px 24px; gap: 10px; }
+  .gh-card { padding: 12px; border-radius: 16px; }
 }
 
+/* Chặn mọi phần tử con gây tràn ngang */
+.gh-root, .gh-body, .gh-feed { min-width: 0; }
+.gh-root * { max-width: 100%; }
 
-/* Main Content Area */
-.group-main-content {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 1rem 1.25rem;
-    overflow-x: hidden;
+
+/* Tablet: 2 cột (left rail + feed), right rail ẩn */
+@media (min-width: 900px) {
+  .gh-body {
+    padding: 14px 16px 32px;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+  .gh-railRight { display: none; }
 }
 
-/* Post Composer Margin */
-.post-composer-margin {
-    margin-bottom: 1rem;
+/* Desktop: 3 cột */
+@media (min-width: 1200px) {
+  .gh-body {
+    padding: 16px 22px 36px;
+    grid-template-columns: 320px minmax(0, 1fr) 360px;
+    gap: 16px;
+  }
+  .gh-railRight { display: block; }
 }
 
-/* Loading/Empty State */
-.loading-message, .empty-message {
-    padding-top: 2.5rem;
-    padding-bottom: 2.5rem;
-    text-align: center;
+/* Rails */
+.gh-rail { display: none; }
+@media (min-width: 900px) {
+  .gh-rail { display: flex; flex-direction: column; gap: 12px; }
 }
 
-.loading-spinner {
-    display: inline-block;
-    height: 2rem;
-    width: 2rem;
-    border-width: 2px;
-    border-radius: 9999px;
-    border-bottom-color: #4f46e5; /* border-indigo-500 */
-    border-style: solid;
-    animation: spin 1s linear infinite;
+/* Feed */
+.gh-feed {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+/* Composer full width */
+.gh-composer { width: 100%; }
+
+/* Posts list */
+.gh-postList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.empty-message {
-    color: #6b7280; /* text-gray-500 */
+/* Cards in rails */
+.gh-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow2);
+  padding: 14px;
 }
 
-/* Post List */
-.post-list-space > * + * {
-    margin-top: 1rem; /* space-y-4 */
+.gh-cardTitle {
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.gh-cardText {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Skeleton */
+.gh-skeletonWrap {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow2);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gh-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(127,127,127,0.25);
+  border-top-color: var(--accent);
+  animation: ghSpin 0.9s linear infinite;
+}
+
+@keyframes ghSpin {
+  to { transform: rotate(360deg); }
+}
+
+.gh-skeletonText { color: var(--muted); font-weight: 600; }
+
+/* Empty state */
+.gh-empty {
+  background: var(--panel);
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  padding: 22px 18px;
+  text-align: center;
+}
+
+.gh-emptyTitle { font-weight: 900; font-size: 16px; }
+.gh-emptySub { margin-top: 6px; color: var(--muted); font-size: 13px; }
+
+
+/* FIX overflow 1-2px (textarea/input width 100% + padding) */
+.gh-root,
+.gh-root * {
+  box-sizing: border-box;
+}
+
+/* chặn tràn ngang toàn page group */
+.gh-root {
+  overflow-x: hidden;
 }

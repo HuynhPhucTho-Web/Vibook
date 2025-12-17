@@ -1,22 +1,21 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { doc, getDoc, collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { db, auth } from "../components/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../components/firebase";
 import { ThemeContext } from "../context/ThemeContext";
+import { Outlet } from "react-router-dom";
 
 import GroupHeader from "../components/group/GroupHeader";
 import GroupSidebar from "../components/group/GroupSidebar";
-import GroupPostComposer from "../components/group/GroupPosts";
-import GroupPostItem from "../components/group/PostItem";
 
-export default function GroupHome() {
+import "../style/GroupHome.css";
+
+export default function GroupPage() {
   const { groupId } = useParams();
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
 
   const [group, setGroup] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [loadingPosts, setLoadingPosts] = useState(true);
 
   // fetch group
   useEffect(() => {
@@ -25,72 +24,65 @@ export default function GroupHome() {
       const ref = doc(db, "Groups", groupId);
       const snap = await getDoc(ref);
       if (mounted && snap.exists()) setGroup({ id: snap.id, ...snap.data() });
+      if (mounted && !snap.exists()) setGroup({ id: groupId, name: "Group", description: "" });
     })();
     return () => { mounted = false; };
   }, [groupId]);
 
-  // realtime posts
-  useEffect(() => {
-    if (!groupId) return;
-    const q = query(collection(db, "Groups", groupId, "Posts"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (s) => {
-      setPosts(s.docs.map((d) => ({ id: d.id, groupId, ...d.data() })));
-      setLoadingPosts(false);
-    });
-    return () => unsub();
-  }, [groupId]);
-
-  const canPost = useMemo(() => !!auth.currentUser, []);
-
   if (!group) {
     return (
-      <div className={`p-4 text-center ${isDark ? "text-gray-100" : "text-gray-900"}`}>
-        Loading Group…
+      <div className={`gh-root ${isDark ? "is-dark" : "is-light"}`} data-theme={isDark ? "dark" : "light"}>
+        <div className="gh-loading">Loading Group…</div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen w-full overflow-x-hidden ${isDark ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
-      {/* Header thấp, dính trên */}
-      <div className="sticky top-0 z-[30]">
+    <div className={`gh-root ${isDark ? "is-dark" : "is-light"}`} data-theme={isDark ? "dark" : "light"}>
+      {/* Header sticky */}
+      <div className="gh-sticky gh-stickyHeader">
         <GroupHeader group={group} />
       </div>
 
-      {/* Tabs ngay dưới header, cũng sticky */}
-      <div className="sticky top-[64px] sm:top-[68px] md:top-[72px] lg:top-[76px] z-[25]">
+      {/* Tabs sticky ngay dưới header */}
+      <div className="gh-sticky gh-stickyTabs">
         <GroupSidebar group={group} />
       </div>
 
-      {/* Nội dung full chiều ngang – giống feed trang Home */}
-      <main className="w-full mx-auto px-2 sm:px-3 md:px-4 lg:px-6 py-4 overflow-x-hidden max-w-4xl">
-        {/* Composer (tạo bài) kéo ngang full như PostCreator ở home */}
-        {canPost && (
-          <div className="mb-4">
-            <GroupPostComposer groupId={groupId} />
+      {/* BODY full width: mobile 1 cột, desktop 2-3 cột */}
+      <div className="gh-body">
+        {/* LEFT rail (desktop/tablet) */}
+        <aside className="gh-rail gh-railLeft">
+          <div className="gh-card">
+            <div className="gh-cardTitle">Giới thiệu</div>
+            <div className="gh-cardText">
+              {group.description || "Chưa có mô tả."}
+            </div>
           </div>
-        )}
 
-        {/* Danh sách bài */}
-        {loadingPosts ? (
-          <div className="flex items-center justify-center py-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+          <div className="gh-card">
+            <div className="gh-cardTitle">Thành viên</div>
+            <div className="gh-cardText">
+              {group.members?.length || 0} thành viên
+            </div>
           </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">Chưa có bài viết nào trong nhóm.</div>
-        ) : (
-          <div className="space-y-4">
-            {posts.map((p) => (
-              <GroupPostItem
-                key={p.id}
-                post={p}
-                groupId={groupId}
-                auth={auth}
-              />
-            ))}
+        </aside>
+
+        {/* CENTER feed */}
+        <main className="gh-feed">
+          <Outlet />
+        </main>
+
+        {/* RIGHT rail (desktop) */}
+        <aside className="gh-rail gh-railRight">
+          <div className="gh-card">
+            <div className="gh-cardTitle">Gợi ý</div>
+            <div className="gh-cardText">
+              Bạn có thể đặt “rules”, “pinned post”, “events”… ở cột này để giống app group thật.
+            </div>
           </div>
-        )}
-      </main>
+        </aside>
+      </div>
     </div>
   );
 }

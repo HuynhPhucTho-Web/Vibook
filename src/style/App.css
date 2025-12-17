@@ -103,4 +103,76 @@
       @media (max-width: 640px) {
         .post-card { padding:16px; border-radius:12px; }
       }
-  
+  /* =======================
+   FIX OVERFLOW + KHỚP BỀ NGANG HEADER
+   ======================= */
+
+/* 1) Quan trọng nhất: border-box để width:100% không bị cộng thêm padding/border */
+.post-card-wrap,
+.post-card-wrap * {
+  box-sizing: border-box;
+}
+
+/* 2) Card wrap: KHÔNG center theo kiểu tạo lề 2 bên làm cảm giác lệch,
+      và không làm nở hơn viewport */
+.post-card-wrap{
+  width: 100%;
+  max-width: 100%;
+  justify-content: stretch;     /* thay vì center */
+  padding-left: 0;             /* triệt padding ngoài */
+  padding-right: 0;
+}
+
+/* 3) Card: luôn co đúng, không bị min-width làm nở */
+.post-card{
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;          /* chặn trường hợp text/icon đẩy ngang */
+}
+
+/* 4) Chặn text/link dài (đặc biệt link, url) làm tràn */
+.post-card a,
+.user-name,
+.user-desc{
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 5) Các khối flex bên trong: cho phép co lại (đây là lỗi hay gặp nhất) */
+.user-row,
+.progress-head,
+.media-title{
+  min-width: 0;
+}
+.user-row > * { min-width: 0; }
+
+/* 6) Media/preview: không bao giờ vượt card */
+.media-grid,
+.media-area,
+.pc-textarea,
+.cam-video{
+  max-width: 100%;
+}
+
+/* 7) Fix popover bị đẩy ra ngoài bên phải trên màn nhỏ */
+.popover{
+  right: 12px;
+  left: 12px;                  /* cho popover nằm trong card */
+  width: auto;
+  max-width: calc(100% - 24px);
+}
+.pop-camera{ width: 100%; }
+
+/* 8) Màn siêu nhỏ (<=360px): giảm spacing + nút auto-fit nhỏ hơn */
+@media (max-width: 360px){
+  .post-card{ padding: 14px; border-radius: 12px; }
+  .actions-grid{
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+  }
+  .pc-textarea{
+    padding-left: 38px;
+    min-height: 104px;
+  }
+}

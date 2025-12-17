@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FaUsers, FaImage, FaTimes } from "react-icons/fa";
 import { db, auth } from "../../components/firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import "../../style/GroupHeader.css";
 
 const uploadToCloudinary = async (file) => {
   const cloudName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
@@ -62,7 +63,6 @@ export default function GroupHeader({ group }) {
       setFile(null);
       if (inputRef.current) inputRef.current.value = "";
       setBannerPreview(url);
-      alert("Banner updated successfully!");
     } catch (e) {
       console.error(e);
       alert("Failed to update banner");
@@ -72,53 +72,44 @@ export default function GroupHeader({ group }) {
   };
 
   return (
-    <header className="bg-white/95 dark:bg-gray-800/90 border-b border-gray-200 dark:border-gray-700 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
-      <div className="relative">
+    <header className="ghd-header">
+      <div className="ghd-cover">
         {bannerPreview ? (
-          <img
-            src={bannerPreview}
-            alt="Group Banner"
-            className="w-full h-16 md:h-20 object-cover"
-          />
+          <img src={bannerPreview} alt="Group Banner" className="ghd-coverImg" />
         ) : (
-          <div className="w-full h-16 md:h-20 bg-gradient-to-r from-blue-500 to-purple-600" />
+          <div className="ghd-coverFallback" />
         )}
 
         {isOwner && (
-          <div className="absolute top-2 right-2 flex gap-2">
+          <div className="ghd-coverActions">
             {!editing ? (
-              <button
-                className="px-3 py-1 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700"
-                onClick={() => setEditing(true)}
-              >
-                Update Banner
+              <button className="ghd-btn ghd-btnPrimary" onClick={() => setEditing(true)}>
+                Update banner
               </button>
             ) : (
-              <div className="flex gap-2">
-                <label className="cursor-pointer px-3 py-1 rounded-md bg-green-600 text-white text-sm hover:bg-green-700 inline-flex items-center gap-2">
-                  <FaImage /> Choose
+              <div className="ghd-actionRow">
+                <label className="ghd-btn ghd-btnSoft ghd-btnIcon">
+                  <FaImage />
+                  <span>Choose</span>
                   <input ref={inputRef} type="file" hidden accept="image/*" onChange={onPickFile} />
                 </label>
+
                 {file && (
-                  <button
-                    className="px-3 py-1 rounded-md bg-red-600 text-white text-sm hover:bg-red-700"
-                    onClick={onRemovePreview}
-                    title="Remove selected"
-                  >
+                  <button className="ghd-btn ghd-btnDanger ghd-btnIcon" onClick={onRemovePreview} title="Remove selected">
                     <FaTimes />
                   </button>
                 )}
+
                 <button
-                  className={`px-3 py-1 rounded-md text-sm text-white ${
-                    canSave ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
-                  }`}
+                  className={`ghd-btn ${canSave ? "ghd-btnPrimary" : "ghd-btnDisabled"}`}
                   onClick={onSave}
                   disabled={!canSave}
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>
+
                 <button
-                  className="px-3 py-1 rounded-md bg-gray-500 text-white text-sm hover:bg-gray-600"
+                  className="ghd-btn ghd-btnGhost"
                   onClick={() => {
                     setEditing(false);
                     onRemovePreview();
@@ -130,22 +121,24 @@ export default function GroupHeader({ group }) {
             )}
           </div>
         )}
+
+        {/* gradient overlay để chữ nổi trên ảnh */}
+        <div className="ghd-coverShade" />
       </div>
 
-      {/* Info compact (cao ~ 48–52px) */}
-      <div className="px-2 sm:px-3 md:px-4 py-2 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-lg md:text-xl font-bold truncate">{group.name}</h1>
-          <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
-            {group.description}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-2">
-            <FaUsers /> {group.members?.length || 0} members
+      <div className="ghd-info">
+        <div className="ghd-infoLeft">
+          <h1 className="ghd-title" title={group.name}>{group.name}</h1>
+          <div className="ghd-desc" title={group.description}>{group.description}</div>
+          <div className="ghd-meta">
+            <FaUsers />
+            <span>{group.members?.length || 0} members</span>
           </div>
         </div>
-        <button className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 whitespace-nowrap">
-          + Invite friends
-        </button>
+
+        <div className="ghd-infoRight">
+          <button className="ghd-btn ghd-btnPrimary ghd-inviteBtn">+ Invite</button>
+        </div>
       </div>
     </header>
   );
