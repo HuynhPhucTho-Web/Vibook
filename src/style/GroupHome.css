@@ -1,0 +1,91 @@
+/* D:\Project-Company\Vibook\src\style\GroupHome.css */
+
+/* Dark/Light Mode Base Container */
+.group-home-container {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.group-home-container.light {
+    background-color: #f3f4f6; /* bg-gray-100 */
+    color: #111827; /* text-gray-900 */
+}
+
+.group-home-container.dark {
+    background-color: #111827; /* bg-gray-900 */
+    color: #f3f4f6; /* text-gray-100 */
+}
+
+/* Sticky Header Wrapper */
+.header-sticky-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+/* Sticky Tabs/Sidebar Wrapper */
+.sidebar-sticky-wrapper {
+    position: sticky;
+    z-index: 25;
+}
+
+/* Kích thước top cho Sidebar để dính ngay dưới Header */
+@media (min-width: 1024px) { /* lg */
+    .sidebar-sticky-wrapper { top: 76px; }
+}
+@media (min-width: 768px) and (max-width: 1023px) { /* md */
+    .sidebar-sticky-wrapper { top: 72px; }
+}
+@media (min-width: 640px) and (max-width: 767px) { /* sm */
+    .sidebar-sticky-wrapper { top: 68px; }
+}
+@media (max-width: 639px) { /* default/mobile */
+    .sidebar-sticky-wrapper { top: 64px; }
+}
+
+
+/* Main Content Area */
+.group-main-content {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1rem 1.25rem;
+    overflow-x: hidden;
+}
+
+/* Post Composer Margin */
+.post-composer-margin {
+    margin-bottom: 1rem;
+}
+
+/* Loading/Empty State */
+.loading-message, .empty-message {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+    text-align: center;
+}
+
+.loading-spinner {
+    display: inline-block;
+    height: 2rem;
+    width: 2rem;
+    border-width: 2px;
+    border-radius: 9999px;
+    border-bottom-color: #4f46e5; /* border-indigo-500 */
+    border-style: solid;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.empty-message {
+    color: #6b7280; /* text-gray-500 */
+}
+
+/* Post List */
+.post-list-space > * + * {
+    margin-top: 1rem; /* space-y-4 */
+}

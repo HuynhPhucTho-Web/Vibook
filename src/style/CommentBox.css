@@ -1,0 +1,49 @@
+/* D:\Project-Company\Vibook\src\style\CommentBox.css */
+
+.comment-box-wrapper {
+    margin-top: 0.75rem; /* mt-3 */
+}
+
+.comment-form {
+    display: flex;
+    gap: 0.5rem; /* gap-2 */
+}
+
+.comment-input {
+    flex: 1;
+    border: 1px solid #ccc;
+    border-radius: 0.75rem; /* rounded-xl */
+    padding: 0.25rem 0.75rem; /* px-3 py-1 */
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.comment-input:focus {
+    border-color: #3b82f6; /* focus:border-blue-500 */
+}
+
+.submit-button {
+    background-color: #e5e7eb; /* bg-gray-200 */
+    padding: 0 0.75rem; /* px-3 */
+    border-radius: 0.75rem; /* rounded-xl */
+    color: #1f2937; /* text-gray-800 */
+    transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+    background-color: #d1d5db; /* hover:bg-gray-300 */
+}
+
+.comments-list {
+    margin-top: 0.5rem; /* mt-2 */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* space-y-2 */
+}
+
+.comment-item {
+    background-color: #f3f4f6; /* bg-gray-100 */
+    padding: 0.5rem; /* p-2 */
+    border-radius: 0.75rem; /* rounded-xl */
+    color: #1f2937;
+}
