@@ -53,10 +53,11 @@
     .chat-container.chat-active {
         display: flex;
         width: 100%;
-        height: 100%;
+        height: calc(100vh - 60px); /* Ensure full height minus header */
         position: absolute;
-        top: 60px; /* Or header height */
+        top: 60px; /* Position below the app header */
         left: 0;
         z-index: 100;
+        padding-top: 0; /* Remove any extra padding that might hide the header */
     }
 }

@@ -1,72 +1,222 @@
-/* src/style/MessageInput.css */
+/* =========================
+   MessageInput – New Layout
+   Keep everything horizontal (desktop) + responsive (mobile)
+   ========================= */
+
 .message-input-container {
-  padding: 1rem;
-  border-top: 1px solid #dee2e6;
-  background-color: #ffffff;
-}
-.message-input-container.dark {
-  background-color: #2c2f33;
-  border-top: 1px solid #343a40;
+  --bg-color: #ffffff;
+  --border-color: #e9ecef;
+  --text-color: #212529;
+  --placeholder-color: #6c757d;
+  --chip-bg: #f8f9fa;
+
+  padding: 12px 14px;
+  background: var(--bg-color);
+  border-top: 1px solid var(--border-color);
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
+.message-input-container.dark {
+  --bg-color: #1a1a1a;
+  --border-color: #343a40;
+  --text-color: #ffffff;
+  --placeholder-color: #adb5bd;
+  --chip-bg: #2c2f33;
+}
+
+/* ===== Reply preview (giữ logic cũ, chỉ làm gọn đẹp hơn) ===== */
+.reply-preview {
+  border-left: 4px solid #0d6efd;
+  background: var(--chip-bg);
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.reply-preview strong { color: #0d6efd; }
+.reply-preview p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--placeholder-color);
+}
+
+/* ===== Attached preview ===== */
+.attached-files-preview {
+  padding: 0;
+  margin-bottom: 10px;
+}
+
+.attached-file-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.attached-file-item img,
+.attached-file-item video {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* ===== FORM: quan trọng nhất để không rớt nút gửi ===== */
 .message-input-form {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
+/* Wrapper chứa input + icon actions */
 .message-input-wrapper {
-  flex-grow: 1;
-  position: relative;
+  flex: 1 1 auto;
+  min-width: 0; /* cực quan trọng để không bị tràn làm rớt nút gửi */
   display: flex;
   align-items: center;
-  background-color: #f1f3f5;
-  border-radius: 9999px;
-  padding: 0 0.5rem;
-}
-.message-input-wrapper.dark {
-  background-color: #3a3f44;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-color);
+  box-sizing: border-box;
 }
 
+/* Input field */
 .message-input-field {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   border: none;
-  background-color: transparent;
-  padding: 0.75rem 1rem;
   outline: none;
-  font-size: 0.9rem;
-}
-.message-input-field.dark {
-    color: #f8f9fa;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 14px;
+  padding: 6px 6px;
 }
 
+.message-input-field::placeholder { color: var(--placeholder-color); }
+
+/* Focus state: highlight wrapper (đẹp hơn focus input riêng) */
+.message-input-wrapper:focus-within {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13,110,253,.20);
+}
+
+/* Actions icon group */
 .message-input-actions {
-    display: flex;
-    gap: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
 }
 
+/* Buttons icon trong actions (emoji/attach/mic) */
 .message-input-actions .btn {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d;
-}
-.message-input-actions .btn:hover {
-    color: #212529;
-    background-color: #e9ecef;
-}
-.message-input-actions.dark .btn {
-    color: #adb5bd;
-}
-.message-input-actions.dark .btn:hover {
-    color: #f8f9fa;
-    background-color: #495057;
+  border-radius: 999px;
+  padding: 6px;
+  line-height: 1;
 }
 
+.message-input-actions .btn:hover {
+  background: rgba(0,0,0,.06);
+}
+
+.message-input-container.dark .message-input-actions .btn:hover {
+  background: rgba(255,255,255,.08);
+}
+
+/* Recording status – không làm vỡ layout */
+.recording-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border-color);
+}
+
+.recording-timer {
+  font-weight: 700;
+  color: var(--text-color);
+  font-size: 13px;
+}
+
+/* Send button: luôn đứng cùng hàng */
 .message-send-btn {
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  box-shadow: 0 8px 18px rgba(13,110,253,.18);
+  border: none;
+}
+
+.message-send-btn:disabled {
+  opacity: .55;
+  box-shadow: none;
+}
+
+/* ===== Emoji picker: tránh bị lệch/che ===== */
+.emoji-picker-container {
+  position: absolute;
+  bottom: 64px;
+  right: 12px;
+  z-index: 1000;
+}
+
+/* Bạn đang render Picker bằng: position-absolute bottom-100 start-0 ...
+   -> ép nó nằm ngay trên cụm icon, không bị tràn */
+.message-input-actions .position-absolute.bottom-100.start-0.mb-2 {
+  left: auto !important;
+  right: 0 !important;
+  bottom: calc(100% + 10px) !important;
+}
+
+/* ===== Mobile responsive: vẫn ngang, chỉ thu gọn ===== */
+@media (max-width: 768px) {
+  .message-input-container { padding: 10px; }
+
+  .message-input-form { gap: 8px; }
+
+  .message-input-wrapper {
+    padding: 7px 8px;
+  }
+
+  .message-input-field { font-size: 14px; padding: 6px 4px; }
+
+  .message-input-actions { gap: 4px; }
+
+  .message-input-actions .btn { padding: 6px; }
+
+  .message-send-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Reply preview gọn hơn */
+  .reply-preview { padding: 8px 10px; border-radius: 10px; }
+  .reply-preview p { font-size: 0.82rem; }
+}
+
+/* Ultra small (<=360px): icon co lại để KHÔNG rớt xuống hàng */
+@media (max-width: 360px) {
+  .message-input-actions .btn { padding: 5px; }
+  .message-send-btn { width: 40px; height: 40px; }
 }

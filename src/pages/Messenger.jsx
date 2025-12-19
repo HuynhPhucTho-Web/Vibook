@@ -11,6 +11,7 @@ import {
   where,
   doc,
   getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -34,6 +35,10 @@ const Messenger = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [replyMessage, setReplyMessage] = useState(null);
+  const [chatTheme, setChatTheme] = useState({ backgroundColor: "#ffffff", messageColor: "#0d6efd" });
+  const [showRecallModal, setShowRecallModal] = useState(false);
+  const [recallMessageId, setRecallMessageId] = useState(null);
 
   const unsubscribeRefs = useRef({});
   const lastChatId = useRef(null);
@@ -166,11 +171,28 @@ const Messenger = () => {
 
     unsubscribeRefs.current.messages = onSnapshot(
       messagesQuery,
-      (snapshot) => {
+      async (snapshot) => {
         const messageList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+
+        // Mark messages as read if current user is receiver
+        const unreadMessages = messageList.filter(msg =>
+          msg.senderId !== currentUser.uid &&
+          (!msg.readBy || !msg.readBy.includes(currentUser.uid))
+        );
+
+        if (unreadMessages.length > 0) {
+          const chatId = createChatId(currentUser.uid, selectedUser.uid);
+          const updatePromises = unreadMessages.map(msg =>
+            updateDoc(doc(db, "Messages", chatId, "messages", msg.id), {
+              readBy: [...(msg.readBy || []), currentUser.uid]
+            })
+          );
+          await Promise.all(updatePromises);
+        }
+
         setMessages(messageList);
       },
       (error) => {
@@ -189,21 +211,46 @@ const Messenger = () => {
     if (!content.trim() && mediaFiles.length === 0) return;
 
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
+    const tempMessageId = `temp-${Date.now()}`;
+    const optimisticMessage = {
+      id: tempMessageId,
+      senderId: currentUser.uid,
+      receiverId: selectedUser.uid,
+      content: content,
+      mediaFiles: mediaFiles,
+      replyTo: replyMessage ? replyMessage.id : null,
+      createdAt: Date.now(),
+      timestamp: { seconds: Date.now() / 1000 },
+      isOptimistic: true, // Flag to indicate this is a temporary message
+    };
+
+    // Optimistically add the message to the UI
+    setMessages(prev => [...prev, optimisticMessage]);
 
     try {
-      await addDoc(collection(db, "Messages", chatId, "messages"), {
+      const docRef = await addDoc(collection(db, "Messages", chatId, "messages"), {
         senderId: currentUser.uid,
         receiverId: selectedUser.uid,
         content: content,
-        mediaFiles: mediaFiles, // Include mediaFiles here
+        mediaFiles: mediaFiles,
+        replyTo: replyMessage ? replyMessage.id : null,
         createdAt: Date.now(),
         timestamp: serverTimestamp(),
       });
+
+      // Replace the optimistic message with the real one
+      setMessages(prev => prev.map(msg =>
+        msg.id === tempMessageId ? { ...optimisticMessage, id: docRef.id, isOptimistic: false } : msg
+      ));
+
+      setReplyMessage(null); // Clear reply after sending
     } catch (error) {
       console.error(`Error sending message:`, error);
+      // Remove the optimistic message on failure
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessageId));
       toast.error(t("couldNotSendMessage"), { position: "top-center" });
     }
-  }, [selectedUser, currentUser, createChatId, t]); // Removed messageText from dependencies as it's passed as content
+  }, [selectedUser, currentUser, createChatId, t, replyMessage]);
 
   const handleUserSelect = useCallback((user) => {
     if (selectedUser?.uid === user.uid) return;
@@ -219,6 +266,120 @@ const Messenger = () => {
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [users, searchTerm]);
+
+  const handleReaction = useCallback(async (messageId) => {
+    const chatId = createChatId(currentUser.uid, selectedUser.uid);
+    const messageRef = doc(db, "Messages", chatId, "messages", messageId);
+
+    try {
+      const messageSnap = await getDoc(messageRef);
+      if (messageSnap.exists()) {
+        const messageData = messageSnap.data();
+        const reactions = messageData.reactions || [];
+        const existingReactionIndex = reactions.findIndex(r => r.userId === currentUser.uid);
+
+        if (existingReactionIndex >= 0) {
+          // Toggle off if already reacted
+          reactions.splice(existingReactionIndex, 1);
+        } else {
+          reactions.push({ userId: currentUser.uid, type: 'heart' });
+        }
+
+        await updateDoc(messageRef, { reactions });
+      }
+    } catch (error) {
+      console.error("Error adding reaction:", error);
+      toast.error(t("couldNotAddReaction"), { position: "top-center" });
+    }
+  }, [currentUser, selectedUser, createChatId, t]);
+
+  const handleReply = useCallback((message) => {
+    setReplyMessage(message);
+  }, []);
+
+  const handleApplyTheme = useCallback((newTheme) => {
+    setChatTheme(newTheme);
+  }, []);
+
+  const handleRecallMessage = useCallback((messageId) => {
+    // Show confirmation modal
+    setRecallMessageId(messageId);
+    setShowRecallModal(true);
+  }, []);
+
+  const confirmRecallMessage = useCallback(async () => {
+    if (!recallMessageId) return;
+
+    const messageId = recallMessageId;
+    setShowRecallModal(false);
+    setRecallMessageId(null);
+
+    const chatId = createChatId(currentUser.uid, selectedUser.uid);
+    const messageRef = doc(db, "Messages", chatId, "messages", messageId);
+
+    // Optimistically update the UI first
+    setMessages(prev => prev.map(msg =>
+      msg.id === messageId
+        ? { ...msg, content: "This message was recalled", isRecalled: true, recalledAt: Date.now() }
+        : msg
+    ));
+
+    try {
+      const messageSnap = await getDoc(messageRef);
+      if (messageSnap.exists()) {
+        const messageData = messageSnap.data();
+
+        // Check if message is from current user
+        if (messageData.senderId !== currentUser.uid) {
+          // Revert optimistic update
+          setMessages(prev => prev.map(msg =>
+            msg.id === messageId
+              ? { ...msg, content: messageData.content, isRecalled: false, recalledAt: null }
+              : msg
+          ));
+          toast.error("You can only recall your own messages.");
+          return;
+        }
+
+        // Check read status and time
+        const isRead = messageData.readBy && messageData.readBy.includes(selectedUser.uid);
+        const messageTime = messageData.createdAt;
+        const currentTime = Date.now();
+        const timeDiff = currentTime - messageTime;
+
+        if (isRead && timeDiff > 3 * 60 * 1000) { // 3 minutes
+          // Revert optimistic update
+          setMessages(prev => prev.map(msg =>
+            msg.id === messageId
+              ? { ...msg, content: messageData.content, isRecalled: false, recalledAt: null }
+              : msg
+          ));
+          toast.error("You can only recall messages within 3 minutes after they are read.");
+          return;
+        }
+
+        // Update Firestore
+        await updateDoc(messageRef, {
+          content: "This message was recalled",
+          isRecalled: true,
+          recalledAt: serverTimestamp()
+        });
+
+        toast.success("Message recalled successfully.");
+      }
+    } catch (error) {
+      console.error("Error recalling message:", error);
+      // Revert optimistic update on error
+      setMessages(prev => prev.map(msg => {
+        if (msg.id === messageId) {
+          // Try to get original content from Firestore or revert to previous state
+          return { ...msg, content: msg.originalContent || msg.content, isRecalled: false, recalledAt: null };
+        }
+        return msg;
+      }));
+      toast.error("Failed to recall message.");
+    }
+  }, [recallMessageId, currentUser, selectedUser, createChatId]);
 
   if (isLoading) {
     return (
@@ -249,24 +410,63 @@ const Messenger = () => {
         <div className={`chat-container ${isChatActive ? 'chat-active' : ''}`}>
             {selectedUser ? (
                 <>
-                    <ChatHeader user={selectedUser} theme={theme} />
-                    <MessageList 
+                    <ChatHeader user={selectedUser} theme={theme} onBack={() => setSelectedUser(null)} onApplyTheme={handleApplyTheme} initialTheme={chatTheme} />
+                    <MessageList
                         messages={messages}
                         currentUser={currentUser}
                         selectedUser={selectedUser}
                         theme={theme}
+                        chatTheme={chatTheme}
+                        onReaction={handleReaction}
+                        onReply={handleReply}
+                        onRecallMessage={handleRecallMessage}
                     />
-                    <MessageInput 
+                    <MessageInput
                         messageText={messageText}
                         onMessageChange={setMessageText}
                         onSendMessage={handleSendMessage}
+                        replyMessage={replyMessage}
+                        onCancelReply={() => setReplyMessage(null)}
                         theme={theme}
+                        currentUser={currentUser}
+                        selectedUser={selectedUser}
                     />
                 </>
             ) : (
                 <WelcomeScreen theme={theme} />
             )}
         </div>
+
+        {/* Recall Confirmation Modal */}
+        {showRecallModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                Thu hồi tin nhắn
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Bạn có muốn thu hồi tin nhắn này không?
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowRecallModal(false);
+                    setRecallMessageId(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmRecallMessage}
+                  className="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                >
+                  Thu hồi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

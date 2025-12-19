@@ -14,9 +14,52 @@
 
 .chat-header-info {
   display: flex;
-  align-items: center;
   gap: 0.75rem;
+
 }
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* NEW: gom back + avatar + info */
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Back button */
+.chat-back-btn {
+  color: #0d6efd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Info */
+.chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.chat-header-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-header-status {
+  font-size: 0.8rem;
+}
+
 
 .chat-header-name {
   font-weight: 600;
@@ -49,8 +92,153 @@
 @media (max-width: 768px) {
   .chat-header {
     padding: 0.5rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin-top: 30px;
   }
   .chat-header-name {
     font-size: 1rem;
   }
+
+  /* Modal positioning for mobile */
+  .modal-dialog-centered {
+    margin-top: 80px; /* Move modal down to avoid header */
+    margin-bottom: 0;
+  }
+
+  .modal-content {
+    margin: 0 1rem;
+    border-radius: 12px;
+  }
+}
+
+/* overlay */
+.chat-settings-overlay{
+  background: rgba(0,0,0,.5);
+}
+
+/* modal body layout */
+.chat-settings-modal .chat-settings-body{
+  position: relative;
+}
+
+/* panel area */
+.settings-panel{
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: rgba(255,255,255,.9);
+}
+
+.modal-content.dark .settings-panel{
+  background: rgba(44,47,51,.9);
+  border-color: rgba(255,255,255,.10);
+}
+
+.settings-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.settings-panel-title{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.settings-panel-actions{
+  display:flex;
+  gap: 8px;
+}
+
+.settings-panel-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 576px){
+  .settings-panel-grid{ grid-template-columns: 1fr; }
+}
+
+.settings-panel-item{
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.06);
+  background: rgba(248,249,250,.8);
+}
+
+.modal-content.dark .settings-panel-item{
+  background: rgba(26,26,26,.7);
+  border-color: rgba(255,255,255,.08);
+}
+
+.settings-label{
+  font-size: 12px;
+  font-weight: 700;
+  opacity: .85;
+  margin-bottom: 6px;
+}
+
+.settings-row{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.color-input{
+  width: 44px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.color-value{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  opacity: .9;
+}
+
+/* preview */
+.settings-preview{
+  margin-top: 12px;
+  border-radius: 14px;
+  padding: 12px;
+  display:flex;
+  gap: 10px;
+  align-items:flex-end;
+  justify-content:flex-end;
+  min-height: 80px;
+}
+
+.settings-preview-bubble{
+  padding: 8px 10px;
+  border-radius: 16px;
+  max-width: 70%;
+  font-weight: 700;
+}
+
+.settings-preview-bubble.ghost{
+  background: rgba(255,255,255,.95);
+  border: 1px solid rgba(0,0,0,.08);
+  color: #111827;
+}
+
+.modal-content.dark .settings-preview-bubble.ghost{
+  background: rgba(17,24,39,.95);
+  border-color: rgba(255,255,255,.10);
+  color: #e5e7eb;
+}
+
+/* when panel open -> push list down (spacing already by margin-bottom) */
+.settings-list.pushed{
+  margin-top: 2px;
 }

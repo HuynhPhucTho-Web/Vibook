@@ -6,7 +6,7 @@ import "../../style/MessageInput.css";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { toast } from "react-toastify"; // Ensure toast is imported
 
-const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) => {
+const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessage, onCancelReply, theme, currentUser, selectedUser }) => {
     const { t } = useContext(LanguageContext);
     const isLight = theme === "light";
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -332,6 +332,19 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, theme }) =>
 
     return (
         <div className={`message-input-container ${isLight ? 'light' : 'dark'}`}>
+            {replyMessage && (
+                <div className="reply-preview mb-2 p-2 border rounded bg-light">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Replying to {replyMessage.senderId === (currentUser?.uid) ? 'You' : (selectedUser?.firstName || 'Unknown')}:</strong>
+                            <p className="mb-0">{replyMessage.content}</p>
+                        </div>
+                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onCancelReply}>
+                            <FaTimes />
+                        </button>
+                    </div>
+                </div>
+            )}
             {(attachedFiles.length > 0 || recordedBlob) && (
                 <div className="attached-files-preview mb-3 px-4">
                     <div className="d-flex flex-wrap gap-2">
