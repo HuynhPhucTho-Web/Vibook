@@ -1,10 +1,7 @@
-# TODO: Fix Errors in Pages
+# TODO: Synchronize UI Theme Across Store Pages
 
-## Tasks
-- [x] Resolve merge conflict in src/components/friends/FriendRequests.jsx
-- [x] Resolve merge conflict in src/components/friends/FriendsList.jsx
-- [x] Remove unused imports in src/pages/friends/index.jsx
-- [x] Investigate and fix 'Icon' unused variable in src/components/Sidebar.jsx (confirmed false positive)
-- [x] Add missing import for Friends in src/App.jsx
-- [x] Verify all errors are fixed
-co
+- [x] Update Store.jsx to use ThemeContext for backgrounds, text, and inputs
+- [x] Update SellerPage.jsx to use ThemeContext for backgrounds, text, and inputs
+- [x] Update ProductPage.jsx to use ThemeContext for backgrounds, text, and inputs
+- [x] Update OrdersPage.jsx to use ThemeContext for backgrounds, text, and inputs
+- [x] Update CartPage.jsx to use ThemeContext for backgrounds, text, and inputs

@@ -1,0 +1,27 @@
+/* ProductPage.css */
+
+/* Hiệu ứng loading */
+.loading-spinner {
+    @apply animate-pulse text-xl font-semibold text-gray-400;
+}
+
+/* Tùy chỉnh hover ảnh */
+.product-main-image {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Nút bấm Responsive cho mobile */
+@media (max-width: 640px) {
+    .purchase-section {
+        @apply fixed bottom-0 left-0 right-0 bg-white p-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50 flex-row border-t;
+    }
+}
+
+/* Scrollbar đẹp cho mô tả dài */
+.product-description::-webkit-scrollbar {
+    width: 6px;
+}
+.product-description::-webkit-scrollbar-thumb {
+    background-color: #e5e7eb;
+    border-radius: 10px;
+}

@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  FaHome, FaUser, FaUserPlus, FaUsers, FaCalendarAlt, FaVideo, FaGamepad,
+  FaHome, FaUser, FaUserPlus, FaUsers, FaCalendarAlt, FaVideo, FaGamepad, FaStore,
+  FaShoppingBag, FaClipboardList, FaStoreAlt,
   FaSignOutAlt, FaBars, FaTimes
 } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -26,6 +27,7 @@ const MENU = [
   { path: "/events",     icon: FaCalendarAlt, labelKey: "events" },
   { path: "/story",      icon: FaVideo, labelKey: "story" },
   { path: "/playgame",   icon: FaGamepad, labelKey: "playGame" },
+  { path: "/market",     icon: FaShoppingBag, labelKey: "market" },
 ];
 
 export default function Sidebar() {

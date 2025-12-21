@@ -24,7 +24,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import GroupPage from "./pages/GroupPage";
 import { auth } from "./components/firebase";
-import { ThemeProvider } from "./context/ThemeProvider";
+import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import GroupMembers from "./pages/group/GroupMembers";
 import GroupMedia from "./pages/group/GroupMedia";
@@ -33,7 +33,15 @@ import GroupInfo from "./pages/group/GroupInfo";
 import GroupHome from "./pages/group/GroupHome";
 import PostDetail from "./pages/PostDetail";
 import UserDetailPage from "./pages/UserDetailPage";
-import Friends from "./pages/friends";
+import Friends from "./pages/friends/FriendPage";
+import Store from "./pages/store/Store";
+import ProductPage from "./pages/store/ProductPage";
+import CartPage from "./pages/store/CartPage";
+import CheckoutPage from "./pages/store/CheckoutPage";
+import OrdersPage from "./pages/store/OrdersPage";
+import SellerPage from "./pages/store/SellerPage";
+import ManageProducts from "./components/shop/ManageProducts";
+import { CartProvider } from "./context/CartContext";
 
 // Layout for authentication pages
 const AuthLayout = () => (
@@ -100,7 +108,8 @@ function App() {
   return (
     <LanguageProvider>
       <ThemeProvider>
-        <Router>
+        <CartProvider>
+          <Router>
           <Routes>
             {/* Auth Routes */}
             <Route element={<AuthLayout />}>
@@ -122,6 +131,13 @@ function App() {
               <Route path="/friends" element={user ? <Friends /> : <Navigate to="/login" />} />
               <Route path="/story" element={user ? <Storys /> : <Navigate to="/login" />} />
               <Route path="/playgame" element={user ? <PlayGame /> : <Navigate to="/login" />} />
+              <Route path="/market" element={user ? <Store /> : <Navigate to="/login" />} />
+              <Route path="/product/:id" element={user ? <ProductPage /> : <Navigate to="/login" />} />
+              <Route path="/cart" element={user ? <CartPage /> : <Navigate to="/login" />} />
+              <Route path="/checkout" element={user ? <CheckoutPage /> : <Navigate to="/login" />} />
+              <Route path="/my-orders" element={user ? <OrdersPage /> : <Navigate to="/login" />} />
+              <Route path="/seller-dashboard" element={user ? <SellerPage /> : <Navigate to="/login" />} />
+              <Route path="/manage-products" element={user ? <ManageProducts /> : <Navigate to="/login" />} />
               <Route path="/post/:postId" element={user ? <PostDetail /> : <Navigate to="/login" />} />
               {/* Group Page with nested routes */}
 
@@ -152,6 +168,7 @@ function App() {
             bodyClassName="custom-toast-body"
           />
         </Router>
+        </CartProvider>
       </ThemeProvider>
     </LanguageProvider>
   );

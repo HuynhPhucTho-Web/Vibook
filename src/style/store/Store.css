@@ -1,0 +1,33 @@
+/* Store.css */
+
+.store-container {
+    scroll-behavior: smooth;
+}
+
+/* Hiệu ứng Line Clamp để mô tả không bị quá dài làm lệch Card */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-clamp: 2;
+}
+
+/* Hiệu ứng đổ bóng đổ mượt cho Card sản phẩm */
+.product-card-shadow {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+/* Custom Scrollbar cho Sidebar */
+aside::-webkit-scrollbar {
+    width: 4px;
+}
+aside::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 10px;
+}
+
+/* Animation khi Hover nút */
+button, a {
+    transition: all 0.2s ease-in-out;
+}
