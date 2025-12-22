@@ -8,7 +8,6 @@ const getActionButtonClass = (isLight, isActive) => {
     "font-medium rounded-lg transition-colors duration-150 select-none";
 
   if (isActive) {
-    // Active: chỉ đổi màu icon + chữ, không nền
     return `${base} text-blue-500 font-semibold`;
   }
 
@@ -42,7 +41,7 @@ const PostActions = ({
     setShowReactions(true);
   };
 
-  const closeReactionsDelayed = (delay = 220) => {
+  const closeReactionsDelayed = (delay = 350) => { // Tăng delay lên 350ms để mượt hơn
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     hoverTimerRef.current = setTimeout(() => {
       setShowReactions(false);
@@ -69,14 +68,12 @@ const PostActions = ({
   const barBorder = isLight ? "border-gray-200" : "border-zinc-800";
 
   return (
-    <div
-      className={`post-item-actions grid grid-cols-3 border-t ${barBorder} pt-1`}
-    >
-      {/* LIKE */}
+    <div className={`post-item-actions grid grid-cols-3 border-t ${barBorder} pt-1`}>
+      {/* LIKE SECTION */}
       <div
         className="relative col-span-1 flex items-center justify-center"
         onMouseEnter={openReactions}
-        onMouseLeave={() => closeReactionsDelayed(220)}
+        onMouseLeave={() => closeReactionsDelayed(350)}
       >
         <button
           onClick={() => onReaction(post.id, "Like")}
@@ -92,15 +89,21 @@ const PostActions = ({
         {/* REACTION POPUP */}
         {showReactions && (
           <div
-            onMouseEnter={openReactions}
-            onMouseLeave={() => closeReactionsDelayed(220)}
-            className={`absolute -top-14 left-1/2 -translate-x-1/2 z-30 
-              flex items-center gap-2 px-3 py-2 rounded-full border shadow-[0_12px_28px_rgba(0,0,0,0.25)]
+            onMouseEnter={openReactions} // Quan trọng: giữ popup khi di chuột vào chính nó
+            onMouseLeave={() => closeReactionsDelayed(350)}
+            className={`reaction-pop absolute z-[100] flex items-center gap-1 sm:gap-2 px-2 py-2 rounded-full border shadow-xl
               ${isLight ? "bg-white border-gray-200" : "bg-zinc-900 border-zinc-700"}`}
+            style={{
+              bottom: "calc(100% + 8px)", 
+              left: "0", // Căn lề trái để không bị tràn màn hình mobile
+              width: "max-content", 
+              minWidth: "260px", 
+              animation: "popUp 0.2s ease-out"
+            }}
           >
-            {/* mũi tên nhỏ */}
+            {/* Mũi tên nhỏ - pointer-events-none để không gây nháy chuột */}
             <div
-              className={`absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -mt-1 rotate-45 
+              className={`absolute left-6 top-full h-3 w-3 rotate-45 -mt-1.5 pointer-events-none
               ${isLight ? "bg-white border-b border-r border-gray-200" : "bg-zinc-900 border-b border-r border-zinc-700"}`}
             />
 
@@ -114,9 +117,8 @@ const PostActions = ({
                   setShowReactions(false);
                 }}
                 disabled={isReacting}
-                aria-label={key}
-                className="h-9 w-9 flex items-center justify-center rounded-full text-2xl
-                           hover:scale-125 transition-transform duration-150"
+                className="h-10 w-10 flex items-center justify-center rounded-full text-2xl
+                           hover:scale-125 transition-transform duration-150 active:scale-90"
               >
                 {icon}
               </button>
@@ -153,9 +155,7 @@ const PostActions = ({
 
 const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
-
-  const baseItem =
-    "w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors";
+  const baseItem = "w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors";
 
   return (
     <div className="relative col-span-1 flex items-center justify-center">
@@ -169,61 +169,28 @@ const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
 
       {showShareMenu && (
         <>
-          <div
-            className="fixed inset-0 z-20"
-            onClick={() => setShowShareMenu(false)}
-          />
-
+          <div className="fixed inset-0 z-20" onClick={() => setShowShareMenu(false)} />
           <div
             className={`absolute right-0 bottom-full mb-2 w-60 max-w-[calc(100vw-2rem)]
               rounded-2xl border shadow-[0_12px_28px_rgba(0,0,0,0.25)] z-30 py-2
               ${isLight ? "bg-white border-gray-100" : "bg-zinc-900 border-zinc-700"}`}
           >
-            <button
-              onClick={() => onShare("copy")}
-              className={`${baseItem} ${
-                isLight
-                  ? "hover:bg-gray-50 text-gray-700"
-                  : "hover:bg-zinc-800 text-gray-100"
-              }`}
-            >
+            <button onClick={() => onShare("copy")} className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}>
               <FaLink className="text-sm" />
               <span>Sao chép link</span>
             </button>
-
-            <button
-              onClick={() => onShare("copyWithContent")}
-              className={`${baseItem} ${
-                isLight
-                  ? "hover:bg-gray-50 text-gray-700"
-                  : "hover:bg-zinc-800 text-gray-100"
-              }`}
-            >
+            <button onClick={() => onShare("copyWithContent")} className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}>
               <FaCopy className="text-sm" />
               <span>Copy nội dung</span>
             </button>
-
             {navigator.share && (
-              <button
-                onClick={() => onShare("native")}
-                className={`${baseItem} ${
-                  isLight
-                    ? "hover:bg-gray-50 text-gray-700"
-                    : "hover:bg-zinc-800 text-gray-100"
-                }`}
-              >
+              <button onClick={() => onShare("native")} className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}>
                 <FaShare className="text-sm" />
                 <span>Chia sẻ hệ thống</span>
               </button>
             )}
-
-            <button
-              onClick={onRepostToTimeline}
-              className={`${baseItem} text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20`}
-            >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-500">
-                @
-              </span>
+            <button onClick={onRepostToTimeline} className={`${baseItem} text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20`}>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-500">@</span>
               <span>Chia sẻ lên trang cá nhân</span>
             </button>
           </div>

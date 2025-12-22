@@ -286,36 +286,43 @@ export default function GroupPostItem({
 
   useEffect(() => {
     const recalc = () => {
-      if (showMenu && btnRef.current) {
-        const pos = placeFloating(btnRef.current, isMobile ? Math.min(280, window.innerWidth - 24) : 220);
-        setMenuStyle({
-          position: "fixed",
-          top: pos.top,
-          left: pos.left,
-          zIndex: 60,
-          width: isMobile ? `min(280px, calc(100vw - 24px))` : "220px",
-          transition: "all 0.2s ease",
-        });
-      }
-      if (showShare && shareBtnRef.current) {
-        const pos = placeFloating(shareBtnRef.current, isMobile ? Math.min(280, window.innerWidth - 24) : 240);
-        setShareStyle({
-          position: "fixed",
-          top: pos.top,
-          left: pos.left,
-          zIndex: 60,
-          width: isMobile ? `min(280px, calc(100vw - 24px))` : "240px",
-          transition: "all 0.2s ease",
-        });
-      }
+      // Sử dụng requestAnimationFrame để mượt mà hơn khi scroll
+      requestAnimationFrame(() => {
+        if (showMenu && btnRef.current) {
+          const pos = placeFloating(btnRef.current, isMobile ? Math.min(280, window.innerWidth - 24) : 220);
+          setMenuStyle(prev => ({
+            ...prev,
+            position: "fixed",
+            top: pos.top,
+            left: pos.left,
+            zIndex: 60,
+            width: isMobile ? `min(280px, calc(100vw - 24px))` : "220px",
+          }));
+        }
+        if (showShare && shareBtnRef.current) {
+          const pos = placeFloating(shareBtnRef.current, isMobile ? Math.min(280, window.innerWidth - 24) : 240);
+          setShareStyle(prev => ({
+            ...prev,
+            position: "fixed",
+            top: pos.top,
+            left: pos.left,
+            zIndex: 60,
+            width: isMobile ? `min(280px, calc(100vw - 24px))` : "240px",
+          }));
+        }
+      });
     };
 
-    recalc();
-    window.addEventListener("resize", recalc);
-    window.addEventListener("scroll", recalc, true);
+    if (showMenu || showShare) {
+      recalc();
+      // Lắng nghe scroll trên toàn bộ window và các phần tử cha
+      window.addEventListener("scroll", recalc, true);
+      window.addEventListener("resize", recalc);
+    }
+
     return () => {
-      window.removeEventListener("resize", recalc);
       window.removeEventListener("scroll", recalc, true);
+      window.removeEventListener("resize", recalc);
     };
   }, [showMenu, showShare, isMobile]);
 
@@ -376,11 +383,10 @@ export default function GroupPostItem({
 
   return (
     <article
-      className={`rounded-3xl mb-4 overflow-hidden transition-all w-full max-w-full ${isLight
-        ? "bg-white border border-gray-100 shadow-sm hover:shadow-md"
-        : "bg-zinc-900 border border-zinc-800 shadow-lg"
+      className={`rounded-3xl mb-4 transition-all w-full max-w-full ${isLight ? "bg-white border border-gray-100 shadow-sm" : "bg-zinc-900 border border-zinc-800 shadow-lg"
         }`}
-      style={{ boxSizing: "border-box" }}
+      // Thay overflow-hidden bằng overflow-visible để popup không bị cắt
+      style={{ boxSizing: "border-box", overflow: "visible" }}
     >
       {/* Header */}
       <div className="p-4 flex items-center justify-between gap-3" style={{ minWidth: 0 }}>
@@ -643,19 +649,25 @@ export default function GroupPostItem({
 
           {showReactions && (
             <div
-              className={`reaction-pop absolute flex items-center gap-2 px-3 py-2 rounded-full shadow-xl z-30 ${isLight
-                  ? "bg-white border border-gray-200"
-                  : "bg-zinc-800 border border-zinc-700"
+              className={`reaction-pop absolute flex items-center gap-2 px-3 py-2 rounded-full shadow-2xl z-50 ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"
                 }`}
               style={{
-                bottom: "calc(100% + 8px)",
-                left: "8px",
-                width: "min(240px, calc(100vw - 16px))",
-                overflowX: "auto",
-                WebkitOverflowScrolling: "touch",
+                bottom: "calc(100% + 10px)",
+                // Thay đổi ở đây:
+                left: isMobile ? "0" : "50%",
+                transform: isMobile ? "none" : "translateX(-50%)",
+
+                // Quan trọng để không bị cuộn:
+                width: "max-content",
+                minWidth: "max-content",
+                whiteSpace: "nowrap",
+                display: "flex",
+                flexDirection: "row",
+
+                // Giới hạn để không lệch khỏi màn hình điện thoại
+                maxWidth: isMobile ? "90vw" : "none",
+                overflow: "visible"
               }}
-
-
               onMouseEnter={!isMobile ? openReactions : undefined}
               onMouseLeave={!isMobile ? () => closeReactionsDelayed(160) : undefined}
             >
@@ -668,9 +680,9 @@ export default function GroupPostItem({
                     handleReaction(key);
                     setShowReactions(false);
                   }}
-                  className="text-2xl hover:scale-125 transition-transform"
+                  // flex-shrink-0 để icon không bao giờ bị bóp nhỏ
+                  className="text-2xl sm:text-3xl hover:scale-125 transition-transform duration-200 flex-shrink-0"
                   disabled={isReacting}
-                  aria-label={key}
                 >
                   {icon}
                 </button>

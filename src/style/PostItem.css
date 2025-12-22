@@ -74,6 +74,17 @@
     transition: all 150ms;
 }
 
+/* Tạo một vùng đệm phía dưới popup để chuột không bị lọt ra ngoài khi di chuyển */
+.reaction-pop-container::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 20px; /* Khoảng cách đệm giữa nút và popup */
+  background: transparent;
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .post-item-container {

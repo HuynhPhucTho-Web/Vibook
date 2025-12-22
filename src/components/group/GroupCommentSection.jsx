@@ -32,20 +32,7 @@ const ReactionPicker = ({ isOpen, onClose, onSelect, targetRef }) => {
     const { theme } = useContext(ThemeContext);
     const isLight = theme === "light";
     const pickerRef = useRef(null);
-    const [style, setStyle] = useState(null);
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (
-                pickerRef.current && !pickerRef.current.contains(e.target) &&
-                targetRef.current && !targetRef.current.contains(e.target)
-            ) {
-                onClose();
-            }
-        };
-        if (isOpen) document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isOpen, onClose, targetRef]);
+    const [style, setStyle] = useState({});
 
     useEffect(() => {
         if (!isOpen) return;
@@ -55,67 +42,55 @@ const ReactionPicker = ({ isOpen, onClose, onSelect, targetRef }) => {
             if (!el) return;
 
             const r = el.getBoundingClientRect();
-            const vw = window.innerWidth || 375;
-            const vh = window.innerHeight || 667;
-            const padding = 8;
+            const vw = window.innerWidth;
+            const padding = 12;
 
-            // popup width ước lượng (đủ cho 6 icon + padding) - làm nhỏ gọn hơn cho mobile
-            const W = Math.min(360, vw - padding * 2);
-
-            // neo theo nút like, canh trái
+            // Để trình duyệt tự tính chiều rộng dựa trên nội dung (flex)
+            // Chúng ta chỉ cần tính toán vị trí Left/Top
             let left = r.left;
-            // nếu gần mép phải -> kéo vào
-            left = Math.max(padding, Math.min(left, vw - W - padding));
 
-            // ưu tiên đặt phía trên nút, nếu không đủ chỗ thì đặt phía dưới
-            let top = r.top - 56;
-            if (top < padding) {
-                top = r.bottom + 8;
+            // Nếu bảng hiện ra bị tràn lề phải màn hình, đẩy nó sang trái
+            // Giả sử chiều rộng tối đa khoảng 300px cho 6 icon
+            if (left + 300 > vw) {
+                left = vw - 300 - padding;
             }
-            top = Math.max(padding, Math.min(top, vh - 56 - padding)); // đảm bảo không vượt quá màn hình
+
+            left = Math.max(padding, left);
+
+            let top = r.top - 50; // Đẩy lên trên nút Like
+            if (top < padding) {
+                top = r.bottom + 8; // Nếu sát mép trên quá thì hiện bên dưới
+            }
 
             setStyle({
                 position: "fixed",
-                top,
-                left,
-                width: W,
+                top: `${top}px`,
+                left: `${left}px`,
                 zIndex: 9999,
             });
         };
 
         place();
         window.addEventListener("resize", place);
-        window.addEventListener("scroll", place, true);
-        return () => {
-            window.removeEventListener("resize", place);
-            window.removeEventListener("scroll", place, true);
-        };
+        return () => window.removeEventListener("resize", place);
     }, [isOpen, targetRef]);
 
     if (!isOpen) return null;
 
     return (
         <>
-            {/* overlay để bấm ngoài đóng (mobile tốt hơn hover) */}
             <div className="fixed inset-0 z-[9998]" onClick={onClose} />
-
             <div
                 ref={pickerRef}
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-full shadow-2xl
-        ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"}`}
-                style={{
-                    ...style,
-                    overflowX: "auto",
-                    overflowY: "hidden",
-                    WebkitOverflowScrolling: "touch",
-                    whiteSpace: "nowrap",
-                }}
+                style={style}
+                className={`flex items-center gap-3 px-4 py-2 rounded-full shadow-2xl animate-in fade-in zoom-in duration-200
+                    ${isLight ? "bg-white border border-gray-200" : "bg-zinc-800 border border-zinc-700"}`}
             >
                 {Object.entries(REACTIONS).map(([type, reaction]) => (
                     <button
                         key={type}
                         onClick={() => onSelect(type)}
-                        className="text-2xl hover:scale-125 transition-transform"
+                        className="text-2xl hover:scale-130 active:scale-90 transition-transform duration-150"
                         title={reaction.label}
                     >
                         {reaction.emoji}

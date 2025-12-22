@@ -206,10 +206,14 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
 
   return (
     <div
-      id={`post-${post.id}`}
-      className={`post-item-container ${isLight ? 'light' : 'dark'} ${!isDetailView ? "mb-3 sm:mb-4" : ""}`}
-      style={customBgColor ? { backgroundColor: customBgColor } : {}}
-    >
+    id={`post-${post.id}`}
+    className={`post-item-container ${isLight ? 'light' : 'dark'} ${!isDetailView ? "mb-3 sm:mb-4" : ""}`}
+    style={{
+      ...(customBgColor ? { backgroundColor: customBgColor } : {}),
+      overflow: "visible", 
+      position: "relative" 
+    }}
+  >
       <PostHeader
         post={localPost}
         auth={auth}
