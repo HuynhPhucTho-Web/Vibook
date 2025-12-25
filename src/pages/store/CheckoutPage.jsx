@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCreditCard, FaTruck, FaMapMarkerAlt, FaArrowLeft } from 'react-icons/fa';
+import { ThemeContext } from '../../context/ThemeContext';
 import '../../style/store/CheckoutPage.css';
 
 const CheckoutPage = () => {
+  const { theme } = useContext(ThemeContext);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -40,7 +42,7 @@ const CheckoutPage = () => {
   };
 
   return (
-    <div className="checkout-page-container">
+    <div className={`checkout-page-container ${theme === "dark" ? "dark-theme" : ""}`}>
       <Link to="/market" className="back-button">
         <FaArrowLeft />
       </Link>

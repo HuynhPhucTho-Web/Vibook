@@ -15,6 +15,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes } from "react-icons/fa";
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
+import { Search } from "lucide-react";
 
 const Events = () => {
   const { theme } = useContext(ThemeContext);
@@ -34,6 +35,26 @@ const Events = () => {
   const [editingEvent, setEditingEvent] = useState(null);
   const [showOptions, setShowOptions] = useState(null);
   const [setShowUpdateModal] = useState(false);
+ const isDark = theme === "dark";
+  
+    const cls = {
+      page: isDark ? "bg-neutral-900 text-neutral-100" : "bg-neutral-100 text-neutral-900",
+      surface: isDark ? "bg-neutral-800" : "bg-white",
+      border: isDark ? "border border-neutral-700" : "border border-neutral-200",
+      shadow: "shadow-md hover:shadow-lg transition",
+      muted: isDark ? "text-neutral-400" : "text-neutral-600",
+      input: `${
+        isDark
+          ? "bg-neutral-700 border-neutral-600 text-neutral-100 placeholder-neutral-400"
+          : "bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-500"
+      } border rounded-lg`,
+      ringFocus: "focus:outline-none focus:ring-2 focus:ring-pink-500",
+      menu: isDark
+        ? "bg-neutral-800 border border-neutral-700 text-neutral-200"
+        : "bg-white border border-neutral-200 text-neutral-700",
+      backdrop: "fixed inset-0 bg-black/50 flex items-center justify-center z-50",
+    };
+
   // Handle click outside to close modal
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -341,13 +362,24 @@ const Events = () => {
             {t("eventsTitle")} ({events.length})
           </h1>
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <input
+            {/* <input
               type="text"
               placeholder={`🔍 ${t("searchEvents")}`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full sm:w-64 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            /> */}
+
+            <div className="relative w-full md:w-1/2">
+              <input
+                type="text"
+                placeholder={t('searchEvents')}
+                className={`w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 focus:ring-orange-500 transition-all ${cls.input} ${cls.ringFocus}`}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <Search className={`absolute left-3 top-3 ${cls.input} ${cls.ringFocus} `} size={18} />
+            </div>
             <button
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
               onClick={() => setShowCreateModal(true)}
@@ -442,7 +474,7 @@ const Events = () => {
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-colors"
                     disabled={!eventName.trim() || !eventDate.trim()}
                   >
-                    Create
+                    {t("create")}
                   </button>
                 </div>
               </form>
@@ -583,7 +615,7 @@ const Events = () => {
                             }}
                             className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
                           >
-                            <FaEdit className="inline mr-2 " /> Edit
+                            <FaEdit className="inline mr-2 " /> {t("edit")}
                           </button>
                           <button
                             onClick={() => {
@@ -592,7 +624,7 @@ const Events = () => {
                             }}
                             className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                           >
-                            <FaTrash className="inline mr-2" /> Delete
+                            <FaTrash className="inline mr-2" /> {t("delete")}
                           </button>
                         </div>
                       )}
@@ -609,17 +641,17 @@ const Events = () => {
                         {event.name}
                       </h3>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {event.attendees.length} Participants
+                        {event.attendees.length} {t("participants")}
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                     <div>
-                      <span className="font-medium">Date:</span> {formatEventDate(event.date)}
+                      <span className="font-medium">{t("date")} {formatEventDate(event.date)}</span>
                     </div>
                     <div>
-                      <span className="font-medium">Location:</span> {event.location}
+                      <span className="font-medium">{t("location" )}</span> {event.location}
                     </div>
                     <p className="line-clamp-3">{event.description}</p>
                   </div>
@@ -647,12 +679,12 @@ const Events = () => {
                       {isAttendee ? (
                         <div className="flex items-center gap-1">
                           <FaSignOutAlt size={14} />
-                          Leave Event
+                          {t("leaveEvent")}
                         </div>
                       ) : (
                         <div className="flex items-center gap-1">
                           <FaSignInAlt size={14} />
-                          Join Event
+                          {t("joinEvent")}
                         </div>
                       )}
                     </button>

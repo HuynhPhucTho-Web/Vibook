@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useContext  } from "react";
+import { LanguageContext } from "../../context/LanguageContext";
 
 const CommentBox = ({ comments, onAddComment }) => {
   const [text, setText] = useState("");
+  const { t } = useContext(LanguageContext);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -15,7 +17,7 @@ const CommentBox = ({ comments, onAddComment }) => {
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="text"
-          placeholder="Viết bình luận..."
+          placeholder={t("writeComment")}
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="flex-1 border rounded-xl px-3 py-1"

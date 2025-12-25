@@ -1,5 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
 import { FaComment, FaShare, FaLink, FaCopy } from "react-icons/fa";
+import { LanguageContext } from "../../context/LanguageContext";
+import { SlLike } from "react-icons/sl";
 
 /** Helper chung cho 3 nút action */
 const getActionButtonClass = (isLight, isActive) => {
@@ -12,9 +14,7 @@ const getActionButtonClass = (isLight, isActive) => {
   }
 
   return `${base} ${
-    isLight
-      ? "text-gray-600 hover:bg-gray-100"
-      : "text-gray-400 hover:bg-zinc-800"
+    isLight ? "text-gray-600 hover:bg-gray-100" : "text-gray-400 hover:bg-zinc-800"
   }`;
 };
 
@@ -32,6 +32,7 @@ const PostActions = ({
   onRepostToTimeline,
 }) => {
   const hoverTimerRef = useRef(null);
+  const { t } = useContext(LanguageContext);
 
   const openReactions = () => {
     if (hoverTimerRef.current) {
@@ -41,7 +42,7 @@ const PostActions = ({
     setShowReactions(true);
   };
 
-  const closeReactionsDelayed = (delay = 350) => { // Tăng delay lên 350ms để mượt hơn
+  const closeReactionsDelayed = (delay = 350) => {
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     hoverTimerRef.current = setTimeout(() => {
       setShowReactions(false);
@@ -55,17 +56,52 @@ const PostActions = ({
     };
   }, []);
 
-  const reactions = {
-    Like: "👍",
-    Love: "❤️",
-    Haha: "😂",
-    Wow: "😮",
-    Sad: "😢",
-    Angry: "😠",
-  };
+  // Reaction icons (emoji)
+  const reactions = useMemo(
+    () => ({
+      Like: "👍",
+      Love: "❤️",
+      Haha: "😂",
+      Wow: "😮",
+      Sad: "😢",
+      Angry: "😠",
+    }),
+    []
+  );
 
   const currentReaction = post.reactedBy?.[auth.currentUser?.uid];
   const barBorder = isLight ? "border-gray-200" : "border-zinc-800";
+
+  // Map key -> translation key (fallback nếu bạn chưa khai báo đủ)
+  const getReactionLabel = (key) => {
+    const map = {
+      Like: "like",
+      Love: "love",
+      Haha: "haha",
+      Wow: "wow",
+      Sad: "sad",
+      Angry: "angry",
+    };
+    const k = map[key];
+    return k ? t(k) : key;
+  };
+
+  const isLikeActive = currentReaction === "Like";
+  const isAnyReactionActive = !!currentReaction;
+
+  // Icon hiển thị:
+  // - Chưa react: SlLike
+  // - React Like: SlLike (xanh)
+  // - React khác: emoji tương ứng
+  const renderLikeIcon = () => {
+    if (!currentReaction) {
+      return <SlLike />;
+    }
+    if (currentReaction === "Like") {
+      return <SlLike />;
+    }
+    return reactions[currentReaction] || <SlLike />;
+  };
 
   return (
     <div className={`post-item-actions grid grid-cols-3 border-t ${barBorder} pt-1`}>
@@ -78,30 +114,41 @@ const PostActions = ({
         <button
           onClick={() => onReaction(post.id, "Like")}
           disabled={isReacting}
-          className={getActionButtonClass(isLight, !!currentReaction)}
+          className={getActionButtonClass(isLight, isAnyReactionActive)}
         >
-          <span className="text-lg">
-            {currentReaction ? reactions[currentReaction] : "👍"}
+          <span
+            className={`text-lg transition-colors ${
+              isLikeActive ? "text-blue-500" : ""
+            }`}
+          >
+            {renderLikeIcon()}
           </span>
-          <span>{currentReaction || "Thích"}</span>
+
+          <span
+            className={`transition-colors ${
+              isAnyReactionActive ? "text-blue-500 font-semibold" : ""
+            }`}
+          >
+            {currentReaction ? getReactionLabel(currentReaction) : t("like")}
+          </span>
         </button>
 
         {/* REACTION POPUP */}
         {showReactions && (
           <div
-            onMouseEnter={openReactions} // Quan trọng: giữ popup khi di chuột vào chính nó
+            onMouseEnter={openReactions}
             onMouseLeave={() => closeReactionsDelayed(350)}
             className={`reaction-pop absolute z-[100] flex items-center gap-1 sm:gap-2 px-2 py-2 rounded-full border shadow-xl
               ${isLight ? "bg-white border-gray-200" : "bg-zinc-900 border-zinc-700"}`}
             style={{
-              bottom: "calc(100% + 8px)", 
-              left: "0", // Căn lề trái để không bị tràn màn hình mobile
-              width: "max-content", 
-              minWidth: "260px", 
-              animation: "popUp 0.2s ease-out"
+              bottom: "calc(100% + 8px)",
+              left: "0",
+              width: "max-content",
+              minWidth: "260px",
+              animation: "popUp 0.2s ease-out",
             }}
           >
-            {/* Mũi tên nhỏ - pointer-events-none để không gây nháy chuột */}
+            {/* Mũi tên nhỏ */}
             <div
               className={`absolute left-6 top-full h-3 w-3 rotate-45 -mt-1.5 pointer-events-none
               ${isLight ? "bg-white border-b border-r border-gray-200" : "bg-zinc-900 border-b border-r border-zinc-700"}`}
@@ -119,6 +166,7 @@ const PostActions = ({
                 disabled={isReacting}
                 className="h-10 w-10 flex items-center justify-center rounded-full text-2xl
                            hover:scale-125 transition-transform duration-150 active:scale-90"
+                title={getReactionLabel(key)}
               >
                 {icon}
               </button>
@@ -130,31 +178,23 @@ const PostActions = ({
       {/* COMMENT */}
       <div className="col-span-1 flex items-center justify-center">
         <button
-          onClick={() =>
-            setSelectedPostId(selectedPostId === post.id ? null : post.id)
-          }
-          className={getActionButtonClass(
-            isLight,
-            selectedPostId === post.id
-          )}
+          onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
+          className={getActionButtonClass(isLight, selectedPostId === post.id)}
         >
           <FaComment className="text-base" />
-          <span>Bình luận</span>
+          <span>{t("comment")}</span>
         </button>
       </div>
 
       {/* SHARE */}
-      <PostShareMenu
-        isLight={isLight}
-        onShare={onShare}
-        onRepostToTimeline={onRepostToTimeline}
-      />
+      <PostShareMenu isLight={isLight} onShare={onShare} onRepostToTimeline={onRepostToTimeline} />
     </div>
   );
 };
 
 const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const { t } = useContext(LanguageContext);
   const baseItem = "w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors";
 
   return (
@@ -164,7 +204,7 @@ const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
         className={getActionButtonClass(isLight, showShareMenu)}
       >
         <FaShare className="text-base" />
-        <span>Chia sẻ</span>
+        <span> {t("share")} </span>
       </button>
 
       {showShareMenu && (
@@ -175,23 +215,40 @@ const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
               rounded-2xl border shadow-[0_12px_28px_rgba(0,0,0,0.25)] z-30 py-2
               ${isLight ? "bg-white border-gray-100" : "bg-zinc-900 border-zinc-700"}`}
           >
-            <button onClick={() => onShare("copy")} className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}>
+            <button
+              onClick={() => onShare("copy")}
+              className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
+            >
               <FaLink className="text-sm" />
-              <span>Sao chép link</span>
+              <span>{t("copyLink") || "Sao chép link"}</span>
             </button>
-            <button onClick={() => onShare("copyWithContent")} className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}>
+
+            <button
+              onClick={() => onShare("copyWithContent")}
+              className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
+            >
               <FaCopy className="text-sm" />
-              <span>Copy nội dung</span>
+              <span>{t("copyContent") || "Copy nội dung"}</span>
             </button>
+
             {navigator.share && (
-              <button onClick={() => onShare("native")} className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}>
+              <button
+                onClick={() => onShare("native")}
+                className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
+              >
                 <FaShare className="text-sm" />
-                <span>Chia sẻ hệ thống</span>
+                <span>{t("systemShare") || "Chia sẻ hệ thống"}</span>
               </button>
             )}
-            <button onClick={onRepostToTimeline} className={`${baseItem} text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20`}>
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-500">@</span>
-              <span>Chia sẻ lên trang cá nhân</span>
+
+            <button
+              onClick={onRepostToTimeline}
+              className={`${baseItem} text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20`}
+            >
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-500">
+                @
+              </span>
+              <span>{t("shareToTimeline") || "Chia sẻ lên trang cá nhân"}</span>
             </button>
           </div>
         </>

@@ -27,7 +27,7 @@ const MENU = [
   { path: "/events",     icon: FaCalendarAlt, labelKey: "events" },
   { path: "/story",      icon: FaVideo, labelKey: "story" },
   { path: "/playgame",   icon: FaGamepad, labelKey: "playGame" },
-  { path: "/market",     icon: FaShoppingBag, labelKey: "market" },
+  { path: "/market",     icon: FaShoppingBag, labelKey: "store" },
 ];
 
 export default function Sidebar() {
@@ -91,6 +91,15 @@ export default function Sidebar() {
   useEffect(() => {
     if (isMobile) setIsMobileOpen(false);
   }, [location.pathname, isMobile]);
+
+  // Listen for closeSidebar event
+  useEffect(() => {
+    const handleCloseSidebar = () => {
+      if (isMobile) setIsMobileOpen(false);
+    };
+    window.addEventListener('closeSidebar', handleCloseSidebar);
+    return () => window.removeEventListener('closeSidebar', handleCloseSidebar);
+  }, [isMobile]);
 
   // Auto-close sidebar after 5 seconds of inactivity (mobile only)
   useEffect(() => {
@@ -297,7 +306,6 @@ export default function Sidebar() {
           isMobileOpen ? "is-open" : "",
           isCollapsed && !isMobile ? "is-collapsed" : ""
         ].join(" ").replace(/\s+/g, " ").trim()}
-        // 👉 sidebar luôn nằm ngay dưới header, cả mobile + desktop
         style={{
           top: headerHeight,
           height: `calc(100vh - ${headerHeight}px)`,

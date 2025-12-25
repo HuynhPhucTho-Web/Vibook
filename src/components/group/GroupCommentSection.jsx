@@ -16,6 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane } from "react-icons/fa";
 import { ThemeContext } from "../../context/ThemeContext";
+import { LanguageContext } from "../../context/LanguageContext";
 import { db } from "../../components/firebase";
 import Picker from "emoji-picker-react";
 
@@ -482,6 +483,7 @@ const GroupCommentSection = ({ groupId, postId, auth, userDetails, isCommentSect
     const emojiRef = useRef(null);
     const inputRef = useRef(null);
     const isLight = theme === "light";
+    const { t } = useContext(LanguageContext);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -608,7 +610,7 @@ const GroupCommentSection = ({ groupId, postId, auth, userDetails, isCommentSect
                             value={commentText}
                             onChange={(e) => setCommentText(e.target.value)}
                             onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
-                            placeholder="Viết bình luận..."
+                            placeholder= {t("writeComment")}
                             className={`w-full rounded-full pl-4 pr-24 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 ${isLight ? "bg-gray-100" : "bg-zinc-800"
                                 }`}
                         />

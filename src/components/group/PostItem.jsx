@@ -11,6 +11,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { ThemeContext } from "../../context/ThemeContext";
+import { LanguageContext } from "../../context/LanguageContext";
+import { SlLike } from "react-icons/sl";
 import {
   FaComment,
   FaTrash,
@@ -74,6 +76,10 @@ export default function GroupPostItem({
   const btnRef = useRef(null);
   const shareBtnRef = useRef(null);
   const shareMenuRef = useRef(null);
+  const { t } = useContext(LanguageContext);
+
+  
+
 
   // ===== Mobile detect (touch-friendly) =====
   const [isMobile, setIsMobile] = useState(() => {
@@ -456,7 +462,7 @@ export default function GroupPostItem({
                     className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
                       }`}
                   >
-                    <FaEdit /> Chỉnh sửa
+                    <FaEdit /> {t("editPost")}
                   </button>
 
                   <button
@@ -467,7 +473,7 @@ export default function GroupPostItem({
                     className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
                       }`}
                   >
-                    <FaLock /> Riêng tư
+                    <FaLock /> {t("privatePost")}
                   </button>
 
                   <button
@@ -477,7 +483,7 @@ export default function GroupPostItem({
                     }}
                     className="w-full px-4 py-2.5 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
-                    <FaTrash /> Xóa
+                    <FaTrash /> {t("deletePost")}
                   </button>
                 </div>
               </>
@@ -607,7 +613,7 @@ export default function GroupPostItem({
             onClick={() => setOpenComments((s) => !s)}
             className={`transition-colors ${commentCount > 0 ? "text-gray-500 hover:text-blue-500" : "text-gray-400"}`}
           >
-            {commentCount} bình luận
+            {commentCount} {t("comments")}
           </button>
         </div>
       )}
@@ -643,8 +649,8 @@ export default function GroupPostItem({
             }}
             disabled={isReacting}
           >
-            <span className="text-lg">{currentReaction ? reactions[currentReaction] : "👍"}</span>
-            <span className="text-sm">{currentReaction || "Thích"}</span>
+            <span className="text-lg">{currentReaction ? reactions[currentReaction] : SlLike }</span>
+            <span className="text-sm">{currentReaction || t("like")}</span>
           </button>
 
           {showReactions && (
@@ -706,7 +712,7 @@ export default function GroupPostItem({
             }`}
         >
           <FaComment />
-          <span className="text-sm">Bình luận</span>
+          <span className="text-sm">{t("comment")} </span>
         </button>
 
         {/* Share */}

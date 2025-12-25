@@ -1,4 +1,6 @@
-import React from "react";
+import React, {useContext} from "react";
+import { LanguageContext } from "../../context/LanguageContext";
+
 
 const PostStats = ({ post, commentCount, isLight, onCommentClick }) => {
   const reactions = {
@@ -9,6 +11,7 @@ const PostStats = ({ post, commentCount, isLight, onCommentClick }) => {
     Sad: "😢",
     Angry: "😠",
   };
+  const { t } = useContext(LanguageContext);
 
   const totalReactions = Object.values(post.likes || {}).reduce((s, c) => s + c, 0);
 
@@ -35,7 +38,7 @@ const PostStats = ({ post, commentCount, isLight, onCommentClick }) => {
           onClick={onCommentClick}
           className="text-gray-500 hover:text-blue-500 transition-colors"
         >
-          {commentCount} bình luận
+          {commentCount} {t("comment")}
         </button>
       )}
     </div>

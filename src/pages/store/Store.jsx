@@ -5,10 +5,12 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../components/firebase';
 import { useCart } from '../../context/CartContext';
 import { ThemeContext } from '../../context/ThemeContext';
+import { LanguageContext } from '../../context/LanguageContext';
 import '../../style/store/Store.css';
 
 const Store = () => {
   const { theme } = useContext(ThemeContext);
+  const { t } = useContext(LanguageContext);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,13 +58,13 @@ const Store = () => {
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <StoreIcon className="text-orange-600" size={28} />
-            <h1 className={`text-2xl font-black tracking-tight ${isLight ? "text-gray-800" : "text-white"}`}>VIBOOK MARKET</h1>
+            <h1 className={`text-2xl font-black tracking-tight ${isLight ? "text-gray-800" : "text-white"}`}>{t('storeTitle')}</h1>
           </div>
 
           <div className="relative w-full md:w-1/2">
             <input
               type="text"
-              placeholder="Tìm sản phẩm bạn mong muốn..."
+              placeholder={t('searchProducts')}
               className={`w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 focus:ring-orange-500 transition-all ${isLight ? "bg-gray-100 text-black placeholder-gray-600" : "bg-gray-700 text-white placeholder-gray-400"}`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -72,7 +74,7 @@ const Store = () => {
 
           <div className="flex items-center gap-2 md:gap-5">
 
-            <Link title="Giỏ hàng" to="/cart" className={`relative p-2 transition ${isLight ? "text-gray-600 hover:text-orange-600" : "text-gray-400 hover:text-orange-400"}`}>
+            <Link title={t('cart')} to="/cart" className={`relative p-2 transition ${isLight ? "text-gray-600 hover:text-orange-600" : "text-gray-400 hover:text-orange-400"}`}>
               <ShoppingCart size={24} />
               {getTotalItems() > 0 && (
                 <span className="absolute top-1 right-1 bg-orange-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
@@ -81,14 +83,14 @@ const Store = () => {
               )}
             </Link>
 
-            <Link title="Đơn hàng" to="/my-orders" className={`p-2 transition ${isLight ? "text-gray-600 hover:text-orange-600" : "text-gray-400 hover:text-orange-400"}`}>
+            <Link title={t('orders')} to="/my-orders" className={`p-2 transition ${isLight ? "text-gray-600 hover:text-orange-600" : "text-gray-400 hover:text-orange-400"}`}>
               <Package size={24} />
             </Link>
 
 
-            <Link title="Kênh người bán" to="/seller-dashboard" className={`p-2 transition flex items-center justify-center ${isLight ? "text-gray-600 hover:text-orange-600" : "text-gray-400 hover:text-orange-400"}`}>
+            <Link title={t('sellerChannel')} to="/seller-dashboard" className={`p-2 transition flex items-center justify-center ${isLight ? "text-gray-600 hover:text-orange-600" : "text-gray-400 hover:text-orange-400"}`}>
               <StoreIcon size={24} />
-              <span className="hidden lg:inline ml-2 text-sm font-bold">Kênh người bán</span>
+              <span className="hidden lg:inline ml-2 text-sm font-bold">{t('sellerChannel')}</span>
             </Link>
 
           </div>
@@ -101,7 +103,7 @@ const Store = () => {
         <aside className="w-full md:w-64 flex-shrink-0">
           <div className={`${isLight ? "bg-white" : "bg-gray-800"} p-6 rounded-xl shadow-sm border ${isLight ? "border-gray-100" : "border-gray-700"} sticky top-24`}>
             <div className={`flex items-center gap-2 mb-6 font-bold border-b pb-2 ${isLight ? "text-gray-800" : "text-white"}`}>
-              <Filter size={18} /> Danh mục
+              <Filter size={18} /> {t('categories')}
             </div>
             <div className="space-y-2">
               {categories.map(cat => (
@@ -113,7 +115,7 @@ const Store = () => {
                       : `${isLight ? 'text-gray-600 hover:bg-gray-50' : 'text-gray-400 hover:bg-gray-700'}`
                     }`}
                 >
-                  {cat === 'all' ? 'Tất cả sản phẩm' : cat}
+                  {cat === 'all' ? t('allProducts') : cat}
                 </button>
               ))}
             </div>
@@ -124,9 +126,9 @@ const Store = () => {
         <main className="flex-1">
           <div className="flex items-center justify-between mb-6">
             <h2 className={`text-xl font-bold italic ${isLight ? "text-gray-800" : "text-white"}`}>
-              {selectedCategory === 'all' ? 'Sản phẩm mới nhất' : `Danh mục: ${selectedCategory}`}
+              {selectedCategory === 'all' ? t('latestProducts') : `${t('category')}: ${selectedCategory}`}
             </h2>
-            <span className={`text-sm font-medium ${isLight ? "text-gray-500" : "text-gray-400"}`}>{filteredProducts.length} sản phẩm</span>
+            <span className={`text-sm font-medium ${isLight ? "text-gray-500" : "text-gray-400"}`}>{filteredProducts.length} {t('products')}</span>
           </div>
 
           {filteredProducts.length === 0 ? (
@@ -134,7 +136,7 @@ const Store = () => {
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${isLight ? "bg-gray-100 text-gray-400" : "bg-gray-700 text-gray-500"}`}>
                 <Search size={40} />
               </div>
-              <p className={`font-medium text-lg ${isLight ? "text-gray-500" : "text-gray-400"}`}>Không tìm thấy sản phẩm nào phù hợp.</p>
+              <p className={`font-medium text-lg ${isLight ? "text-gray-500" : "text-gray-400"}`}>{t('noProductsFound')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -148,7 +150,7 @@ const Store = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">
-                      HOT
+                      {t('hot')}
                     </div>
                   </div>
 
@@ -169,7 +171,7 @@ const Store = () => {
                         to={`/product/${product.id}`}
                         className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-2 rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors active:scale-95"
                       >
-                        Xem chi tiết <ChevronRight size={14} />
+                        {t('viewDetails')} <ChevronRight size={14} />
                       </Link>
                     </div>
                   </div>

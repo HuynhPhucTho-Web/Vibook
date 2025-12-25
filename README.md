@@ -27,6 +27,7 @@ npm install emoji-picker-react
 npm install lucide-react
 npm i @emoji-mart/react @emoji-mart/data
 npm install lucide-react
+npm install react-icons --save
 ## Short Dependence
 npm install react-router-dom react-icons react-toastify bootstrap firebase
 npm install -D eslint eslint-plugin-react eslint-plugin-react-refresh

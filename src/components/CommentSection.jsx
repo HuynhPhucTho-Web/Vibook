@@ -18,6 +18,8 @@ import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane 
 import { ThemeContext } from "../context/ThemeContext";
 import { db } from "../components/firebase";
 import Picker from "emoji-picker-react";
+import { LanguageContext } from "../context/LanguageContext";
+import { SlLike } from "react-icons/sl";
 
 const REACTIONS = {
   like: { emoji: "👍", label: "Thích" },
@@ -218,7 +220,7 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const likeButtonRef = useRef(null);
   const isLight = theme === "light";
-
+  
   const handleReaction = async (reactionType) => {
     if (!auth.currentUser) {
       toast.error("Vui lòng đăng nhập");
@@ -314,8 +316,8 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
   const userReaction = getUserReaction();
   const topReactions = getTopReactions();
   const totalReactions = Object.values(comment.reactions || {}).reduce((sum, users) => sum + (users?.length || 0), 0);
-
   const marginLeft = depth > 0 ? "ml-12" : "";
+  const { t } = useContext(LanguageContext);
 
   return (
     <div className={`${depth > 0 ? marginLeft + " mt-2" : "mb-3"}`}>
@@ -355,7 +357,7 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
                   userReaction ? "text-blue-500" : isLight ? "text-gray-600 hover:text-blue-500" : "text-gray-400 hover:text-blue-400"
                 }`}
               >
-                <span className="text-base">{userReaction ? REACTIONS[userReaction].emoji : "👍"}</span>
+                <span className="text-base">{userReaction ? REACTIONS[userReaction].emoji : <SlLike />}</span>
               </button>
 
               <ReactionPicker
@@ -373,7 +375,7 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
               }`}
             >
               <FaReply size={12} />
-              <span>Phản hồi</span>
+              <span>{t("respond")}</span>
             </button>
 
             {totalReactions > 0 && (
@@ -410,7 +412,7 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
                 }`}
               >
                 {showReplies ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />}
-                <span>{showReplies ? "Ẩn" : "Xem"} {comment.replyCount} phản hồi</span>
+                <span>{showReplies ? t("hidden") : t("view")} {comment.replyCount} {t("respond")} </span>
               </button>
 
               {showReplies && comment.replies?.map((reply) => (
@@ -443,6 +445,8 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
   const emojiRef = useRef(null);
   const inputRef = useRef(null);
   const isLight = theme === "light";
+  const { t } = useContext(LanguageContext);
+  
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -532,7 +536,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
     <div className={`border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`}>
       {totalCommentCount > 0 && (
         <div className={`px-4 pt-3 pb-2 text-sm font-semibold ${isLight ? "text-gray-700" : "text-gray-300"}`}>
-          {totalCommentCount} bình luận
+          {totalCommentCount} {t("comment")}
         </div>
       )}
 
@@ -568,7 +572,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
-              placeholder="Viết bình luận..."
+              placeholder={t("writeComment")}
               className={`w-full rounded-full pl-4 pr-24 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 isLight ? "bg-gray-100" : "bg-zinc-800"
               }`}

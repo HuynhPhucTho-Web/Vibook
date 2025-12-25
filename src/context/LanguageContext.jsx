@@ -21,6 +21,7 @@ const translations = {
     friends: "Friends",
     story: "Story",
     playGame: "Play Game",
+    store: "Store",
 
     // Common
     loading: "Loading ViBook...",
@@ -30,13 +31,18 @@ const translations = {
 
     // Groups
     groupsCount: "Groups",
+    searchGroup: "Search group...",
     createGroup: "Create Group",
+    createNewGroup: "Create New Group",
+    saveGroup : "Create",
     joinGroup: "Join Group",
+    dateCreateGroup: "Date:",
     leaveGroup: "Leave Group",
     deleteGroup: "Delete Group",
     groupName: "Group Name",
     groupDescription: "Description",
     members: "Members",
+    viewDetail: "View Detail",
     media: "Media",
     about: "About",
 
@@ -76,6 +82,8 @@ const translations = {
     settings: "Settings",
     editProfile: "Edit Profile",
     updateProfile: "Update Profile",
+    respond: "Respond",
+    viewRespond: "View Respond",
 
     // Posts
     createPost: "Create Post",
@@ -83,6 +91,12 @@ const translations = {
     comment: "Comment",
     like: "Like",
     share: "Share",
+    hidden: "Hidden",
+    view: "View",
+    writeComment: "Write comment...",
+    editPost: "Edit",
+    deletePost: "Delete",
+    privatePost: "Private",
 
     // Friends
     addFriend: "Add Friend",
@@ -95,6 +109,7 @@ const translations = {
 
     // Events
     createEvent: "Create Event",
+    description: "Description",
     eventName: "Event Name",
     eventDate: "Event Date",
     eventLocation: "Event Location",
@@ -141,6 +156,16 @@ const translations = {
 
     // Game
     gameInstructions: "Game Instructions",
+    gameTitleCount: "Games",
+    addNewgame: "Add New Game",
+    gameTitle: "Title",
+    descriptionGame: "Description",
+    gameLink: "Game Link (URL)",
+    gameImage: "Game Image (URL)",
+    playNow: "Play Now",
+    addGame: "Add Game",
+    Nogamesfound: "No games found.",
+
 
     // Post creation
     whatsOnYourMind: "What's on your mind?",
@@ -195,6 +220,35 @@ const translations = {
     closeMenu: "Close menu",
     expandSidebar: "Expand sidebar",
     collapseSidebar: "Collapse sidebar",
+
+    // Store/Market
+    storeTitle: "VIBOOK MARKET",
+    searchProducts: "Search for products you want...",
+    cart: "Cart",
+    orders: "Orders",
+    sellerChannel: "Seller Channel",
+    categories: "Categories",
+    allProducts: "All Products",
+    latestProducts: "Latest Products",
+    categoryTitle: "Category: {category}",
+    productCount: "{count} products",
+    noProductsFound: "No matching products found.",
+    hot: "HOT",
+    viewDetails: "View Details",
+    loadingOrders: "Loading orders...",
+    myOrders: "My Orders",
+    all: "All",
+    noOrdersInSection: "You have no orders in this section.",
+    shopNow: "Shop now",
+    buyAgain: "Buy again",
+    categoryLabel: "Category:",
+    default: "Default",
+    quantity: "Quantity:",
+    totalAmount: "Total:",
+    pending: "Pending",
+    shipped: "Shipped",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
   },
   vi: {
     // Header
@@ -215,21 +269,29 @@ const translations = {
     friends: "Bạn bè",
     story: "Story",
     playGame: "Chơi game",
+    store: "Cửa hàng",
 
     // Common
     loading: "Đang tải ViBook...",
     anonymous: "Ẩn danh",
     noContent: "Không có nội dung",
+    language: "Ngôn ngữ",
 
     // Groups
+    searchGroup: "Tìm kiếm nhóm...",
     groupsCount: "Nhóm",
     createGroup: "Tạo nhóm",
+    createNewGroup: "Tạo nhóm mới",
+    saveGroup : "Tạo",
     joinGroup: "Tham gia nhóm",
+    dateCreateGroup: "Ngày:",
     leaveGroup: "Rời nhóm",
+    editGroup: "Chỉnh sửa nhóm",
     deleteGroup: "Xóa nhóm",
     groupName: "Tên nhóm",
     groupDescription: "Mô tả",
     members: "Thành viên",
+    viewDetail: "Xem chi tiết",
     media: "Media",
     about: "Giới thiệu",
 
@@ -275,6 +337,15 @@ const translations = {
     comment: "Bình luận",
     like: "Thích",
     share: "Chia sẻ",
+    respond: "Phản hồi",
+    viewRespond: "Xem phản hồi",
+    hidden: "Ẩn",
+    view: "Xem",
+    writeComment: "Viết bình luận...",
+    editPost: "Chỉnh sửa",
+    deletePost: "Xóa",
+    privatePost: "Riêng tư",
+
 
     // Friends
     addFriend: "Thêm bạn",
@@ -287,6 +358,7 @@ const translations = {
 
     // Events
     createEvent: "Tạo sự kiện",
+    description: "Mô tả",
     eventName: "Tên sự kiện",
     eventDate: "Ngày sự kiện",
     eventLocation: "Địa điểm sự kiện",
@@ -312,10 +384,10 @@ const translations = {
     create: "Tạo",
     cancel: "Hủy",
     save: "Lưu",
-    edit: "Chỉnh sửa",
+    edit: "Sửa",
     delete: "Xóa",
     participants: "Người tham gia",
-    date: "Ngày:",
+    date: "Ngày: ",
     location: "Địa điểm:",
     leaveEvent: "Rời sự kiện",
     joinEvent: "Tham gia sự kiện",
@@ -323,10 +395,21 @@ const translations = {
     noEventsFound: "Không tìm thấy sự kiện nào. Tạo sự kiện đầu tiên của bạn!",
     unableToLoadEvents: "Không thể tải sự kiện",
     eventChat: "Trò chuyện sự kiện",
+    eventsTitle: "Sự kiện",
     justNow: "Vừa xong",
 
     // Game
     gameInstructions: "Hướng dẫn chơi",
+    gameTitleCount: "Trò Chơi",
+    addGame: "Tạo game",
+    addNewgame: "Thêm Trò Chơi Mới",
+    gameTitle: "Tiêu Đề",
+    descriptionGame: "Mô Tả",
+    gameLink: "Liên Kết Trò Chơi (URL)",
+    gameImage: "Ảnh Trò Chơi (URL)",
+    playNow: "Chơi Ngay",
+    Nogamesfound: "Không tìm thấy trò chơi nào.",
+    
 
     // Post creation
     whatsOnYourMind: "Bạn đang nghĩ gì thế?",
@@ -382,6 +465,35 @@ const translations = {
     closeMenu: "Đóng menu",
     expandSidebar: "Mở rộng sidebar",
     collapseSidebar: "Thu gọn sidebar",
+
+    // Store/Market
+    storeTitle: "VIBOOK MARKET",
+    searchProducts: "Tìm sản phẩm bạn mong muốn...",
+    cart: "Giỏ hàng",
+    orders: "Đơn hàng",
+    sellerChannel: "Kênh người bán",
+    categories: "Danh mục",
+    allProducts: "Tất cả sản phẩm",
+    latestProducts: "Sản phẩm mới nhất",
+    categoryTitle: "Danh mục: {category}",
+    productCount: "{count} sản phẩm",
+    noProductsFound: "Không tìm thấy sản phẩm nào phù hợp.",
+    hot: "HOT",
+    viewDetails: "Xem chi tiết",
+    loadingOrders: "Đang tải đơn hàng...",
+    myOrders: "Đơn hàng của tôi",
+    all: "Tất cả",
+    noOrdersInSection: "Bạn chưa có đơn hàng nào trong mục này.",
+    shopNow: "Mua sắm ngay",
+    buyAgain: "Mua lại",
+    categoryLabel: "Phân loại:",
+    default: "Mặc định",
+    quantity: "Số lượng:",
+    totalAmount: "Thành tiền:",
+    pending: "Chờ xử lý",
+    shipped: "Đang giao",
+    delivered: "Đã giao",
+    cancelled: "Đã hủy",
   },
   ja: {
     // Header
@@ -402,21 +514,29 @@ const translations = {
     friends: "友達",
     story: "ストーリー",
     playGame: "ゲーム",
+    store: "ストア",
 
     // Common
     loading: "ViBookを読み込み中...",
     anonymous: "匿名",
     noContent: "コンテンツなし",
+    language: "言語",
 
     // Groups
+    searchGroup: "グループを検索...",
     groupsCount: "グループ",
     createGroup: "グループ作成",
+    createNewGroup: "新しいグループを作成",
     joinGroup: "グループ参加",
+    saveGroup : "作成",
+    dateCreateGroup: "日付:",
     leaveGroup: "グループ退出",
     deleteGroup: "グループ削除",
+    editGroup: "グループ編集",
     groupName: "グループ名",
     groupDescription: "説明",
     members: "メンバー",
+    viewDetail: "詳細を見る",
     media: "メディア",
     about: "について",
 
@@ -462,6 +582,13 @@ const translations = {
     comment: "コメント",
     like: "いいね",
     share: "シェア",
+    respond: "返信",
+    hidden: "非表示",
+    view: "見る",
+    writeComment: "コメントを書く...",
+    editPost: "編集",
+    deletePost: "削除",
+    privatePost: "非公開",
 
     // Friends
     addFriend: "友達追加",
@@ -474,6 +601,7 @@ const translations = {
 
     // Events
     createEvent: "イベント作成",
+    description: "説明",
     eventName: "イベント名",
     eventDate: "イベント日",
     eventLocation: "イベント場所",
@@ -512,21 +640,56 @@ const translations = {
     unableToLoadEvents: "イベントを読み込めません",
     eventChat: "イベントチャット",
     justNow: "たった今",
+    enterEventName: "イベント名を入力",
+    enterLocation: "場所を入力（オプション）",
+    enterEventDescription: "イベントの説明を入力（オプション）",
+    eventDescription: "説明",
+    dateAndTime: "日時",
+    eventsTitle: "イベント",
 
     // Game
-    gameInstructions: "ゲーム説明",
+    gameInstructions: "ゲーム",
+    gameTitleCount: "ゲームタイトル",
+    addGame: "ゲームを追加",
+    addNewgame: "新しいゲームを追加",
+    gameTitle: "タイトル",
+    descriptionGame: "説明",
+    gameLink: "ゲームリンク (URL)",
+    gameImage: "ゲーム画像 (URL)",
+    playNow: "今すぐプレイ",
+    Nogamesfound: "ゲームが見つかりません。",
+    
+
 
     // Post creation
+    whatsOnYourMind: "何を考えていますか？",
+    photoVideo: "写真/ビデオ",
+    camera: "カメラ",
+    document: "ドキュメント",
+    emoji: "絵文字",
+    posting: "投稿中...",
+    mediaAttached: "メディアが添付されました",
+    maxFilesReached: "最大ファイル数に達しました",
+    cameraActive: "カメラがアクティブ",
+    switch: "切り替え",
+    capture: "キャプチャ",
+    searchEmoji: "絵文字を検索...",
+    loginRequired: "投稿するにはログインしてください",
+    contentOrMediaRequired: "コンテンツを入力するかメディアを添付してください",
+    maxFilesLimit: "投稿あたり最大5ファイル",
+    postSuccess: "投稿が作成されました",
+    postError: "投稿作成エラー",
+    cloudinaryConfigMissing: ".envにCloudinary設定がありません",
+    photoCaptured: "写真が撮影され、投稿に追加されました",
+    cameraError: "カメラを開けません。権限を確認してください",
+    uploadFailed: "アップロード失敗: ",
+    switchCamera: "カメラを切り替え",
+    capturePhoto: "写真を撮影",
+    attachedMedia: "添付メディア",
+    limitReached: "制限に達しました",
     unsupportedFormat: "サポートされていない形式: ",
     fileTooLarge: "ファイルが大きすぎます ",
-    uploadFailed: "アップロード失敗: ",
-    photoCaptured: "写真が撮影され、投稿に追加されました",
-    cameraActive: "カメラがアクティブ",
-    switchCamera: "カメラを切り替え",
     close: "閉じる",
-    capturePhoto: "写真を撮影",
-    searchEmoji: "絵文字を検索...",
-    whatsOnYourMind: "何を考えていますか？",
 
     // Error messages
     error: "エラー",
@@ -554,6 +717,35 @@ const translations = {
     closeMenu: "メニューを閉じる",
     expandSidebar: "サイドバーを展開",
     collapseSidebar: "サイドバーを折りたたむ",
+
+    // Store/Market
+    storeTitle: "VIBOOK MARKET",
+    searchProducts: "欲しい商品を検索...",
+    cart: "カート",
+    orders: "注文",
+    sellerChannel: "販売者チャンネル",
+    categories: "カテゴリ",
+    allProducts: "すべての商品",
+    latestProducts: "最新の商品",
+    categoryTitle: "カテゴリ: {category}",
+    productCount: "{count} 個の商品",
+    noProductsFound: "一致する商品が見つかりません。",
+    hot: "HOT",
+    viewDetails: "詳細を見る",
+    loadingOrders: "注文を読み込み中...",
+    myOrders: "マイ注文",
+    all: "すべて",
+    noOrdersInSection: "このセクションに注文がありません。",
+    shopNow: "今すぐショッピング",
+    buyAgain: "再購入",
+    categoryLabel: "カテゴリ:",
+    default: "デフォルト",
+    quantity: "数量:",
+    totalAmount: "合計:",
+    pending: "保留中",
+    shipped: "発送済み",
+    delivered: "配達済み",
+    cancelled: "キャンセル済み",
   },
 };
 

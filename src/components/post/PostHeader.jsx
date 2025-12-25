@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { FaEllipsisH, FaEdit, FaLock, FaTrash, FaUser } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { LanguageContext } from "../../context/LanguageContext";
 
 const PostHeader = ({
   post,
@@ -14,7 +15,7 @@ const PostHeader = ({
   onDelete
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
-
+ const { t } = useContext(LanguageContext);
   const formatTimeAgo = (timestamp) => {
     const diff = Date.now() - timestamp;
     const mins = Math.floor(diff / 60000);
@@ -126,7 +127,7 @@ const PostHeader = ({
                   className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
                     }`}
                 >
-                  <FaEdit /> Chỉnh sửa
+                  <FaEdit /> {t("editPost")}
                 </button>
                 <button
                   onClick={() => {
@@ -136,7 +137,7 @@ const PostHeader = ({
                   className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
                     }`}
                 >
-                  <FaLock /> Riêng tư
+                  <FaLock /> {t("privatePost")}
                 </button>
                 <button
                   onClick={() => {
@@ -145,7 +146,7 @@ const PostHeader = ({
                   }}
                   className="w-full px-4 py-2.5 flex items-center gap-3 text-red-500 hover:bg-red-50 transition-colors"
                 >
-                  <FaTrash /> Xóa
+                  <FaTrash /> {t("deletePost")}
                 </button>
               </div>
             </>

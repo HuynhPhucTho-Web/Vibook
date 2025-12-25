@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaUpload, FaBox, FaLayerGroup, FaHistory } from 'react-icons/fa';
 import { collection, getDocs, query, where, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../firebase';
+import { ThemeContext } from '../../context/ThemeContext';
 import '../../style/shop/ManageProducts.css';
 
 const ManageProducts = () => {
+  const { theme } = useContext(ThemeContext);
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,7 @@ const ManageProducts = () => {
   if (loading) return <div className="loading-container">Đang tải dữ liệu...</div>;
 
   return (
-    <div className="manage-products-container">
+    <div className={`manage-products-container ${theme === "dark" ? "dark-theme" : ""}`}>
       {/* HEADER ĐỒNG BỘ */}
       <div className="manage-header-section">
         <div className="header-info">

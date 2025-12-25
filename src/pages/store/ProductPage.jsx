@@ -120,7 +120,7 @@ const ProductPage = () => {
               <img
                 src={product.imageUrl || '/placeholder-product.jpg'}
                 alt={product.name}
-                className="max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition duration-500"
+                className="max-h-full object-contain group-hover:scale-110 transition duration-500"
               />
             </div>
           </div>
@@ -171,12 +171,12 @@ const ProductPage = () => {
                   <div className={`flex items-center ${isLight ? "bg-white border-gray-200" : "bg-gray-800 border-gray-600"} border rounded-xl p-1 shadow-sm`}>
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q-1))}
-                      className={`w-10 h-10 flex items-center justify-center hover:${isLight ? "bg-gray-50" : "bg-gray-700"} rounded-lg font-bold`}
+                      className={`w-10 h-10 flex items-center justify-center hover:${isLight ? "bg-gray-50" : "bg-gray-700"} rounded-lg font-bold ${isLight ? "text-gray-800" : "text-white"}`}
                     >-</button>
-                    <span className="w-12 text-center font-black">{quantity}</span>
+                    <span className={`w-12 text-center font-black ${isLight ? "text-gray-800" : "text-white"}`}>{quantity}</span>
                     <button
                       onClick={() => setQuantity(q => Math.min(product.stock || 99, q+1))}
-                      className={`w-10 h-10 flex items-center justify-center hover:${isLight ? "bg-gray-50" : "bg-gray-700"} rounded-lg font-bold`}
+                      className={`w-10 h-10 flex items-center justify-center hover:${isLight ? "bg-gray-50" : "bg-gray-700"} rounded-lg font-bold ${isLight ? "text-gray-800" : "text-white"}`}
                     >+</button>
                   </div>
                   <span className={`text-sm font-bold ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>

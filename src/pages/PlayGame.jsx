@@ -5,12 +5,15 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
+import { LanguageContext } from '../context/LanguageContext';
 import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
+import { Search } from "lucide-react";
 
 const Games = () => {
+
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
-
+  const { t } = useContext(LanguageContext);
   // —— design tokens theo theme ——
   const cls = {
     page: isDark ? "bg-neutral-900 text-neutral-100" : "bg-neutral-100 text-neutral-900",
@@ -204,22 +207,35 @@ const Games = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <FaGamepad className="text-pink-500" /> Games ({games.length})
+            <FaGamepad className="text-pink-500" /> {t("gameTitleCount")} ({games.length})
           </h1>
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <input
+            {/* <input
               type="text"
               placeholder="🔍 Search games..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className={`w-full sm:w-64 px-4 py-2 rounded-full ${cls.input} ${cls.ringFocus}`}
+            /> */}
+            
+            <div className="relative w-full md:w-1/2">
+            <input
+              type="text"
+              placeholder={t('searchProducts')}
+              className={`w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 focus:ring-orange-500 transition-all ${cls.input} ${cls.ringFocus}`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
+            <Search className={`absolute left-3 top-3 ${cls.input} ${cls.ringFocus} `} size={18} />
+          </div>
+
+
             <button
               className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition-colors disabled:opacity-60"
               onClick={() => setShowCreateModal(true)}
               disabled={!currentUser}
             >
-              <FaPlus size={16} /> Add Game
+              <FaPlus size={16} /> {t("addGame")}
             </button>
           </div>
         </div>
@@ -229,7 +245,7 @@ const Games = () => {
           <div className={cls.backdrop}>
             <div ref={modalRef} className={`${cls.surface} ${cls.border} rounded-xl p-6 w-full max-w-md`}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Add New Game</h3>
+                <h3 className="text-lg font-semibold"> {t("addNewgame")} </h3>
                 <button className={`${cls.muted} hover:opacity-80`} onClick={() => setShowCreateModal(false)}>
                   <FaTimes size={20} />
                 </button>
@@ -237,16 +253,16 @@ const Games = () => {
               <form onSubmit={handleCreateGame} className="space-y-3">
                 <input
                   type="text" value={gameTitle} onChange={(e) => setGameTitle(e.target.value)}
-                  placeholder="Game Title" className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
+                  placeholder= {t("gameTitle")} className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
                 />
                 <textarea
                   value={gameDesc} onChange={(e) => setGameDesc(e.target.value)}
-                  placeholder="Game Description" rows={2}
+                  placeholder= {t("descriptionGame")} rows={2}
                   className={`w-full p-2 ${cls.input} ${cls.ringFocus}`}
                 />
                 <input
                   type="url" value={gameLink} onChange={(e) => setGameLink(e.target.value)}
-                  placeholder="Game Link (URL)" className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
+                  placeholder= {t("gameLink")} className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
                 />
                 <input
                   type="url" value={gameImg} onChange={(e) => setGameImg(e.target.value)}
@@ -254,10 +270,10 @@ const Games = () => {
                 />
                 <div className="flex justify-end gap-2 pt-1">
                   <button type="button" className={`${cls.muted}`} onClick={() => setShowCreateModal(false)}>
-                    Cancel
+                    {t("cancel")}
                   </button>
                   <button type="submit" className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600">
-                    Save
+                    {t("addGame")}
                   </button>
                 </div>
               </form>
@@ -346,7 +362,7 @@ const Games = () => {
                             setShowOptions(null);
                           }}
                         >
-                          <FaEdit className="mr-2" /> Edit
+                          <FaEdit className="mr-2" /> {t("edit")}
                         </button>
                         <button
                           className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-neutral-100/60 dark:hover:bg-neutral-700/60 flex items-center rounded-b-md"
@@ -355,7 +371,7 @@ const Games = () => {
                             setShowOptions(null);
                           }}
                         >
-                          <FaTrash className="mr-2" /> Delete
+                          <FaTrash className="mr-2" /> {t("delete")}
                         </button>
                       </div>
                     )}
@@ -375,13 +391,13 @@ const Games = () => {
                     rel="noopener noreferrer"
                     className="text-decoration-none inline-block px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-purple-600 hover:to-pink-600 transition"
                   >
-                    Play Now
+                    {t("playNow")}
                   </a>
                 </div>
               </div>
             ))
           ) : (
-            <div className={`col-span-full text-center py-8 ${cls.muted}`}>No games found</div>
+            <div className={`col-span-full text-center py-8 ${cls.muted}`}>{t("Nogamesfound")} </div>
           )}
         </div>
       </div>

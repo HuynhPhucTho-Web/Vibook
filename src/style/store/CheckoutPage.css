@@ -1,7 +1,30 @@
-.checkout-container {
+.checkout-page-container {
   padding: 20px;
   max-width: 1000px;
   margin: 0 auto;
+  background: #fdfdfd;
+  min-height: 100vh;
+  --text-color: #1f2937;
+  --bg-color: #ffffff;
+  --card-bg: #ffffff;
+  --border-color: #d1d5db;
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --text-secondary: #6b7280;
+  --bg-hover: #f3f4f6;
+}
+
+.checkout-page-container.dark-theme {
+  background: #1a1a1a;
+  color: #e5e5e5;
+  --text-color: #e5e5e5;
+  --bg-color: #374151;
+  --card-bg: #4b5563;
+  --border-color: #6b7280;
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --text-secondary: #9ca3af;
+  --bg-hover: #6b7280;
 }
 
 .checkout-header {
@@ -110,6 +133,12 @@
 .form-group textarea:focus {
   outline: none;
   border-color: var(--primary-color);
+}
+
+.form-group input::placeholder,
+.form-group select::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-secondary);
 }
 
 .form-group textarea {
@@ -273,7 +302,7 @@
 }
 
 @media (max-width: 768px) {
-  .checkout-container {
+  .checkout-page-container {
     padding: 15px;
   }
 
