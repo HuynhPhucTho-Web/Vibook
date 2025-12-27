@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { auth, db } from "../components/firebase";
-import { doc, onSnapshot, collection, query, getDocs, orderBy, limit } from "firebase/firestore";
+import { doc, onSnapshot, collection, query, getDocs, orderBy, limit, startAfter } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
@@ -17,6 +17,9 @@ function Home() {
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastVisible, setLastVisible] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fetch user data and posts
   useEffect(() => {
@@ -54,17 +57,19 @@ function Home() {
           unsubscribe = () => unsubPost();
         } else {
           // Otherwise, fetch the general feed
-          const postsQuery = query(collection(db, "Posts"), orderBy("createdAt", "desc"), limit(20));
+          const postsQuery = query(collection(db, "Posts"), orderBy("createdAt", "desc"), limit(10));
           const unsubPosts = onSnapshot(postsQuery, async (snapshot) => {
             const allPosts = await Promise.all(
               snapshot.docs.map(async (doc) => {
                 const postData = { id: doc.id, ...doc.data() };
                 // We don't need to fetch all comments for the entire feed, PostItem can do it.
-                postData.comments = []; 
+                postData.comments = [];
                 return postData;
               })
             );
             setPosts(allPosts);
+            setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+            setHasMore(snapshot.docs.length === 10);
             setIsLoading(false);
           });
           unsubscribe = () => unsubPosts();
@@ -99,6 +104,53 @@ function Home() {
     );
     setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
   };
+
+  // Load more posts
+  const loadMorePosts = useCallback(async () => {
+    if (!hasMore || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const postsQuery = query(
+        collection(db, "Posts"),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(10)
+      );
+      const snapshot = await getDocs(postsQuery);
+      const newPosts = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const postData = { id: doc.id, ...doc.data() };
+          postData.comments = [];
+          return postData;
+        })
+      );
+      setPosts((prevPosts) => [...prevPosts, ...newPosts]);
+      setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+      setHasMore(snapshot.docs.length === 10);
+    } catch (error) {
+      console.error("Error loading more posts:", error);
+      toast.error("Failed to load more posts");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [hasMore, loadingMore, lastVisible]);
+
+  // Scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop
+        >= document.documentElement.offsetHeight - 100 &&
+        hasMore &&
+        !loadingMore
+      ) {
+        loadMorePosts();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadMorePosts, hasMore, loadingMore]);
 
   // Scroll to post when postId parameter is present
   useEffect(() => {
@@ -156,6 +208,13 @@ function Home() {
           <div className="text-center py-5">
             <h5 className="text-muted">No posts available</h5>
             <p className="text-muted">Be the first to share something!</p>
+          </div>
+        )}
+        {loadingMore && (
+          <div className="d-flex justify-content-center py-3">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading more posts...</span>
+            </div>
           </div>
         )}
       </div>
