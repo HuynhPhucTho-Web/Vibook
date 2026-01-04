@@ -153,7 +153,7 @@ const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess,
             onChange={(e) => setReplyText(e.target.value)}
             placeholder={replyToName ? `Phản hồi ${replyToName}...` : "Viết phản hồi..."}
             className={`w-full rounded-full pl-4 pr-24 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isLight ? "bg-gray-100" : "bg-zinc-800"
+              isLight ? "bg-gray-100 text-gray-900" : "bg-zinc-800 text-white"
             }`}
             onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSubmit(e)}
           />
@@ -574,7 +574,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
               onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
               placeholder={t("writeComment")}
               className={`w-full rounded-full pl-4 pr-24 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                isLight ? "bg-gray-100" : "bg-zinc-800"
+                isLight ? "bg-gray-100 text-gray-900" : "bg-zinc-800 text-white"
               }`}
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">

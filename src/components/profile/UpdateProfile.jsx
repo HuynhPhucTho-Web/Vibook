@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../components/firebase";
+import { auth, db } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import {
@@ -15,7 +15,7 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { ThemeContext } from "../context/ThemeContext";
+import { ThemeContext } from "../../context/ThemeContext";
 import PlacesAutocomplete from "react-places-autocomplete";
 
 /** Upload ảnh lên Cloudinary */

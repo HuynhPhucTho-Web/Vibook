@@ -25,6 +25,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import { FaUsers, FaPlus, FaTimes, FaEllipsisH } from "react-icons/fa";
 import { FaHouse } from "react-icons/fa6";
 import { Search } from "lucide-react";
+import "../style/group/Group.css";
 
 /* ---------- utils ---------- */
 const cx = (...c) => c.filter(Boolean).join(" ");
@@ -49,9 +50,9 @@ export default function Groups() {
   const [editingGroup, setEditingGroup] = useState(null); // group đang edit
   const modalRef = useRef(null);
 
-    const { theme } = useContext(ThemeContext);
-    const isDark = theme === "dark";
-    const { t } = useContext(LanguageContext);
+  const { theme } = useContext(ThemeContext);
+  const isDark = theme === "dark";
+  const { t } = useContext(LanguageContext);
 
   const cls = {
     page: isDark ? "bg-neutral-900 text-neutral-100" : "bg-neutral-100 text-neutral-900",
@@ -59,11 +60,10 @@ export default function Groups() {
     border: isDark ? "border border-neutral-700" : "border border-neutral-200",
     shadow: "shadow-md hover:shadow-lg transition",
     muted: isDark ? "text-neutral-400" : "text-neutral-600",
-    input: `${
-      isDark
-        ? "bg-neutral-700 border-neutral-600 text-neutral-100 placeholder-neutral-400"
-        : "bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-500"
-    } border rounded-lg`,
+    input: `${isDark
+      ? "bg-neutral-700 border-neutral-600 text-neutral-100 placeholder-neutral-400"
+      : "bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-500"
+      } border rounded-lg`,
     ringFocus: "focus:outline-none focus:ring-2 focus:ring-pink-500",
     menu: isDark
       ? "bg-neutral-800 border border-neutral-700 text-neutral-200"
@@ -266,17 +266,18 @@ export default function Groups() {
 
 
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
               onClick={() => {
                 setEditingGroup(null);
                 setGroupName("");
                 setGroupDescription("");
                 setShowCreateModal(true);
               }}
+              className="create-group-btn"
             >
-              <FaPlus size={16} />
+              <FaPlus size={15} />
               {t("createGroup")}
             </button>
+
           </div>
         </div>
 
@@ -305,7 +306,7 @@ export default function Groups() {
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder= {t("groupName")}
+                  placeholder={t("groupName")}
                   className={cx(
                     "w-full p-2 mb-3 rounded-lg",
                     isDark

@@ -1,0 +1,42 @@
+.create-group-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+
+  color: #5f7fa8;
+  background: #e7eef6;
+
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 40px;
+
+  padding: 14px 26px;
+
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  box-shadow:
+    -6px -4px 16px rgba(255, 255, 255, 0.9),
+     6px  4px 16px rgba(95, 157, 231, 0.45);
+}
+
+.create-group-btn:hover {
+  color: #4a6a94;
+  background: #edf3fa;
+
+  box-shadow:
+    -3px -2px 8px rgba(255, 255, 255, 0.9),
+     3px  2px 8px rgba(95, 157, 231, 0.45);
+}
+
+.create-group-btn:active {
+  box-shadow: inset
+    -3px -2px 6px rgba(255, 255, 255, 0.8),
+     inset 3px  2px 6px rgba(95, 157, 231, 0.35);
+}

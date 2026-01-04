@@ -5,7 +5,7 @@ import { doc, onSnapshot, query, collection, where, getDocs, orderBy } from "fir
 import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import PostItem from "../components/PostItem";
-import ProfileHeader from "../components/UpdateProfile"; // Can be reused
+import ProfileHeader from "../components/profile/UpdateProfile";
 
 function UserDetailPage() {
   const { theme } = useContext(ThemeContext);

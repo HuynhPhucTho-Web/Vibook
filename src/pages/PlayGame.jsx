@@ -8,6 +8,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from '../context/LanguageContext';
 import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
+import "../style/game/Game.css";
 
 const Games = () => {
 
@@ -21,11 +22,10 @@ const Games = () => {
     border: isDark ? "border border-neutral-700" : "border border-neutral-200",
     shadow: "shadow-md hover:shadow-lg transition",
     muted: isDark ? "text-neutral-400" : "text-neutral-600",
-    input: `${
-      isDark
+    input: `${isDark
         ? "bg-neutral-700 border-neutral-600 text-neutral-100 placeholder-neutral-400"
         : "bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-500"
-    } border rounded-lg`,
+      } border rounded-lg`,
     ringFocus: "focus:outline-none focus:ring-2 focus:ring-pink-500",
     menu: isDark
       ? "bg-neutral-800 border border-neutral-700 text-neutral-200"
@@ -217,26 +217,28 @@ const Games = () => {
               onChange={(e) => setSearch(e.target.value)}
               className={`w-full sm:w-64 px-4 py-2 rounded-full ${cls.input} ${cls.ringFocus}`}
             /> */}
-            
+
             <div className="relative w-full md:w-1/2">
-            <input
-              type="text"
-              placeholder={t('searchProducts')}
-              className={`w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 focus:ring-orange-500 transition-all ${cls.input} ${cls.ringFocus}`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Search className={`absolute left-3 top-3 ${cls.input} ${cls.ringFocus} `} size={18} />
-          </div>
+              <input
+                type="text"
+                placeholder={t('searchProducts')}
+                className={`w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 focus:ring-orange-500 transition-all ${cls.input} ${cls.ringFocus}`}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <Search className={`absolute left-3 top-3 ${cls.input} ${cls.ringFocus} `} size={18} />
+            </div>
 
 
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition-colors disabled:opacity-60"
               onClick={() => setShowCreateModal(true)}
               disabled={!currentUser}
+              className="create-neo-btn create-neo-btn--pink"
             >
-              <FaPlus size={16} /> {t("addGame")}
+              <FaPlus size={15} />
+              {t("addGame")}
             </button>
+
           </div>
         </div>
 
@@ -253,16 +255,16 @@ const Games = () => {
               <form onSubmit={handleCreateGame} className="space-y-3">
                 <input
                   type="text" value={gameTitle} onChange={(e) => setGameTitle(e.target.value)}
-                  placeholder= {t("gameTitle")} className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
+                  placeholder={t("gameTitle")} className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
                 />
                 <textarea
                   value={gameDesc} onChange={(e) => setGameDesc(e.target.value)}
-                  placeholder= {t("descriptionGame")} rows={2}
+                  placeholder={t("descriptionGame")} rows={2}
                   className={`w-full p-2 ${cls.input} ${cls.ringFocus}`}
                 />
                 <input
                   type="url" value={gameLink} onChange={(e) => setGameLink(e.target.value)}
-                  placeholder= {t("gameLink")} className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
+                  placeholder={t("gameLink")} className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
                 />
                 <input
                   type="url" value={gameImg} onChange={(e) => setGameImg(e.target.value)}

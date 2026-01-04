@@ -7,7 +7,9 @@ import { LanguageContext } from "../context/LanguageContext";
 import { toast } from "react-toastify";
 import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
-import ProfileHeader from "../components/UpdateProfile";
+import ProfileHeader from "../components/profile/UpdateProfile";
+import ProfileStories from "../components/profile/ProfileStories";
+
 
 function Profile() {
   const { theme } = useContext(ThemeContext);
@@ -46,7 +48,7 @@ function Profile() {
         const cs = await getDocs(collection(db, "Posts", d.id, "comments"));
         return { ...p, comments: cs.docs.map(c => ({ id: c.id, ...c.data() })) };
       }));
-      arr.sort((a,b) => {
+      arr.sort((a, b) => {
         const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : a.createdAt || 0;
         const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : b.createdAt || 0;
         return tb - ta;
@@ -249,6 +251,10 @@ function Profile() {
           onFollow={handleFollow}
           onUpdated={(partial) => setUserDetails(prev => ({ ...prev, ...partial }))}
         />
+
+        {/* Story của đúng user đang xem */}
+        <ProfileStories userId={userDetails.id} theme={theme} />
+
 
         {isOwner && (
           <div className="mt-4">
