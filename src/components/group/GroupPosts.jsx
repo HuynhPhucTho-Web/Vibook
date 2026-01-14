@@ -6,6 +6,8 @@ import { FaImage, FaVideo, FaFile, FaSmile } from "react-icons/fa";
 import Picker from "emoji-picker-react";
 import "../../style/GroupPost.css";
 
+import {LanguageContext} from "../../context/LanguageContext";
+
 const uploadToCloudinary = async (file) => {
   const cloud = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
   const preset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
@@ -25,6 +27,7 @@ const uploadToCloudinary = async (file) => {
 export default function GroupPostComposer({ groupId }) {
   const { theme } = useContext(ThemeContext);
   const isLight = theme === "light";
+  const {t} = useContext(LanguageContext);
 
   const [content, setContent] = useState("");
   const [media, setMedia] = useState([]); // [{file, preview}]
@@ -86,7 +89,7 @@ export default function GroupPostComposer({ groupId }) {
     <div className={`gpc-card ${isLight ? "is-light" : "is-dark"}`}>
       <div className="gpc-top">
         <textarea
-          placeholder="Bạn đang nghĩ gì?"
+          placeholder= {t("youMean")}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={3}
@@ -133,7 +136,7 @@ export default function GroupPostComposer({ groupId }) {
             disabled={loading || (!content.trim() && media.length === 0)}
             className={`gpc-postBtn ${loading || (!content.trim() && media.length === 0) ? "is-disabled" : ""}`}
           >
-            {loading ? "Đang đăng…" : "Đăng"}
+            {loading ? t("creating") : t("create")}
           </button>
         </div>
       </div>

@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect,useContext, useMemo, useRef, useState } from "react";
 import { FaUsers, FaImage, FaTimes } from "react-icons/fa";
 import { db, auth } from "../../components/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import "../../style/GroupHeader.css";
+import {LanguageContext} from "../../context/LanguageContext"
 
 const uploadToCloudinary = async (file) => {
   const cloudName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
@@ -18,13 +19,12 @@ const uploadToCloudinary = async (file) => {
 
 export default function GroupHeader({ group }) {
   const isOwner = auth.currentUser?.uid === group.ownerId;
-
   const [editing, setEditing] = useState(false);
   const [bannerPreview, setBannerPreview] = useState(group.bannerUrl || "");
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef(null);
-
+  const {t} = useContext(LanguageContext);
   useEffect(() => {
     return () => {
       if (bannerPreview?.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
@@ -84,7 +84,7 @@ export default function GroupHeader({ group }) {
           <div className="ghd-coverActions">
             {!editing ? (
               <button className="ghd-btn ghd-btnPrimary" onClick={() => setEditing(true)}>
-                Update banner
+                {t("updateBanner")}
               </button>
             ) : (
               <div className="ghd-actionRow">
@@ -137,7 +137,7 @@ export default function GroupHeader({ group }) {
         </div>
 
         <div className="ghd-infoRight">
-          <button className="ghd-btn ghd-btnPrimary ghd-inviteBtn">+ Invite</button>
+          <button className="ghd-btn ghd-btnPrimary ghd-inviteBtn"> {t("invitemembers")} </button>
         </div>
       </div>
     </header>

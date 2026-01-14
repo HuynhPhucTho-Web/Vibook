@@ -4,7 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../components/firebase";
 import { ThemeContext } from "../context/ThemeContext";
 import { Outlet } from "react-router-dom";
-
+import {LanguageContext} from "../context/LanguageContext";
 import GroupHeader from "../components/group/GroupHeader";
 import GroupSidebar from "../components/group/GroupSidebar";
 
@@ -14,7 +14,7 @@ export default function GroupPage() {
   const { groupId } = useParams();
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
-
+  const {t} = useContext(LanguageContext);
   const [group, setGroup] = useState(null);
 
   // fetch group
@@ -54,16 +54,16 @@ export default function GroupPage() {
         {/* LEFT rail (desktop/tablet) */}
         <aside className="gh-rail gh-railLeft">
           <div className="gh-card">
-            <div className="gh-cardTitle">Giới thiệu</div>
+            <div className="gh-cardTitle"> {t("introduction")} </div>
             <div className="gh-cardText">
               {group.description || "Chưa có mô tả."}
             </div>
           </div>
 
           <div className="gh-card">
-            <div className="gh-cardTitle">Thành viên</div>
+            <div className="gh-cardTitle"> {t("membersGroup")} </div>
             <div className="gh-cardText">
-              {group.members?.length || 0} thành viên
+              {group.members?.length || 0} {t("membersGroup")}
             </div>
           </div>
         </aside>
@@ -76,7 +76,7 @@ export default function GroupPage() {
         {/* RIGHT rail (desktop) */}
         <aside className="gh-rail gh-railRight">
           <div className="gh-card">
-            <div className="gh-cardTitle">Gợi ý</div>
+            <div className="gh-cardTitle"> {t("suggest")} </div>
             <div className="gh-cardText">
               Bạn có thể đặt “rules”, “pinned post”, “events”… ở cột này để giống app group thật.
             </div>

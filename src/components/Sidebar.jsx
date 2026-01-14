@@ -3,7 +3,8 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   FaHome, FaUser, FaUserPlus, FaUsers, FaCalendarAlt, FaVideo, FaGamepad, FaStore,
   FaShoppingBag, FaClipboardList, FaStoreAlt,
-  FaSignOutAlt, FaBars, FaTimes
+  FaSignOutAlt, FaBars, FaTimes,
+  FaYoutube
 } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { auth } from "../components/firebase";
@@ -25,6 +26,7 @@ const MENU = [
   { path: "/friends",    icon: FaUserPlus, labelKey: "friends" },
   { path: "/groups",     icon: FaUsers, labelKey: "groups" },
   { path: "/events",     icon: FaCalendarAlt, labelKey: "events" },
+  { path: "/videos",     icon: FaYoutube, labelKey: "video" },
   { path: "/story",      icon: FaVideo, labelKey: "story" },
   { path: "/playgame",   icon: FaGamepad, labelKey: "playGame" },
   { path: "/market",     icon: FaShoppingBag, labelKey: "store" },

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { collection, addDoc, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaUser } from "react-icons/fa";
 import { db } from "../components/firebase";
 
 const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
@@ -60,12 +60,18 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
   return (
     <form onSubmit={handleReplySubmit} className="mt-3 ms-2">
       <div className="d-flex gap-2 align-items-start">
-        <img
-          src={userDetails?.photo || auth.currentUser?.photoURL || "/default-avatar.png"}
-          alt="Your avatar"
-          className="rounded-circle flex-shrink-0"
-          style={{ width: "30px", height: "30px", objectFit: "cover" }}
-        />
+        {userDetails?.photo || auth.currentUser?.photoURL ? (
+          <img
+            src={userDetails?.photo || auth.currentUser?.photoURL}
+            alt="Your avatar"
+            className="rounded-circle flex-shrink-0"
+            style={{ width: "30px", height: "30px", objectFit: "cover" }}
+          />
+        ) : (
+          <div className="rounded-circle flex-shrink-0 bg-light d-flex align-items-center justify-content-center" style={{ width: "30px", height: "30px" }}>
+            <FaUser size={12} className="text-muted" />
+          </div>
+        )}
         <div className="flex-grow-1 position-relative">
           <textarea
             value={replyText}

@@ -54,4 +54,13 @@ npm run preview
 # React Websocket
 npm install react-use-websocket
 
+# Build app android
+npx cap sync android
+npx cap run android
 
+
+# Build app IOS
+
+npx cap sync ios
+npx cap run ios
+npm install react-player

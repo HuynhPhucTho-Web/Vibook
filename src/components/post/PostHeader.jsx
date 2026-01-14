@@ -54,37 +54,33 @@ const PostHeader = ({
     <div className="post-item-header">
       <div className="post-item-author">
         <Link to={`/profile/${post.userId}`} className="no-underline hover:no-underline">
-          <div
-            className="post-item-avatar d-flex align-items-center justify-content-center"
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "50%",
-              backgroundColor: isLight ? "#e9ecef" : "#495057",
-              color: isLight ? "#6c757d" : "#adb5bd",
-              position: "relative",
-            }}
-          >
-            {post.userPhoto ? (
-              <img
-                src={post.userPhoto}
-                alt={post.userName}
-                className="rounded-circle"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  objectFit: "cover",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                }}
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
-            ) : null}
-            <FaUser size={20} style={{ display: post.userPhoto ? "none" : "block" }} />
-          </div>
+          {post.userPhoto ? (
+            <img
+              src={post.userPhoto}
+              alt={post.userName}
+              className="rounded-circle"
+              style={{
+                width: "40px",
+                height: "40px",
+                objectFit: "cover",
+              }}
+              onError={(e) => {
+                e.target.style.display = "none";
+              }}
+            />
+          ) : (
+            <div
+              className="d-flex align-items-center justify-content-center rounded-circle"
+              style={{
+                width: "40px",
+                height: "40px",
+                backgroundColor: isLight ? "#e9ecef" : "#495057",
+                color: isLight ? "#6c757d" : "#adb5bd",
+              }}
+            >
+              <FaUser size={20} />
+            </div>
+          )}
         </Link>
 
         <div>

@@ -19,6 +19,7 @@ const translations = {
     groups: "Groups",
     events: "Events",
     friends: "Friends",
+    video: "Video",
     story: "Story",
     playGame: "Play Game",
     store: "Store",
@@ -45,6 +46,17 @@ const translations = {
     viewDetail: "View Detail",
     media: "Media",
     about: "About",
+
+    //Menu Group Sidebar
+    homeGroup: "Group Home",
+    membersGroup: "Members",
+    eventsGroup: "Events",
+    mediaGroup: "Media",
+    aboutGroup: "About Group",
+
+     // Groups details header
+    updateBanner: "Update Banner",
+    invitemembers: "+ Invite Members",
 
     // Stories
     createStory: "Create Story",
@@ -267,6 +279,7 @@ const translations = {
     groups: "Nhóm",
     events: "Sự kiện",
     friends: "Bạn bè",
+    video: "Video",
     story: "Story",
     playGame: "Chơi game",
     store: "Cửa hàng",
@@ -294,6 +307,18 @@ const translations = {
     viewDetail: "Xem chi tiết",
     media: "Media",
     about: "Giới thiệu",
+
+    //Menu Group Sidebar
+    homeGroup: "Trang nhóm",
+    membersGroup: "Thành viên",
+    eventsGroup: "Sự kiện",
+    mediaGroup: "Media",
+    aboutGroup: "Giới thiệu nhóm",
+
+     // Groups details header
+    updateBanner: "Cập nhật banner",
+    invitemembers: "+ Mời thành viên",
+
 
     // Stories
     createStory: "Tạo story",
@@ -512,6 +537,7 @@ const translations = {
     groups: "グループ",
     events: "イベント",
     friends: "友達",
+    video: "ビデオ",
     story: "ストーリー",
     playGame: "ゲーム",
     store: "ストア",
@@ -539,6 +565,45 @@ const translations = {
     viewDetail: "詳細を見る",
     media: "メディア",
     about: "について",
+
+    // Groups details header
+    updateBanner: "バナーを更新",
+    invitemembers: "+メンバーを招待",
+
+    //Menu Group Sidebar
+    homeGroup: "グループホーム",
+    membersGroup: "メンバー",
+    eventsGroup: "イベント",
+    mediaGroup: "メディア",
+    aboutGroup: "グループについて",
+
+    groupMembers: "グループメンバー",
+    
+    //introduction
+    introduction: "紹介",
+    suggest: "提案",
+    
+    // Members
+    notFindMember: "メンバーが見つかりません",
+
+    serachMembersGroup: "メンバーを検索...",
+    noMembersFound: "メンバーが見つかりません",
+    memberCount: "メンバー数",
+
+    //Create group
+    youMean: "あなたが意味するのは？",
+    publicGroup: "パブリックグループ",
+    privateGroup: "プライベートグループ",
+    privacy: "プライバシー",
+    anyoneCanFind: "誰でもグループを見つけて参加できます",
+    onlyInvitedCanJoin: "招待されたメンバーのみが参加できます",
+    create: "作成",
+    creating: "作成中...",
+
+    //Group media
+    noMediaFound: "メディアが見つかりません",
+
+
 
     // Stories
     createStory: "ストーリー作成",
@@ -625,7 +690,6 @@ const translations = {
     eventDeleteFailed: "イベントの削除に失敗しました",
     loginToViewEvents: "イベントを表示して参加するにはログインしてください",
     searchEvents: "イベントを検索...",
-    create: "作成",
     cancel: "キャンセル",
     save: "保存",
     edit: "編集",

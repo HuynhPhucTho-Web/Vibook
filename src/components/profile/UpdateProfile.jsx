@@ -63,7 +63,6 @@ export default function ProfileHeader({
     location: user?.location || "",
   }));
 
-  // ✅ Sync form khi chuyển profile / snapshot update
   useEffect(() => {
     setForm({
       firstName: user?.firstName || "",
@@ -201,9 +200,6 @@ export default function ProfileHeader({
 
   return (
     <div className={`rounded-2xl overflow-hidden shadow-lg ${bgCard}`}>
-      {/* ======================================================
-          ✅ DESKTOP (md+) — GIỮ NGUYÊN GIAO DIỆN CŨ
-         ====================================================== */}
       <div className="hidden md:block">
         {/* Cover */}
         <div className="relative">
@@ -221,13 +217,21 @@ export default function ProfileHeader({
           <div className="flex items-start gap-5 -mt-16 md:-mt-20">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <img
-                src={avatarSrc}
-                alt="avatar"
-                className={`w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ${
+              {user?.photo ? (
+                <img
+                  src={avatarSrc}
+                  alt="avatar"
+                  className={`w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ${
+                    isDark ? "ring-gray-800" : "ring-white"
+                  } object-cover shadow-xl`}
+                />
+              ) : (
+                <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ${
                   isDark ? "ring-gray-800" : "ring-white"
-                } object-cover shadow-xl`}
-              />
+                } bg-gray-300 flex items-center justify-center shadow-xl`}>
+                  <FaUser size={64} className="text-gray-600" />
+                </div>
+              )}
               {isOwner && (
                 <label className="absolute right-0 bottom-0 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-full cursor-pointer shadow-lg transition">
                   {uploadingAvatar ? <FaSpinner className="animate-spin" size={16} /> : <FaCamera size={16} />}
@@ -438,11 +442,17 @@ export default function ProfileHeader({
           <div className={`rounded-2xl border ${borderColor} shadow-sm ${bgCard} p-4`}>
             <div className="flex items-center gap-3">
               <div className="relative">
-                <img
-                  src={avatarSrc}
-                  alt="avatar"
-                  className={`w-20 h-20 rounded-full object-cover ring-4 ${isDark ? "ring-gray-900" : "ring-white"} shadow`}
-                />
+                {user?.photo ? (
+                  <img
+                    src={avatarSrc}
+                    alt="avatar"
+                    className={`w-20 h-20 rounded-full object-cover ring-4 ${isDark ? "ring-gray-900" : "ring-white"} shadow`}
+                  />
+                ) : (
+                  <div className={`w-20 h-20 rounded-full ring-4 ${isDark ? "ring-gray-900" : "ring-white"} bg-gray-300 flex items-center justify-center shadow`}>
+                    <FaUser size={40} className="text-gray-600" />
+                  </div>
+                )}
                 {isOwner && (
                   <label className="absolute -right-1 -bottom-1 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full cursor-pointer shadow">
                     {uploadingAvatar ? <FaSpinner className="animate-spin" size={14} /> : <FaCamera size={14} />}
@@ -452,7 +462,6 @@ export default function ProfileHeader({
               </div>
 
               <div className="min-w-0 flex-1">
-                {/* ✅ Tên: wrap đẹp, không truncate */}
                 <div className={`text-base font-extrabold leading-snug ${textPrimary} break-words`}>
                   {fullName}
                 </div>

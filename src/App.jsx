@@ -42,6 +42,7 @@ import OrdersPage from "./pages/store/OrdersPage";
 import SellerPage from "./pages/store/SellerPage";
 import ManageProducts from "./components/shop/ManageProducts";
 import { CartProvider } from "./context/CartContext";
+import Video from "./pages/video/VideoHub"
 
 // Layout for authentication pages
 const AuthLayout = () => (
@@ -139,6 +140,7 @@ function App() {
               <Route path="/seller-dashboard" element={user ? <SellerPage /> : <Navigate to="/login" />} />
               <Route path="/manage-products" element={user ? <ManageProducts /> : <Navigate to="/login" />} />
               <Route path="/post/:postId" element={user ? <PostDetail /> : <Navigate to="/login" />} />
+              <Route path="/videos" element={user ? <Video /> : <Navigate to="/login" />} />
               {/* Group Page with nested routes */}
 
               <Route path="groups/:groupId" element={<GroupPage />}>

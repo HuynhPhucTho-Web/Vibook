@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { db, auth } from "../../components/firebase";
 import { doc, getDoc, updateDoc, arrayRemove } from "firebase/firestore";
+import {LanguageContext} from "../../context/LanguageContext";
 
 const GroupMembers = () => {
   const { groupId } = useParams();
@@ -9,6 +10,8 @@ const GroupMembers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [group, setGroup] = useState(null);
   const [isCreator, setIsCreator] = useState(false);
+  const {t} = useContext(LanguageContext);
+
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -108,7 +111,7 @@ const GroupMembers = () => {
         </ul>
       ) : (
         <p className="text-gray-500 dark:text-gray-400">
-          Không tìm thấy thành viên nào.
+          {t("notFindMember")}
         </p>
       )}
     </div>

@@ -14,7 +14,7 @@ import {
   arrayRemove
 } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane } from "react-icons/fa";
+import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane, FaUser } from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
 import { db } from "../components/firebase";
 import Picker from "emoji-picker-react";
@@ -140,11 +140,17 @@ const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess,
   return (
     <div className="mt-2 ml-12">
       <div className="flex gap-2 items-end">
-        <img
-          src={userDetails?.photo || auth.currentUser?.photoURL || "/default-avatar.png"}
-          alt="Avatar"
-          className="w-8 h-8 rounded-full object-cover"
-        />
+        {userDetails?.photo || auth.currentUser?.photoURL ? (
+          <img
+            src={userDetails?.photo || auth.currentUser?.photoURL}
+            alt="Avatar"
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+            <FaUser size={16} className="text-gray-600" />
+          </div>
+        )}
         <div className="flex-1 relative">
           <input
             ref={inputRef}
@@ -322,11 +328,17 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
   return (
     <div className={`${depth > 0 ? marginLeft + " mt-2" : "mb-3"}`}>
       <div className="flex gap-2">
-        <img
-          src={comment.userPhoto || "/default-avatar.png"}
-          alt="Avatar"
-          className={`${depth > 0 ? "w-8 h-8" : "w-10 h-10"} rounded-full object-cover flex-shrink-0`}
-        />
+        {comment.userPhoto ? (
+          <img
+            src={comment.userPhoto}
+            alt="Avatar"
+            className={`${depth > 0 ? "w-8 h-8" : "w-10 h-10"} rounded-full object-cover flex-shrink-0`}
+          />
+        ) : (
+          <div className={`${depth > 0 ? "w-8 h-8" : "w-10 h-10"} rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0`}>
+            <FaUser size={depth > 0 ? 16 : 20} className="text-gray-600" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className={`inline-block rounded-2xl px-3 py-2 ${
             isLight ? "bg-gray-100" : "bg-zinc-800"
@@ -560,11 +572,17 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
 
       <div className={`p-4 border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`}>
         <div className="flex gap-2 items-end">
-          <img
-            src={userDetails?.photo || auth.currentUser?.photoURL || "/default-avatar.png"}
-            alt="Avatar"
-            className="w-10 h-10 rounded-full object-cover"
-          />
+          {userDetails?.photo || auth.currentUser?.photoURL ? (
+            <img
+              src={userDetails?.photo || auth.currentUser?.photoURL}
+              alt="Avatar"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+              <FaUser size={20} className="text-gray-600" />
+            </div>
+          )}
           <div className="flex-1 relative">
             <input
               ref={inputRef}

@@ -23,6 +23,7 @@ import {
   FaLock,
   FaSave,
   FaTimes,
+  FaUser,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import GroupCommentSection from "./GroupCommentSection";
@@ -405,8 +406,8 @@ export default function GroupPostItem({
                 className="w-12 h-12 rounded-full object-cover ring-2 ring-offset-2 ring-gray-200 dark:ring-gray-700"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white grid place-items-center font-bold">
-                {(localPost.userName?.[0] || "?").toUpperCase()}
+              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                <FaUser size={24} className="text-gray-600" />
               </div>
             )}
           </Link>
