@@ -264,7 +264,7 @@ function Profile() {
 
         <div className="mt-4 space-y-4">
           {posts.length ? posts.map(p => (
-            <PostItem key={p.id} post={p} auth={auth} userDetails={userDetails} />
+            <PostItem key={p.id} post={p} auth={auth} userDetails={userDetails} isDetailView={true} />
           )) : (
             <p className="text-center opacity-75">{isOwner ? t("youHaventPostedYet") : t("noPostsYet")}</p>
           )}

@@ -10,13 +10,14 @@ import {
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { toast } from "react-toastify";
-import { FaComments, FaUserMinus, FaUser } from "react-icons/fa";
+import { FaComments, FaUserMinus, FaUser, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const FriendsList = ({ currentUser, theme }) => {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   // Load friendships + thông tin user của bạn bè
@@ -116,10 +117,34 @@ const FriendsList = ({ currentUser, theme }) => {
     );
   }
 
+  // Filter friends based on search term
+  const filteredFriends = friends.filter((friend) => {
+    if (!searchTerm) return true;
+    const fullName = friend.displayName.toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return fullName.includes(search);
+  });
+
   return (
     <div className="friends-list">
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="input-group">
+          <span className="input-group-text">
+            <FaSearch />
+          </span>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search friends..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="row">
-        {friends.map((friend) => (
+        {filteredFriends.map((friend) => (
           <div key={friend.uid} className="col-md-6 col-lg-4 mb-3">
             <div
               className={`card ${

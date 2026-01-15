@@ -84,6 +84,7 @@ function PostDetail() {
           auth={auth}
           userDetails={userDetails}
           onPostDeleted={() => window.history.back()}
+          isDetailView={true}
         />
       </div>
     </div>

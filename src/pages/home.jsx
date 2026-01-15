@@ -8,7 +8,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { FaSignOutAlt } from "react-icons/fa";
 import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
-import VideoCarousel from "../components/VideoCarousel";
+// import VideoCarousel from "../components/VideoCarousel";
 import "../style/Home.css";
 
 function Home() {
@@ -62,8 +62,10 @@ function Home() {
             const allPosts = await Promise.all(
               snapshot.docs.map(async (doc) => {
                 const postData = { id: doc.id, ...doc.data() };
-                // We don't need to fetch all comments for the entire feed, PostItem can do it.
-                postData.comments = [];
+                // Fetch comment count for feed performance
+                const commentsQuery = query(collection(db, "Posts", doc.id, "comments"));
+                const commentsSnapshot = await getDocs(commentsQuery);
+                postData.comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
                 return postData;
               })
             );
@@ -120,7 +122,10 @@ function Home() {
       const newPosts = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const postData = { id: doc.id, ...doc.data() };
-          postData.comments = [];
+          // Fetch comment count for feed performance
+          const commentsQuery = query(collection(db, "Posts", doc.id, "comments"));
+          const commentsSnapshot = await getDocs(commentsQuery);
+          postData.comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
           return postData;
         })
       );
@@ -189,9 +194,9 @@ function Home() {
 
   return (
     <div className="home-container">
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <VideoCarousel theme={theme} />
-      </div>
+      </div> */}
       <PostCreator onPostCreated={handlePostCreated} />
       <div className="posts-list">
         {posts.length > 0 ? (

@@ -27,9 +27,9 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
 
   const isLight = theme === "light";
 
-  // Real-time listeners
+  // Real-time listeners only for detail view to optimize feed performance
   useEffect(() => {
-    if (!post.id) return;
+    if (!isDetailView || !post.id) return;
     const unsubPost = onSnapshot(doc(db, "Posts", post.id), (snap) => {
       if (snap.exists()) {
         setLocalPost({ ...snap.data(), id: snap.id });
@@ -38,14 +38,15 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
       }
     });
     return () => unsubPost();
-  }, [post.id, onPostDeleted]);
+  }, [post.id, onPostDeleted, isDetailView]);
 
   useEffect(() => {
+    if (!isDetailView || !post.id) return;
     const unsubComments = onSnapshot(query(collection(db, "Posts", post.id, "comments")), (snap) => {
       setCommentCount(snap.docs.length);
     });
     return () => unsubComments();
-  }, [post.id]);
+  }, [post.id, isDetailView]);
 
 
   const handleRepostToTimeline = async () => {

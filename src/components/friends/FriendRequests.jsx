@@ -12,13 +12,14 @@ import {
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { toast } from "react-toastify";
-import { FaCheck, FaTimes, FaUser } from "react-icons/fa";
+import { FaCheck, FaTimes, FaUser, FaSearch } from "react-icons/fa";
 
 const FriendRequests = ({ currentUser, theme }) => {
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Load incoming friend requests (toUserId = currentUser.uid, status = pending)
   useEffect(() => {
@@ -164,10 +165,41 @@ const FriendRequests = ({ currentUser, theme }) => {
     );
   }
 
+  // Filter requests based on search term
+  const filteredIncomingRequests = incomingRequests.filter((req) => {
+    if (!searchTerm) return true;
+    const name = (req.fromUserName || "").toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return name.includes(search);
+  });
+
+  const filteredSentRequests = sentRequests.filter((req) => {
+    if (!searchTerm) return true;
+    const name = (req.toUserName || "").toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return name.includes(search);
+  });
+
   return (
     <div className="friend-requests">
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="input-group">
+          <span className="input-group-text">
+            <FaSearch />
+          </span>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search friend requests..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       {/* Incoming Friend Requests */}
-      {incomingRequests.length > 0 && (
+      {filteredIncomingRequests.length > 0 && (
         <div className="mb-4">
           <h5 className="mb-3">Friend Requests ({incomingRequests.length})</h5>
           <div className="row">
@@ -250,11 +282,11 @@ const FriendRequests = ({ currentUser, theme }) => {
       )}
 
       {/* Sent Friend Requests */}
-      {sentRequests.length > 0 && (
+      {filteredSentRequests.length > 0 && (
         <div>
           <h5 className="mb-3">Sent Requests ({sentRequests.length})</h5>
           <div className="row">
-            {sentRequests.map((req) => (
+            {filteredSentRequests.map((req) => (
               <div key={req.id} className="col-md-6 col-lg-4 mb-3">
                 <div
                   className={`card ${
