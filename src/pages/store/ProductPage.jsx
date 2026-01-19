@@ -6,12 +6,14 @@ import { db } from '../../components/firebase';
 import { useCart } from '../../context/CartContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { toast } from 'react-toastify';
+import {LanguageContext} from '../../context/LanguageContext';
 
 const ProductPage = () => {
   const { theme } = useContext(ThemeContext);
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { t } = useContext(LanguageContext);
   
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -141,9 +143,9 @@ const ProductPage = () => {
                   <span className="font-bold text-lg">{averageRating}</span>
                 </div>
                 <span className={`${isLight ? "text-gray-400" : "text-gray-500"} font-medium`}>|</span>
-                <span className={`${isLight ? "text-gray-500" : "text-gray-400"} font-medium`}>{reviews.length} đánh giá</span>
+                <span className={`${isLight ? "text-gray-500" : "text-gray-400"} font-medium`}>{reviews.length} {t('evaluate')} </span>
                 <span className={`${isLight ? "text-gray-400" : "text-gray-500"} font-medium`}>|</span>
-                <span className={`${isLight ? "text-gray-500" : "text-gray-400"} font-medium`}>Đã bán 1.2k+</span>
+                <span className={`${isLight ? "text-gray-500" : "text-gray-400"} font-medium`}> {t('sold')} 1.2k+</span>
               </div>
             </div>
 
@@ -161,13 +163,13 @@ const ProductPage = () => {
 
             <div className="space-y-6">
               <div>
-                <h3 className={`text-sm font-bold uppercase tracking-widest mb-2 ${isLight ? "text-gray-400" : "text-gray-500"}`}>Mô tả</h3>
+                <h3 className={`text-sm font-bold uppercase tracking-widest mb-2 ${isLight ? "text-gray-400" : "text-gray-500"}`}>{t('description')} </h3>
                 <p className={`${isLight ? "text-gray-600" : "text-gray-300"} leading-relaxed italic`}>{product.description}</p>
               </div>
 
               <div className={`flex flex-col gap-4 py-6 border-y ${isLight ? "border-gray-100" : "border-gray-700"}`}>
                 <div className="flex items-center gap-6">
-                  <span className={`text-sm font-bold ${isLight ? "text-gray-800" : "text-white"}`}>Số lượng:</span>
+                  <span className={`text-sm font-bold ${isLight ? "text-gray-800" : "text-white"}`}>{t('numberProduct')}:</span>
                   <div className={`flex items-center ${isLight ? "bg-white border-gray-200" : "bg-gray-800 border-gray-600"} border rounded-xl p-1 shadow-sm`}>
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q-1))}
@@ -180,7 +182,7 @@ const ProductPage = () => {
                     >+</button>
                   </div>
                   <span className={`text-sm font-bold ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {product.stock > 0 ? `Còn ${product.stock} sản phẩm` : 'Hết hàng'}
+                    {product.stock > 0 ? `Còn ${product.stock} ${t('product')}` : t('outOfStock')}
                   </span>
                 </div>
               </div>
@@ -191,14 +193,14 @@ const ProductPage = () => {
                   disabled={product.stock <= 0}
                   className="flex items-center justify-center gap-3 bg-white border-2 border-orange-600 text-orange-600 py-4 rounded-2xl font-black hover:bg-orange-50 transition active:scale-95 disabled:opacity-50"
                 >
-                  <ShoppingCart size={20} /> Thêm vào giỏ
+                  <ShoppingCart size={20} /> {t('addCart')}
                 </button>
                 <button 
                   onClick={handleBuyNow}
                   disabled={product.stock <= 0}
                   className="bg-orange-600 text-white py-4 rounded-2xl font-black hover:bg-orange-700 transition shadow-lg shadow-orange-100 active:scale-95 disabled:bg-gray-200"
                 >
-                  Mua ngay
+                  {t('byNow')}
                 </button>
               </div>
             </div>
@@ -206,10 +208,10 @@ const ProductPage = () => {
             {/* Thông tin thêm */}
             <div className={`mt-8 flex flex-wrap gap-6 border-t pt-8 ${isLight ? "border-gray-100" : "border-gray-700"}`}>
                <div className={`flex items-center gap-2 text-xs font-bold uppercase ${isLight ? "text-gray-500" : "text-gray-400"}`}>
-                  <ShieldCheck className="text-green-500" size={18} /> Chính hãng 100%
+                  <ShieldCheck className="text-green-500" size={18} /> {t('genuine')}100%
                </div>
                <div className={`flex items-center gap-2 text-xs font-bold uppercase ${isLight ? "text-gray-500" : "text-gray-400"}`}>
-                  <Truck className="text-blue-500" size={18} /> Giao hàng toàn quốc
+                  <Truck className="text-blue-500" size={18} /> {t('nationwideDelivery')}
                </div>
             </div>
           </div>
@@ -218,7 +220,7 @@ const ProductPage = () => {
         {/* Section: Reviews từ Firebase */}
         <div className={`mt-12 ${isLight ? "bg-white" : "bg-gray-800"} rounded-3xl p-8 border ${isLight ? "border-gray-100" : "border-gray-700"} shadow-sm`}>
           <div className={`flex items-center justify-between mb-8 border-b pb-6 ${isLight ? "border-gray-100" : "border-gray-700"}`}>
-            <h3 className={`text-2xl font-black ${isLight ? "text-gray-800" : "text-white"}`}>Đánh giá khách hàng</h3>
+            <h3 className={`text-2xl font-black ${isLight ? "text-gray-800" : "text-white"}`}>{t("review")}</h3>
             <div className="text-right">
               <div className="text-3xl font-black text-orange-600">{averageRating}/5</div>
               <div className="flex text-orange-400 mt-1">
@@ -229,7 +231,7 @@ const ProductPage = () => {
 
           <div className="space-y-8">
             {reviews.length === 0 ? (
-              <p className={`${isLight ? "text-gray-400" : "text-gray-500"} italic text-center py-10`}>Chưa có đánh giá nào cho sản phẩm này.</p>
+              <p className={`${isLight ? "text-gray-400" : "text-gray-500"} italic text-center py-10`}>{t("notReviewForProduct")}.</p>
             ) : (
               reviews.map(review => (
                 <div key={review.id} className={`border-b pb-8 last:border-0 ${isLight ? "border-gray-50" : "border-gray-700"}`}>

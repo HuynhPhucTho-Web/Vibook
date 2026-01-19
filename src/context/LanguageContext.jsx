@@ -261,6 +261,20 @@ const translations = {
     shipped: "Shipped",
     delivered: "Delivered",
     cancelled: "Cancelled",
+
+    addCart: "Add to Cart",
+    byNow: "Buy Now",
+    numberProduct: "Number",
+    review: "Review",
+    notReviewForProduct: "No reviews for this product",
+    genuine: "Genuine Product",
+    nationwideDelivery: "Nationwide Delivery",
+    evaluate: "Evaluate",
+    sold: "Sold",
+    outOfStock: "Out of Stock",
+    product: "Product",
+
+
   },
   vi: {
     // Header
@@ -519,6 +533,18 @@ const translations = {
     shipped: "Đang giao",
     delivered: "Đã giao",
     cancelled: "Đã hủy",
+
+    addCart: "Thêm vào giỏ",
+    byNow: "Mua ngay",
+    numberProduct: "Số lượng",
+    review: "Đánh giá",
+    notReviewForProduct: "Chưa có đánh giá cho sản phẩm này",
+    genuine: "Sản phẩm chính hãng",
+    nationwideDelivery: "Giao hàng toàn quốc",
+    evaluate: "Đánh giá",
+    sold: "Đã bán",
+    outOfStock: "Hết hàng",
+    product: "Sản phẩm",
   },
   ja: {
     // Header
@@ -810,6 +836,18 @@ const translations = {
     shipped: "発送済み",
     delivered: "配達済み",
     cancelled: "キャンセル済み",
+
+    addCart: "カートに追加",
+    byNow: "今すぐ購入",
+    numberProduct: "商品の数",
+    review: "レビュー",
+    notReviewForProduct: "この商品のレビューはありません",
+    genuine: "本物の商品",
+    nationwideDelivery: "全国配達",
+    evaluate: "評価する",
+    sold: "販売済み",
+    outOfStock: "在庫切れ",
+    product: "商品",
   },
 };
 
