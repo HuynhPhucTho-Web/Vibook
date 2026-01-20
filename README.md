@@ -39,6 +39,7 @@ firebase --version
 firebase login
 npm run build
 firebase init
+npx update-browserslist-db@latest
 select 
 ✅ Hosting: Configure files for Firebase Hosting...
 Spacebar

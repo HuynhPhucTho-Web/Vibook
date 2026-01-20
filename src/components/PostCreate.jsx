@@ -4,7 +4,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
-import { FaImage, FaVideo, FaFile, FaSmile, FaCamera, FaTimes, FaExpand } from "react-icons/fa";
+import { FaImage, FaVideo, FaFile, FaSmile, FaCamera, FaTimes, FaExpand, FaUser } from "react-icons/fa";
 import { Cloudinary } from "@cloudinary/url-gen";
 import Picker from "emoji-picker-react";
 import "../style/PostCreate.css";
@@ -428,11 +428,17 @@ const PostCreator = ({ onPostCreated }) => {
         <div className="flex items-start gap-4">
           {/* Avatar */}
           <div className="relative flex-shrink-0 group">
-            <img
-              src={auth.currentUser?.photoURL || "/default-avatar.png"}
-              alt="avatar"
-              className="h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-400/50 transition-all group-hover:ring-indigo-500"
-            />
+            {auth.currentUser?.photoURL ? (
+              <img
+                src={auth.currentUser.photoURL}
+                alt="avatar"
+                className="h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-400/50 transition-all group-hover:ring-indigo-500"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center ring-2 ring-offset-2 ring-indigo-400/50 transition-all group-hover:ring-indigo-500">
+                <FaUser className="text-gray-600 text-xl" />
+              </div>
+            )}
             <span className="absolute right-0 bottom-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white shadow-sm"></span>
           </div>
 

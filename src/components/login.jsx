@@ -16,8 +16,20 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast.success("Chào mừng bạn quay trở lại!", { position: "top-center" });
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // KIỂM TRA XÁC NHẬN EMAIL
+      if (!user.emailVerified) {
+        toast.warning("Tài khoản chưa được xác nhận. Vui lòng kiểm tra email!", {
+          position: "bottom-center"
+        });
+        // (Tùy chọn) Đăng xuất người dùng ngay lập tức nếu chưa xác nhận
+        // await auth.signOut(); 
+        return; // Dừng lại, không cho chuyển trang
+      }
+
+      toast.success("User logged in Successfully", { position: "top-center" });
       navigate("/homevibook", { replace: true });
     } catch (error) {
       toast.error(error.message, { position: "bottom-center" });
@@ -31,7 +43,7 @@ function Login() {
       <InteractiveBlob color="#d8b4fe" size={400} offset={{ x: 200, y: 200 }} />
       <InteractiveBlob color="#fda4af" size={300} offset={{ x: 0, y: 0 }} />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="glass-container relative z-10 w-full max-w-[1000px] flex flex-col md:flex-row rounded-[40px] overflow-hidden"
@@ -39,8 +51,8 @@ function Login() {
         {/* CỘT TRÁI: FORM */}
         <div className="flex-1 p-8 md:p-14 bg-white/20">
           <div className="mb-10 flex items-center gap-2">
-             <div className="w-10 h-10 rounded-full bg-pink-500 shadow-lg shadow-pink-200" />
-             <div className="w-4 h-4 rounded-full bg-blue-400" />
+            <div className="w-10 h-10 rounded-full bg-pink-500 shadow-lg shadow-pink-200" />
+            <div className="w-4 h-4 rounded-full bg-blue-400" />
           </div>
 
           <h1 className="text-4xl font-extrabold text-slate-800 mb-2">Sign in</h1>
@@ -76,8 +88,8 @@ function Login() {
                 <input type="checkbox" className="w-4 h-4 rounded accent-pink-500" />
                 <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Duy trì đăng nhập</span>
               </label>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="text-pink-600 font-bold hover:text-pink-700 transition-colors"
                 onClick={() => toast.info("Chức năng đang phát triển")}
               >
@@ -85,8 +97,8 @@ function Login() {
               </button>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="w-full py-4 bg-gradient-to-r from-[#FF1493] to-[#FF69B4] text-white rounded-2xl font-bold text-lg shadow-xl shadow-pink-200 hover:scale-[1.02] active:scale-95 transition-all duration-300"
             >
               LOGIN
@@ -115,14 +127,14 @@ function Login() {
           >
             {/* Hình tròn lớn giả lập giọt nước */}
             <div className="w-64 h-64 rounded-full bg-white/40 shadow-inner border border-white/50 backdrop-blur-md flex items-center justify-center p-8">
-               <div className="space-y-4">
-                  <h2 className="text-2xl font-bold text-slate-800 italic leading-tight">
-                    “Tìm kiếm sự thú vị dễ dàng hơn bạn tưởng.”
-                  </h2>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Trải nghiệm kết nối cộng đồng hoàn toàn mới cùng ViBook.
-                  </p>
-               </div>
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-slate-800 italic leading-tight">
+                  “Tìm kiếm sự thú vị dễ dàng hơn bạn tưởng.”
+                </h2>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Trải nghiệm kết nối cộng đồng hoàn toàn mới cùng ViBook.
+                </p>
+              </div>
             </div>
             {/* Các bong bóng nhỏ trang trí xung quanh */}
             <div className="absolute -top-4 -right-4 w-12 h-12 bg-blue-300/50 rounded-full blur-sm" />

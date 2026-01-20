@@ -1,5 +1,5 @@
 // src/components/Register.jsx
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import React, { useState } from "react";
 import { auth, db } from "./firebase";
 import { setDoc, doc } from "firebase/firestore";
@@ -34,15 +34,24 @@ function Register() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // GỬI EMAIL XÁC NHẬN
+      await sendEmailVerification(user);
+
       await setDoc(doc(db, "Users", user.uid), {
         email: user.email,
         firstName: fname,
         lastName: lname,
         photo: "",
+        emailVerified: false
       });
 
-      toast.success("Đăng ký tài khoản thành công!", { position: "top-center" });
-      navigate("/homevibook", { replace: true });
+      toast.info("Một email xác nhận đã được gửi! Vui lòng kiểm tra hộp thư trước khi đăng nhập.", {
+        position: "top-center",
+        autoClose: 8000,
+      });
+
+
+      navigate("/login", { replace: true });
     } catch (error) {
       toast.error(error.message, { position: "bottom-center" });
     }
@@ -54,7 +63,7 @@ function Register() {
       <InteractiveBlob color="#60a5fa" size={450} offset={{ x: -250, y: -150 }} />
       <InteractiveBlob color="#f472b6" size={400} offset={{ x: 250, y: 150 }} />
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="glass-container relative z-10 w-full max-w-[1000px] flex flex-col md:flex-row rounded-[40px] overflow-hidden"
@@ -127,8 +136,8 @@ function Register() {
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="w-full mt-4 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-200 hover:scale-[1.01] active:scale-95 transition-all duration-300"
             >
               ĐĂNG KÝ NGAY

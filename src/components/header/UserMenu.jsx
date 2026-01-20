@@ -34,11 +34,17 @@ const UserMenu = ({
         }}
       >
         <div className="relative">
-          <img
-            src={auth.currentUser?.photoURL || "/default-avatar.png"}
-            alt="User Avatar"
-            className="w-10 h-10 rounded-full object-cover"
-          />
+          {auth.currentUser?.photoURL ? (
+            <img
+              src={auth.currentUser.photoURL}
+              alt="User Avatar"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+              <FaUser className="text-gray-600 text-lg" />
+            </div>
+          )}
           <div
             className={`absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 ${
               theme === "light" ? "border-white" : "border-black"
@@ -70,11 +76,17 @@ const UserMenu = ({
 
           {/* Avatar middle */}
           <div className="absolute inset-[30%] rounded-full overflow-hidden border border-gray-300/40">
-            <img
-              src={auth.currentUser?.photoURL || "/default-avatar.png"}
-              alt="User Avatar"
-              className="w-full h-full object-cover"
-            />
+            {auth.currentUser?.photoURL ? (
+              <img
+                src={auth.currentUser.photoURL}
+                alt="User Avatar"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                <FaUser className="text-gray-600 text-sm" />
+              </div>
+            )}
           </div>
 
           {/* Profile – TOP */}
@@ -215,11 +227,17 @@ const UserMenu = ({
         <ul className="hidden md:block absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
           <li className="p-3">
             <div className="flex items-center">
-              <img
-                src={auth.currentUser?.photoURL || "/default-avatar.png"}
-                alt="User Avatar"
-                className="w-8 h-8 rounded-full object-cover mr-3 flex-shrink-0"
-              />
+              {auth.currentUser?.photoURL ? (
+                <img
+                  src={auth.currentUser.photoURL}
+                  alt="User Avatar"
+                  className="w-8 h-8 rounded-full object-cover mr-3 flex-shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-3 flex-shrink-0">
+                  <FaUser className="text-gray-600 text-sm" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <h6
                   className={`mb-0 text-sm font-semibold truncate ${
