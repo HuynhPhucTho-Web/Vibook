@@ -1,11 +1,12 @@
-// src/components/Login.jsx
-import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { motion } from "framer-motion";
 import SignInwithGoogle from "./signInWIthGoogle";
-import "../style/auth.css";    // dùng chung cho login + register
+import InteractiveBlob from "./InteractiveBlob";
+import "../style/auth.css";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -16,126 +17,127 @@ function Login() {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast.success("User logged in Successfully", {
-        position: "top-center",
-      });
+      toast.success("Chào mừng bạn quay trở lại!", { position: "top-center" });
       navigate("/homevibook", { replace: true });
     } catch (error) {
-      toast.error(error.message, {
-        position: "bottom-center",
-      });
+      toast.error(error.message, { position: "bottom-center" });
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-inner">
-          {/* LEFT: LOGIN FORM */}
-          <div className="auth-left">
-            <div className="auth-logo-pill">
-              <span className="dot dot-1" />
-              <span className="dot dot-2" />
-            </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#f8fafc] overflow-hidden p-4">
+      {/* Hiệu ứng nước nền */}
+      <InteractiveBlob color="#60a5fa" size={450} offset={{ x: -200, y: -200 }} />
+      <InteractiveBlob color="#d8b4fe" size={400} offset={{ x: 200, y: 200 }} />
+      <InteractiveBlob color="#fda4af" size={300} offset={{ x: 0, y: 0 }} />
 
-            <h1 className="auth-title">Welcome back</h1>
-            <p className="auth-subtitle">
-              Please enter your account details.
-            </p>
-
-            <form onSubmit={handleSubmit} className="auth-form">
-              <div className="auth-field">
-                <label>Email</label>
-                <div className="auth-input-wrap">
-                  <input
-                    type="email"
-                    placeholder="johndoe@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="auth-field">
-                <label>Password</label>
-                <div className="auth-input-wrap">
-                  <input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="auth-row between">
-                <label className="auth-checkbox">
-                  <input type="checkbox" />
-                  <span>Keep me logged in</span>
-                </label>
-                <button
-                  type="button"
-                  className="auth-link-text"
-                  onClick={() => toast.info("Chức năng quên mật khẩu đang phát triển")}
-                >
-                  Forgot password
-                </button>
-              </div>
-
-              <button type="submit" className="auth-primary-btn">
-                Sign in
-              </button>
-
-              <div className="auth-divider">
-                <span>or continue with</span>
-              </div>
-
-              <div className="auth-social-row">
-                <SignInwithGoogle />
-                {/* Có thể thêm GitHub / Facebook icon sau nếu muốn */}
-              </div>
-
-              <p className="auth-bottom-text">
-                New here?{" "}
-                <Link to="/register" className="auth-bottom-link">
-                  Create an account
-                </Link>
-              </p>
-            </form>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-container relative z-10 w-full max-w-[1000px] flex flex-col md:flex-row rounded-[40px] overflow-hidden"
+      >
+        {/* CỘT TRÁI: FORM */}
+        <div className="flex-1 p-8 md:p-14 bg-white/20">
+          <div className="mb-10 flex items-center gap-2">
+             <div className="w-10 h-10 rounded-full bg-pink-500 shadow-lg shadow-pink-200" />
+             <div className="w-4 h-4 rounded-full bg-blue-400" />
           </div>
 
-          {/* RIGHT: TESTIMONIAL / INFO */}
-          <div className="auth-right">
-            <div className="auth-right-inner">
-              <p className="auth-right-label">Người dùng của chúng tôi nói</p>
-              <h2 className="auth-right-title">
-                “Tìm kiếm sự thú vị nằm ở đây<br />dễ dàng hơn bạn tưởng.”
-              </h2>
-              <p className="auth-right-quote">
-                Bạn chỉ cần đăng nhập vào và trải nghiệm.  
-                Chúng tôi sẽ giúp bạn hết muộn phiền.
-              </p>
+          <h1 className="text-4xl font-extrabold text-slate-800 mb-2">Sign in</h1>
+          <p className="text-slate-500 mb-8">Vui lòng nhập thông tin tài khoản của bạn.</p>
 
-              <div className="auth-right-user">
-                <div className="avatar-circle">M</div>
-                <div>
-                  <p className="auth-right-name">ViBook</p>
-                  <p className="auth-right-role">UI Designer By Huynh Phuc Tho Web</p>
-                </div>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 ml-1 mb-2">Email</label>
+              <input
+                type="email"
+                className="liquid-input"
+                placeholder="johndoe@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-              <div className="auth-right-footer-card">
-                <h3>Truy cập ngay bây giờ để không bỏ lỡ từng khoảnh khắc</h3>
-                <p>
-                 Thể hiện bản thân bạn, kết nối với cộng đồng và khám phá những điều thú vị mỗi ngày cùng ViBook!
-                </p>
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 ml-1 mb-2">Mật khẩu</label>
+              <input
+                type="password"
+                className="liquid-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" className="w-4 h-4 rounded accent-pink-500" />
+                <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Duy trì đăng nhập</span>
+              </label>
+              <button 
+                type="button" 
+                className="text-pink-600 font-bold hover:text-pink-700 transition-colors"
+                onClick={() => toast.info("Chức năng đang phát triển")}
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full py-4 bg-gradient-to-r from-[#FF1493] to-[#FF69B4] text-white rounded-2xl font-bold text-lg shadow-xl shadow-pink-200 hover:scale-[1.02] active:scale-95 transition-all duration-300"
+            >
+              LOGIN
+            </button>
+
+            <div className="relative py-4">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-300"></span></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-2 text-slate-500">Hoặc tiếp tục với</span></div>
+            </div>
+
+            <SignInwithGoogle />
+
+            <p className="text-center text-slate-600 pt-4">
+              Bạn chưa có tài khoản?{" "}
+              <Link to="/register" className="text-pink-600 font-bold hover:underline">Tạo ngay</Link>
+            </p>
+          </form>
+        </div>
+
+        {/* CỘT PHẢI: DECORATION */}
+        <div className="hidden md:flex flex-1 bg-gradient-to-br from-white/30 to-white/10 p-12 flex-col justify-center items-center text-center">
+          <motion.div
+            animate={{ y: [0, -15, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="relative"
+          >
+            {/* Hình tròn lớn giả lập giọt nước */}
+            <div className="w-64 h-64 rounded-full bg-white/40 shadow-inner border border-white/50 backdrop-blur-md flex items-center justify-center p-8">
+               <div className="space-y-4">
+                  <h2 className="text-2xl font-bold text-slate-800 italic leading-tight">
+                    “Tìm kiếm sự thú vị dễ dàng hơn bạn tưởng.”
+                  </h2>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    Trải nghiệm kết nối cộng đồng hoàn toàn mới cùng ViBook.
+                  </p>
+               </div>
+            </div>
+            {/* Các bong bóng nhỏ trang trí xung quanh */}
+            <div className="absolute -top-4 -right-4 w-12 h-12 bg-blue-300/50 rounded-full blur-sm" />
+            <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-purple-300/50 rounded-full blur-sm" />
+          </motion.div>
+
+          <div className="mt-12 flex items-center gap-4 bg-white/40 p-4 rounded-3xl border border-white/50">
+            <div className="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-xl">V</div>
+            <div className="text-left">
+              <p className="font-bold text-slate-800">ViBook</p>
+              <p className="text-xs text-slate-500">UI Designer By Tho Web</p>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

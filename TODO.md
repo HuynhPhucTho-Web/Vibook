@@ -1,7 +1,10 @@
-# TODO: Synchronize UI Theme Across Store Pages
+# Refactor VideoHub.jsx and Fix Scrolling Issue
 
-- [x] Update Store.jsx to use ThemeContext for backgrounds, text, and inputs
-- [x] Update SellerPage.jsx to use ThemeContext for backgrounds, text, and inputs
-- [x] Update ProductPage.jsx to use ThemeContext for backgrounds, text, and inputs
-- [x] Update OrdersPage.jsx to use ThemeContext for backgrounds, text, and inputs
-- [x] Update CartPage.jsx to use ThemeContext for backgrounds, text, and inputs
+## Tasks
+- [x] Create VideoHeader component in src/components/video/VideoHeader.jsx
+- [x] Create VideoGrid component in src/components/video/VideoGrid.jsx
+- [x] Create VideoDetail component in src/components/video/VideoDetail.jsx
+- [x] Create VideoSidebar component in src/components/video/VideoSidebar.jsx
+- [x] Update VideoHub.jsx to use the new components
+- [x] Fix scrolling issue: Make video player sticky in VideoDetail
+- [x] Test the refactored code
