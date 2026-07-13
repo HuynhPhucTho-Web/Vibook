@@ -1,5 +1,6 @@
 import {
   collection,
+  collectionGroup,
   query,
   where,
   onSnapshot,
@@ -65,9 +66,10 @@ export const cleanupOldNotifications = async (userId) => {
   }
 };
 
+const processedNotifications = new Set();
+
 export const createNotificationIfNotExists = async (notificationData) => {
-  const processedNotifications = new Set();
-  const notificationKey = `${notificationData.type}_${notificationData.actorId}_${notificationData.postId || 'global'}_${Math.floor(notificationData.createdAt / 60000)}`; // Group theo phút
+  const notificationKey = `${notificationData.type}_${notificationData.actorId}_${notificationData.requestId || notificationData.messageId || notificationData.postId || 'global'}_${Math.floor(notificationData.createdAt / 60000)}`; // Group theo phút
 
   if (processedNotifications.has(notificationKey)) {
     return; // Đã xử lý rồi, bỏ qua
@@ -76,6 +78,38 @@ export const createNotificationIfNotExists = async (notificationData) => {
   processedNotifications.add(notificationKey);
 
   try {
+    // Check in DB to prevent duplicates
+    let q = null;
+    if (notificationData.type === "friend_request" && notificationData.requestId) {
+      q = query(
+        collection(db, "Notifications"),
+        where("userId", "==", notificationData.userId),
+        where("type", "==", "friend_request"),
+        where("requestId", "==", notificationData.requestId)
+      );
+    } else if (notificationData.type === "friend_message" && notificationData.messageId) {
+      q = query(
+        collection(db, "Notifications"),
+        where("userId", "==", notificationData.userId),
+        where("type", "==", "friend_message"),
+        where("messageId", "==", notificationData.messageId)
+      );
+    } else if (notificationData.type === "friend_post" && notificationData.postId) {
+      q = query(
+        collection(db, "Notifications"),
+        where("userId", "==", notificationData.userId),
+        where("type", "==", "friend_post"),
+        where("postId", "==", notificationData.postId)
+      );
+    }
+
+    if (q) {
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        return; // Đã tồn tại trong DB, không tạo lại
+      }
+    }
+
     await addDoc(collection(db, "Notifications"), notificationData);
   } catch (error) {
     console.error("Error creating notification:", error);
@@ -154,10 +188,8 @@ export const setupNotificationListeners = (user, createNotificationIfNotExists) 
 
   // Setup messages listener (từ bạn bè)
   const messagesQuery = query(
-    collection(db, "Messages"),
-    where("receiverId", "==", user.uid),
-    orderBy("createdAt", "desc"),
-    limit(10)
+    collectionGroup(db, "messages"),
+    where("receiverId", "==", user.uid)
   );
 
   const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
@@ -165,20 +197,23 @@ export const setupNotificationListeners = (user, createNotificationIfNotExists) 
       if (change.type === "added") {
         const messageData = change.doc.data();
 
-        // Kiểm tra xem có phải từ bạn bè không
-        // (Bạn cần implement logic kiểm tra friendship ở đây)
+        // Chỉ tạo thông báo cho tin nhắn mới (trong vòng 5 phút)
+        if (messageData.senderId !== user.uid &&
+          messageData.createdAt &&
+          (Date.now() - messageData.createdAt) < 300000) {
 
-        createNotificationIfNotExists({
-          userId: user.uid,
-          type: "friend_message",
-          actorId: messageData.senderId,
-          actorName: messageData.senderName,
-          actorPhoto: messageData.senderPhoto,
-          messageId: change.doc.id,
-          content: `${messageData.senderName} sent you a message`,
-          createdAt: Date.now(),
-          read: false,
-        });
+          createNotificationIfNotExists({
+            userId: user.uid,
+            type: "friend_message",
+            actorId: messageData.senderId,
+            actorName: messageData.senderName || "Someone",
+            actorPhoto: messageData.senderPhoto || null,
+            messageId: change.doc.id,
+            content: `${messageData.senderName || "Someone"} sent you a message`,
+            createdAt: Date.now(),
+            read: false,
+          });
+        }
       }
     });
   });

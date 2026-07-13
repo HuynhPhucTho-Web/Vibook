@@ -43,6 +43,7 @@ import SellerPage from "./pages/store/SellerPage";
 import ManageProducts from "./components/shop/ManageProducts";
 import { CartProvider } from "./context/CartContext";
 import Video from "./pages/video/VideoHub"
+import Setting from "./pages/Setting";
 
 // Layout for authentication pages
 const AuthLayout = () => (
@@ -56,27 +57,16 @@ const AuthLayout = () => (
 );
 
 const MainLayout = () => {
-  const [sidebarWidth, setSidebarWidth] = useState('250px');
-  const headerHeight = 0;
-
-  const handleSidebarToggle = () => {
-    setSidebarWidth((prev) => (prev === '250px' ? '60px' : '250px'));
-  };
-
   return (
-    <div className="App">
-      <Header onSidebarToggle={handleSidebarToggle} />
-      <div style={{ height: `${headerHeight}px` }} aria-hidden="true" />
-      <div className="d-flex flex-nowrap">
-        <Sidebar style={{ width: sidebarWidth }} />
-        <main className="flex-grow-1 overflow-hidden">
-          <div className="row g-0 m-0">
-            <section className="col-12 p-0 flex-grow-1">
-              <Outlet />
-            </section>
+    <div className="App app-shell">
+      <Header />
+      <div className="app-shell__body">
+        <Sidebar />
+        <main className="app-shell__main">
+          <div className="app-shell__content">
+            <Outlet />
           </div>
         </main>
-
       </div>
     </div>
   );
@@ -141,6 +131,7 @@ function App() {
               <Route path="/manage-products" element={user ? <ManageProducts /> : <Navigate to="/login" />} />
               <Route path="/post/:postId" element={user ? <PostDetail /> : <Navigate to="/login" />} />
               <Route path="/videos" element={user ? <Video /> : <Navigate to="/login" />} />
+              <Route path="/settings" element={user ? <Setting /> : <Navigate to="/login" />} />
               {/* Group Page with nested routes */}
 
               <Route path="groups/:groupId" element={<GroupPage />}>

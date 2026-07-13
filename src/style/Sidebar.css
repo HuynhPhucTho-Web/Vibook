@@ -43,6 +43,7 @@
   z-index: 1000;
   overflow: hidden;
   box-sizing: border-box;
+  overscroll-behavior: contain;
 }
 
 /* Mobile slide-in */
@@ -282,6 +283,7 @@
   justify-content: center;
   cursor: pointer;
   transition: background .2s ease, transform .2s ease;
+  touch-action: none;
 }
 
 .sidebar__mobile-toggle:hover {
@@ -316,5 +318,11 @@
   .sidebar__toggle,
   .sidebar__logout {
     transition: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: min(82vw, 288px) !important;
   }
 }

@@ -15,17 +15,18 @@ const PostHeader = ({
   onDelete
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
- const { t } = useContext(LanguageContext);
+ const { t, language } = useContext(LanguageContext);
   const formatTimeAgo = (timestamp) => {
-    const diff = Date.now() - timestamp;
+    const value = timestamp?.toMillis ? timestamp.toMillis() : timestamp;
+    const diff = Date.now() - value;
     const mins = Math.floor(diff / 60000);
     const hrs = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-    if (mins < 1) return "Vừa xong";
-    if (mins < 60) return `${mins} phút`;
-    if (hrs < 24) return `${hrs} giờ`;
-    if (days < 7) return `${days} ngày`;
-    return new Date(timestamp).toLocaleDateString("vi-VN");
+    if (mins < 1) return t("justNow");
+    if (mins < 60) return t("minuteAgo").replace("{count}", mins);
+    if (hrs < 24) return t("hourAgo").replace("{count}", hrs);
+    if (days < 7) return t("dayAgo").replace("{count}", days);
+    return new Date(value).toLocaleDateString({ en: "en-US", vi: "vi-VN", ja: "ja-JP" }[language] || "en-US");
   };
   useEffect(() => {
     let mounted = true;

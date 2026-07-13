@@ -11,6 +11,19 @@ import PostItem from "../components/PostItem";
 // import VideoCarousel from "../components/VideoCarousel";
 import "../style/Home.css";
 
+const mergeUniquePosts = (...postGroups) => {
+  const postsById = new Map();
+
+  postGroups.flat().forEach((post) => {
+    if (post?.id) postsById.set(post.id, post);
+  });
+
+  return Array.from(postsById.values()).sort(
+    (a, b) => (b.createdAt?.toMillis?.() ?? b.createdAt ?? 0) -
+      (a.createdAt?.toMillis?.() ?? a.createdAt ?? 0),
+  );
+};
+
 function Home() {
   const { theme } = useContext(ThemeContext);
   const [searchParams] = useSearchParams();
@@ -69,7 +82,7 @@ function Home() {
                 return postData;
               })
             );
-            setPosts(allPosts);
+            setPosts(mergeUniquePosts(allPosts));
             setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
             setHasMore(snapshot.docs.length === 10);
             setIsLoading(false);
@@ -95,7 +108,7 @@ function Home() {
       `[${new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })}] New post received:`,
       postData
     );
-    setPosts((prevPosts) => [postData, ...prevPosts.sort((a, b) => b.createdAt - a.createdAt)]);
+    setPosts((prevPosts) => mergeUniquePosts([postData], prevPosts));
   };
 
   // Handle post deletion
@@ -129,7 +142,7 @@ function Home() {
           return postData;
         })
       );
-      setPosts((prevPosts) => [...prevPosts, ...newPosts]);
+      setPosts((prevPosts) => mergeUniquePosts(prevPosts, newPosts));
       setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
       setHasMore(snapshot.docs.length === 10);
     } catch (error) {

@@ -11,7 +11,8 @@ import {
   serverTimestamp,
   increment,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  getDocs
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane, FaUser } from "react-icons/fa";
@@ -279,6 +280,9 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
 
       if (isReply) {
         await updateDoc(doc(db, "Posts", postId, "comments", parentCommentId), { replyCount: increment(-1) });
+      } else {
+        const repliesSnapshot = await getDocs(collection(db, "Posts", postId, "comments", comment.id, "replies"));
+        await Promise.all(repliesSnapshot.docs.map((replyDocument) => deleteDoc(replyDocument.ref)));
       }
 
       await deleteDoc(targetRef);
@@ -476,9 +480,12 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
     if (!isCommentSectionOpen) return;
 
     setLoading(true);
+    let replyUnsubscribers = [];
     const unsubscribe = onSnapshot(
       query(collection(db, "Posts", postId, "comments"), orderBy("createdAt", "desc")),
-      async (snapshot) => {
+      (snapshot) => {
+        replyUnsubscribers.forEach((stop) => stop());
+        replyUnsubscribers = [];
         const commentsData = [];
         let totalCount = snapshot.docs.length;
 
@@ -486,13 +493,14 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
           const commentData = { id: commentDoc.id, ...commentDoc.data(), replies: [] };
           totalCount += commentData.replyCount || 0;
 
-          onSnapshot(
+          const unsubscribeReplies = onSnapshot(
             query(collection(db, "Posts", postId, "comments", commentDoc.id, "replies"), orderBy("createdAt", "asc")),
             (repliesSnap) => {
               commentData.replies = repliesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
               setComments(prev => prev.map(c => c.id === commentDoc.id ? { ...c, replies: commentData.replies } : c));
             }
           );
+          replyUnsubscribers.push(unsubscribeReplies);
 
           commentsData.push(commentData);
         }
@@ -502,7 +510,10 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      replyUnsubscribers.forEach((stop) => stop());
+    };
   }, [isCommentSectionOpen, postId]);
 
   const handleSubmit = async (e) => {

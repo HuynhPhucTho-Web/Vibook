@@ -18,20 +18,17 @@ const UserMenu = ({
   mobileSettingsOpen,
   setMobileSettingsOpen,
 
-  setMobileSearchOpen,
-
   userMenuRef,
+  closeAllPopups,
 }) => {
   return (
     <div className="relative" ref={userMenuRef}>
-      <button
+      <Link
+        to="/profile"
         className="p-0 border-none bg-transparent"
-        type="button"
-        onClick={() => {
-          setUserMenuOpen((v) => !v);
-          setMobileSettingsOpen(false);
-          setMobileSearchOpen(false);
-        }}
+        onClick={closeAllPopups}
+        title="Trang cá nhân"
+        aria-label="Mở trang cá nhân"
       >
         <div className="relative">
           {auth.currentUser?.photoURL ? (
@@ -51,7 +48,7 @@ const UserMenu = ({
             }`}
           />
         </div>
-      </button>
+      </Link>
 
       {/* ===== Mobile radial menu ===== */}
       <div

@@ -1,10 +1,21 @@
 import React, { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  FaHome, FaUser, FaUserPlus, FaUsers, FaCalendarAlt, FaVideo, FaGamepad, FaStore,
-  FaShoppingBag, FaClipboardList, FaStoreAlt,
-  FaSignOutAlt, FaBars, FaTimes,
-  FaYoutube
+  FaHome,
+  FaUserPlus,
+  FaUsers,
+  FaCalendarAlt,
+  FaVideo,
+  FaGamepad,
+  FaStore,
+  FaShoppingBag,
+  FaClipboardList,
+  FaStoreAlt,
+  FaSignOutAlt,
+  FaBars,
+  FaTimes,
+  FaYoutube,
+  FaCog,
 } from "react-icons/fa";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { auth } from "../components/firebase";
@@ -14,22 +25,22 @@ import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 
 // ======= constants =======
-const DEFAULT_HEADER_HEIGHT = 100;          // fallback nếu không đo được
+const DEFAULT_HEADER_HEIGHT = 100; // fallback nếu không đo được
 
 const COLLAPSED_WIDTH = 72;
-const EXPANDED_WIDTH  = 200;
+const EXPANDED_WIDTH = 200;
 const MOBILE_BREAKPOINT = 768;
 
 const MENU = [
   { path: "/homevibook", icon: FaHome, labelKey: "home" },
-  { path: "/profile",    icon: FaUser, labelKey: "profile" },
-  { path: "/friends",    icon: FaUserPlus, labelKey: "friends" },
-  { path: "/groups",     icon: FaUsers, labelKey: "groups" },
-  { path: "/events",     icon: FaCalendarAlt, labelKey: "events" },
-  { path: "/videos",     icon: FaYoutube, labelKey: "video" },
-  { path: "/story",      icon: FaVideo, labelKey: "story" },
-  { path: "/playgame",   icon: FaGamepad, labelKey: "playGame" },
-  { path: "/market",     icon: FaShoppingBag, labelKey: "store" },
+  { path: "/friends", icon: FaUserPlus, labelKey: "friends" },
+  { path: "/groups", icon: FaUsers, labelKey: "groups" },
+  { path: "/events", icon: FaCalendarAlt, labelKey: "events" },
+  { path: "/videos", icon: FaYoutube, labelKey: "video" },
+  { path: "/story", icon: FaVideo, labelKey: "story" },
+  { path: "/playgame", icon: FaGamepad, labelKey: "playGame" },
+  { path: "/market", icon: FaShoppingBag, labelKey: "store" },
+  { path: "/settings", icon: FaCog, labelKey: "settings" },
 ];
 
 export default function Sidebar() {
@@ -37,7 +48,9 @@ export default function Sidebar() {
   const { t } = useContext(LanguageContext);
   const location = useLocation();
 
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= MOBILE_BREAKPOINT);
+  const [isMobile, setIsMobile] = useState(
+    () => window.innerWidth <= MOBILE_BREAKPOINT,
+  );
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
@@ -63,7 +76,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     const updateHeaderHeight = () => {
-      const header = document.querySelector("header");
+      const header = document.querySelector("[data-app-header]");
       if (header) {
         setHeaderHeight(header.offsetHeight);
       } else {
@@ -71,8 +84,14 @@ export default function Sidebar() {
       }
     };
     updateHeaderHeight();
+    const header = document.querySelector("[data-app-header]");
+    const observer = header ? new ResizeObserver(updateHeaderHeight) : null;
+    if (header) observer.observe(header);
     window.addEventListener("resize", updateHeaderHeight);
-    return () => window.removeEventListener("resize", updateHeaderHeight);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateHeaderHeight);
+    };
   }, []);
 
   // ======= responsive =======
@@ -99,8 +118,8 @@ export default function Sidebar() {
     const handleCloseSidebar = () => {
       if (isMobile) setIsMobileOpen(false);
     };
-    window.addEventListener('closeSidebar', handleCloseSidebar);
-    return () => window.removeEventListener('closeSidebar', handleCloseSidebar);
+    window.addEventListener("closeSidebar", handleCloseSidebar);
+    return () => window.removeEventListener("closeSidebar", handleCloseSidebar);
   }, [isMobile]);
 
   // Auto-close sidebar after 5 seconds of inactivity (mobile only)
@@ -130,13 +149,13 @@ export default function Sidebar() {
     startAutoCloseTimer();
 
     // Add event listeners to reset timer on interaction
-    const sidebar = document.querySelector('.sidebar');
+    const sidebar = document.querySelector(".sidebar");
     if (sidebar) {
-      sidebar.addEventListener('mouseenter', resetTimer);
-      sidebar.addEventListener('mouseleave', resetTimer);
-      sidebar.addEventListener('click', resetTimer);
-      sidebar.addEventListener('touchstart', resetTimer);
-      sidebar.addEventListener('touchend', resetTimer);
+      sidebar.addEventListener("mouseenter", resetTimer);
+      sidebar.addEventListener("mouseleave", resetTimer);
+      sidebar.addEventListener("click", resetTimer);
+      sidebar.addEventListener("touchstart", resetTimer);
+      sidebar.addEventListener("touchend", resetTimer);
     }
 
     return () => {
@@ -145,18 +164,19 @@ export default function Sidebar() {
         autoCloseTimerRef.current = null;
       }
       if (sidebar) {
-        sidebar.removeEventListener('mouseenter', resetTimer);
-        sidebar.removeEventListener('mouseleave', resetTimer);
-        sidebar.removeEventListener('click', resetTimer);
-        sidebar.removeEventListener('touchstart', resetTimer);
-        sidebar.removeEventListener('touchend', resetTimer);
+        sidebar.removeEventListener("mouseenter", resetTimer);
+        sidebar.removeEventListener("mouseleave", resetTimer);
+        sidebar.removeEventListener("click", resetTimer);
+        sidebar.removeEventListener("touchstart", resetTimer);
+        sidebar.removeEventListener("touchend", resetTimer);
       }
     };
   }, [isMobile, isMobileOpen]);
 
   // Persist trạng thái thu gọn (chỉ desktop)
   useEffect(() => {
-    if (!isMobile) localStorage.setItem("sidebar_collapsed", String(isCollapsed));
+    if (!isMobile)
+      localStorage.setItem("sidebar_collapsed", String(isCollapsed));
   }, [isCollapsed, isMobile]);
 
   // Lưu vị trí vào localStorage
@@ -200,10 +220,11 @@ export default function Sidebar() {
       const margin = 8;
       const size = 56; // ~ kích thước nút
       const maxLeft = window.innerWidth - size - margin;
-      const maxTop = window.innerHeight - size - margin;
+      const minTop = headerHeight + margin;
+      const maxTop = Math.max(minTop, window.innerHeight - size - margin);
 
       const clampedLeft = Math.min(Math.max(margin, newLeft), maxLeft);
-      const clampedTop = Math.min(Math.max(margin, newTop), maxTop);
+      const clampedTop = Math.min(Math.max(minTop, newTop), maxTop);
 
       setFabPosition({ left: clampedLeft, top: clampedTop });
 
@@ -239,13 +260,13 @@ export default function Sidebar() {
 
   const sidebarWidth = useMemo(
     () => (isCollapsed && !isMobile ? COLLAPSED_WIDTH : EXPANDED_WIDTH),
-    [isCollapsed, isMobile]
+    [isCollapsed, isMobile],
   );
 
   // ======= actions =======
   const toggleSidebar = () => {
-    if (isMobile) setIsMobileOpen(v => !v);
-    else setIsCollapsed(v => !v);
+    if (isMobile) setIsMobileOpen((v) => !v);
+    else setIsCollapsed((v) => !v);
   };
 
   const handleLogout = async () => {
@@ -253,19 +274,11 @@ export default function Sidebar() {
       await auth.signOut();
       toast.success("Logged out successfully", { position: "top-center" });
     } catch (e) {
-      toast.error(`Failed to log out: ${e.message}`, { position: "top-center" });
+      toast.error(`Failed to log out: ${e.message}`, {
+        position: "top-center",
+      });
     }
   };
-
-  const menuItems = useMemo(() => {
-    const isOnProfilePage = location.pathname.startsWith("/profile/");
-    return MENU.map(item => {
-      if (item.labelKey === "profile") {
-        return { ...item, path: isOnProfilePage ? location.pathname : "/profile" };
-      }
-      return item;
-    });
-  }, [location.pathname]);
 
   // ======= render =======
   return (
@@ -279,7 +292,7 @@ export default function Sidebar() {
           onMouseDown={handleFabMouseDown}
           onTouchStart={handleFabTouchStart}
           style={{
-            top: fabPosition.top,
+            top: Math.max(headerHeight + 8, fabPosition.top),
             left: fabPosition.left,
           }}
         >
@@ -306,13 +319,16 @@ export default function Sidebar() {
           `sidebar--${theme === "light" ? "light" : "dark"}`,
           isMobile ? "is-mobile" : "",
           isMobileOpen ? "is-open" : "",
-          isCollapsed && !isMobile ? "is-collapsed" : ""
-        ].join(" ").replace(/\s+/g, " ").trim()}
+          isCollapsed && !isMobile ? "is-collapsed" : "",
+        ]
+          .join(" ")
+          .replace(/\s+/g, " ")
+          .trim()}
         style={{
-          top: headerHeight,
-          height: `calc(100vh - ${headerHeight}px)`,
+          top: "var(--app-header-height, 72px)",
+          height: "calc(100dvh - var(--app-header-height, 72px))",
           width: sidebarWidth,
-          zIndex: 1002
+          zIndex: 1002,
         }}
       >
         {/* Header */}
@@ -322,15 +338,21 @@ export default function Sidebar() {
             onClick={toggleSidebar}
             aria-label={
               isMobile
-                ? (isMobileOpen ? t("closeMenu") : t("openMenu"))
-                : (isCollapsed ? t("expandSidebar") : t("collapseSidebar"))
+                ? isMobileOpen
+                  ? t("closeMenu")
+                  : t("openMenu")
+                : isCollapsed
+                  ? t("expandSidebar")
+                  : t("collapseSidebar")
             }
             aria-expanded={isMobile ? isMobileOpen : !isCollapsed}
             aria-controls="sidebar-menu"
           >
-            {(isMobile && isMobileOpen) || (!isMobile && !isCollapsed)
-              ? <FaTimes />
-              : <FaBars />}
+            {(isMobile && isMobileOpen) || (!isMobile && !isCollapsed) ? (
+              <FaTimes />
+            ) : (
+              <FaBars />
+            )}
           </button>
 
           {(!isCollapsed || isMobile) && (
@@ -341,20 +363,21 @@ export default function Sidebar() {
         {/* Menu */}
         <nav id="sidebar-menu" className="sidebar__menu" aria-label="Primary">
           <ul>
-            {menuItems.map(({ path, icon: Icon, labelKey }) => (
+            {MENU.map(({ path, icon: Icon, labelKey }) => (
               <li key={path}>
                 <NavLink
                   to={path}
-                  end={path === "/profile"}
                   className={({ isActive }) =>
                     "sidebar__link" +
                     (isActive ? " is-active" : "") +
                     (isCollapsed && !isMobile ? " is-icon" : "")
                   }
-                  aria-current={({ isActive }) => (isActive ? "page" : undefined)}
+                  aria-current={({ isActive }) =>
+                    isActive ? "page" : undefined
+                  }
                   title={isCollapsed && !isMobile ? t(labelKey) : undefined}
                 >
-                  <Icon className="sidebar__icon" />
+                  {React.createElement(Icon, { className: "sidebar__icon" })}
                   {(!isCollapsed || isMobile) && (
                     <span className="sidebar__label">{t(labelKey)}</span>
                   )}
@@ -369,7 +392,9 @@ export default function Sidebar() {
           </ul>
 
           <button
-            className={"sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")}
+            className={
+              "sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")
+            }
             onClick={handleLogout}
             disabled={!auth.currentUser}
             title={isCollapsed && !isMobile ? t("logout") : undefined}
@@ -388,7 +413,7 @@ export default function Sidebar() {
           style={{
             width: sidebarWidth,
             transition: "width .25s ease",
-            flexShrink: 0
+            flexShrink: 0,
           }}
         />
       )}

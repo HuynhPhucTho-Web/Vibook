@@ -1,6 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-html, body, #root { height: 100%; }
-body { margin: 0; background-color: #ffffff; }
-.dark body { background-color: #0b0f19; } /* nền tối */
+html, body, #root { min-height: 100%; }
+body { margin: 0; background-color: var(--app-background, #ffffff); transition: background-color .25s ease; }
+.app-shell, .app-shell__main, .app-shell__content { background-color: var(--app-background, #ffffff); }
+
+html[data-font-size="large"] { font-size: 18px; }
+html[data-font-size="small"] { font-size: 14px; }
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+}
+.dark body { background-color: var(--app-background, #0b0f19) !important; }
+html[data-compact="true"] .post-card,
+html[data-compact="true"] .post-create-container { padding: 14px !important; }
+html[data-compact="true"] .sidebar__link { min-height: 42px; }

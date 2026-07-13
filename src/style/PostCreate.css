@@ -24,6 +24,95 @@
   padding: 1.5rem;
 }
 
+/* Default compact composer shown before the user starts a post. */
+.post-creator-collapsed {
+  border-radius: 1.15rem;
+}
+
+.post-collapsed-row {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  min-width: 0;
+  padding: .85rem 1rem;
+}
+
+.post-collapsed-prompt {
+  min-width: 0;
+  flex: 1;
+  height: 46px;
+  padding: 0 1rem;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 999px;
+  background: transparent;
+  font-size: .95rem;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: border-color 150ms, background-color 150ms;
+}
+
+.post-creator-collapsed.light .post-collapsed-prompt {
+  border-color: #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.post-creator-collapsed.dark .post-collapsed-prompt {
+  border-color: #3f3f46;
+  background: rgb(39 39 42 / .7);
+  color: #a1a1aa;
+}
+
+.post-creator-collapsed.light .post-collapsed-prompt:hover { background: #f3f4f6; border-color: #c7d2fe; }
+.post-creator-collapsed.dark .post-collapsed-prompt:hover { background: #3f3f46; border-color: #6366f1; }
+
+.post-collapsed-actions {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex: 0 0 auto;
+}
+
+.post-collapsed-action {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: .75rem;
+  cursor: pointer;
+  font-size: 1.05rem;
+  transition: filter 150ms, transform 150ms;
+}
+
+.post-collapsed-action:hover { filter: brightness(.95); transform: translateY(-1px); }
+.post-collapsed-action:active { transform: scale(.94); }
+.post-creator-collapsed.light .post-collapsed-action.media { background: #ecfdf5; color: #047857; }
+.post-creator-collapsed.light .post-collapsed-action.camera { background: #f5f3ff; color: #6d28d9; }
+.post-creator-collapsed.light .post-collapsed-action.document { background: #eff6ff; color: #1d4ed8; }
+.post-creator-collapsed.light .post-collapsed-action.emoji { background: #fffbeb; color: #b45309; }
+.post-creator-collapsed.dark .post-collapsed-action.media { background: rgb(6 78 59 / .45); color: #34d399; }
+.post-creator-collapsed.dark .post-collapsed-action.camera { background: rgb(76 29 149 / .45); color: #a78bfa; }
+.post-creator-collapsed.dark .post-collapsed-action.document { background: rgb(30 58 138 / .45); color: #60a5fa; }
+.post-creator-collapsed.dark .post-collapsed-action.emoji { background: rgb(120 53 15 / .45); color: #fbbf24; }
+
+.post-creator-compose-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+}
+
+.post-creator-compose-row.has-camera {
+  grid-template-columns: 3rem minmax(0, 1fr) minmax(280px, 36%);
+}
+
+.post-creator-editor-column {
+  min-width: 0;
+}
+
 .post-creator-actions-container {
   margin-top: 1rem;
   display: flex;
@@ -46,6 +135,165 @@
     transition: all 150ms;
 }
 
+.post-rich-editor .ql-toolbar { border: 0; border-bottom: 1px solid rgba(148, 163, 184, .25); }
+.post-rich-editor .ql-container { border: 0; min-height: 150px; font-size: 1rem; }
+.post-rich-editor .ql-editor { min-height: 150px; max-height: 420px; overflow-y: auto; line-height: 1.7; }
+.post-rich-editor .ql-editor img { display: block; max-width: 100%; height: auto; margin: 1rem auto; border-radius: .75rem; }
+.post-creator-container.dark .ql-stroke { stroke: #d4d4d8; }
+.post-creator-container.dark .ql-fill { fill: #d4d4d8; }
+.post-creator-container.dark .ql-picker { color: #d4d4d8; }
+.post-creator-container.dark .ql-editor.ql-blank::before { color: #71717a; }
+
+/* Compact camera panel beside the editor on desktop. */
+.post-camera-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.14);
+}
+
+.post-camera-panel.light { background: #fff; border-color: #e5e7eb; }
+.post-camera-panel.dark { background: #18181b; border-color: #3f3f46; }
+
+.post-camera-header {
+  min-height: 42px;
+  padding: .45rem .6rem .45rem .75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  border-bottom: 1px solid;
+}
+
+.post-camera-panel.light .post-camera-header { background: #f9fafb; border-color: #e5e7eb; color: #1f2937; }
+.post-camera-panel.dark .post-camera-header { background: rgb(39 39 42 / .8); border-color: #3f3f46; color: #f4f4f5; }
+
+.post-camera-status,
+.post-camera-header-actions {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.post-camera-status {
+  min-width: 0;
+  font-size: .8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-camera-live-dot {
+  width: .5rem;
+  height: .5rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #10b981;
+  box-shadow: 0 0 0 4px rgb(16 185 129 / .14);
+}
+
+.post-camera-switch-btn,
+.post-camera-close-btn {
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 600;
+  transition: filter 150ms, transform 150ms;
+}
+
+.post-camera-switch-btn { padding: 0 .7rem; }
+.post-camera-close-btn { width: 30px; display: grid; place-items: center; }
+.post-camera-panel.light .post-camera-switch-btn,
+.post-camera-panel.light .post-camera-close-btn { background: #e5e7eb; color: #1f2937; }
+.post-camera-panel.dark .post-camera-switch-btn,
+.post-camera-panel.dark .post-camera-close-btn { background: #3f3f46; color: #fafafa; }
+.post-camera-switch-btn:hover,
+.post-camera-close-btn:hover { filter: brightness(.94); }
+.post-camera-switch-btn:active,
+.post-camera-close-btn:active { transform: scale(.94); }
+
+.post-camera-viewport {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  min-height: 190px;
+  max-height: 310px;
+  background: #050505;
+}
+
+.post-camera-viewport video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-camera-controls {
+  position: absolute;
+  inset: auto 0 .75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.post-camera-capture-btn {
+  width: 54px;
+  height: 54px;
+  padding: 4px;
+  border: 3px solid rgb(255 255 255 / .92);
+  border-radius: 999px;
+  background: rgb(0 0 0 / .16);
+  box-shadow: 0 2px 12px rgb(0 0 0 / .3);
+  transition: transform 150ms;
+}
+
+.post-camera-capture-btn span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+}
+
+.post-camera-capture-btn:active { transform: scale(.9); }
+
+/* Attachment previews and a remove button that stays visible on touch screens. */
+.post-media-preview-wrap { padding: 0 1.5rem 1rem; }
+.post-media-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .75rem;
+}
+.post-media-preview-item { min-width: 0; }
+.post-media-remove-btn {
+  position: absolute;
+  z-index: 2;
+  top: .45rem;
+  right: .45rem;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgb(255 255 255 / .9);
+  border-radius: 999px;
+  background: rgb(220 38 38 / .96);
+  color: #fff;
+  opacity: 1;
+  box-shadow: 0 2px 8px rgb(0 0 0 / .3);
+  transition: background-color 150ms, transform 150ms;
+}
+.post-media-remove-btn:hover { background: #b91c1c; }
+.post-media-remove-btn:active { transform: scale(.9); }
+.post-media-remove-btn:disabled { cursor: not-allowed; opacity: .5; }
+
+@media (max-width: 1100px) {
+  .post-creator-compose-row.has-camera {
+    grid-template-columns: 3rem minmax(0, 1fr) minmax(250px, 38%);
+  }
+  .post-camera-status span:last-child { display: none; }
+}
+
 /* Responsive styles for mobile */
 @media (max-width: 768px) {
   .post-creator-container {
@@ -53,8 +301,31 @@
     margin-bottom: 1rem;
     border-radius: 1rem;
   }
+  .post-collapsed-row { padding: .75rem; gap: .65rem; }
+  .post-collapsed-prompt { height: 42px; padding: 0 .85rem; font-size: .9rem; }
+  .post-collapsed-action { width: 38px; height: 38px; }
   .post-creator-header {
     padding: 1rem;
+  }
+  .post-creator-compose-row,
+  .post-creator-compose-row.has-camera {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: .75rem;
+  }
+  .post-camera-panel {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+  }
+  .post-creator-compose-row.has-camera .post-creator-editor-column {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .post-camera-status span:last-child { display: inline; }
+  .post-camera-viewport {
+    aspect-ratio: 16 / 9;
+    min-height: 180px;
+    max-height: 55vh;
   }
   .post-creator-actions-container {
     flex-direction: column;
@@ -67,7 +338,43 @@
   .post-creator-submit-btn {
     width: 100%;
   }
+  .post-rich-editor .ql-toolbar { white-space: nowrap; overflow-x: auto; }
+  .post-rich-editor .ql-formats { margin-right: .35rem; }
+  .post-rich-editor .ql-editor { min-height: 130px; max-height: 55vh; padding: .75rem; }
   .post-creator-action-buttons .group span {
-      display: none; /* Hide text like "Ảnh/Video" on mobile */
+      display: none;
   }
+  .post-media-preview-wrap { padding: 0 1rem 1rem; }
+  .post-media-preview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
+  .post-media-remove-btn { top: .35rem; right: .35rem; width: 34px; height: 34px; }
+}
+
+@media (max-width: 520px) {
+  .post-collapsed-row { gap: .5rem; }
+  .post-collapsed-row > .relative.flex-shrink-0,
+  .post-collapsed-row > .relative.flex-shrink-0 > img,
+  .post-collapsed-row > .relative.flex-shrink-0 > div { width: 40px; height: 40px; }
+  .post-collapsed-actions { gap: .3rem; }
+  .post-collapsed-action { width: 36px; height: 36px; border-radius: .65rem; }
+  .post-collapsed-prompt { height: 40px; padding: 0 .7rem; }
+  .post-creator-compose-row,
+  .post-creator-compose-row.has-camera {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .post-creator-compose-row > .relative.flex-shrink-0 { margin-left: .15rem; }
+  .post-camera-panel,
+  .post-creator-compose-row.has-camera .post-creator-editor-column { grid-column: 1; }
+  .post-camera-panel { grid-row: 2; }
+  .post-creator-compose-row.has-camera .post-creator-editor-column { grid-row: 3; }
+  .post-title-input { font-size: 1rem; }
+  .post-camera-header { min-height: 40px; }
+  .post-camera-viewport { min-height: 170px; }
+  .post-media-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 360px) {
+  .post-creator-header { padding: .75rem; }
+  .post-camera-status span:last-child { display: none; }
+  .post-camera-switch-btn { padding: 0 .55rem; }
+  .post-media-preview-wrap { padding: 0 .75rem .75rem; }
 }

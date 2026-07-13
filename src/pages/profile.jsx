@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { auth, db } from "../components/firebase";
-import { doc, onSnapshot, query, collection, where, getDocs, addDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, query, collection, where, getDoc, addDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 import { toast } from "react-toastify";
@@ -18,6 +18,9 @@ function Profile() {
   const [currentUid, setCurrentUid] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [activePostTab, setActivePostTab] = useState("posts");
+  const [savedPostsLoading, setSavedPostsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isFriend, setIsFriend] = useState(false);
   const [hasSentRequest, setHasSentRequest] = useState(false);
@@ -32,6 +35,34 @@ function Profile() {
 
   const isOwner = currentUid && userDetails && userDetails.id === currentUid;
 
+  useEffect(() => {
+    if (!isOwner || !currentUid) {
+      setSavedPosts([]);
+      if (activePostTab === "saved") setActivePostTab("posts");
+      return undefined;
+    }
+    setSavedPostsLoading(true);
+    const savedQuery = query(collection(db, "SavedPosts"), where("userId", "==", currentUid));
+    return onSnapshot(savedQuery, async (snapshot) => {
+      const resolved = await Promise.all(snapshot.docs.map(async (savedDocument) => {
+        const savedData = savedDocument.data();
+        const postSnapshot = await getDoc(doc(db, "Posts", savedData.postId));
+        return postSnapshot.exists()
+          ? { id: postSnapshot.id, ...postSnapshot.data(), savedAt: savedData.savedAt }
+          : null;
+      }));
+      setSavedPosts(resolved.filter(Boolean).sort((a, b) => {
+        const left = a.savedAt?.toMillis ? a.savedAt.toMillis() : 0;
+        const right = b.savedAt?.toMillis ? b.savedAt.toMillis() : 0;
+        return right - left;
+      }));
+      setSavedPostsLoading(false);
+    }, (error) => {
+      console.error("Error loading saved posts", error);
+      setSavedPostsLoading(false);
+    });
+  }, [activePostTab, currentUid, isOwner]);
+
   const fetchUserData = useCallback((targetUid) => {
     if (!targetUid) { setLoading(false); return; }
 
@@ -42,12 +73,8 @@ function Profile() {
     });
 
     const q = query(collection(db, "Posts"), where("userId", "==", targetUid));
-    const unsubPosts = onSnapshot(q, async (qs) => {
-      const arr = await Promise.all(qs.docs.map(async (d) => {
-        const p = { id: d.id, ...d.data() };
-        const cs = await getDocs(collection(db, "Posts", d.id, "comments"));
-        return { ...p, comments: cs.docs.map(c => ({ id: c.id, ...c.data() })) };
-      }));
+    const unsubPosts = onSnapshot(q, (qs) => {
+      const arr = qs.docs.map((d) => ({ id: d.id, ...d.data() }));
       arr.sort((a, b) => {
         const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : a.createdAt || 0;
         const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : b.createdAt || 0;
@@ -57,7 +84,7 @@ function Profile() {
     });
 
     return () => { unsubUser(); unsubPosts(); };
-  }, []);
+  }, [t]);
 
   // Check if current user and viewed user are friends
   useEffect(() => {
@@ -235,6 +262,14 @@ function Profile() {
   if (loading) return <p>Loading...</p>;
   if (!userDetails) return <p>User not found</p>;
 
+  const ownPosts = posts.filter((post) => post.type !== "share");
+  const sharedPosts = posts.filter((post) => post.type === "share");
+  const visiblePosts = activePostTab === "shared"
+    ? sharedPosts
+    : activePostTab === "saved"
+      ? savedPosts
+      : ownPosts;
+
   return (
     <div className={`min-h-screen transition-colors ${theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
       <div className="container-fluid mx-auto py-4 ">
@@ -262,11 +297,32 @@ function Profile() {
           </div>
         )}
 
+        <div className={`mt-4 flex gap-2 overflow-x-auto rounded-xl p-2 ${theme === "dark" ? "bg-zinc-900" : "bg-white"}`}>
+          {[
+            { id: "posts", label: `Bài viết (${ownPosts.length})` },
+            { id: "shared", label: `Đã chia sẻ (${sharedPosts.length})` },
+            ...(isOwner ? [{ id: "saved", label: `Đã lưu (${savedPosts.length})` }] : []),
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActivePostTab(tab.id)}
+              className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${activePostTab === tab.id ? "bg-blue-600 text-white" : theme === "dark" ? "text-gray-300 hover:bg-zinc-800" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="mt-4 space-y-4">
-          {posts.length ? posts.map(p => (
+          {activePostTab === "saved" && savedPostsLoading ? (
+            <p className="text-center opacity-75">Đang tải bài viết đã lưu...</p>
+          ) : visiblePosts.length ? visiblePosts.map(p => (
             <PostItem key={p.id} post={p} auth={auth} userDetails={userDetails} isDetailView={true} />
           )) : (
-            <p className="text-center opacity-75">{isOwner ? t("youHaventPostedYet") : t("noPostsYet")}</p>
+            <p className="text-center opacity-75">
+              {activePostTab === "saved" ? "Chưa có bài viết đã lưu" : activePostTab === "shared" ? "Chưa có bài viết đã chia sẻ" : isOwner ? t("youHaventPostedYet") : t("noPostsYet")}
+            </p>
           )}
         </div>
       </div>

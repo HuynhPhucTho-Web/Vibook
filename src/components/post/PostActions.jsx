@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
-import { FaComment, FaShare, FaLink, FaCopy } from "react-icons/fa";
+import { FaBookmark, FaComment, FaRegBookmark, FaShare, FaLink, FaCopy } from "react-icons/fa";
 import { LanguageContext } from "../../context/LanguageContext";
 import { SlLike } from "react-icons/sl";
 
@@ -30,6 +30,9 @@ const PostActions = ({
   onReaction,
   onShare,
   onRepostToTimeline,
+  isSaved,
+  isSavingPost,
+  onToggleSave,
 }) => {
   const hoverTimerRef = useRef(null);
   const { t } = useContext(LanguageContext);
@@ -104,7 +107,7 @@ const PostActions = ({
   };
 
   return (
-    <div className={`post-item-actions grid grid-cols-3 border-t ${barBorder} pt-1`}>
+    <div className={`post-item-actions grid grid-cols-4 border-t ${barBorder} pt-1`}>
       {/* LIKE SECTION */}
       <div
         className="relative col-span-1 flex items-center justify-center"
@@ -186,6 +189,18 @@ const PostActions = ({
         </button>
       </div>
 
+      <div className="col-span-1 flex items-center justify-center">
+        <button
+          onClick={onToggleSave}
+          disabled={isSavingPost}
+          className={getActionButtonClass(isLight, isSaved)}
+          title={isSaved ? t("unsavePost") : t("savePost")}
+        >
+          {isSaved ? <FaBookmark /> : <FaRegBookmark />}
+          <span className="hidden sm:inline">{isSaved ? t("saved") : t("save")}</span>
+        </button>
+      </div>
+
       {/* SHARE */}
       <PostShareMenu isLight={isLight} onShare={onShare} onRepostToTimeline={onRepostToTimeline} />
     </div>
@@ -220,7 +235,7 @@ const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
               className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
             >
               <FaLink className="text-sm" />
-              <span>{t("copyLink") || "Sao chép link"}</span>
+              <span>{t("copyLink")}</span>
             </button>
 
             <button
@@ -228,7 +243,7 @@ const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
               className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
             >
               <FaCopy className="text-sm" />
-              <span>{t("copyContent") || "Copy nội dung"}</span>
+              <span>{t("copyContent")}</span>
             </button>
 
             {navigator.share && (
@@ -237,18 +252,21 @@ const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
                 className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
               >
                 <FaShare className="text-sm" />
-                <span>{t("systemShare") || "Chia sẻ hệ thống"}</span>
+                <span>{t("systemShare")}</span>
               </button>
             )}
 
             <button
-              onClick={onRepostToTimeline}
+              onClick={() => {
+                setShowShareMenu(false);
+                onRepostToTimeline();
+              }}
               className={`${baseItem} text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20`}
             >
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-500">
                 @
               </span>
-              <span>{t("shareToTimeline") || "Chia sẻ lên trang cá nhân"}</span>
+              <span>{t("shareToTimeline")}</span>
             </button>
           </div>
         </>

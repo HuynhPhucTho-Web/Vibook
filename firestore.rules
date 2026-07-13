@@ -71,11 +71,56 @@ service cloud.firestore {
 
     /* ========= GLOBAL POSTS ========= */
     match /Posts/{postId} {
+      function hasValidVisibility(data) {
+        return !data.keys().hasAny(['status'])
+          || data.status in ['public', 'friends', 'private'];
+      }
+
+      function hasValidFriendTags(data) {
+        return !data.keys().hasAny(['taggedFriendIds', 'taggedFriends'])
+          || (
+            data.keys().hasAll(['taggedFriendIds', 'taggedFriends'])
+            && data.taggedFriendIds is list
+            && data.taggedFriends is list
+            && data.taggedFriendIds.size() == data.taggedFriends.size()
+            && data.taggedFriendIds.size() <= 20
+            && !(request.auth.uid in data.taggedFriendIds)
+          );
+      }
+
+      function isValidReactionUpdate() {
+        let oldLikes = resource.data.likes;
+        let newLikes = request.resource.data.likes;
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactedBy'])
+          && request.resource.data.reactedBy.diff(resource.data.reactedBy).affectedKeys().hasOnly([request.auth.uid])
+          && request.resource.data.reactedBy.get(request.auth.uid, null) in [null, 'Like', 'Love', 'Haha', 'Wow', 'Sad', 'Angry']
+          && newLikes.diff(oldLikes).affectedKeys().hasOnly(['Like', 'Love', 'Haha', 'Wow', 'Sad', 'Angry'])
+          && newLikes.get('Like', 0) >= 0
+          && newLikes.get('Love', 0) >= 0
+          && newLikes.get('Haha', 0) >= 0
+          && newLikes.get('Wow', 0) >= 0
+          && newLikes.get('Sad', 0) >= 0
+          && newLikes.get('Angry', 0) >= 0;
+      }
+
       allow read: if true;
 
       // Chỉ user đăng nhập mới tạo được post
       allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid;
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'createdAt'])
+        && hasValidVisibility(request.resource.data)
+        && hasValidFriendTags(request.resource.data)
+        && (!request.resource.data.keys().hasAny(['type'])
+            || request.resource.data.type in ['post', 'share'])
+        && (!request.resource.data.keys().hasAny(['type'])
+            || request.resource.data.type != 'post'
+            || (request.resource.data.title is string
+                && request.resource.data.title.size() > 0
+                && request.resource.data.title.size() <= 180))
+        && (!request.resource.data.keys().hasAny(['type'])
+            || request.resource.data.type != 'share'
+            || request.resource.data.keys().hasAny(['sharedPostId', 'sharedFrom']));
 
       // Update:
       // - Chủ post: title, content, mediaUrls, status
@@ -86,17 +131,20 @@ service cloud.firestore {
             .hasOnly([
               'title',
               'content',
+              'contentHtml',
+              'contentText',
+              'searchText',
               'mediaUrls',
+              'mediaFiles',
               'status',
-              'likes',
-              'reactedBy',
-              'reactions',
-              'reactionCount'
+              'taggedFriendIds',
+              'taggedFriends',
+              'updatedAt'
             ])
+          && hasValidVisibility(request.resource.data)
+          && hasValidFriendTags(request.resource.data)
         )
-        ||
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['likes', 'reactedBy', 'reactions', 'reactionCount'])
+        || isValidReactionUpdate()
       );
 
       // Xóa: chỉ chủ post
@@ -116,7 +164,8 @@ service cloud.firestore {
         );
 
         allow delete: if isSignedIn()
-          && request.auth.uid == resource.data.userId;
+          && (request.auth.uid == resource.data.userId
+              || request.auth.uid == get(/databases/$(database)/documents/Posts/$(postId)).data.userId);
 
         /* ----- Replies (lồng nhau) ----- */
         match /replies/{replyId} {
@@ -129,7 +178,8 @@ service cloud.firestore {
               .hasOnly(['reactions', 'reactionCount', 'replyCount'])
           );
           allow delete: if isSignedIn()
-            && request.auth.uid == resource.data.userId;
+            && (request.auth.uid == resource.data.userId
+                || request.auth.uid == get(/databases/$(database)/documents/Posts/$(postId)).data.userId);
 
           // Cho phép nesting không giới hạn
           match /{document=**} {
@@ -152,6 +202,20 @@ service cloud.firestore {
           allow write: if isSignedIn();
         }
       }
+    }
+
+    /* ========= SAVED POSTS ========= */
+    // documentId = "uid_postId". Bookmark là dữ liệu riêng của từng user.
+    match /SavedPosts/{savedPostId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'postId', 'savedAt'])
+        && request.resource.data.keys().hasOnly(['userId', 'postId', 'savedAt'])
+        && savedPostId == request.auth.uid + '_' + request.resource.data.postId
+        && exists(/databases/$(database)/documents/Posts/$(request.resource.data.postId));
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
     /* ========= PRIVATE MESSAGES ========= */
@@ -194,6 +258,13 @@ service cloud.firestore {
       }
     }
 
+    /* ========= COLLECTION GROUP: MESSAGES ========= */
+    match /{path=**}/messages/{messageId} {
+      allow read: if isSignedIn()
+        && (request.auth.uid == resource.data.receiverId
+            || request.auth.uid == resource.data.senderId);
+    }
+
     /* ========= NOTIFICATIONS ========= */
     match /Notifications/{notificationId} {
       // Chỉ chủ notification được đọc
@@ -208,7 +279,6 @@ service cloud.firestore {
       allow update, delete: if isSignedIn()
         && resource.data.userId == request.auth.uid;
     }
-
     /* ========= GROUPS ========= */
     match /Groups/{groupId} {
       allow read: if true;
@@ -246,8 +316,13 @@ service cloud.firestore {
               .hasOnly([
                 'title',
                 'content',
+                'contentHtml',
+                'contentText',
+                'searchText',
                 'mediaUrls',
+                'mediaFiles',
                 'status',
+                'updatedAt',
                 'likes',
                 'reactedBy',
                 'reactions',

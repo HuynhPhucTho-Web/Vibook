@@ -19,8 +19,6 @@ const HeaderRightActions = ({
 
   mobileSettingsOpen,
   setMobileSettingsOpen,
-  
-  setMobileSearchOpen,
 
   userMenuRef,
 
@@ -52,7 +50,9 @@ const HeaderRightActions = ({
               : "bg-white/10 hover:bg-white/20"
           }`}
         >
-          <FaBell className={`text-lg ${theme === "light" ? "text-black" : "text-white"}`} />
+          <FaBell
+            className={`text-lg ${theme === "light" ? "text-black" : "text-white"}`}
+          />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
               {unreadCount > 9 ? unreadCount : ""}
@@ -71,14 +71,10 @@ const HeaderRightActions = ({
         setUserMenuOpen={setUserMenuOpen}
         mobileSettingsOpen={mobileSettingsOpen}
         setMobileSettingsOpen={setMobileSettingsOpen}
-        setMobileSearchOpen={setMobileSearchOpen}
         userMenuRef={userMenuRef}
         t={t}
         closeAllPopups={closeAllPopups}
       />
-
-      {/* Theme + Language dropdown trên desktop */}
-      <ThemeLanguageControls />
     </div>
   );
 };
