@@ -1,10 +1,13 @@
-# Refactor VideoHub.jsx and Fix Scrolling Issue
+﻿# Auth public vs private — status
 
-## Tasks
-- [x] Create VideoHeader component in src/components/video/VideoHeader.jsx
-- [x] Create VideoGrid component in src/components/video/VideoGrid.jsx
-- [x] Create VideoDetail component in src/components/video/VideoDetail.jsx
-- [x] Create VideoSidebar component in src/components/video/VideoSidebar.jsx
-- [x] Update VideoHub.jsx to use the new components
-- [x] Fix scrolling issue: Make video player sticky in VideoDetail
-- [x] Test the refactored code
+Completed implementation. See **docs/AUTH_PUBLIC_PRIVATE.md** for full route map, guard locations, and guest UI behavior.
+
+## Checklist
+- [x] Read Sidebar / Header / App / HeaderRightActions
+- [x] Classify routes public/private
+- [x] RequireAuth + requireLogin helper
+- [x] Sidebar private links redirect to login
+- [x] Header shows Login + Register when guest
+- [x] Public pages load data without login (Home, Events, Groups, PlayGame, …)
+- [x] Action handlers guard writes
+- [x] Build passes

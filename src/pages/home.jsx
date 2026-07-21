@@ -34,71 +34,87 @@ function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Fetch user data and posts
+  // Fetch user profile (optional) + public feed (works for guests)
   useEffect(() => {
-    const postId = searchParams.get('postId');
-    let unsubscribe = () => {};
+    const postId = searchParams.get("postId");
+    let unsubPosts = () => {};
+    let unsubUser = () => {};
 
-    const unsubAuth = auth.onAuthStateChanged(user => {
+    const unsubAuth = auth.onAuthStateChanged((user) => {
+      unsubUser();
       if (user) {
         const userRef = doc(db, "Users", user.uid);
-        onSnapshot(userRef, (docSnap) => {
+        unsubUser = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
             setUserDetails(docSnap.data());
           } else {
-            toast.error("User data not found");
             setUserDetails(null);
           }
         });
-
-        // If a specific post is requested, fetch only that one
-        if (postId) {
-          const postRef = doc(db, "Posts", postId);
-          const unsubPost = onSnapshot(postRef, async (docSnap) => {
-            if (docSnap.exists()) {
-              const postData = { id: docSnap.id, ...docSnap.data() };
-              const commentsQuery = query(collection(db, "Posts", postId, "comments"));
-              const commentsSnapshot = await getDocs(commentsQuery);
-              postData.comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
-              setPosts([postData]);
-            } else {
-              toast.error("Post not found");
-              setPosts([]);
-            }
-            setIsLoading(false);
-          });
-          unsubscribe = () => unsubPost();
-        } else {
-          // Otherwise, fetch the general feed
-          const postsQuery = query(collection(db, "Posts"), orderBy("createdAt", "desc"), limit(10));
-          const unsubPosts = onSnapshot(postsQuery, async (snapshot) => {
-            const allPosts = await Promise.all(
-              snapshot.docs.map(async (doc) => {
-                const postData = { id: doc.id, ...doc.data() };
-                // Fetch comment count for feed performance
-                const commentsQuery = query(collection(db, "Posts", doc.id, "comments"));
-                const commentsSnapshot = await getDocs(commentsQuery);
-                postData.comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
-                return postData;
-              })
-            );
-            setPosts(mergeUniquePosts(allPosts));
-            setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
-            setHasMore(snapshot.docs.length === 10);
-            setIsLoading(false);
-          });
-          unsubscribe = () => unsubPosts();
-        }
       } else {
         setUserDetails(null);
-        setPosts([]);
-        setIsLoading(false);
       }
     });
 
+    // Posts are public — load regardless of auth
+    if (postId) {
+      const postRef = doc(db, "Posts", postId);
+      unsubPosts = onSnapshot(postRef, async (docSnap) => {
+        if (docSnap.exists()) {
+          const postData = { id: docSnap.id, ...docSnap.data() };
+          const commentsQuery = query(collection(db, "Posts", postId, "comments"));
+          const commentsSnapshot = await getDocs(commentsQuery);
+          postData.comments = commentsSnapshot.docs.map((c) => ({
+            id: c.id,
+            ...c.data(),
+          }));
+          setPosts([postData]);
+        } else {
+          toast.error("Post not found");
+          setPosts([]);
+        }
+        setIsLoading(false);
+      });
+    } else {
+      const postsQuery = query(
+        collection(db, "Posts"),
+        orderBy("createdAt", "desc"),
+        limit(10),
+      );
+      unsubPosts = onSnapshot(
+        postsQuery,
+        async (snapshot) => {
+          const allPosts = await Promise.all(
+            snapshot.docs.map(async (docSnap) => {
+              const postData = { id: docSnap.id, ...docSnap.data() };
+              const commentsQuery = query(
+                collection(db, "Posts", docSnap.id, "comments"),
+              );
+              const commentsSnapshot = await getDocs(commentsQuery);
+              postData.comments = commentsSnapshot.docs.map((c) => ({
+                id: c.id,
+                ...c.data(),
+              }));
+              return postData;
+            }),
+          );
+          setPosts(mergeUniquePosts(allPosts));
+          setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null);
+          setHasMore(snapshot.docs.length === 10);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error("Error loading posts:", error);
+          toast.error("Failed to load posts");
+          setIsLoading(false);
+        },
+      );
+    }
+
     return () => {
       unsubAuth();
-      unsubscribe();
+      unsubUser();
+      unsubPosts();
     };
   }, [searchParams]);
 
@@ -193,14 +209,6 @@ function Home() {
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-      </div>
-    );
-  }
-
-  if (!userDetails) {
-    return (
-      <div className="text-center py-5">
-        <h5 className="text-muted">Please log in to view content</h5>
       </div>
     );
   }

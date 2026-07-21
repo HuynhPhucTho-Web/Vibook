@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaBell, FaFacebookMessenger } from "react-icons/fa";
 import UserMenu from "./UserMenu";
-import ThemeLanguageControls from "./ThemeLanguageControls";
+import { auth } from "../firebase";
 
 const HeaderRightActions = ({
   theme,
@@ -13,6 +13,7 @@ const HeaderRightActions = ({
   t,
 
   unreadCount,
+  isAuthenticated = Boolean(auth.currentUser),
 
   userMenuOpen,
   setUserMenuOpen,
@@ -24,19 +25,51 @@ const HeaderRightActions = ({
 
   closeAllPopups,
 }) => {
+  const isLight = theme === "light";
+
+  // Guest: Login + Register only (hide messenger / notifications / user menu)
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <Link
+          to="/login"
+          onClick={closeAllPopups}
+          className={`px-3 sm:px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all hover:scale-105 ${
+            isLight
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "bg-blue-500 text-white hover:bg-blue-400"
+          }`}
+        >
+          {t("login")}
+        </Link>
+        <Link
+          to="/register"
+          onClick={closeAllPopups}
+          className={`px-3 sm:px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all hover:scale-105 ${
+            isLight
+              ? "bg-black/10 text-black hover:bg-black/20"
+              : "bg-white/15 text-white hover:bg-white/25"
+          }`}
+        >
+          {t("register")}
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-3 flex-shrink-0">
       {/* Messenger icon - hidden on mobile */}
       <Link to="/messenger" title="Messenger" className="hidden md:block">
         <div
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
-            theme === "light"
+            isLight
               ? "bg-black/10 hover:bg-black/20"
               : "bg-white/10 hover:bg-white/20"
           }`}
         >
           <FaFacebookMessenger
-            className={`text-lg ${theme === "light" ? "text-black" : "text-white"}`}
+            className={`text-lg ${isLight ? "text-black" : "text-white"}`}
           />
         </div>
       </Link>
@@ -45,13 +78,13 @@ const HeaderRightActions = ({
       <Link to="/notifications" className="relative" title="Notifications">
         <div
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
-            theme === "light"
+            isLight
               ? "bg-black/5 hover:bg-black/10"
               : "bg-white/10 hover:bg-white/20"
           }`}
         >
           <FaBell
-            className={`text-lg ${theme === "light" ? "text-black" : "text-white"}`}
+            className={`text-lg ${isLight ? "text-black" : "text-white"}`}
           />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">

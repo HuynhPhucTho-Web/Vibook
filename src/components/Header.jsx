@@ -28,6 +28,7 @@ import "../style/Header.css";
 const Header = () => {
   const { theme, setTheme } = useContext(ThemeContext);
   const { language, setLanguage, t } = useContext(LanguageContext);
+  const [authUser, setAuthUser] = useState(() => auth.currentUser);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -59,17 +60,28 @@ const Header = () => {
     };
   }, []);
 
+  // Keep header in sync when user logs in/out without remounting layout
   useEffect(() => {
-    if (!auth.currentUser) return undefined;
+    return auth.onAuthStateChanged((user) => {
+      setAuthUser(user);
+      if (!user) setUnreadCount(0);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!authUser) {
+      setUnreadCount(0);
+      return undefined;
+    }
     return onSnapshot(
       query(
         collection(db, "Notifications"),
-        where("userId", "==", auth.currentUser.uid),
+        where("userId", "==", authUser.uid),
         where("read", "==", false),
       ),
       (snapshot) => setUnreadCount(snapshot.docs.length),
     );
-  }, []);
+  }, [authUser]);
 
   useEffect(() => {
     const onOutsideClick = (event) => {
@@ -265,6 +277,7 @@ const Header = () => {
               setLanguage={setLanguage}
               t={t}
               unreadCount={unreadCount}
+              isAuthenticated={Boolean(authUser)}
               userMenuOpen={userMenuOpen}
               setUserMenuOpen={setUserMenuOpen}
               mobileSettingsOpen={mobileSettingsOpen}

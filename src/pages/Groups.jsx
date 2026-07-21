@@ -7,7 +7,7 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import {
   collection,
@@ -25,6 +25,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import { FaUsers, FaPlus, FaTimes, FaEllipsisH } from "react-icons/fa";
 import { FaHouse } from "react-icons/fa6";
 import { Search } from "lucide-react";
+import { requireLogin } from "../utils/requireLogin";
 import "../style/group/Group.css";
 
 /* ---------- utils ---------- */
@@ -53,6 +54,7 @@ export default function Groups() {
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
   const { t } = useContext(LanguageContext);
+  const navigate = useNavigate();
 
   const cls = {
     page: isDark ? "bg-neutral-900 text-neutral-100" : "bg-neutral-100 text-neutral-900",
@@ -71,21 +73,16 @@ export default function Groups() {
     backdrop: "fixed inset-0 bg-black/50 flex items-center justify-center z-50",
   };
 
-  /* ---------- auth ---------- */
+  /* ---------- auth (list is public; create/join need login) ---------- */
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((u) => {
       setCurrentUser(u);
-      if (!u) {
-        setGroups([]);
-        setIsLoading(false);
-      }
     });
     return () => unsub();
   }, []);
 
-  /* ---------- data ---------- */
+  /* ---------- data (public browse) ---------- */
   useEffect(() => {
-    if (!currentUser) return;
     setIsLoading(true);
     const unsub = onSnapshot(
       query(collection(db, "Groups")),
@@ -106,7 +103,7 @@ export default function Groups() {
       }
     );
     return () => unsub();
-  }, [currentUser]);
+  }, []);
 
   /* ---------- filter ---------- */
   const filteredGroups = useMemo(() => {
@@ -138,7 +135,11 @@ export default function Groups() {
     async (e) => {
       e.preventDefault();
       if (!groupName.trim()) return toast.error("Group name cannot be empty");
-      if (!currentUser) return toast.error("Please log in to create a group");
+      const user = requireLogin({
+        navigate,
+        message: "Please log in to create a group",
+      });
+      if (!user) return;
 
       try {
         if (editingGroup) {
@@ -151,8 +152,8 @@ export default function Groups() {
           await addDoc(collection(db, "Groups"), {
             name: groupName.trim(),
             description: groupDescription.trim() || "No description",
-            ownerId: currentUser.uid,
-            members: [currentUser.uid],
+            ownerId: user.uid,
+            members: [user.uid],
             createdAt: serverTimestamp(),
           });
           toast.success("Group created successfully!");
@@ -167,13 +168,17 @@ export default function Groups() {
         toast.error(editingGroup ? "Failed to update group" : "Failed to create group");
       }
     },
-    [groupName, groupDescription, currentUser, editingGroup]
+    [groupName, groupDescription, editingGroup, navigate]
   );
 
   const handleJoinGroup = async (groupId, members = []) => {
-    if (!currentUser) return;
+    const user = requireLogin({
+      navigate,
+      message: "Please log in to join a group",
+    });
+    if (!user) return;
     try {
-      const next = members.includes(currentUser.uid) ? members : [...members, currentUser.uid];
+      const next = members.includes(user.uid) ? members : [...members, user.uid];
       await updateDoc(doc(db, "Groups", groupId), { members: next });
       toast.success("Joined group successfully!");
     } catch {
@@ -182,10 +187,14 @@ export default function Groups() {
   };
 
   const handleLeaveGroup = async (groupId, members = []) => {
-    if (!currentUser) return;
+    const user = requireLogin({
+      navigate,
+      message: "Please log in to leave a group",
+    });
+    if (!user) return;
     try {
       await updateDoc(doc(db, "Groups", groupId), {
-        members: members.filter((uid) => uid !== currentUser.uid),
+        members: members.filter((uid) => uid !== user.uid),
       });
       toast.success("Left group successfully!");
     } catch {
@@ -210,21 +219,6 @@ export default function Groups() {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500" />
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div
-        className={cx(
-          "container mx-auto p-4 transition-colors",
-          isDark ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
-        )}
-      >
-        <h5 className="text-center text-gray-500 dark:text-gray-400">
-          Please log in to view and join groups
-        </h5>
       </div>
     );
   }
@@ -354,8 +348,10 @@ export default function Groups() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGroups.length ? (
             filteredGroups.map((g) => {
-              const isMember = g.members?.includes(currentUser.uid);
-              const isOwner = g.ownerId === currentUser.uid;
+              // Guest-safe: no crash when currentUser is null
+              const uid = currentUser?.uid;
+              const isMember = Boolean(uid && g.members?.includes(uid));
+              const isOwner = Boolean(uid && g.ownerId === uid);
 
               return (
                 <div key={g.id} className={cx("rounded-xl overflow-hidden transition-shadow", cardBg, cardHover)}>

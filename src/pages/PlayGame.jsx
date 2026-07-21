@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import {
   collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
@@ -8,6 +9,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from '../context/LanguageContext';
 import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
+import { requireLogin } from "../utils/requireLogin";
 import "../style/game/Game.css";
 
 const Games = () => {
@@ -15,6 +17,7 @@ const Games = () => {
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
   const { t } = useContext(LanguageContext);
+  const navigate = useNavigate();
   // —— design tokens theo theme ——
   const cls = {
     page: isDark ? "bg-neutral-900 text-neutral-100" : "bg-neutral-100 text-neutral-900",
@@ -72,15 +75,10 @@ const Games = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showOptions]);
 
-  // Auth
+  // Auth (list is public; create/edit need login)
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
-      if (!user) {
-        setGames([]);
-        setFilteredGames([]);
-        setIsLoading(false);
-      }
     });
     return () => unsub();
   }, []);
@@ -119,7 +117,11 @@ const Games = () => {
   const handleCreateGame = useCallback(
     async (e) => {
       e.preventDefault();
-      if (!currentUser) return toast.error("Please log in to create a game");
+      const user = requireLogin({
+        navigate,
+        message: "Please log in to create a game",
+      });
+      if (!user) return;
       if (!gameTitle.trim() || !gameLink.trim() || !gameImg.trim())
         return toast.error("Please fill in all required fields");
 
@@ -129,7 +131,7 @@ const Games = () => {
           description: gameDesc.trim() || "No description",
           link: gameLink.trim(),
           imgUrl: gameImg.trim(),
-          ownerId: currentUser.uid,
+          ownerId: user.uid,
           createdAt: serverTimestamp(),
         });
         setGameTitle(""); setGameDesc(""); setGameLink(""); setGameImg("");
@@ -140,7 +142,7 @@ const Games = () => {
         toast.error("Create failed");
       }
     },
-    [currentUser, gameTitle, gameDesc, gameLink, gameImg]
+    [gameTitle, gameDesc, gameLink, gameImg, navigate]
   );
 
   // Update
@@ -193,14 +195,6 @@ const Games = () => {
     );
   }
 
-  if (!currentUser) {
-    return (
-      <div className={`text-center p-6 ${cls.muted}`}>
-        Please log in to view and manage games
-      </div>
-    );
-  }
-
   return (
     <div className={`min-h-screen p-4 transition-colors duration-300 ${cls.page}`}>
       <div className="max-w-7xl mx-auto">
@@ -231,8 +225,18 @@ const Games = () => {
 
 
             <button
-              onClick={() => setShowCreateModal(true)}
-              disabled={!currentUser}
+              type="button"
+              onClick={() => {
+                if (
+                  !requireLogin({
+                    navigate,
+                    message: "Please log in to create a game",
+                  })
+                ) {
+                  return;
+                }
+                setShowCreateModal(true);
+              }}
               className="create-neo-btn create-neo-btn--pink"
             >
               <FaPlus size={15} />
@@ -320,8 +324,9 @@ const Games = () => {
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-60"
                     disabled={
                       !currentUser ||
+                      !selectedGame ||
                       selectedGame.id.startsWith("default-") ||
-                      currentUser.uid !== selectedGame.ownerId
+                      currentUser?.uid !== selectedGame.ownerId
                     }
                   >
                     Save

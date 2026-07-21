@@ -1,6 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Login prompt toast (requireLogin — no auto-redirect) */
+.login-prompt-toast-container {
+  padding: 0 !important;
+  min-width: min(360px, 92vw);
+}
+.login-prompt-toast-body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.login-prompt-toast {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 2px;
+}
+.login-prompt-toast__msg {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.login-prompt-toast__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.login-prompt-toast__btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.login-prompt-toast__btn:hover {
+  transform: scale(1.03);
+}
+.login-prompt-toast__btn:active {
+  transform: scale(0.98);
+}
+.login-prompt-toast__btn--primary {
+  background: #2563eb;
+  color: #fff;
+}
+.login-prompt-toast__btn--primary:hover {
+  background: #1d4ed8;
+}
+.login-prompt-toast__btn--ghost {
+  background: transparent;
+  color: inherit;
+  opacity: 0.85;
+  border: 1px solid currentColor;
+}
+.login-prompt-toast__btn--ghost:hover {
+  opacity: 1;
+}
+
 html, body, #root { min-height: 100%; }
 body { margin: 0; background-color: var(--app-background, #ffffff); transition: background-color .25s ease; }
 .app-shell, .app-shell__main, .app-shell__content { background-color: var(--app-background, #ffffff); }

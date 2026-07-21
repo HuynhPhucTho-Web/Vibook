@@ -12,6 +12,7 @@ import {
 import { db } from "../../components/firebase";
 import { ThemeContext } from "../../context/ThemeContext";
 import { LanguageContext } from "../../context/LanguageContext";
+import { requireLogin } from "../../utils/requireLogin";
 import { SlLike } from "react-icons/sl";
 import {
   FaComment,
@@ -25,7 +26,7 @@ import {
   FaTimes,
   FaUser,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import GroupCommentSection from "./GroupCommentSection";
 
 /** helpers */
@@ -59,6 +60,7 @@ export default function GroupPostItem({
 }) {
   const { theme } = useContext(ThemeContext);
   const isLight = theme === "light";
+  const navigate = useNavigate();
 
   const [localPost, setLocalPost] = useState(post);
   const [commentCount, setCommentCount] = useState(0);
@@ -161,7 +163,8 @@ export default function GroupPostItem({
   const totalReactions = Object.values(localPost.likes || {}).reduce((s, c) => s + c, 0);
 
   const handleReaction = async (reaction) => {
-    if (isReacting || !auth?.currentUser) return;
+    if (isReacting) return;
+    if (!requireLogin({ navigate, message: "Vui lòng đăng nhập để thả cảm xúc" })) return;
     setIsReacting(true);
     try {
       const ref = doc(db, "Groups", groupId, "Posts", post.id);

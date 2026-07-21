@@ -1,9 +1,11 @@
 import React, { useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../context/ThemeContext";
 import { auth, db } from "../../components/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { FaImage, FaVideo, FaFile, FaSmile } from "react-icons/fa";
 import Picker from "emoji-picker-react";
+import { requireLogin } from "../../utils/requireLogin";
 import "../../style/GroupPost.css";
 
 import {LanguageContext} from "../../context/LanguageContext";
@@ -28,6 +30,7 @@ export default function GroupPostComposer({ groupId }) {
   const { theme } = useContext(ThemeContext);
   const isLight = theme === "light";
   const {t} = useContext(LanguageContext);
+  const navigate = useNavigate();
 
   const [content, setContent] = useState("");
   const [media, setMedia] = useState([]); // [{file, preview}]
@@ -57,6 +60,14 @@ export default function GroupPostComposer({ groupId }) {
   const submit = async () => {
     if (loading) return;
     if (!content.trim() && media.length === 0) return;
+    if (
+      !requireLogin({
+        navigate,
+        message: "Vui lòng đăng nhập để đăng bài trong nhóm",
+      })
+    ) {
+      return;
+    }
 
     setLoading(true);
     try {
@@ -67,7 +78,7 @@ export default function GroupPostComposer({ groupId }) {
         content: content.trim(),
         mediaUrls: urls,
         createdAt: serverTimestamp(),
-        userId: auth.currentUser?.uid,
+        userId: auth.currentUser.uid,
         userName: auth.currentUser?.displayName || "Anonymous",
         userPhoto: auth.currentUser?.photoURL || null,
         likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },

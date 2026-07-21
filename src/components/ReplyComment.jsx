@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, addDoc, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { FaTimes, FaUser } from "react-icons/fa";
 import { db } from "../components/firebase";
+import { requireLogin } from "../utils/requireLogin";
 
 const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
   const [replyText, setReplyText] = useState("");
+  const navigate = useNavigate();
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();
@@ -15,10 +18,7 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
       return;
     }
 
-    if (!auth.currentUser) {
-      toast.error("Please login to reply", { position: "top-center" });
-      return;
-    }
+    if (!requireLogin({ navigate, message: "Please login to reply" })) return;
 
     try {
       const replyData = {

@@ -2,8 +2,14 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "./firebase";
 import { toast } from "react-toastify";
 import { setDoc, doc } from "firebase/firestore";
+import { useLocation, useNavigate } from "react-router-dom";
+import { clearLoginRedirect, getLoginRedirect } from "../utils/requireLogin";
 
 function SignInwithGoogle() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = getLoginRedirect(location.state?.from);
+
   function googleLogin() {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).then(async (result) => {
@@ -14,10 +20,13 @@ function SignInwithGoogle() {
           firstName: user.displayName,
           photo: user.photoURL,
           lastName: "",
-        });
+        }, { merge: true });
         toast.success("Đăng nhập thành công!", { position: "top-center" });
-        window.location.href = "/homevibook";
+        clearLoginRedirect();
+        navigate(redirectTo, { replace: true });
       }
+    }).catch((error) => {
+      toast.error(error.message || "Google sign-in failed", { position: "bottom-center" });
     });
   }
 

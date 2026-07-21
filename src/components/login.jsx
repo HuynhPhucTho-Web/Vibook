@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import SignInwithGoogle from "./signInWIthGoogle";
 import InteractiveBlob from "./InteractiveBlob";
 import "../style/auth.css";
+import { clearLoginRedirect, getLoginRedirect } from "../utils/requireLogin";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = getLoginRedirect(location.state?.from);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +33,8 @@ function Login() {
       }
 
       toast.success("User logged in Successfully", { position: "top-center" });
-      navigate("/homevibook", { replace: true });
+      clearLoginRedirect();
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       toast.error(error.message, { position: "bottom-center" });
     }
@@ -50,9 +54,17 @@ function Login() {
       >
         {/* CỘT TRÁI: FORM */}
         <div className="flex-1 p-8 md:p-14 bg-white/20">
-          <div className="mb-10 flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-pink-500 shadow-lg shadow-pink-200" />
-            <div className="w-4 h-4 rounded-full bg-blue-400" />
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-pink-500 shadow-lg shadow-pink-200" />
+              <div className="w-4 h-4 rounded-full bg-blue-400" />
+            </div>
+            <Link
+              to="/homevibook"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-slate-700 bg-white/70 border border-white/80 shadow-sm hover:bg-white hover:scale-[1.02] active:scale-95 transition-all no-underline"
+            >
+              ← Về trang chủ
+            </Link>
           </div>
 
           <h1 className="text-4xl font-extrabold text-slate-800 mb-2">Sign in</h1>
@@ -114,6 +126,15 @@ function Login() {
             <p className="text-center text-slate-600 pt-4">
               Bạn chưa có tài khoản?{" "}
               <Link to="/register" className="text-pink-600 font-bold hover:underline">Tạo ngay</Link>
+            </p>
+
+            <p className="text-center pt-2">
+              <Link
+                to="/homevibook"
+                className="text-slate-500 text-sm font-medium hover:text-blue-600 hover:underline"
+              >
+                Tiếp tục xem với tư cách khách →
+              </Link>
             </p>
           </form>
         </div>

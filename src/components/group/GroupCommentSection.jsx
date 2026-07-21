@@ -19,6 +19,7 @@ import { ThemeContext } from "../../context/ThemeContext";
 import { LanguageContext } from "../../context/LanguageContext";
 import { db } from "../../components/firebase";
 import Picker from "emoji-picker-react";
+import { requireLogin } from "../../utils/requireLogin";
 
 const REACTIONS = {
     like: { emoji: "👍", label: "Thích" },
@@ -127,6 +128,7 @@ const ReplyInput = ({ commentId, groupId, postId, auth, userDetails, onCancel, o
     const handleSubmit = async (e) => {
         e?.preventDefault();
         if (!replyText.trim() || isSubmitting) return;
+        if (!requireLogin({ message: "Vui lòng đăng nhập để trả lời" })) return;
 
         setIsSubmitting(true);
         try {
@@ -262,13 +264,11 @@ const CommentItem = ({ comment, groupId, postId, auth, userDetails, isReply = fa
     const isLight = theme === "light";
 
     const handleReaction = async (reactionType) => {
-        if (!auth.currentUser) {
-            toast.error("Vui lòng đăng nhập");
-            return;
-        }
+        const user = requireLogin({ message: "Vui lòng đăng nhập" });
+        if (!user) return;
 
         try {
-            const userId = auth.currentUser.uid;
+            const userId = user.uid;
             let targetRef = isReply
                 ? doc(db, "Groups", groupId, "Posts", postId, "comments", parentCommentId, "replies", comment.id)
                 : doc(db, "Groups", groupId, "Posts", postId, "comments", comment.id);
@@ -545,6 +545,7 @@ const GroupCommentSection = ({ groupId, postId, auth, userDetails, isCommentSect
     const handleSubmit = async (e) => {
         e?.preventDefault();
         if (!commentText.trim()) return;
+        if (!requireLogin({ message: "Vui lòng đăng nhập để bình luận" })) return;
 
         try {
             await addDoc(collection(db, "Groups", groupId, "Posts", postId, "comments"), {

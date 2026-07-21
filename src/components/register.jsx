@@ -70,9 +70,17 @@ function Register() {
       >
         {/* LEFT: FORM ĐĂNG KÝ */}
         <div className="flex-[1.2] p-8 md:p-12 bg-white/20">
-          <div className="mb-6 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-blue-500 shadow-lg shadow-blue-200" />
-            <div className="w-3 h-3 rounded-full bg-pink-400" />
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-blue-500 shadow-lg shadow-blue-200" />
+              <div className="w-3 h-3 rounded-full bg-pink-400" />
+            </div>
+            <Link
+              to="/homevibook"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-slate-700 bg-white/70 border border-white/80 shadow-sm hover:bg-white hover:scale-[1.02] active:scale-95 transition-all no-underline"
+            >
+              ← Về trang chủ
+            </Link>
           </div>
 
           <h1 className="text-3xl font-extrabold text-slate-800 mb-2">Create Account</h1>
@@ -146,6 +154,15 @@ function Register() {
             <p className="text-center text-slate-600 pt-4">
               Đã có tài khoản?{" "}
               <Link to="/login" className="text-blue-600 font-bold hover:underline">Đăng nhập</Link>
+            </p>
+
+            <p className="text-center pt-2">
+              <Link
+                to="/homevibook"
+                className="text-slate-500 text-sm font-medium hover:text-blue-600 hover:underline"
+              >
+                Tiếp tục xem với tư cách khách →
+              </Link>
             </p>
           </form>
         </div>

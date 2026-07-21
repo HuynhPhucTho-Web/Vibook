@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   collection,
   addDoc,
@@ -21,6 +22,7 @@ import { db } from "../components/firebase";
 import Picker from "emoji-picker-react";
 import { LanguageContext } from "../context/LanguageContext";
 import { SlLike } from "react-icons/sl";
+import { requireLogin } from "../utils/requireLogin";
 
 const REACTIONS = {
   like: { emoji: "👍", label: "Thích" },
@@ -75,6 +77,7 @@ const ReactionPicker = ({ isOpen, onClose, onSelect, targetRef }) => {
 
 const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess, replyToName }) => {
   const { theme } = useContext(ThemeContext);
+  const navigate = useNavigate();
   const [replyText, setReplyText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
@@ -97,6 +100,7 @@ const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess,
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!replyText.trim() || isSubmitting) return;
+    if (!requireLogin({ navigate, message: "Vui lòng đăng nhập để trả lời" })) return;
 
     setIsSubmitting(true);
     try {
@@ -228,14 +232,17 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
   const likeButtonRef = useRef(null);
   const isLight = theme === "light";
   
+  const navigate = useNavigate();
+
   const handleReaction = async (reactionType) => {
-    if (!auth.currentUser) {
-      toast.error("Vui lòng đăng nhập");
-      return;
-    }
+    const user = requireLogin({
+      navigate,
+      message: "Vui lòng đăng nhập",
+    });
+    if (!user) return;
 
     try {
-      const userId = auth.currentUser.uid;
+      const userId = user.uid;
       let targetRef = isReply
         ? doc(db, "Posts", postId, "comments", parentCommentId, "replies", comment.id)
         : doc(db, "Posts", postId, "comments", comment.id);
@@ -516,9 +523,12 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
     };
   }, [isCommentSectionOpen, postId]);
 
+  const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!commentText.trim()) return;
+    if (!requireLogin({ navigate, message: "Vui lòng đăng nhập để bình luận" })) return;
 
     try {
       await addDoc(collection(db, "Posts", postId, "comments"), {

@@ -1,5 +1,6 @@
 // src/components/friends/FindFriends.jsx
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   collection,
   query,
@@ -12,8 +13,10 @@ import {
 import { db } from "../../components/firebase";
 import { FaUserPlus, FaSearch, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { requireLogin } from "../../utils/requireLogin";
 
 const FindFriends = ({ currentUser, theme }) => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -21,14 +24,12 @@ const FindFriends = ({ currentUser, theme }) => {
   const [friends, setFriends] = useState(new Set());
   const [showAll, setShowAll] = useState(false);
 
-  // Load all users (chỉ những người cho phép tìm – isPublic == true)
+  // Public directory — guests can browse users
   useEffect(() => {
-    if (!currentUser) return;
-
     const usersQuery = query(
       collection(db, "Users"),
       orderBy("firstName"),
-      limit(100)
+      limit(100),
     );
 
     const unsubscribe = onSnapshot(
@@ -39,29 +40,33 @@ const FindFriends = ({ currentUser, theme }) => {
             uid: docSnap.id,
             ...docSnap.data(),
           }))
-          .filter((user) => user.uid !== currentUser.uid);
+          .filter((user) => !currentUser || user.uid !== currentUser.uid);
 
         setUsers(allUsers);
         setLoading(false);
       },
       (error) => {
         console.error("Error loading users:", error);
-        toast.error("Không tải được danh sách người dùng (kiểm tra Firestore rules).");
+        toast.error(
+          "Không tải được danh sách người dùng (kiểm tra Firestore rules).",
+        );
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Load sent friend requests
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setSentRequests(new Set());
+      return undefined;
+    }
 
     const requestsQuery = query(
       collection(db, "FriendRequests"),
       where("fromUserId", "==", currentUser.uid),
-      where("status", "==", "pending")
+      where("status", "==", "pending"),
     );
 
     const unsubscribe = onSnapshot(
@@ -72,20 +77,22 @@ const FindFriends = ({ currentUser, theme }) => {
       },
       (error) => {
         console.error("Error loading sent requests:", error);
-      }
+      },
     );
 
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Load friends
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setFriends(new Set());
+      return undefined;
+    }
 
     const friendshipsQuery = query(
       collection(db, "Friendships"),
       where("participants", "array-contains", currentUser.uid),
-      where("status", "==", "accepted")
+      where("status", "==", "accepted"),
     );
 
     const unsubscribe = onSnapshot(
@@ -101,20 +108,27 @@ const FindFriends = ({ currentUser, theme }) => {
       },
       (error) => {
         console.error("Error loading friendships:", error);
-      }
+      },
     );
 
     return () => unsubscribe();
   }, [currentUser]);
 
   const handleSendRequest = async (toUserId, toUserName) => {
+    const user = requireLogin({
+      navigate,
+      message: "Vui lòng đăng nhập để gửi lời mời kết bạn",
+      from: "/friends",
+    });
+    if (!user) return;
+
     try {
       const targetUser = users.find((u) => u.uid === toUserId);
 
       await addDoc(collection(db, "FriendRequests"), {
-        fromUserId: currentUser.uid,
-        fromUserName: `${currentUser.displayName || currentUser.email}`,
-        fromUserPhoto: currentUser.photoURL || null,
+        fromUserId: user.uid,
+        fromUserName: `${user.displayName || user.email}`,
+        fromUserPhoto: user.photoURL || null,
         toUserId,
         toUserName,
         toUserPhoto: targetUser?.photo || null,
@@ -131,25 +145,26 @@ const FindFriends = ({ currentUser, theme }) => {
 
   const filteredUsers = users.filter((user) => {
     if (!searchTerm) return true;
-    const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
+    const fullName =
+      `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
     const email = (user.email || "").toLowerCase();
     const search = searchTerm.toLowerCase();
 
-    // Split search term into words and check if all words match (case insensitive)
-    const searchWords = search.split(/\s+/).filter(word => word.length > 0);
-    const nameWords = fullName.split(/\s+/).filter(word => word.length > 0);
+    const searchWords = search.split(/\s+/).filter((word) => word.length > 0);
+    const nameWords = fullName.split(/\s+/).filter((word) => word.length > 0);
 
-    // Check if all search words are found in either name or email
-    const matchesName = searchWords.every(searchWord =>
-      nameWords.some(nameWord => nameWord.includes(searchWord)) ||
-      fullName.includes(searchWord)
+    const matchesName = searchWords.every(
+      (searchWord) =>
+        nameWords.some((nameWord) => nameWord.includes(searchWord)) ||
+        fullName.includes(searchWord),
     );
-    const matchesEmail = searchWords.every(searchWord => email.includes(searchWord));
+    const matchesEmail = searchWords.every((searchWord) =>
+      email.includes(searchWord),
+    );
 
     return matchesName || matchesEmail;
   });
 
-  // Show only 10 users initially, or all if showAll is true
   const displayedUsers = showAll ? filteredUsers : filteredUsers.slice(0, 10);
   const hasMoreUsers = filteredUsers.length > 10;
 
@@ -163,7 +178,6 @@ const FindFriends = ({ currentUser, theme }) => {
 
   return (
     <div className="find-friends">
-      {/* Search Bar */}
       <div className="mb-4">
         <div className="input-group">
           <span className="input-group-text">
@@ -179,7 +193,6 @@ const FindFriends = ({ currentUser, theme }) => {
         </div>
       </div>
 
-      {/* Users List */}
       <div className="row">
         {displayedUsers.map((user) => {
           const isFriend = friends.has(user.uid);
@@ -199,7 +212,8 @@ const FindFriends = ({ currentUser, theme }) => {
                       style={{
                         width: "50px",
                         height: "50px",
-                        backgroundColor: theme === "light" ? "#e9ecef" : "#495057",
+                        backgroundColor:
+                          theme === "light" ? "#e9ecef" : "#495057",
                         color: theme === "light" ? "#6c757d" : "#adb5bd",
                         position: "relative",
                       }}
@@ -222,13 +236,15 @@ const FindFriends = ({ currentUser, theme }) => {
                           }}
                         />
                       ) : null}
-                      <FaUser size={24} style={{ display: user.photo ? "none" : "block" }} />
+                      <FaUser
+                        size={24}
+                        style={{ display: user.photo ? "none" : "block" }}
+                      />
                     </div>
                     <div>
                       <h6 className="card-title mb-0">
                         {user.firstName} {user.lastName}
                       </h6>
-                      {/* <small className="text-muted">{user.email}</small> */}
                     </div>
                   </div>
                   <div className="d-flex justify-content-between align-items-center">
@@ -236,16 +252,17 @@ const FindFriends = ({ currentUser, theme }) => {
                       {isFriend
                         ? "Already friends"
                         : hasSentRequest
-                        ? "Request sent"
-                        : ""}
+                          ? "Request sent"
+                          : ""}
                     </small>
                     {!isFriend && !hasSentRequest && (
                       <button
+                        type="button"
                         className="btn btn-primary btn-sm"
                         onClick={() =>
                           handleSendRequest(
                             user.uid,
-                            `${user.firstName} ${user.lastName}`
+                            `${user.firstName} ${user.lastName}`,
                           )
                         }
                       >
@@ -261,10 +278,10 @@ const FindFriends = ({ currentUser, theme }) => {
         })}
       </div>
 
-      {/* See More Button */}
       {hasMoreUsers && !showAll && (
         <div className="text-center mt-4">
           <button
+            type="button"
             className="btn btn-outline-primary"
             onClick={() => setShowAll(true)}
           >

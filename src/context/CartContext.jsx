@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db } from '../components/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import { requireLogin } from '../utils/requireLogin';
 
 const CartContext = createContext();
 
@@ -60,11 +61,10 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = async (product, quantity = 1) => {
-    const user = auth.currentUser;
-    if (!user) {
-      toast.error('Vui lòng đăng nhập để mua hàng');
-      return;
-    }
+    const user = requireLogin({
+      message: "Vui lòng đăng nhập để mua hàng",
+    });
+    if (!user) return;
 
     // KIỂM TRA TỒN KHO THẬT
     if (product.stock !== undefined && product.stock <= 0) {

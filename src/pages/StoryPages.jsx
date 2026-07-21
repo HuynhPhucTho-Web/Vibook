@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import {
   collection,
@@ -11,10 +12,12 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import StoryCreateForm from "../components/story/StoryCreateForm";
+import { requireLogin } from "../utils/requireLogin";
 
 const MS_24H = 24 * 60 * 60 * 1000;
 
 const Storys = () => {
+  const navigate = useNavigate();
   const [stories, setStories] = useState([]);
   const [newStory, setNewStory] = useState({ title: "", mediaFiles: [] });
   const [isUploading, setIsUploading] = useState(false);
@@ -159,10 +162,12 @@ const Storys = () => {
       });
       return;
     }
-    if (!auth.currentUser) {
-      toast.error("You must be logged in to create a story.", {
-        position: "top-center",
-      });
+    if (
+      !requireLogin({
+        navigate,
+        message: "You must be logged in to create a story.",
+      })
+    ) {
       return;
     }
 

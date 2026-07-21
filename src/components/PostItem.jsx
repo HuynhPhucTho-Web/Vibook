@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query,
   runTransaction, serverTimestamp, setDoc, updateDoc, where,
@@ -15,11 +16,13 @@ import PostStats from "./post/PostStats";
 import PostActions from "./post/PostActions";
 import PostComments from "./post/PostComments";
 import { getPostHtml, normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
+import { requireLogin } from "../utils/requireLogin";
 import "../style/PostItem.css";
 
 const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, isDetailView = false, customBgColor = "" }) => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
+  const navigate = useNavigate();
   const isLight = theme === "light";
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [showReactions, setShowReactions] = useState(false);
@@ -99,8 +102,13 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   }, [localPost.sharedFrom?.postId, localPost.sharedPostId, localPost.type]);
 
   const handleReaction = async (postId, reaction) => {
-    const userId = auth?.currentUser?.uid;
-    if (isReacting || !userId) return;
+    if (isReacting) return;
+    const user = requireLogin({
+      navigate,
+      message: t("loginRequired"),
+    });
+    if (!user) return;
+    const userId = user.uid;
     setIsReacting(true);
     try {
       const postRef = doc(db, "Posts", postId);
@@ -160,7 +168,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   };
 
   const handleRepostToTimeline = () => {
-    if (!auth?.currentUser) return toast.error(t("loginToShare"));
+    if (!requireLogin({ navigate, message: t("loginToShare") })) return;
     setShareDescription("");
     setSharePrivacy("public");
     setTaggedFriends([]);
@@ -234,8 +242,9 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   };
 
   const handleToggleSave = async () => {
-    const userId = auth?.currentUser?.uid;
-    if (!userId) return toast.error(t("loginToSave"));
+    const user = requireLogin({ navigate, message: t("loginToSave") });
+    if (!user) return;
+    const userId = user.uid;
     setIsSavingPost(true);
     try {
       const savedRef = doc(db, "SavedPosts", `${userId}_${post.id}`);

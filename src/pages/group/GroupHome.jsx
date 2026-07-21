@@ -22,15 +22,16 @@ const GroupHome = () => {
     return () => unsub();
   }, [groupId]);
 
-  const canPost = !!auth.currentUser;
+  // Composer only for logged-in users; posts list is public for guests
+  const canPost = Boolean(auth.currentUser);
 
   return (
     <div>
-      {canPost && (
+      {canPost ? (
         <section className="gh-composer">
           <GroupPostComposer groupId={groupId} />
         </section>
-      )}
+      ) : null}
 
       {loadingPosts ? (
         <div className="gh-skeletonWrap">

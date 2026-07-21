@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import {
   collection,
@@ -17,11 +18,13 @@ import { LanguageContext } from "../context/LanguageContext";
 import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes } from "react-icons/fa";
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
+import { requireLogin } from "../utils/requireLogin";
 import "../style/event/Event.css";
 
 const Events = () => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,15 +74,10 @@ const Events = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Auth listener
+  // Auth listener (events list is public; only create/join need login)
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
-      if (!user) {
-        setEvents([]);
-        setFilteredEvents([]);
-        setIsLoading(false);
-      }
     });
 
     return () => unsubscribeAuth();
@@ -110,10 +108,8 @@ const Events = () => {
 
 
 
-  // Load events
+  // Load events (public browse)
   useEffect(() => {
-    if (!currentUser) return;
-
     setIsLoading(true);
     const eventsQuery = query(collection(db, "Events"));
     const unsubscribe = onSnapshot(
@@ -139,7 +135,7 @@ const Events = () => {
     );
 
     return () => unsubscribe();
-  }, [currentUser]);
+  }, [t]);
 
   // Search filter
   useEffect(() => {
@@ -162,10 +158,7 @@ const Events = () => {
         toast.error(t("eventNameRequired"), { position: "top-center" });
         return;
       }
-      if (!currentUser) {
-        toast.error(t("loginToCreateEvent"), { position: "top-center" });
-        return;
-      }
+      if (!requireLogin({ navigate, message: t("loginToCreateEvent") })) return;
 
       try {
         const eventData = {
@@ -173,8 +166,8 @@ const Events = () => {
           date: eventDate,
           location: eventLocation.trim() || "Unknown",
           description: eventDescription.trim() || "No description",
-          ownerId: currentUser.uid,
-          attendees: [currentUser.uid],
+          ownerId: auth.currentUser.uid,
+          attendees: [auth.currentUser.uid],
           createdAt: serverTimestamp(),
         };
 
@@ -193,7 +186,7 @@ const Events = () => {
         toast.error(t("eventCreateFailed"), { position: "top-center" });
       }
     },
-    [eventName, eventDate, eventLocation, eventDescription, currentUser]
+    [eventName, eventDate, eventLocation, eventDescription, navigate, t]
   );
 
   // Update event
@@ -228,15 +221,13 @@ const Events = () => {
   // Join event
   const handleJoinEvent = useCallback(
     async (eventId, attendees) => {
-      if (!currentUser) {
-        toast.error(t("loginToJoinEvent"), { position: "top-center" });
-        return;
-      }
+      const user = requireLogin({ navigate, message: t("loginToJoinEvent") });
+      if (!user) return;
 
       try {
         const eventRef = doc(db, "Events", eventId);
         await updateDoc(eventRef, {
-          attendees: [...attendees, currentUser.uid],
+          attendees: [...attendees, user.uid],
         });
         toast.success(t("joinedEvent"), {
           position: "top-center",
@@ -247,21 +238,19 @@ const Events = () => {
         toast.error(t("joinEventFailed"), { position: "top-center" });
       }
     },
-    [currentUser]
+    [navigate, t]
   );
 
   // Leave event
   const handleLeaveEvent = useCallback(
     async (eventId, attendees) => {
-      if (!currentUser) {
-        toast.error(t("loginToLeaveEvent"), { position: "top-center" });
-        return;
-      }
+      const user = requireLogin({ navigate, message: t("loginToLeaveEvent") });
+      if (!user) return;
 
       try {
         const eventRef = doc(db, "Events", eventId);
         await updateDoc(eventRef, {
-          attendees: attendees.filter((uid) => uid !== currentUser.uid),
+          attendees: attendees.filter((uid) => uid !== user.uid),
         });
         toast.success(t("leftEvent"), {
           position: "top-center",
@@ -272,7 +261,7 @@ const Events = () => {
         toast.error(t("leaveEventFailed"), { position: "top-center" });
       }
     },
-    [currentUser]
+    [navigate, t]
   );
 
   // Delete event
@@ -328,15 +317,15 @@ const Events = () => {
     });
   }, []);
 
-  // Show participants modal
+  // Show participants modal (viewable by guests)
   const handleShowParticipants = useCallback(async (event) => {
     setSelectedEvent(event);
     setShowParticipantsModal(true);
+    const attendeeIds = event.attendees || [];
 
     try {
-      // Fetch user data for all attendees
-      const userPromises = event.attendees.map(async (uid) => {
-        const userDoc = await getDoc(doc(db, "users", uid));
+      const userPromises = attendeeIds.map(async (uid) => {
+        const userDoc = await getDoc(doc(db, "Users", uid));
         if (userDoc.exists()) {
           return { uid, ...userDoc.data() };
         }
@@ -347,8 +336,11 @@ const Events = () => {
       setParticipantsData(users);
     } catch (error) {
       console.error("Error fetching participants:", error);
-      // Fallback: show unknown users if fetch fails
-      const fallbackUsers = event.attendees.map(uid => ({ uid, displayName: "Unknown User", photoURL: null }));
+      const fallbackUsers = attendeeIds.map((uid) => ({
+        uid,
+        displayName: "Unknown User",
+        photoURL: null,
+      }));
       setParticipantsData(fallbackUsers);
       toast.error(t("unableToLoadParticipants"), { position: "top-center" });
     }
@@ -359,19 +351,6 @@ const Events = () => {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div
-        className={`container mx-auto p-4 transition-colors duration-300 ${theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
-          }`}
-      >
-        <h5 className="text-center text-gray-500 dark:text-gray-400">
-          {t("loginToViewEvents")}
-        </h5>
       </div>
     );
   }
@@ -649,8 +628,11 @@ const Events = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.length > 0 ? (
             filteredEvents.map((event) => {
-              const isAttendee = event.attendees.includes(currentUser.uid);
-              const isOwner = event.ownerId === currentUser.uid;
+              // Guest-safe: page remains viewable without login
+              const uid = currentUser?.uid;
+              const attendees = event.attendees || [];
+              const isAttendee = Boolean(uid && attendees.includes(uid));
+              const isOwner = Boolean(uid && event.ownerId === uid);
 
               return (
                 <div
@@ -715,7 +697,7 @@ const Events = () => {
                         className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer"
                         onClick={() => handleShowParticipants(event)}
                       >
-                        {event.attendees.length} {t("participants")}
+                        {attendees.length} {t("participants")}
                       </button>
                     </div>
                   </div>
@@ -746,8 +728,8 @@ const Events = () => {
                         }`}
                       onClick={() =>
                         isAttendee
-                          ? handleLeaveEvent(event.id, event.attendees)
-                          : handleJoinEvent(event.id, event.attendees)
+                          ? handleLeaveEvent(event.id, attendees)
+                          : handleJoinEvent(event.id, attendees)
                       }
                     >
                       {isAttendee ? (

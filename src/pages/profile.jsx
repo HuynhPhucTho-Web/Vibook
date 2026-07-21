@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import { doc, onSnapshot, query, collection, where, getDoc, addDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
@@ -9,11 +9,13 @@ import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
 import ProfileHeader from "../components/profile/UpdateProfile";
 import ProfileStories from "../components/profile/ProfileStories";
+import { requireLogin } from "../utils/requireLogin";
 
 
 function Profile() {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
+  const navigate = useNavigate();
   const { uid: routeUid } = useParams();
   const [currentUid, setCurrentUid] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
@@ -206,11 +208,14 @@ function Profile() {
   }, [userDetails]);
 
   const handleSendRequest = async () => {
-    if (!currentUid || !userDetails) return;
+    if (!userDetails) return;
+    const user = requireLogin({ navigate, message: t("loginRequired") });
+    if (!user) return;
+    const uid = user.uid;
 
     try {
       await addDoc(collection(db, "FriendRequests"), {
-        fromUserId: currentUid,
+        fromUserId: uid,
         fromUserName: `${auth.currentUser.displayName || auth.currentUser.email}`,
         fromUserPhoto: auth.currentUser.photoURL || null,
         toUserId: userDetails.id,
@@ -228,10 +233,13 @@ function Profile() {
   };
 
   const handleFollow = async () => {
-    if (!currentUid || !userDetails) return;
+    if (!userDetails) return;
+    const user = requireLogin({ navigate, message: t("loginRequired") });
+    if (!user) return;
+    const uid = user.uid;
 
     try {
-      const followDocId = `${currentUid}_${userDetails.id}`;
+      const followDocId = `${uid}_${userDetails.id}`;
       const followDocRef = doc(db, "Follows", followDocId);
 
       if (isFollowing) {
@@ -241,7 +249,7 @@ function Profile() {
       } else {
         // Follow: create a new follow document with specific ID
         await setDoc(followDocRef, {
-          fromUserId: currentUid,
+          fromUserId: uid,
           toUserId: userDetails.id,
           createdAt: new Date(),
         });

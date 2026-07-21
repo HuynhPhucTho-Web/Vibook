@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
@@ -10,11 +11,13 @@ import Picker from "emoji-picker-react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
+import { requireLogin } from "../utils/requireLogin";
 import "../style/PostCreate.css";
 
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
+  const navigate = useNavigate();
 
   // ----- state -----
   const [postContent, setPostContent] = useState("");
@@ -266,10 +269,7 @@ const PostCreator = ({ onPostCreated }) => {
       toast.error(t("contentOrMediaRequired"), { position: "top-center" });
       return;
     }
-    if (!auth.currentUser) {
-      toast.error(t("loginRequired"), { position: "top-center" });
-      return;
-    }
+    if (!requireLogin({ navigate, message: t("loginRequired") })) return;
 
     setIsUploading(true);
     setUploadProgress(0);

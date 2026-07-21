@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState, useRef } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaUserPlus,
@@ -7,22 +7,22 @@ import {
   FaCalendarAlt,
   FaVideo,
   FaGamepad,
-  FaStore,
   FaShoppingBag,
-  FaClipboardList,
-  FaStoreAlt,
   FaSignOutAlt,
   FaBars,
   FaTimes,
   FaYoutube,
   FaCog,
+  FaFacebookMessenger,
 } from "react-icons/fa";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import { auth } from "../components/firebase";
 import { toast } from "react-toastify";
 import "../style/Sidebar.css";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
+import { requireLogin } from "../utils/requireLogin";
 
 // ======= constants =======
 const DEFAULT_HEADER_HEIGHT = 100; // fallback nếu không đo được
@@ -31,26 +31,42 @@ const COLLAPSED_WIDTH = 72;
 const EXPANDED_WIDTH = 200;
 const MOBILE_BREAKPOINT = 768;
 
+// Public view on all items except Messenger (DM) → login on click.
+// Friends is public browse; kết bạn / create actions are gated in handlers.
 const MENU = [
-  { path: "/homevibook", icon: FaHome, labelKey: "home" },
-  { path: "/friends", icon: FaUserPlus, labelKey: "friends" },
-  { path: "/groups", icon: FaUsers, labelKey: "groups" },
-  { path: "/events", icon: FaCalendarAlt, labelKey: "events" },
-  { path: "/videos", icon: FaYoutube, labelKey: "video" },
-  { path: "/story", icon: FaVideo, labelKey: "story" },
-  { path: "/playgame", icon: FaGamepad, labelKey: "playGame" },
-  { path: "/market", icon: FaShoppingBag, labelKey: "store" },
-  { path: "/settings", icon: FaCog, labelKey: "settings" },
+  { path: "/homevibook", icon: FaHome, labelKey: "home", requiresAuth: false },
+  { path: "/friends", icon: FaUserPlus, labelKey: "friends", requiresAuth: false },
+  { path: "/groups", icon: FaUsers, labelKey: "groups", requiresAuth: false },
+  { path: "/events", icon: FaCalendarAlt, labelKey: "events", requiresAuth: false },
+  { path: "/videos", icon: FaYoutube, labelKey: "video", requiresAuth: false },
+  { path: "/story", icon: FaVideo, labelKey: "story", requiresAuth: false },
+  { path: "/playgame", icon: FaGamepad, labelKey: "playGame", requiresAuth: false },
+  { path: "/market", icon: FaShoppingBag, labelKey: "store", requiresAuth: false },
+  {
+    path: "/messenger",
+    icon: FaFacebookMessenger,
+    labelKey: "messenger",
+    requiresAuth: true,
+  },
+  { path: "/settings", icon: FaCog, labelKey: "settings", requiresAuth: true },
 ];
 
 export default function Sidebar() {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    Boolean(auth.currentUser),
+  );
 
   const [isMobile, setIsMobile] = useState(
     () => window.innerWidth <= MOBILE_BREAKPOINT,
   );
+
+  useEffect(() => {
+    return auth.onAuthStateChanged((user) => setIsAuthenticated(Boolean(user)));
+  }, []);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar_collapsed");
@@ -363,19 +379,38 @@ export default function Sidebar() {
         {/* Menu */}
         <nav id="sidebar-menu" className="sidebar__menu" aria-label="Primary">
           <ul>
-            {MENU.map(({ path, icon: Icon, labelKey }) => (
+            {MENU.map(({ path, icon: Icon, labelKey, requiresAuth }) => (
               <li key={path}>
                 <NavLink
                   to={path}
                   className={({ isActive }) =>
                     "sidebar__link" +
                     (isActive ? " is-active" : "") +
-                    (isCollapsed && !isMobile ? " is-icon" : "")
+                    (isCollapsed && !isMobile ? " is-icon" : "") +
+                    (requiresAuth && !isAuthenticated ? " is-locked" : "")
                   }
                   aria-current={({ isActive }) =>
                     isActive ? "page" : undefined
                   }
-                  title={isCollapsed && !isMobile ? t(labelKey) : undefined}
+                  title={
+                    isCollapsed && !isMobile
+                      ? t(labelKey)
+                      : requiresAuth && !isAuthenticated
+                        ? t("loginRequired")
+                        : undefined
+                  }
+                  onClick={(e) => {
+                    if (requiresAuth && !auth.currentUser) {
+                      e.preventDefault();
+                      // Toast + nút Đăng nhập — không redirect thẳng
+                      requireLogin({
+                        navigate,
+                        message: t("loginRequired"),
+                        from: path,
+                        loginLabel: t("login"),
+                      });
+                    }
+                  }}
                 >
                   {React.createElement(Icon, { className: "sidebar__icon" })}
                   {(!isCollapsed || isMobile) && (
@@ -396,7 +431,7 @@ export default function Sidebar() {
               "sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")
             }
             onClick={handleLogout}
-            disabled={!auth.currentUser}
+            disabled={!isAuthenticated}
             title={isCollapsed && !isMobile ? t("logout") : undefined}
           >
             <FaSignOutAlt className="sidebar__icon" />
