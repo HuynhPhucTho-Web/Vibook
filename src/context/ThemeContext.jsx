@@ -5,8 +5,9 @@ import { createContext, useLayoutEffect, useState } from "react";
 // eslint-disable-next-line react-refresh/only-export-components
 export const ThemeContext = createContext();
 
+/* Aligned with DESIGN.md void-black + accent atmospheres */
 const BACKGROUND_COLORS = {
-  default: { light: "#ffffff", dark: "#0b0f19" },
+  default: { light: "#f4f2fb", dark: "#0c0d14" },
   sky: { light: "#eef6ff", dark: "#0b1525" },
   lavender: { light: "#f5f1ff", dark: "#171225" },
   mint: { light: "#effbf6", dark: "#0c1d18" },

@@ -10,6 +10,11 @@ import FriendRequests from "../../components/friends/FriendRequests";
 import FriendsList from "../../components/friends/FriendsList";
 import FindFriends from "../../components/friends/FindFriends";
 
+/**
+ * Friends module — BR §9
+ * Guest: only Find Friends content; My Friends / Requests tabs show login toast on click.
+ * Logged-in: full tabs + private data.
+ */
 const Friends = () => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
@@ -22,19 +27,28 @@ const Friends = () => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setAuthReady(true);
-      // Guests default to "find" (public browse); logged-in users keep/see friends
+      // Guests stay on "find"; logged-in users land on my friends
       if (user) setActiveTab((tab) => (tab === "find" ? "friends" : tab));
       else setActiveTab("find");
     });
     return () => unsubscribe();
   }, []);
 
+  const isGuest = authReady && !currentUser;
+
+  /** BR §9: private tabs → login toast (no content leak) */
   const openPrivateTab = (tab) => {
     if (!currentUser) {
+      const message =
+        tab === "requests"
+          ? t("loginToViewFriendRequests")
+          : t("loginToViewFriends");
       requireLogin({
         navigate,
-        message: t("loginRequired") || "Please log in to continue",
+        title: t("loginToastTitle"),
+        message,
         from: "/friends",
+        loginLabel: t("login"),
       });
       return;
     }
@@ -57,30 +71,51 @@ const Friends = () => {
       <div className="container-fluid py-4">
         <div className="row">
           <div className="col-12">
-            <h1 className="mb-4">{t("friends")}</h1>
+            <div className="friends-page__header d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+              <div>
+                <h1 className="mb-1">{t("friends")}</h1>
+                {isGuest && (
+                  <p className="friends-page__guest-hint mb-0">
+                    {t("guestFriendsHint")}
+                  </p>
+                )}
+              </div>
+            </div>
 
-            <ul className="nav nav-tabs mb-4">
-              <li className="nav-item">
+            <ul className="nav nav-tabs mb-4" role="tablist">
+              <li className="nav-item" role="presentation">
                 <button
                   type="button"
-                  className={`nav-link ${activeTab === "friends" ? "active" : ""}`}
+                  role="tab"
+                  aria-selected={activeTab === "friends"}
+                  className={`nav-link ${activeTab === "friends" ? "active" : ""} ${
+                    isGuest ? "is-locked" : ""
+                  }`}
                   onClick={() => openPrivateTab("friends")}
                 >
                   {t("myFriends")}
+                  {isGuest && <span className="friends-page__lock" aria-hidden> 🔒</span>}
                 </button>
               </li>
-              <li className="nav-item">
+              <li className="nav-item" role="presentation">
                 <button
                   type="button"
-                  className={`nav-link ${activeTab === "requests" ? "active" : ""}`}
+                  role="tab"
+                  aria-selected={activeTab === "requests"}
+                  className={`nav-link ${activeTab === "requests" ? "active" : ""} ${
+                    isGuest ? "is-locked" : ""
+                  }`}
                   onClick={() => openPrivateTab("requests")}
                 >
                   {t("friendRequests")}
+                  {isGuest && <span className="friends-page__lock" aria-hidden> 🔒</span>}
                 </button>
               </li>
-              <li className="nav-item">
+              <li className="nav-item" role="presentation">
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === "find"}
                   className={`nav-link ${activeTab === "find" ? "active" : ""}`}
                   onClick={() => setActiveTab("find")}
                 >
@@ -90,14 +125,15 @@ const Friends = () => {
             </ul>
 
             <div className="tab-content">
-              {activeTab === "friends" && currentUser && (
+              {/* Guest always sees Find Friends only (BR §9 — no private data) */}
+              {(isGuest || activeTab === "find") && (
+                <FindFriends currentUser={currentUser} theme={theme} />
+              )}
+              {!isGuest && activeTab === "friends" && (
                 <FriendsList currentUser={currentUser} theme={theme} />
               )}
-              {activeTab === "requests" && currentUser && (
+              {!isGuest && activeTab === "requests" && (
                 <FriendRequests currentUser={currentUser} theme={theme} />
-              )}
-              {activeTab === "find" && (
-                <FindFriends currentUser={currentUser} theme={theme} />
               )}
             </div>
           </div>

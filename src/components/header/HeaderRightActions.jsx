@@ -34,22 +34,14 @@ const HeaderRightActions = ({
         <Link
           to="/login"
           onClick={closeAllPopups}
-          className={`px-3 sm:px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all hover:scale-105 ${
-            isLight
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-blue-500 text-white hover:bg-blue-400"
-          }`}
+          className="vb-btn vb-btn--primary vb-btn--sm vb-btn--pill no-underline"
         >
           {t("login")}
         </Link>
         <Link
           to="/register"
           onClick={closeAllPopups}
-          className={`px-3 sm:px-4 py-2 rounded-full text-sm font-semibold no-underline transition-all hover:scale-105 ${
-            isLight
-              ? "bg-black/10 text-black hover:bg-black/20"
-              : "bg-white/15 text-white hover:bg-white/25"
-          }`}
+          className="vb-btn vb-btn--ghost vb-btn--sm vb-btn--pill no-underline"
         >
           {t("register")}
         </Link>

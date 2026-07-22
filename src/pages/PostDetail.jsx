@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { auth, db } from "../components/firebase";
-import { doc, onSnapshot, collection, query, getDocs, getDoc} from "firebase/firestore";
+import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import PostItem from "../components/PostItem";
@@ -16,51 +16,55 @@ function PostDetail() {
   useEffect(() => {
     if (!postId) {
       setLoading(false);
-      return;
+      return undefined;
     }
 
-    const fetchPost = async () => {
-      try {
-        // Listen to post data
-        const postRef = doc(db, "Posts", postId);
-        const unsubscribePost = onSnapshot(postRef, async (snap) => {
-          if (snap.exists()) {
-            const postData = { id: snap.id, ...snap.data() };
-
-            // Fetch comments
-            const commentsQuery = query(collection(db, "Posts", postId, "comments"));
-            const commentsSnapshot = await getDocs(commentsQuery);
-            const comments = commentsSnapshot.docs.map((c) => ({ id: c.id, ...c.data() }));
-
-            setPost({ ...postData, comments });
-
-            // Fetch user details if not already set
-            if (!userDetails && postData.userId) {
-              const userDoc = await getDoc(doc(db, "Users", postData.userId));
-              if (userDoc.exists()) {
-                setUserDetails({ id: postData.userId, ...userDoc.data() });
-              }
-            }
-          } else {
-            toast.error("Post not found");
-          }
+    let cancelled = false;
+    // Post body only — comments load inside PostItem (isDetailView)
+    const unsubscribePost = onSnapshot(
+      doc(db, "Posts", postId),
+      async (snap) => {
+        if (cancelled) return;
+        if (!snap.exists()) {
+          toast.error("Post not found");
+          setPost(null);
           setLoading(false);
-        });
+          return;
+        }
+        const postData = { id: snap.id, ...snap.data() };
+        setPost(postData);
+        setLoading(false);
 
-        return () => unsubscribePost();
-      } catch (error) {
+        if (postData.userId) {
+          try {
+            const userDoc = await getDoc(doc(db, "Users", postData.userId));
+            if (!cancelled && userDoc.exists()) {
+              setUserDetails({ id: postData.userId, ...userDoc.data() });
+            }
+          } catch {
+            // non-blocking
+          }
+        }
+      },
+      (error) => {
         console.error("Error fetching post:", error);
         toast.error("Failed to load post");
         setLoading(false);
-      }
-    };
+      },
+    );
 
-    fetchPost();
-  }, [postId, userDetails]);
+    return () => {
+      cancelled = true;
+      unsubscribePost();
+    };
+  }, [postId]);
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "50vh" }}
+      >
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
@@ -77,8 +81,10 @@ function PostDetail() {
   }
 
   return (
-    <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"} flex justify-center`}>
-      <div className="w-full p-[13px]  pt-4">
+    <div
+      className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"} flex justify-center`}
+    >
+      <div className="w-full p-[13px] pt-4" style={{ maxWidth: 680 }}>
         <PostItem
           post={post}
           auth={auth}

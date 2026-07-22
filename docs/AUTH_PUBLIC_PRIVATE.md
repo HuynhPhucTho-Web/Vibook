@@ -1,11 +1,13 @@
-# Auth: Public vs Private (updated)
+# Auth: Public vs Private
+
+Aligned with `docs/BUSINESS_RULES.md` (BRD v2.0).
 
 ## Policy
 
 - **App entry:** `/` → `/homevibook` (home first; login is never the landing page).
 - **Browse/view is public** for feed, groups, events, store, stories, videos, games, friends directory, profiles.
-- **Restricted:** Messenger (DM), friend-request / join / create / like / comment / cart checkout actions, and account pages.
-- **Guest private action:** toast popup with a **Login** button (no auto-redirect). After login, return via `state.from` / `sessionStorage`.
+- **Restricted writes:** friend-request / join / create / like / comment / cart / checkout, etc.
+- **Guest private action:** toast with **Đăng nhập / Đăng ký / Đóng** (no auto-redirect). After auth, return via `state.from` / `sessionStorage`.
 
 ## Guard
 
@@ -14,6 +16,7 @@
 | Route guard | `src/components/auth/RequireAuth.jsx` |
 | Action helper | `src/utils/requireLogin.js` |
 | Path map | `src/config/routeAuth.js` |
+| Firestore rules | `firestore.rules` |
 
 ## Routes
 
@@ -25,11 +28,12 @@
 | `/post/:postId` | Post detail |
 | `/profile/:uid` | Profile view |
 | `/user/:uid` | User detail |
-| `/groups`, `/groups/:groupId/*` | Groups |
+| `/groups`, `/groups/:groupId/*` | Groups browse |
 | `/events` | Events list |
 | `/videos`, `/story`, `/playgame` | Media / games |
 | `/market`, `/product/:id` | Store browse |
-| `/friends` | Public find-friends browse; My friends / requests need login |
+| `/friends` | Find Friends public; My Friends / Requests → toast |
+| `/settings` | Public page; privacy / notifications / security gated in UI |
 
 ### Private (`RequireAuth`)
 
@@ -40,29 +44,51 @@
 | `/notifications` | Inbox |
 | `/cart`, `/checkout`, `/my-orders` | Commerce |
 | `/seller-dashboard`, `/manage-products` | Seller |
-| `/settings` | Account |
 
-## Sidebar
+## Sidebar (BR §4)
 
-| Item | Guest click |
-|------|-------------|
-| Home, Friends, Groups, Events, Videos, Story, PlayGame, Market | Open page (view) |
-| **Messenger** | → `/login` |
-| **Settings** | → `/login` |
-| Logout | Disabled when guest |
+| Item | Guest |
+|------|--------|
+| Home, Friends, Groups, Events, Videos, Story, PlayGame, Market, **Settings** | Open page (view) |
+| **Messenger** | Visible, locked → login toast (not auto-redirect) |
+| Logout | Visible, **disabled** |
 
-## Header (guest)
+## Settings (guest)
 
-- **Login** + **Register**
+| Section | Guest |
+|---------|--------|
+| Appearance (theme, background, language) | ✅ |
+| Accessibility | ✅ |
+| Privacy, Notifications, Security | 🔒 toast + login gate |
+
+## Header (guest) — BR §5
+
+- **Login** + **Register** only
 - Hide messenger, notifications, user menu
-- `unreadCount` stays `0`
+- `unreadCount` = 0
 
-## Write actions (toast + Login button)
+## Friends (BR §9)
 
-Post create/react/save/share, comments, story create, event create/join, group create/join/post, game create, cart add, friend request / follow, private friend tabs, sidebar Messenger/Settings.
+- Guest content: **Find Friends** only
+- Tabs My Friends / Friend Requests: visible but locked; click → feature-specific toast
+- No private friendship data for guests (Firestore + UI)
 
-`requireLogin()` shows a small toast: message + **Đăng nhập** / **Đóng**. User stays on the page until they click Login.
+## Firestore (browse first)
+
+| Collection | Guest read | Write |
+|------------|------------|--------|
+| Users | ✅ public | Owner only |
+| Posts, comments | ✅ public | Signed-in |
+| Groups, group posts | ✅ public | Member / owner |
+| Events, Stories, Games, Products | ✅ public | Signed-in / owner |
+| FriendRequests, Friendships | ❌ private participants | Signed-in |
+| Messages | ❌ friends only | Friends only |
+| Carts, Orders | ❌ owner | Owner / parties |
+
+## Write actions
+
+All mutations call `requireLogin()` with a **feature-specific** message (not a single generic “đăng bài” string).
 
 ## Login return path
 
-`getLoginRedirect()` reads `location.state.from` then `sessionStorage.vibook_login_from`, default `/homevibook`.
+`getLoginRedirect()`: `location.state.from` → `sessionStorage.vibook_login_from` → `/homevibook`.

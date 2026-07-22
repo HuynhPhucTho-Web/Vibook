@@ -12,15 +12,31 @@ service cloud.firestore {
     }
 
     /* ========= USERS ========= */
+    // Public profiles / Find Friends / search: guest + user đều đọc được
+    // Ghi (create/update/delete): chỉ chủ tài khoản
     match /Users/{userId} {
-      // Cho phép tất cả user đã login đọc (để dùng FindFriends)
-      allow read: if isSignedIn();
+      allow read: if true;
 
-      // Chỉ chủ tài khoản được tạo/update doc Users của chính mình
-      allow create, update: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
 
-      // Cho xoá: chỉ chủ
-      allow delete: if isSignedIn() && request.auth.uid == userId;
+    /* ========= FOLLOWS ========= */
+    // Public follower counts; follow/unfollow only by the follower (fromUserId)
+    // documentId = "fromUid_toUid"
+    match /Follows/{followId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.resource.data.toUserId != request.auth.uid
+        && request.resource.data.keys().hasAll(['fromUserId', 'toUserId', 'createdAt'])
+        && followId == request.auth.uid + '_' + request.resource.data.toUserId;
+
+      allow update: if false;
+
+      allow delete: if isSignedIn()
+        && resource.data.fromUserId == request.auth.uid;
     }
 
     /* ========= FRIEND REQUESTS ========= */
@@ -271,13 +287,51 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && resource.data.userId == request.auth.uid;
 
-      // Tạo notification cho chính mình
+      // Actor (logged-in) có thể tạo notification cho người khác (like, friend request…)
       allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid;
+        && request.resource.data.keys().hasAll(['userId'])
+        && request.resource.data.userId is string
+        && request.resource.data.userId.size() > 0;
 
-      // Cho phép user tự xoá / update trạng thái (đã đọc…)
+      // Chủ notification tự update (đã đọc) / xoá
       allow update, delete: if isSignedIn()
         && resource.data.userId == request.auth.uid;
+    }
+
+    /* ========= PRODUCTS (store) ========= */
+    match /Products/{productId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if isSignedIn()
+        && resource.data.sellerId == request.auth.uid;
+    }
+
+    /* ========= ORDERS ========= */
+    match /Orders/{orderId} {
+      allow read: if isSignedIn()
+        && (resource.data.buyerId == request.auth.uid
+            || resource.data.sellerId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isSignedIn()
+        && (resource.data.buyerId == request.auth.uid
+            || resource.data.sellerId == request.auth.uid);
+      allow delete: if false;
+    }
+
+    /* ========= REVIEWS ========= */
+    match /Reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    /* ========= CARTS ========= */
+    match /Carts/{userId} {
+      allow read, write: if isOwner(userId);
     }
     /* ========= GROUPS ========= */
     match /Groups/{groupId} {
@@ -301,10 +355,9 @@ service cloud.firestore {
             && (request.auth.uid in get(/databases/$(database)/documents/Groups/$(groupId)).data.members);
         }
 
-        // Nếu group public: ai cũng đọc; nếu private: chỉ member
-        allow read: if
-          get(/databases/$(database)/documents/Groups/$(groupId)).data.isPublic == true
-          || isGroupMember();
+        // Public browse: guest + user xem post nhóm (join/create vẫn gated ở app + isGroupMember)
+        // (app hiện không set isPublic; không khóa đọc theo field đó)
+        allow read: if true;
 
         // Chỉ member mới post
         allow create: if isGroupMember()

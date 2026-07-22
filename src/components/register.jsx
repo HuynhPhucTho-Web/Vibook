@@ -15,10 +15,12 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (submitting) return;
 
     if (password.length < 8) {
       toast.error("Mật khẩu phải có ít nhất 8 ký tự!", { position: "bottom-center" });
@@ -30,11 +32,12 @@ function Register() {
       return;
     }
 
+    setSubmitting(true);
     try {
+      // Firebase auto-signs-in on create — we will sign out after verification email is sent
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // GỬI EMAIL XÁC NHẬN
       await sendEmailVerification(user);
 
       await setDoc(doc(db, "Users", user.uid), {
@@ -42,18 +45,41 @@ function Register() {
         firstName: fname,
         lastName: lname,
         photo: "",
-        emailVerified: false
+        emailVerified: false,
+        createdAt: new Date().toISOString(),
       });
 
-      toast.info("Một email xác nhận đã được gửi! Vui lòng kiểm tra hộp thư trước khi đăng nhập.", {
-        position: "top-center",
-        autoClose: 8000,
+      // Rule: chưa xác nhận email → không giữ session, bắt đăng nhập lại sau verify
+      await auth.signOut();
+
+      toast.success(
+        "Đăng ký thành công! Vui lòng mở email và xác nhận tài khoản trước khi đăng nhập.",
+        {
+          position: "top-center",
+          autoClose: 9000,
+        },
+      );
+
+      navigate("/login", {
+        replace: true,
+        state: {
+          fromRegister: true,
+          email: email.trim(),
+          needsEmailVerification: true,
+        },
       });
-
-
-      navigate("/login", { replace: true });
     } catch (error) {
+      // Nếu tạo user rồi mà bước sau lỗi, tránh kẹt session chưa verify
+      try {
+        if (auth.currentUser && !auth.currentUser.emailVerified) {
+          await auth.signOut();
+        }
+      } catch {
+        // ignore
+      }
       toast.error(error.message, { position: "bottom-center" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -146,9 +172,10 @@ function Register() {
 
             <button
               type="submit"
-              className="w-full mt-4 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-blue-200 hover:scale-[1.01] active:scale-95 transition-all duration-300"
+              disabled={submitting}
+              className="vb-btn vb-btn--primary w-full mt-4 py-4 text-lg disabled:opacity-60"
             >
-              ĐĂNG KÝ NGAY
+              {submitting ? "Đang đăng ký..." : "Đăng ký ngay"}
             </button>
 
             <p className="text-center text-slate-600 pt-4">

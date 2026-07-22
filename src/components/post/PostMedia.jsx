@@ -66,6 +66,8 @@ const PostMedia = ({ post, isLight }) => {
                 key={idx}
                 src={item.url}
                 alt={item.originalName || "Image"}
+                loading="lazy"
+                decoding="async"
                 className={`w-full cursor-pointer hover:opacity-95 transition-opacity ${mediaFiles.length === 1
                   ? "object-contain max-h-[600px]"
                   : "rounded-xl object-cover aspect-square"

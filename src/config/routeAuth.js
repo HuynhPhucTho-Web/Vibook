@@ -4,7 +4,8 @@
  * Public: browse/read without login. Mutations (create, kết bạn, like…) check auth in handlers.
  * Private: RequireAuth redirects guests to /login.
  *
- * Sidebar: almost everything is navigable; only Messenger + Settings force login on click.
+ * Settings is public at route level; privacy / notifications / security sections
+ * are gated inside the page for guests.
  */
 
 /** Paths that require an authenticated user at the route level */
@@ -17,7 +18,6 @@ export const PRIVATE_PATHS = [
   "/my-orders",
   "/seller-dashboard",
   "/manage-products",
-  "/settings",
 ];
 
 /** True if this path needs login to enter the page */

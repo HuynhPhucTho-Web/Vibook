@@ -269,7 +269,15 @@ const PostCreator = ({ onPostCreated }) => {
       toast.error(t("contentOrMediaRequired"), { position: "top-center" });
       return;
     }
-    if (!requireLogin({ navigate, message: t("loginRequired") })) return;
+    if (
+      !requireLogin({
+        navigate,
+        title: t("loginToastTitle"),
+        message: t("loginRequired"),
+        loginLabel: t("login"),
+      })
+    )
+      return;
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -788,10 +796,11 @@ const PostCreator = ({ onPostCreated }) => {
             type="button"
             onClick={handlePostSubmit}
             disabled={(!postTitle.trim() || (!postContent.trim() && mediaFiles.length === 0)) || isUploading}
-            className={`post-creator-submit-btn ${(!postTitle.trim() || (!postContent.trim() && mediaFiles.length === 0)) || isUploading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 shadow-lg hover:shadow-xl"
-              }`}
+            className={`post-creator-submit-btn vb-btn vb-btn--primary${
+              (!postTitle.trim() || (!postContent.trim() && mediaFiles.length === 0)) || isUploading
+                ? " is-disabled"
+                : ""
+            }`}
           >
             {isUploading ? (
               <span className="flex items-center gap-2">

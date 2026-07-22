@@ -11,7 +11,6 @@ import {
   FaChevronRight,
   FaEye,
   FaEyeSlash,
-  FaGlobe,
   FaKey,
   FaLock,
   FaPalette,
@@ -24,7 +23,12 @@ import { toast } from "react-toastify";
 import { auth } from "../components/firebase";
 import { LanguageContext } from "../context/LanguageContext";
 import { ThemeContext } from "../context/ThemeContext";
+import { requireLogin } from "../utils/requireLogin";
 import "../style/Setting.css";
+
+/** Guest may use these (local prefs). Account-bound sections stay private. */
+const PUBLIC_SECTION_IDS = new Set(["appearance", "accessibility"]);
+const PRIVATE_SECTION_IDS = new Set(["privacy", "notifications", "security"]);
 
 const readStoredObject = (key, fallback) => {
   try {
@@ -66,6 +70,8 @@ const Setting = () => {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useContext(LanguageContext);
   const { theme, setTheme, background, setBackground } = useContext(ThemeContext);
+  const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
+  const [authReady, setAuthReady] = useState(Boolean(auth.currentUser));
   const [activeSection, setActiveSection] = useState("appearance");
   const [notifications, setNotifications] = useState(() =>
     readStoredObject("vibook_notification_preferences", NOTIFICATION_DEFAULTS),
@@ -86,28 +92,47 @@ const Setting = () => {
   const [passwordForm, setPasswordForm] = useState({ current: "", next: "", confirm: "" });
   const [changingPassword, setChangingPassword] = useState(false);
 
-  const passwordProvider = auth.currentUser?.providerData?.some(
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      setAuthReady(true);
+      // Guest must not stay on a private section after logout
+      if (!user) {
+        setActiveSection((section) =>
+          PRIVATE_SECTION_IDS.has(section) ? "appearance" : section,
+        );
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const isGuest = authReady && !currentUser;
+
+  const passwordProvider = currentUser?.providerData?.some(
     (provider) => provider.providerId === "password",
   );
 
   const sections = useMemo(
     () => [
-      { id: "appearance", icon: FaPalette, label: t("settingAppearance") },
-      { id: "privacy", icon: FaShieldAlt, label: t("settingPrivacy") },
-      { id: "notifications", icon: FaBell, label: t("settingNotifications") },
-      { id: "accessibility", icon: FaUniversalAccess, label: t("settingAccessibility") },
-      { id: "security", icon: FaLock, label: t("settingSecurity") },
+      { id: "appearance", icon: FaPalette, label: t("settingAppearance"), private: false },
+      { id: "accessibility", icon: FaUniversalAccess, label: t("settingAccessibility"), private: false },
+      { id: "privacy", icon: FaShieldAlt, label: t("settingPrivacy"), private: true },
+      { id: "notifications", icon: FaBell, label: t("settingNotifications"), private: true },
+      { id: "security", icon: FaLock, label: t("settingSecurity"), private: true },
     ],
     [t],
   );
 
   useEffect(() => {
+    // Only persist notification prefs when logged in (account-bound intent)
+    if (!currentUser) return;
     localStorage.setItem("vibook_notification_preferences", JSON.stringify(notifications));
-  }, [notifications]);
+  }, [notifications, currentUser]);
 
   useEffect(() => {
+    if (!currentUser) return;
     localStorage.setItem("vibook_default_privacy", defaultPrivacy);
-  }, [defaultPrivacy]);
+  }, [defaultPrivacy, currentUser]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -119,17 +144,52 @@ const Setting = () => {
     localStorage.setItem("vibook_compact_mode", String(compactMode));
   }, [compactMode, fontSize, reducedMotion]);
 
+  const promptLoginForPrivate = () => {
+    requireLogin({
+      navigate,
+      title: t("loginToastTitle"),
+      message: t("loginToPrivateSettings") || t("loginToSettings"),
+      from: "/settings",
+      loginLabel: t("login"),
+    });
+  };
+
+  const openSection = (id) => {
+    if (PRIVATE_SECTION_IDS.has(id) && !currentUser) {
+      promptLoginForPrivate();
+      setActiveSection(id); // show locked panel
+      return;
+    }
+    setActiveSection(id);
+  };
+
   const updateNotification = (key, value) => {
+    if (!currentUser) {
+      promptLoginForPrivate();
+      return;
+    }
     setNotifications((current) => ({ ...current, [key]: value }));
   };
 
   const handleLanguageChange = (code) => {
     setLanguage(code);
-    auth.languageCode = code;
+    if (auth.currentUser) auth.languageCode = code;
+  };
+
+  const handleDefaultPrivacy = (id) => {
+    if (!currentUser) {
+      promptLoginForPrivate();
+      return;
+    }
+    setDefaultPrivacy(id);
   };
 
   const handlePasswordChange = async (event) => {
     event.preventDefault();
+    if (!currentUser) {
+      promptLoginForPrivate();
+      return;
+    }
     if (passwordForm.next.length < 6) {
       toast.error(t("settingPasswordTooShort"));
       return;
@@ -138,17 +198,16 @@ const Setting = () => {
       toast.error(t("settingPasswordMismatch"));
       return;
     }
-    const user = auth.currentUser;
-    if (!user?.email || !passwordProvider) {
+    if (!currentUser.email || !passwordProvider) {
       toast.error(t("settingPasswordProviderUnsupported"));
       return;
     }
 
     setChangingPassword(true);
     try {
-      const credential = EmailAuthProvider.credential(user.email, passwordForm.current);
-      await reauthenticateWithCredential(user, credential);
-      await updatePassword(user, passwordForm.next);
+      const credential = EmailAuthProvider.credential(currentUser.email, passwordForm.current);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, passwordForm.next);
       setPasswordForm({ current: "", next: "", confirm: "" });
       toast.success(t("settingPasswordChanged"));
     } catch (error) {
@@ -164,47 +223,108 @@ const Setting = () => {
   };
 
   const handleLogout = async () => {
+    if (!currentUser) return;
     if (!window.confirm(t("settingLogoutConfirm"))) return;
     await auth.signOut();
-    navigate("/login", { replace: true });
+    navigate("/homevibook", { replace: true });
   };
+
+  const LockedPanel = () => (
+    <section className="setting-card setting-card--locked">
+      <div className="setting-locked">
+        <div className="setting-locked__icon">
+          <FaLock />
+        </div>
+        <h2>{t("settingLockedTitle")}</h2>
+        <p>{t("settingLockedDescription")}</p>
+        <div className="setting-locked__actions">
+          <button
+            type="button"
+            className="vb-btn vb-btn--primary"
+            onClick={promptLoginForPrivate}
+          >
+            {t("login")}
+          </button>
+          <button
+            type="button"
+            className="vb-btn vb-btn--ghost"
+            onClick={() =>
+              navigate("/register", { state: { from: "/settings" } })
+            }
+          >
+            {t("register")}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+
+  const showLocked =
+    isGuest && PRIVATE_SECTION_IDS.has(activeSection) && !PUBLIC_SECTION_IDS.has(activeSection);
 
   return (
     <div className={`setting-page setting-page--${theme}`}>
       <header className="setting-hero">
-        <div className="setting-hero__icon"><FaUserCog /></div>
+        <div className="setting-hero__icon">
+          <FaUserCog />
+        </div>
         <div>
           <p>{t("settingEyebrow")}</p>
           <h1>{t("settingTitle")}</h1>
-          <span>{t("settingSubtitle")}</span>
+          <span>{isGuest ? t("settingGuestHint") : t("settingSubtitle")}</span>
         </div>
       </header>
 
       <div className="setting-layout">
         <nav className="setting-nav" aria-label={t("settingTitle")}>
-          {sections.map(({ id, icon: Icon, label }) => (
+          {sections.map(({ id, icon: Icon, label, private: isPrivate }) => (
             <button
               key={id}
               type="button"
-              className={activeSection === id ? "is-active" : ""}
-              onClick={() => setActiveSection(id)}
+              className={
+                (activeSection === id ? "is-active " : "") +
+                (isGuest && isPrivate ? "is-locked" : "")
+              }
+              onClick={() => openSection(id)}
             >
-              {React.createElement(Icon)}<span>{label}</span><FaChevronRight className="setting-nav__arrow" />
+              {React.createElement(Icon)}
+              <span>
+                {label}
+                {isGuest && isPrivate ? " 🔒" : ""}
+              </span>
+              <FaChevronRight className="setting-nav__arrow" />
             </button>
           ))}
         </nav>
 
         <main className="setting-content">
-          {activeSection === "appearance" && (
+          {showLocked && <LockedPanel />}
+
+          {!showLocked && activeSection === "appearance" && (
             <section className="setting-card">
-              <div className="setting-card__heading"><FaPalette /><div><h2>{t("settingAppearance")}</h2><p>{t("settingAppearanceDescription")}</p></div></div>
+              <div className="setting-card__heading">
+                <FaPalette />
+                <div>
+                  <h2>{t("settingAppearance")}</h2>
+                  <p>{t("settingAppearanceDescription")}</p>
+                </div>
+              </div>
 
               <div className="setting-group">
                 <h3>{t("settingTheme")}</h3>
                 <div className="setting-choice-grid setting-choice-grid--two">
                   {["light", "dark"].map((mode) => (
-                    <button key={mode} type="button" className={`setting-theme-choice ${theme === mode ? "is-selected" : ""}`} onClick={() => setTheme(mode)}>
-                      <span className={`setting-theme-preview setting-theme-preview--${mode}`}><i /><i /><i /></span>
+                    <button
+                      key={mode}
+                      type="button"
+                      className={`setting-theme-choice ${theme === mode ? "is-selected" : ""}`}
+                      onClick={() => setTheme(mode)}
+                    >
+                      <span className={`setting-theme-preview setting-theme-preview--${mode}`}>
+                        <i />
+                        <i />
+                        <i />
+                      </span>
                       <strong>{t(mode === "light" ? "settingLight" : "settingDark")}</strong>
                       {theme === mode && <FaCheck />}
                     </button>
@@ -217,8 +337,19 @@ const Setting = () => {
                 <p className="setting-help">{t("settingBackgroundDescription")}</p>
                 <div className="setting-color-grid">
                   {BACKGROUNDS.map((option) => (
-                    <button key={option.id} type="button" className={background === option.id ? "is-selected" : ""} onClick={() => setBackground(option.id)} aria-label={t(option.labelKey)}>
-                      <span style={{ backgroundColor: theme === "dark" ? option.darkColor : option.color }} />
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={background === option.id ? "is-selected" : ""}
+                      onClick={() => setBackground(option.id)}
+                      aria-label={t(option.labelKey)}
+                    >
+                      <span
+                        style={{
+                          backgroundColor:
+                            theme === "dark" ? option.darkColor : option.color,
+                        }}
+                      />
                       <small>{t(option.labelKey)}</small>
                       {background === option.id && <FaCheck />}
                     </button>
@@ -234,8 +365,15 @@ const Setting = () => {
                     { code: "en", flag: "🇺🇸", name: "English" },
                     { code: "ja", flag: "🇯🇵", name: "日本語" },
                   ].map((option) => (
-                    <button key={option.code} type="button" className={language === option.code ? "is-selected" : ""} onClick={() => handleLanguageChange(option.code)}>
-                      <span>{option.flag}</span><strong>{option.name}</strong>{language === option.code && <FaCheck />}
+                    <button
+                      key={option.code}
+                      type="button"
+                      className={language === option.code ? "is-selected" : ""}
+                      onClick={() => handleLanguageChange(option.code)}
+                    >
+                      <span>{option.flag}</span>
+                      <strong>{option.name}</strong>
+                      {language === option.code && <FaCheck />}
                     </button>
                   ))}
                 </div>
@@ -243,21 +381,50 @@ const Setting = () => {
             </section>
           )}
 
-          {activeSection === "privacy" && (
+          {!showLocked && activeSection === "privacy" && currentUser && (
             <section className="setting-card">
-              <div className="setting-card__heading"><FaShieldAlt /><div><h2>{t("settingPrivacy")}</h2><p>{t("settingPrivacyDescription")}</p></div></div>
+              <div className="setting-card__heading">
+                <FaShieldAlt />
+                <div>
+                  <h2>{t("settingPrivacy")}</h2>
+                  <p>{t("settingPrivacyDescription")}</p>
+                </div>
+              </div>
               <div className="setting-group">
                 <h3>{t("settingDefaultAudience")}</h3>
                 <p className="setting-help">{t("settingDefaultAudienceDescription")}</p>
                 <div className="setting-choice-list">
                   {[
-                    { id: "public", icon: "🌐", title: t("publicVisibility"), detail: t("settingPublicDescription") },
-                    { id: "friends", icon: "👥", title: t("friendsVisibility"), detail: t("settingFriendsDescription") },
-                    { id: "private", icon: "🔒", title: t("privateVisibility"), detail: t("settingPrivateDescription") },
+                    {
+                      id: "public",
+                      icon: "🌐",
+                      title: t("publicVisibility"),
+                      detail: t("settingPublicDescription"),
+                    },
+                    {
+                      id: "friends",
+                      icon: "👥",
+                      title: t("friendsVisibility"),
+                      detail: t("settingFriendsDescription"),
+                    },
+                    {
+                      id: "private",
+                      icon: "🔒",
+                      title: t("privateVisibility"),
+                      detail: t("settingPrivateDescription"),
+                    },
                   ].map((option) => (
-                    <button key={option.id} type="button" className={defaultPrivacy === option.id ? "is-selected" : ""} onClick={() => setDefaultPrivacy(option.id)}>
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={defaultPrivacy === option.id ? "is-selected" : ""}
+                      onClick={() => handleDefaultPrivacy(option.id)}
+                    >
                       <span className="setting-choice-list__icon">{option.icon}</span>
-                      <span><strong>{option.title}</strong><small>{option.detail}</small></span>
+                      <span>
+                        <strong>{option.title}</strong>
+                        <small>{option.detail}</small>
+                      </span>
                       <i>{defaultPrivacy === option.id && <FaCheck />}</i>
                     </button>
                   ))}
@@ -266,9 +433,15 @@ const Setting = () => {
             </section>
           )}
 
-          {activeSection === "notifications" && (
+          {!showLocked && activeSection === "notifications" && currentUser && (
             <section className="setting-card">
-              <div className="setting-card__heading"><FaBell /><div><h2>{t("settingNotifications")}</h2><p>{t("settingNotificationsDescription")}</p></div></div>
+              <div className="setting-card__heading">
+                <FaBell />
+                <div>
+                  <h2>{t("settingNotifications")}</h2>
+                  <p>{t("settingNotificationsDescription")}</p>
+                </div>
+              </div>
               <div className="setting-list">
                 {[
                   ["reactions", "settingNotifyReactions", "settingNotifyReactionsDescription"],
@@ -277,34 +450,90 @@ const Setting = () => {
                   ["messages", "settingNotifyMessages", "settingNotifyMessagesDescription"],
                 ].map(([key, titleKey, detailKey]) => (
                   <div className="setting-row" key={key}>
-                    <div><strong>{t(titleKey)}</strong><small>{t(detailKey)}</small></div>
-                    <Toggle checked={notifications[key]} onChange={(value) => updateNotification(key, value)} label={t(titleKey)} />
+                    <div>
+                      <strong>{t(titleKey)}</strong>
+                      <small>{t(detailKey)}</small>
+                    </div>
+                    <Toggle
+                      checked={notifications[key]}
+                      onChange={(value) => updateNotification(key, value)}
+                      label={t(titleKey)}
+                    />
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {activeSection === "accessibility" && (
+          {!showLocked && activeSection === "accessibility" && (
             <section className="setting-card">
-              <div className="setting-card__heading"><FaUniversalAccess /><div><h2>{t("settingAccessibility")}</h2><p>{t("settingAccessibilityDescription")}</p></div></div>
+              <div className="setting-card__heading">
+                <FaUniversalAccess />
+                <div>
+                  <h2>{t("settingAccessibility")}</h2>
+                  <p>{t("settingAccessibilityDescription")}</p>
+                </div>
+              </div>
               <div className="setting-group">
                 <h3>{t("settingFontSize")}</h3>
                 <div className="setting-segmented" role="group" aria-label={t("settingFontSize")}>
-                  {["small", "normal", "large"].map((size) => <button type="button" key={size} className={fontSize === size ? "is-selected" : ""} onClick={() => setFontSize(size)}>{t(`settingFont${size[0].toUpperCase()}${size.slice(1)}`)}</button>)}
+                  {["small", "normal", "large"].map((size) => (
+                    <button
+                      type="button"
+                      key={size}
+                      className={fontSize === size ? "is-selected" : ""}
+                      onClick={() => setFontSize(size)}
+                    >
+                      {t(`settingFont${size[0].toUpperCase()}${size.slice(1)}`)}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="setting-list">
-                <div className="setting-row"><div><strong>{t("settingReducedMotion")}</strong><small>{t("settingReducedMotionDescription")}</small></div><Toggle checked={reducedMotion} onChange={setReducedMotion} label={t("settingReducedMotion")} /></div>
-                <div className="setting-row"><div><strong>{t("settingCompactMode")}</strong><small>{t("settingCompactModeDescription")}</small></div><Toggle checked={compactMode} onChange={setCompactMode} label={t("settingCompactMode")} /></div>
+                <div className="setting-row">
+                  <div>
+                    <strong>{t("settingReducedMotion")}</strong>
+                    <small>{t("settingReducedMotionDescription")}</small>
+                  </div>
+                  <Toggle
+                    checked={reducedMotion}
+                    onChange={setReducedMotion}
+                    label={t("settingReducedMotion")}
+                  />
+                </div>
+                <div className="setting-row">
+                  <div>
+                    <strong>{t("settingCompactMode")}</strong>
+                    <small>{t("settingCompactModeDescription")}</small>
+                  </div>
+                  <Toggle
+                    checked={compactMode}
+                    onChange={setCompactMode}
+                    label={t("settingCompactMode")}
+                  />
+                </div>
               </div>
             </section>
           )}
 
-          {activeSection === "security" && (
+          {!showLocked && activeSection === "security" && currentUser && (
             <section className="setting-card">
-              <div className="setting-card__heading"><FaKey /><div><h2>{t("settingSecurity")}</h2><p>{t("settingSecurityDescription")}</p></div></div>
-              <div className="setting-account-summary"><div><FaUserCog /></div><span><strong>{auth.currentUser?.displayName || t("anonymous")}</strong><small>{auth.currentUser?.email}</small></span></div>
+              <div className="setting-card__heading">
+                <FaKey />
+                <div>
+                  <h2>{t("settingSecurity")}</h2>
+                  <p>{t("settingSecurityDescription")}</p>
+                </div>
+              </div>
+              <div className="setting-account-summary">
+                <div>
+                  <FaUserCog />
+                </div>
+                <span>
+                  <strong>{currentUser.displayName || t("anonymous")}</strong>
+                  <small>{currentUser.email}</small>
+                </span>
+              </div>
               {passwordProvider ? (
                 <form className="setting-password-form" onSubmit={handlePasswordChange}>
                   <h3>{t("settingChangePassword")}</h3>
@@ -313,12 +542,62 @@ const Setting = () => {
                     ["next", "settingNewPassword"],
                     ["confirm", "settingConfirmNewPassword"],
                   ].map(([field, labelKey]) => (
-                    <label key={field}><span>{t(labelKey)}</span><div><input type={showPasswords ? "text" : "password"} autoComplete={field === "current" ? "current-password" : "new-password"} value={passwordForm[field]} onChange={(event) => setPasswordForm((current) => ({ ...current, [field]: event.target.value }))} required /><button type="button" onClick={() => setShowPasswords((visible) => !visible)} aria-label={t(showPasswords ? "settingHidePassword" : "settingShowPassword")}>{showPasswords ? <FaEyeSlash /> : <FaEye />}</button></div></label>
+                    <label key={field}>
+                      <span>{t(labelKey)}</span>
+                      <div>
+                        <input
+                          type={showPasswords ? "text" : "password"}
+                          autoComplete={
+                            field === "current" ? "current-password" : "new-password"
+                          }
+                          value={passwordForm[field]}
+                          onChange={(event) =>
+                            setPasswordForm((current) => ({
+                              ...current,
+                              [field]: event.target.value,
+                            }))
+                          }
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswords((visible) => !visible)}
+                          aria-label={t(
+                            showPasswords ? "settingHidePassword" : "settingShowPassword",
+                          )}
+                        >
+                          {showPasswords ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                      </div>
+                    </label>
                   ))}
-                  <button className="setting-primary-button" type="submit" disabled={changingPassword}>{changingPassword ? t("settingSaving") : t("settingUpdatePassword")}</button>
+                  <button
+                    className="vb-btn vb-btn--primary"
+                    type="submit"
+                    disabled={changingPassword}
+                  >
+                    {changingPassword ? t("settingSaving") : t("settingUpdatePassword")}
+                  </button>
                 </form>
-              ) : <div className="setting-info"><FaLock /><span><strong>{t("settingExternalAccount")}</strong><small>{t("settingExternalAccountDescription")}</small></span></div>}
-              <div className="setting-danger-zone"><div><strong>{t("settingLogout")}</strong><small>{t("settingLogoutDescription")}</small></div><button type="button" onClick={handleLogout}><FaSignOutAlt />{t("logout")}</button></div>
+              ) : (
+                <div className="setting-info">
+                  <FaLock />
+                  <span>
+                    <strong>{t("settingExternalAccount")}</strong>
+                    <small>{t("settingExternalAccountDescription")}</small>
+                  </span>
+                </div>
+              )}
+              <div className="setting-danger-zone">
+                <div>
+                  <strong>{t("settingLogout")}</strong>
+                  <small>{t("settingLogoutDescription")}</small>
+                </div>
+                <button type="button" onClick={handleLogout}>
+                  <FaSignOutAlt />
+                  {t("logout")}
+                </button>
+              </div>
             </section>
           )}
         </main>

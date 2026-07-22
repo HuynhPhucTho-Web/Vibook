@@ -59,10 +59,14 @@ const AuthLayout = () => (
   </div>
 );
 
-/** If already signed in, send user to intended page (or home) */
+/**
+ * Auth pages (login/register): only skip when fully signed in + email verified.
+ * Unverified Firebase sessions must NOT bounce to home (register flow).
+ */
 const AuthEntry = ({ user, children }) => {
   const location = useLocation();
-  if (user) {
+  const isFullySignedIn = Boolean(user?.emailVerified);
+  if (isFullySignedIn) {
     const from = getLoginRedirect(location.state?.from);
     clearLoginRedirect();
     return <Navigate to={from} replace />;
@@ -155,6 +159,8 @@ function App() {
                 <Route path="/videos" element={<Video />} />
                 {/* Friends: public browse; friend-request actions gated in UI/handlers */}
                 <Route path="/friends" element={<Friends />} />
+                {/* Settings: guest may open page; private sections gated in UI */}
+                <Route path="/settings" element={<Setting />} />
 
                 <Route path="groups/:groupId" element={<GroupPage />}>
                   <Route index element={<GroupHome />} />
@@ -175,7 +181,6 @@ function App() {
                   <Route path="/my-orders" element={<OrdersPage />} />
                   <Route path="/seller-dashboard" element={<SellerPage />} />
                   <Route path="/manage-products" element={<ManageProducts />} />
-                  <Route path="/settings" element={<Setting />} />
                 </Route>
               </Route>
             </Routes>

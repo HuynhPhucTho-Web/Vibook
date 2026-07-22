@@ -31,15 +31,15 @@ const COLLAPSED_WIDTH = 72;
 const EXPANDED_WIDTH = 200;
 const MOBILE_BREAKPOINT = 768;
 
-// Public view on all items except Messenger (DM) → login on click.
-// Friends is public browse; kết bạn / create actions are gated in handlers.
+// Guest: public items + Settings (page open; private sections gated inside page).
+// Messenger locked → toast; /messenger URL still behind RequireAuth.
 const MENU = [
   { path: "/homevibook", icon: FaHome, labelKey: "home", requiresAuth: false },
   { path: "/friends", icon: FaUserPlus, labelKey: "friends", requiresAuth: false },
   { path: "/groups", icon: FaUsers, labelKey: "groups", requiresAuth: false },
   { path: "/events", icon: FaCalendarAlt, labelKey: "events", requiresAuth: false },
   { path: "/videos", icon: FaYoutube, labelKey: "video", requiresAuth: false },
-  { path: "/story", icon: FaVideo, labelKey: "story", requiresAuth: false },
+  // { path: "/story", icon: FaVideo, labelKey: "story", requiresAuth: false },
   { path: "/playgame", icon: FaGamepad, labelKey: "playGame", requiresAuth: false },
   { path: "/market", icon: FaShoppingBag, labelKey: "store", requiresAuth: false },
   {
@@ -47,8 +47,9 @@ const MENU = [
     icon: FaFacebookMessenger,
     labelKey: "messenger",
     requiresAuth: true,
+    loginMessageKey: "loginToMessenger",
   },
-  { path: "/settings", icon: FaCog, labelKey: "settings", requiresAuth: true },
+  { path: "/settings", icon: FaCog, labelKey: "settings", requiresAuth: false },
 ];
 
 export default function Sidebar() {
@@ -285,6 +286,11 @@ export default function Sidebar() {
     else setIsCollapsed((v) => !v);
   };
 
+  const loginMessageFor = (item) => {
+    if (item.loginMessageKey) return t(item.loginMessageKey);
+    return t("loginToContinue");
+  };
+
   const handleLogout = async () => {
     try {
       await auth.signOut();
@@ -379,53 +385,50 @@ export default function Sidebar() {
         {/* Menu */}
         <nav id="sidebar-menu" className="sidebar__menu" aria-label="Primary">
           <ul>
-            {MENU.map(({ path, icon: Icon, labelKey, requiresAuth }) => (
-              <li key={path}>
-                <NavLink
-                  to={path}
-                  className={({ isActive }) =>
-                    "sidebar__link" +
-                    (isActive ? " is-active" : "") +
-                    (isCollapsed && !isMobile ? " is-icon" : "") +
-                    (requiresAuth && !isAuthenticated ? " is-locked" : "")
-                  }
-                  aria-current={({ isActive }) =>
-                    isActive ? "page" : undefined
-                  }
-                  title={
-                    isCollapsed && !isMobile
-                      ? t(labelKey)
-                      : requiresAuth && !isAuthenticated
-                        ? t("loginRequired")
-                        : undefined
-                  }
-                  onClick={(e) => {
-                    if (requiresAuth && !auth.currentUser) {
-                      e.preventDefault();
-                      // Toast + nút Đăng nhập — không redirect thẳng
-                      requireLogin({
-                        navigate,
-                        message: t("loginRequired"),
-                        from: path,
-                        loginLabel: t("login"),
-                      });
+            {MENU.map((item) => {
+              const { path, icon: Icon, labelKey, requiresAuth } = item;
+              return (
+                <li key={path}>
+                  <NavLink
+                    to={path}
+                    className={({ isActive }) =>
+                      "sidebar__link" +
+                      (isActive ? " is-active" : "") +
+                      (isCollapsed && !isMobile ? " is-icon" : "") +
+                      (requiresAuth && !isAuthenticated ? " is-locked" : "")
                     }
-                  }}
-                >
-                  {React.createElement(Icon, { className: "sidebar__icon" })}
-                  {(!isCollapsed || isMobile) && (
-                    <span className="sidebar__label">{t(labelKey)}</span>
-                  )}
-                  {({ isActive }) =>
-                    isActive && (!isCollapsed || isMobile) ? (
-                      <i className="sidebar__active-bar" />
-                    ) : null
-                  }
-                </NavLink>
-              </li>
-            ))}
+                    title={
+                      isCollapsed && !isMobile
+                        ? t(labelKey)
+                        : requiresAuth && !isAuthenticated
+                          ? loginMessageFor(item)
+                          : undefined
+                    }
+                    onClick={(e) => {
+                      if (requiresAuth && !auth.currentUser) {
+                        e.preventDefault();
+                        // BR §4/§14: toast + Login — không redirect thẳng từ sidebar
+                        requireLogin({
+                          navigate,
+                          title: t("loginToastTitle"),
+                          message: loginMessageFor(item),
+                          from: path,
+                          loginLabel: t("login"),
+                        });
+                      }
+                    }}
+                  >
+                    {React.createElement(Icon, { className: "sidebar__icon" })}
+                    {(!isCollapsed || isMobile) && (
+                      <span className="sidebar__label">{t(labelKey)}</span>
+                    )}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
 
+          {/* BR §4: Logout always visible; disabled for guest */}
           <button
             className={
               "sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")

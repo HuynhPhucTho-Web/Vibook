@@ -2,68 +2,202 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Login prompt toast (requireLogin — no auto-redirect) */
-.login-prompt-toast-container {
-  padding: 0 !important;
-  min-width: min(360px, 92vw);
+/* —— Tech glassmorphism login toast (DESIGN.md + requireLogin) —— */
+.Toastify__toast-container--top-center {
+  width: calc(100% - 32px);
+  max-width: 440px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0;
+  top: 16px;
+  z-index: 9999;
 }
-.login-prompt-toast-body {
+
+.tech-toast-container.Toastify__toast,
+.Toastify__toast.tech-toast-container {
+  padding: 0 !important;
+  min-height: 0 !important;
+  margin-bottom: 0 !important;
+  width: 100% !important;
+  max-width: 440px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: var(--vb-radius-xl, 1.5rem) !important;
+  overflow: visible !important;
+  animation: techToastSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.tech-toast-body.Toastify__toast-body,
+.Toastify__toast-body.tech-toast-body {
   margin: 0 !important;
   padding: 0 !important;
+  width: 100%;
 }
-.login-prompt-toast {
+
+.tech-toast-container .Toastify__close-button {
+  display: none !important;
+}
+
+.tech-toast {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 4px 2px;
-}
-.login-prompt-toast__msg {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  font-weight: 500;
-}
-.login-prompt-toast__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
-}
-.login-prompt-toast__btn {
-  border: none;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-.login-prompt-toast__btn:hover {
-  transform: scale(1.03);
-}
-.login-prompt-toast__btn:active {
-  transform: scale(0.98);
-}
-.login-prompt-toast__btn--primary {
-  background: #2563eb;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--vb-radius-xl, 1.5rem);
+  background: rgba(18, 19, 28, 0.72);
+  backdrop-filter: var(--vb-glass-blur, blur(20px));
+  -webkit-backdrop-filter: var(--vb-glass-blur, blur(20px));
+  border: 1px solid var(--vb-glass-border-strong, rgba(168, 85, 247, 0.4));
+  box-shadow: var(--vb-shadow-elevated), var(--vb-glow-border);
   color: #fff;
+  font-family: var(--vb-font-sans);
 }
-.login-prompt-toast__btn--primary:hover {
-  background: #1d4ed8;
+
+.tech-toast__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  color: var(--vb-primary, #d5baff);
 }
-.login-prompt-toast__btn--ghost {
+
+.tech-toast__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.tech-toast__title {
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+  font-family: var(--vb-font-sans);
+}
+
+.tech-toast__desc {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11.5px;
+  margin-top: 2px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--vb-font-mono);
+  letter-spacing: 0.02em;
+}
+
+.tech-toast__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tech-toast__btn {
+  background: var(--vb-gradient, linear-gradient(135deg, #8e54e9, #4776e6));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 8px 14px;
+  border-radius: var(--vb-radius-md, 0.75rem);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--vb-font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--vb-glow-purple);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tech-toast__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), var(--vb-glow-purple-strong);
+}
+
+.tech-toast__btn:active {
+  transform: scale(0.96);
+}
+
+.tech-toast__btn--ghost {
   background: transparent;
-  color: inherit;
-  opacity: 0.85;
-  border: 1px solid currentColor;
+  box-shadow: none;
+  border: 1px solid var(--vb-glass-border-strong);
+  color: var(--vb-primary, #d0bcff);
+  padding: 7px 10px;
 }
-.login-prompt-toast__btn--ghost:hover {
-  opacity: 1;
+
+.tech-toast__btn--ghost:hover {
+  background: rgba(168, 85, 247, 0.12);
+  box-shadow: none;
+  transform: none;
+}
+
+.tech-toast__close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.tech-toast__close:hover {
+  color: #ffffff;
+}
+
+@keyframes techToastSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .tech-toast {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .tech-toast__content {
+    flex: 1 1 calc(100% - 100px);
+  }
+  .tech-toast__actions {
+    width: 100%;
+    justify-content: flex-end;
+    order: 4;
+  }
+  .tech-toast__close {
+    order: 3;
+    margin-left: auto;
+  }
+  .tech-toast__desc {
+    white-space: normal;
+  }
 }
 
 html, body, #root { min-height: 100%; }
-body { margin: 0; background-color: var(--app-background, #ffffff); transition: background-color .25s ease; }
-.app-shell, .app-shell__main, .app-shell__content { background-color: var(--app-background, #ffffff); }
+body {
+  margin: 0;
+  background-color: var(--app-background, var(--vb-bg-deep, #0c0d14));
+  transition: background-color .25s ease;
+}
+.app-shell, .app-shell__main, .app-shell__content {
+  background-color: transparent;
+  color: var(--app-text, var(--vb-on-surface));
+}
 
 html[data-font-size="large"] { font-size: 18px; }
 html[data-font-size="small"] { font-size: 14px; }

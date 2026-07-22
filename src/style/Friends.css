@@ -5,18 +5,42 @@
   color: var(--text-color);
 }
 
+.friends-page__header h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.friends-page__guest-hint {
+  color: var(--text-color);
+  opacity: 0.72;
+  font-size: 0.95rem;
+  max-width: 36rem;
+  line-height: 1.45;
+}
+
+.friends-page__login-cta {
+  /* uses .vb-btn--primary when applied together */
+  white-space: nowrap;
+}
+
 .friends-page.light {
-  --bg-color: #f8f9fa;
-  --text-color: #212529;
-  --card-bg: #ffffff;
-  --border-color: #dee2e6;
+  --bg-color: transparent;
+  --text-color: #162033;
+  --card-bg: rgba(255, 255, 255, 0.88);
+  --border-color: rgba(15, 23, 42, 0.1);
 }
 
 .friends-page.dark {
-  --bg-color: #1a1a1a;
-  --text-color: #ffffff;
-  --card-bg: #2d2d2d;
-  --border-color: #404040;
+  --bg-color: transparent;
+  --text-color: #e3e1ec;
+  --card-bg: rgba(30, 31, 39, 0.72);
+  --border-color: rgba(255, 255, 255, 0.12);
+}
+
+.friends-page h1 {
+  font-family: var(--vb-font-sans, inherit);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* Tab Navigation */
@@ -39,22 +63,43 @@
 }
 
 .friends-page .nav-tabs .nav-link.active {
-  border-bottom-color: #007bff;
+  border-bottom-color: var(--vb-neon-purple, #8e54e9);
   background-color: transparent;
-  color: #007bff;
+  color: var(--vb-primary, #d5baff);
 }
 
-/* Cards */
+.friends-page.light .nav-tabs .nav-link.active {
+  color: var(--vb-neon-purple, #8e54e9);
+}
+
+/* BR §9: private tabs for guest — visible but locked (toast on click) */
+.friends-page .nav-tabs .nav-link.is-locked {
+  opacity: 0.72;
+}
+.friends-page .nav-tabs .nav-link.is-locked:hover {
+  opacity: 1;
+  border-bottom-color: #ffc107;
+}
+.friends-page__lock {
+  font-size: 0.75em;
+  margin-left: 0.25rem;
+  opacity: 0.85;
+}
+
+/* Cards — glass units */
 .friends-page .card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  background: var(--vb-glass-surface-strong, var(--card-bg));
+  backdrop-filter: var(--vb-glass-blur, blur(20px));
+  -webkit-backdrop-filter: var(--vb-glass-blur, blur(20px));
+  border: 1px solid var(--vb-glass-border, var(--border-color));
+  border-radius: var(--vb-radius-xl, 1.5rem);
+  box-shadow: var(--vb-shadow-elevated, 0 2px 8px rgba(0, 0, 0, 0.1));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .friends-page .card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-color: var(--vb-glass-border-strong, rgba(168, 85, 247, 0.4));
+  box-shadow: var(--vb-shadow-elevated), var(--vb-glow-border);
   transform: translateY(-2px);
 }
 

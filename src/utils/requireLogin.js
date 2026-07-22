@@ -41,108 +41,188 @@ export function clearLoginRedirect() {
   }
 }
 
+function LockIcon() {
+  return React.createElement(
+    "svg",
+    {
+      width: 18,
+      height: 18,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 2,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": true,
+    },
+    React.createElement("rect", {
+      x: 3,
+      y: 11,
+      width: 18,
+      height: 11,
+      rx: 2,
+      ry: 2,
+    }),
+    React.createElement("path", { d: "M7 11V7a5 5 0 0 1 10 0v4" }),
+  );
+}
+
+function CloseIcon() {
+  return React.createElement(
+    "svg",
+    {
+      width: 16,
+      height: 16,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 2,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": true,
+    },
+    React.createElement("line", { x1: 18, y1: 6, x2: 6, y2: 18 }),
+    React.createElement("line", { x1: 6, y1: 6, x2: 18, y2: 18 }),
+  );
+}
+
 /**
- * Small toast body: message + Login / dismiss buttons.
- * Does NOT auto-redirect — user chooses to open login.
+ * Tech glassmorphism login toast (BR §2.3).
+ * Title + feature message + Login / optional Register + close.
+ * Does NOT auto-redirect.
  */
 function LoginPromptToast({
+  title = "Chưa đăng nhập",
   message,
   from,
   navigate,
   loginLabel = "Đăng nhập",
-  dismissLabel = "Đóng",
+  registerLabel,
   closeToast,
 }) {
-  const goLogin = () => {
+  const goTo = (path) => {
     const target = rememberLoginFrom(from);
     if (typeof closeToast === "function") closeToast();
     if (typeof navigate === "function") {
-      navigate("/login", { state: { from: target } });
+      navigate(path, { state: { from: target } });
     } else {
-      window.location.assign("/login");
+      window.location.assign(path);
     }
   };
 
   return React.createElement(
     "div",
-    { className: "login-prompt-toast", role: "status" },
-    React.createElement("p", { className: "login-prompt-toast__msg" }, message),
+    { className: "tech-toast", role: "status" },
     React.createElement(
       "div",
-      { className: "login-prompt-toast__actions" },
+      { className: "tech-toast__icon", "aria-hidden": true },
+      React.createElement(LockIcon),
+    ),
+    React.createElement(
+      "div",
+      { className: "tech-toast__content" },
+      React.createElement("div", { className: "tech-toast__title" }, title),
+      React.createElement("div", { className: "tech-toast__desc" }, message),
+    ),
+    React.createElement(
+      "div",
+      { className: "tech-toast__actions" },
       React.createElement(
         "button",
         {
           type: "button",
-          className: "login-prompt-toast__btn login-prompt-toast__btn--primary",
-          onClick: goLogin,
+          className: "tech-toast__btn",
+          onClick: () => goTo("/login"),
         },
         loginLabel,
       ),
-      React.createElement(
-        "button",
-        {
-          type: "button",
-          className: "login-prompt-toast__btn login-prompt-toast__btn--ghost",
-          onClick: () => {
-            if (typeof closeToast === "function") closeToast();
-          },
+      registerLabel
+        ? React.createElement(
+            "button",
+            {
+              type: "button",
+              className: "tech-toast__btn tech-toast__btn--ghost",
+              onClick: () => goTo("/register"),
+            },
+            registerLabel,
+          )
+        : null,
+    ),
+    React.createElement(
+      "button",
+      {
+        type: "button",
+        className: "tech-toast__close",
+        "aria-label": "Close",
+        onClick: () => {
+          if (typeof closeToast === "function") closeToast();
         },
-        dismissLabel,
-      ),
+      },
+      React.createElement(CloseIcon),
     ),
   );
 }
 
 /**
  * Guard for write/action handlers (like, comment, cart, create, friend…).
- * Returns the current user if logged in; otherwise shows a toast popup
- * with a Login button (no auto-redirect).
+ * Returns the current user if logged in; otherwise shows glassmorphism toast.
  *
  * @param {object} [options]
  * @param {import('react-router-dom').NavigateFunction} [options.navigate]
- * @param {string} [options.message]
+ * @param {string} [options.message] Feature-specific description
+ * @param {string} [options.title] Toast title (default: Chưa đăng nhập)
  * @param {string} [options.from]
  * @param {string} [options.loginLabel]
- * @param {string} [options.dismissLabel]
+ * @param {string} [options.registerLabel] Optional; omit to hide Register
  * @returns {import('firebase/auth').User|null}
  */
 export function requireLogin(options = {}) {
   const {
     navigate,
-    message = "Vui lòng đăng nhập để tiếp tục",
+    message = "Đăng nhập ViBook để đồng bộ dữ liệu",
+    title = "Chưa đăng nhập",
     from,
     loginLabel = "Đăng nhập",
-    dismissLabel = "Đóng",
+    registerLabel,
   } = options;
   const user = auth.currentUser;
 
   if (user) return user;
 
-  // Remember path now so Login works even if user navigates later
   rememberLoginFrom(from);
 
-  toast(
-    ({ closeToast }) =>
-      React.createElement(LoginPromptToast, {
-        message,
-        from,
-        navigate,
-        loginLabel,
-        dismissLabel,
-        closeToast,
-      }),
-    {
-      toastId: TOAST_ID,
-      position: "top-center",
-      autoClose: 8000,
-      closeOnClick: false,
-      draggable: true,
-      type: "info",
-      className: "login-prompt-toast-container",
-      bodyClassName: "login-prompt-toast-body",
-    },
-  );
+  const renderToast = ({ closeToast }) =>
+    React.createElement(LoginPromptToast, {
+      title,
+      message,
+      from,
+      navigate,
+      loginLabel,
+      registerLabel,
+      closeToast,
+    });
+
+  const toastOpts = {
+    toastId: TOAST_ID,
+    position: "top-center",
+    autoClose: 8000,
+    closeOnClick: false,
+    closeButton: false,
+    draggable: true,
+    hideProgressBar: true,
+    icon: false,
+    className: "tech-toast-container",
+    bodyClassName: "tech-toast-body",
+  };
+
+  if (toast.isActive(TOAST_ID)) {
+    toast.update(TOAST_ID, {
+      ...toastOpts,
+      render: renderToast,
+    });
+  } else {
+    toast(renderToast, toastOpts);
+  }
 
   return null;
 }

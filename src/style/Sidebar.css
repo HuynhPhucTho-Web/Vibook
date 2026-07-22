@@ -1,30 +1,30 @@
-/* ========= THEME TOKENS ========= */
+/* ========= THEME TOKENS (DESIGN.md glass) ========= */
 .sidebar--light {
-  --sb-bg: rgba(255, 255, 255, 0.95);
-  --sb-border: rgba(0, 0, 0, 0.10);
-  --sb-border-strong: rgba(0, 0, 0, 0.20);
-  --sb-text: rgba(0, 0, 0, 0.80);
-  --sb-text-strong: #000;
-  --sb-muted: rgba(0, 0, 0, 0.08);
-  --sb-hover: rgba(0, 0, 0, 0.08);
-  --sb-active: rgba(0, 0, 0, 0.15);
-  --sb-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
-  --sb-scroll-track: rgba(0, 0, 0, 0.10);
-  --sb-scroll-thumb: rgba(0, 0, 0, 0.30);
+  --sb-bg: rgba(255, 255, 255, 0.78);
+  --sb-border: rgba(15, 23, 42, 0.1);
+  --sb-border-strong: rgba(142, 84, 233, 0.28);
+  --sb-text: rgba(22, 32, 51, 0.82);
+  --sb-text-strong: #162033;
+  --sb-muted: rgba(142, 84, 233, 0.06);
+  --sb-hover: rgba(142, 84, 233, 0.1);
+  --sb-active: rgba(142, 84, 233, 0.14);
+  --sb-shadow: 0 8px 32px rgba(20, 28, 45, 0.08);
+  --sb-scroll-track: rgba(0, 0, 0, 0.06);
+  --sb-scroll-thumb: rgba(142, 84, 233, 0.35);
 }
 
 .sidebar--dark {
-  --sb-bg: rgba(0, 0, 0, 0.8);
-  --sb-border: rgba(255, 255, 255, 0.10);
-  --sb-border-strong: rgba(255, 255, 255, 0.20);
-  --sb-text: rgba(255, 255, 255, 0.85);
-  --sb-text-strong: #fff;
-  --sb-muted: rgba(255, 255, 255, 0.08);
-  --sb-hover: rgba(255, 255, 255, 0.08);
-  --sb-active: rgba(255, 255, 255, 0.15);
-  --sb-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --sb-scroll-track: rgba(255, 255, 255, 0.10);
-  --sb-scroll-thumb: rgba(255, 255, 255, 0.30);
+  --sb-bg: rgba(18, 19, 28, 0.72);
+  --sb-border: rgba(255, 255, 255, 0.12);
+  --sb-border-strong: rgba(168, 85, 247, 0.35);
+  --sb-text: #cdc3d6;
+  --sb-text-strong: #e3e1ec;
+  --sb-muted: rgba(255, 255, 255, 0.04);
+  --sb-hover: rgba(142, 84, 233, 0.12);
+  --sb-active: rgba(142, 84, 233, 0.18);
+  --sb-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --sb-scroll-track: rgba(255, 255, 255, 0.06);
+  --sb-scroll-thumb: rgba(142, 84, 233, 0.45);
 }
 
 /* ========= CONTAINER ========= */
@@ -87,11 +87,13 @@
 
 .sidebar__brand {
   margin: 0;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 1.35rem;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  font-family: var(--vb-font-sans, inherit);
+  background: var(--vb-gradient, linear-gradient(135deg, #8e54e9, #4776e6));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -160,6 +162,27 @@
   border-color: var(--sb-border-strong);
   color: var(--sb-text-strong);
   font-weight: 600;
+  box-shadow: 0 0 12px rgba(142, 84, 233, 0.18);
+}
+
+.sidebar__link.is-locked {
+  opacity: 0.72;
+}
+
+/* Active indicator — brand gradient glow */
+.sidebar__link.is-active::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--vb-gradient, linear-gradient(135deg, #8e54e9, #4776e6));
+  box-shadow: 0 0 10px rgba(142, 84, 233, 0.5);
+}
+
+.is-collapsed .sidebar__link.is-active::after {
+  display: none;
 }
 
 .sidebar__link.is-icon {
@@ -194,17 +217,24 @@
   gap: 12px;
   padding: 12px 16px;
   width: calc(100% - 1rem);
-  border-radius: 12px;
-  border: 1px solid rgba(220, 53, 69, .3);
-  background: rgba(220, 53, 69, .1);
-  color: rgba(220, 53, 69, .95);
+  border-radius: var(--vb-radius-md, 0.75rem);
+  border: 1px solid rgba(255, 180, 171, 0.35);
+  background: rgba(147, 0, 10, 0.22);
+  color: var(--vb-error, #ffb4ab);
   font-weight: 600;
+  font-family: var(--vb-font-sans, inherit);
   cursor: pointer;
-  transition: transform .2s ease, background .2s ease;
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
 }
 
-.sidebar__logout:hover {
+.sidebar__logout:hover:not(:disabled) {
   transform: translateX(2px);
+  box-shadow: 0 0 12px rgba(255, 180, 171, 0.2);
+}
+
+.sidebar__logout:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .sidebar__logout.is-icon {

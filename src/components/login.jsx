@@ -1,6 +1,11 @@
-import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebase";
+import React, { useEffect, useState } from "react";
+import {
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
@@ -12,31 +17,69 @@ import { clearLoginRedirect, getLoginRedirect } from "../utils/requireLogin";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = getLoginRedirect(location.state?.from);
 
+  // Prefill email after register + show verify reminder
+  useEffect(() => {
+    const st = location.state;
+    if (st?.email) setEmail(st.email);
+    if (st?.needsEmailVerification || st?.fromRegister) {
+      toast.info(
+        "Hãy xác nhận email (link trong hộp thư) rồi đăng nhập lại tại đây.",
+        { position: "top-center", autoClose: 9000 },
+      );
+    }
+  }, [location.state]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // KIỂM TRA XÁC NHẬN EMAIL
-      if (!user.emailVerified) {
-        toast.warning("Tài khoản chưa được xác nhận. Vui lòng kiểm tra email!", {
-          position: "bottom-center"
-        });
-        // (Tùy chọn) Đăng xuất người dùng ngay lập tức nếu chưa xác nhận
-        // await auth.signOut(); 
-        return; // Dừng lại, không cho chuyển trang
+      // Always refresh flags (user may have just clicked verify link)
+      await user.reload();
+      const fresh = auth.currentUser;
+      if (!fresh?.emailVerified) {
+        try {
+          await sendEmailVerification(fresh);
+          toast.warning(
+            "Tài khoản chưa xác nhận email. Chúng tôi đã gửi lại link xác nhận — kiểm tra hộp thư rồi đăng nhập lại.",
+            { position: "top-center", autoClose: 9000 },
+          );
+        } catch {
+          toast.warning(
+            "Tài khoản chưa được xác nhận. Vui lòng kiểm tra email trước khi đăng nhập!",
+            { position: "top-center", autoClose: 8000 },
+          );
+        }
+        await signOut(auth);
+        return;
       }
 
-      toast.success("User logged in Successfully", { position: "top-center" });
+      // Sync verified flag in profile doc
+      try {
+        await setDoc(
+          doc(db, "Users", fresh.uid),
+          { emailVerified: true },
+          { merge: true },
+        );
+      } catch {
+        // non-blocking
+      }
+
+      toast.success("Đăng nhập thành công!", { position: "top-center" });
       clearLoginRedirect();
       navigate(redirectTo, { replace: true });
     } catch (error) {
       toast.error(error.message, { position: "bottom-center" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -79,6 +122,7 @@ function Login() {
                 placeholder="johndoe@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
               />
             </div>
@@ -91,6 +135,7 @@ function Login() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
             </div>
@@ -111,9 +156,10 @@ function Login() {
 
             <button
               type="submit"
-              className="w-full py-4 bg-gradient-to-r from-[#FF1493] to-[#FF69B4] text-white rounded-2xl font-bold text-lg shadow-xl shadow-pink-200 hover:scale-[1.02] active:scale-95 transition-all duration-300"
+              disabled={submitting}
+              className="vb-btn vb-btn--primary w-full py-4 text-lg disabled:opacity-60"
             >
-              LOGIN
+              {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
             <div className="relative py-4">

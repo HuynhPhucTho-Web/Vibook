@@ -1,0 +1,444 @@
+/**
+ * ViBook Design System — Futuristic Tech / Glassmorphism
+ * Source of truth: DESIGN.md
+ */
+
+:root {
+  /* —— Surfaces —— */
+  --vb-surface: #12131a;
+  --vb-surface-dim: #12131a;
+  --vb-surface-bright: #383941;
+  --vb-surface-container-lowest: #0d0e15;
+  --vb-surface-container-low: #1a1b22;
+  --vb-surface-container: #1e1f27;
+  --vb-surface-container-high: #292931;
+  --vb-surface-container-highest: #34343c;
+  --vb-on-surface: #e3e1ec;
+  --vb-on-surface-variant: #cdc3d6;
+  --vb-outline: #968d9f;
+  --vb-outline-variant: #4b4454;
+
+  /* —— Brand —— */
+  --vb-primary: #d5baff;
+  --vb-on-primary: #42008a;
+  --vb-primary-container: #8e54e9;
+  --vb-on-primary-container: #fffeff;
+  --vb-secondary: #b2c5ff;
+  --vb-on-secondary: #002b74;
+  --vb-secondary-container: #054aba;
+  --vb-tertiary: #ffb955;
+  --vb-error: #ffb4ab;
+  --vb-on-error: #690005;
+
+  --vb-neon-purple: #8e54e9;
+  --vb-electric-blue: #4776e6;
+  --vb-gradient: linear-gradient(135deg, #8e54e9, #4776e6);
+  --vb-gradient-soft: linear-gradient(135deg, rgba(142, 84, 233, 0.2), rgba(71, 118, 230, 0.15));
+
+  /* —— Glass —— */
+  --vb-glass-surface: rgba(255, 255, 255, 0.03);
+  --vb-glass-surface-strong: rgba(255, 255, 255, 0.06);
+  --vb-glass-border: rgba(255, 255, 255, 0.12);
+  --vb-glass-border-strong: rgba(168, 85, 247, 0.4);
+  --vb-glass-blur: blur(20px);
+  --vb-bg-deep: #0c0d14;
+  --vb-background: #12131a;
+  --vb-on-background: #e3e1ec;
+
+  /* —— Glow —— */
+  --vb-glow-purple: 0 0 12px rgba(142, 84, 233, 0.4);
+  --vb-glow-purple-strong: 0 0 16px rgba(142, 84, 233, 0.7);
+  --vb-glow-border: 0 0 12px rgba(168, 85, 247, 0.25);
+  --vb-shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* —— Radius (soft geometric) —— */
+  --vb-radius-sm: 0.25rem;
+  --vb-radius: 0.5rem;
+  --vb-radius-md: 0.75rem;
+  --vb-radius-lg: 1rem;
+  --vb-radius-xl: 1.5rem;
+  --vb-radius-full: 9999px;
+
+  /* —— Spacing (8px rhythm) —— */
+  --vb-space-1: 8px;
+  --vb-space-2: 16px;
+  --vb-space-3: 24px;
+  --vb-space-4: 32px;
+  --vb-gutter: 24px;
+  --vb-margin: 64px;
+
+  /* —— Type —— */
+  --vb-font-sans: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --vb-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* App shell (overridden by ThemeContext for light/dark) */
+  --app-background: var(--vb-bg-deep);
+  --app-text: var(--vb-on-surface);
+  --app-muted: var(--vb-on-surface-variant);
+  --app-card: var(--vb-surface-container);
+  --app-border: var(--vb-glass-border);
+  --app-accent: var(--vb-neon-purple);
+  --app-accent-2: var(--vb-electric-blue);
+}
+
+/* Light theme soft overrides (still brand-aligned) */
+html:not(.dark) {
+  --vb-glass-surface: rgba(255, 255, 255, 0.72);
+  --vb-glass-surface-strong: rgba(255, 255, 255, 0.88);
+  --vb-glass-border: rgba(15, 23, 42, 0.1);
+  --vb-glass-border-strong: rgba(142, 84, 233, 0.35);
+  --vb-on-surface: #162033;
+  --vb-on-surface-variant: #687386;
+  --vb-background: #f4f2fb;
+  --vb-bg-deep: #eef0f7;
+  --vb-surface-container: rgba(255, 255, 255, 0.9);
+  --app-text: var(--vb-on-surface);
+  --app-muted: var(--vb-on-surface-variant);
+  --app-card: var(--vb-surface-container);
+  --app-border: var(--vb-glass-border);
+}
+
+/* ========== Base ========== */
+html {
+  font-family: var(--vb-font-sans);
+  color: var(--app-text);
+  background-color: var(--app-background);
+}
+
+body {
+  font-family: var(--vb-font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient brand glow (dark) */
+html.dark body {
+  background-image:
+    radial-gradient(circle at 30% 12%, rgba(142, 84, 233, 0.14), transparent 42%),
+    radial-gradient(circle at 78% 88%, rgba(71, 118, 230, 0.12), transparent 40%);
+  background-attachment: fixed;
+}
+
+/* Thin glowing scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(142, 84, 233, 0.45) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(142, 84, 233, 0.55), rgba(71, 118, 230, 0.45));
+  border-radius: var(--vb-radius-full);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #8e54e9, #4776e6);
+}
+
+/* ========== Buttons ========== */
+.vb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--vb-radius-md);
+  font-family: var(--vb-font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.vb-btn:disabled,
+.vb-btn.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.vb-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Primary: purple → blue gradient + inner highlight */
+.vb-btn--primary {
+  color: #ffffff;
+  background: var(--vb-gradient);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    var(--vb-glow-purple);
+}
+
+.vb-btn--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    var(--vb-glow-purple-strong);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* Secondary / ghost glass */
+.vb-btn--ghost {
+  color: var(--vb-on-surface);
+  background: transparent;
+  border-color: var(--vb-glass-border);
+  box-shadow: none;
+}
+
+.vb-btn--ghost:hover:not(:disabled) {
+  border-color: var(--vb-glass-border-strong);
+  background: rgba(142, 84, 233, 0.1);
+  color: var(--vb-primary);
+  box-shadow: var(--vb-glow-border);
+}
+
+/* Soft glass fill */
+.vb-btn--glass {
+  color: var(--vb-on-surface);
+  background: var(--vb-glass-surface-strong);
+  border-color: var(--vb-glass-border);
+  backdrop-filter: var(--vb-glass-blur);
+  -webkit-backdrop-filter: var(--vb-glass-blur);
+}
+
+.vb-btn--glass:hover:not(:disabled) {
+  border-color: var(--vb-glass-border-strong);
+  background: rgba(142, 84, 233, 0.12);
+}
+
+.vb-btn--sm {
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  border-radius: var(--vb-radius);
+}
+
+.vb-btn--lg {
+  min-height: 48px;
+  padding: 12px 22px;
+  font-size: 0.95rem;
+  border-radius: var(--vb-radius-lg);
+}
+
+.vb-btn--icon {
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: var(--vb-radius-md);
+}
+
+.vb-btn--pill {
+  border-radius: var(--vb-radius-full);
+}
+
+/* Bootstrap bridge — keep pages using .btn-primary in sync */
+.btn-primary,
+.btn.btn-primary {
+  color: #fff !important;
+  background: var(--vb-gradient) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: var(--vb-radius-md) !important;
+  font-weight: 600 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    var(--vb-glow-purple) !important;
+  transition: transform 0.18s ease, box-shadow 0.2s ease !important;
+}
+.btn-primary:hover,
+.btn.btn-primary:hover {
+  color: #fff !important;
+  background: var(--vb-gradient) !important;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    var(--vb-glow-purple-strong) !important;
+}
+.btn-primary:active,
+.btn.btn-primary:active,
+.btn-primary:focus,
+.btn.btn-primary:focus {
+  color: #fff !important;
+  background: var(--vb-gradient) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    var(--vb-glow-purple) !important;
+}
+
+.btn-outline-primary,
+.btn.btn-outline-primary {
+  color: var(--vb-primary) !important;
+  background: transparent !important;
+  border: 1px solid var(--vb-glass-border-strong) !important;
+  border-radius: var(--vb-radius-md) !important;
+  font-weight: 600 !important;
+}
+.btn-outline-primary:hover,
+.btn.btn-outline-primary:hover {
+  color: #fff !important;
+  background: rgba(142, 84, 233, 0.2) !important;
+  border-color: var(--vb-neon-purple) !important;
+  box-shadow: var(--vb-glow-border);
+}
+
+.btn-outline-secondary,
+.btn.btn-outline-secondary,
+.btn-secondary {
+  border-radius: var(--vb-radius-md) !important;
+  border-color: var(--vb-glass-border) !important;
+  background: var(--vb-glass-surface) !important;
+  color: var(--app-text) !important;
+}
+
+/* ========== Glass card ========== */
+.vb-glass,
+.glass-card {
+  background: var(--vb-glass-surface);
+  backdrop-filter: var(--vb-glass-blur);
+  -webkit-backdrop-filter: var(--vb-glass-blur);
+  border: 1px solid var(--vb-glass-border);
+  border-radius: var(--vb-radius-xl);
+  box-shadow: var(--vb-shadow-elevated);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vb-glass:hover,
+.glass-card:hover {
+  border-color: var(--vb-glass-border-strong);
+  box-shadow:
+    var(--vb-shadow-elevated),
+    var(--vb-glow-border);
+}
+
+/* ========== Inputs ========== */
+.vb-input,
+.vb-field input,
+.vb-field textarea,
+.vb-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  color: var(--vb-on-surface);
+  background: var(--vb-bg-deep);
+  border: 1px solid var(--vb-outline-variant);
+  border-radius: var(--vb-radius-md);
+  font-family: var(--vb-font-sans);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+html:not(.dark) .vb-input,
+html:not(.dark) .vb-field input,
+html:not(.dark) .vb-field textarea {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #162033;
+}
+
+.vb-input:focus,
+.vb-field input:focus,
+.vb-field textarea:focus,
+.vb-field select:focus {
+  border-color: var(--vb-electric-blue);
+  box-shadow: 0 0 0 3px rgba(71, 118, 230, 0.28), 0 0 16px rgba(71, 118, 230, 0.2);
+}
+
+/* form-control bridge */
+.form-control {
+  border-radius: var(--vb-radius-md) !important;
+  border-color: var(--vb-outline-variant) !important;
+  background-color: var(--vb-bg-deep) !important;
+  color: var(--vb-on-surface) !important;
+}
+.form-control:focus {
+  border-color: var(--vb-electric-blue) !important;
+  box-shadow: 0 0 0 0.2rem rgba(71, 118, 230, 0.25) !important;
+  background-color: var(--vb-bg-deep) !important;
+  color: var(--vb-on-surface) !important;
+}
+html:not(.dark) .form-control {
+  background-color: #fff !important;
+  color: #162033 !important;
+}
+
+/* ========== Chips / badges ========== */
+.vb-chip,
+.vb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--vb-radius-full);
+  font-family: var(--vb-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  border: 1px solid var(--vb-glass-border);
+  background: rgba(142, 84, 233, 0.12);
+  color: var(--vb-primary);
+}
+
+.vb-chip--solid,
+.vb-badge--solid {
+  background: var(--vb-gradient);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--vb-glow-purple);
+}
+
+/* ========== Labels ========== */
+.vb-label {
+  font-family: var(--vb-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vb-on-surface-variant);
+}
+
+/* ========== Nav tabs (friends etc.) ========== */
+.nav-tabs {
+  border-bottom-color: var(--vb-glass-border) !important;
+}
+.nav-tabs .nav-link {
+  color: var(--app-muted) !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: var(--vb-radius) var(--vb-radius) 0 0 !important;
+  font-weight: 600 !important;
+  font-family: var(--vb-font-sans) !important;
+}
+.nav-tabs .nav-link:hover {
+  border-bottom-color: rgba(142, 84, 233, 0.45) !important;
+  color: var(--vb-primary) !important;
+  background: rgba(142, 84, 233, 0.06) !important;
+}
+.nav-tabs .nav-link.active {
+  color: var(--vb-primary) !important;
+  background: transparent !important;
+  border-bottom-color: var(--vb-neon-purple) !important;
+  box-shadow: 0 4px 12px rgba(142, 84, 233, 0.15);
+}
+.nav-tabs .nav-link.is-locked {
+  opacity: 0.7;
+}

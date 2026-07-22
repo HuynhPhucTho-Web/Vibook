@@ -1,5 +1,5 @@
 // src/components/friends/FindFriends.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
@@ -14,9 +14,11 @@ import { db } from "../../components/firebase";
 import { FaUserPlus, FaSearch, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { requireLogin } from "../../utils/requireLogin";
+import { LanguageContext } from "../../context/LanguageContext";
 
 const FindFriends = ({ currentUser, theme }) => {
   const navigate = useNavigate();
+  const { t } = useContext(LanguageContext);
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -117,8 +119,10 @@ const FindFriends = ({ currentUser, theme }) => {
   const handleSendRequest = async (toUserId, toUserName) => {
     const user = requireLogin({
       navigate,
-      message: "Vui lòng đăng nhập để gửi lời mời kết bạn",
+      title: t("loginToastTitle"),
+      message: t("loginToAddFriend") || "Vui lòng đăng nhập để gửi lời mời kết bạn",
       from: "/friends",
+      loginLabel: t("login"),
     });
     if (!user) return;
 
@@ -258,7 +262,7 @@ const FindFriends = ({ currentUser, theme }) => {
                     {!isFriend && !hasSentRequest && (
                       <button
                         type="button"
-                        className="btn btn-primary btn-sm"
+                        className="vb-btn vb-btn--primary vb-btn--sm"
                         onClick={() =>
                           handleSendRequest(
                             user.uid,
@@ -282,7 +286,7 @@ const FindFriends = ({ currentUser, theme }) => {
         <div className="text-center mt-4">
           <button
             type="button"
-            className="btn btn-outline-primary"
+            className="vb-btn vb-btn--ghost"
             onClick={() => setShowAll(true)}
           >
             See More ({filteredUsers.length - 10} more users)

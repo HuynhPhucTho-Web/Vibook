@@ -209,7 +209,7 @@ function Profile() {
 
   const handleSendRequest = async () => {
     if (!userDetails) return;
-    const user = requireLogin({ navigate, message: t("loginRequired") });
+    const user = requireLogin({ navigate, message: t("loginToAddFriend") });
     if (!user) return;
     const uid = user.uid;
 
@@ -234,7 +234,7 @@ function Profile() {
 
   const handleFollow = async () => {
     if (!userDetails) return;
-    const user = requireLogin({ navigate, message: t("loginRequired") });
+    const user = requireLogin({ navigate, message: t("loginToFollow") });
     if (!user) return;
     const uid = user.uid;
 

@@ -19,7 +19,32 @@ import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes }
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
+import ReactQuill from "react-quill-new";
 import "../style/event/Event.css";
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ align: [] }],
+    ["link", "image"],
+    ["clean"],
+  ],
+};
+
+const quillFormats = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "list",
+  "bullet",
+  "align",
+  "link",
+  "image",
+];
 
 const Events = () => {
   const { theme } = useContext(ThemeContext);
@@ -31,9 +56,11 @@ const Events = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [eventName, setEventName] = useState("");
-  const [eventDate, setEventDate] = useState("");
+  const [startDateTime, setStartDateTime] = useState("");
+  const [endDateTime, setEndDateTime] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [eventDescription, setEventDescription] = useState("");
+  const [eventBannerImage, setEventBannerImage] = useState("");
   const [search, setSearch] = useState("");
   const modalRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -163,9 +190,11 @@ const Events = () => {
       try {
         const eventData = {
           name: eventName.trim(),
-          date: eventDate,
+          startDateTime: startDateTime || null,
+          endDateTime: endDateTime || null,
           location: eventLocation.trim() || "Unknown",
           description: eventDescription.trim() || "No description",
+          bannerImage: eventBannerImage.trim() || null,
           ownerId: auth.currentUser.uid,
           attendees: [auth.currentUser.uid],
           createdAt: serverTimestamp(),
@@ -199,9 +228,11 @@ const Events = () => {
         const eventRef = doc(db, "Events", editingEvent.id);
         await updateDoc(eventRef, {
           name: eventName.trim(),
-          date: eventDate,
+          startDateTime: startDateTime || null,
+          endDateTime: endDateTime || null,
           location: eventLocation.trim(),
           description: eventDescription.trim(),
+          bannerImage: eventBannerImage.trim() || null,
         });
         setShowEditModal(false);
         setEditingEvent(null);
@@ -439,10 +470,31 @@ const Events = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={startDateTime}
+                    onChange={(e) => setStartDateTime(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                    placeholder="Start"
                     required
+                  />
+                  <input
+                    type="datetime-local"
+                    value={endDateTime}
+                    onChange={(e) => setEndDateTime(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="End"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t("bannerImage")}
+                  </label>
+                  <input
+                    type="text"
+                    value={eventBannerImage}
+                    onChange={(e) => setEventBannerImage(e.target.value)}
+                    placeholder="Banner image URL (optional)"
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="mb-4">
@@ -531,10 +583,31 @@ const Events = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={startDateTime}
+                    onChange={(e) => setStartDateTime(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                    placeholder="Start"
                     required
+                  />
+                  <input
+                    type="datetime-local"
+                    value={endDateTime}
+                    onChange={(e) => setEndDateTime(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="End"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t("bannerImage")}
+                  </label>
+                  <input
+                    type="text"
+                    value={eventBannerImage}
+                    onChange={(e) => setEventBannerImage(e.target.value)}
+                    placeholder="Banner image URL (optional)"
+                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="mb-4">

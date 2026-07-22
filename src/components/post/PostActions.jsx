@@ -1,22 +1,46 @@
-import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
-import { FaBookmark, FaComment, FaRegBookmark, FaShare, FaLink, FaCopy } from "react-icons/fa";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useContext,
+  useMemo,
+  memo,
+  useCallback,
+} from "react";
+import {
+  FaBookmark,
+  FaComment,
+  FaRegBookmark,
+  FaShare,
+  FaLink,
+  FaCopy,
+  FaTimes,
+} from "react-icons/fa";
 import { LanguageContext } from "../../context/LanguageContext";
 import { SlLike } from "react-icons/sl";
 
-/** Helper chung cho 3 nút action */
-const getActionButtonClass = (isLight, isActive) => {
-  const base =
-    "w-full h-9 inline-flex items-center justify-center gap-2 px-3 text-sm " +
-    "font-medium rounded-lg transition-colors duration-150 select-none";
-
-  if (isActive) {
-    return `${base} text-blue-500 font-semibold`;
-  }
-
-  return `${base} ${
-    isLight ? "text-gray-600 hover:bg-gray-100" : "text-gray-400 hover:bg-zinc-800"
-  }`;
+const REACTION_ICONS = {
+  Like: "👍",
+  Love: "❤️",
+  Haha: "😂",
+  Wow: "😮",
+  Sad: "😢",
+  Angry: "😠",
 };
+
+const REACTION_I18N = {
+  Like: "like",
+  Love: "love",
+  Haha: "haha",
+  Wow: "wow",
+  Sad: "sad",
+  Angry: "angry",
+};
+
+const isCoarsePointer = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia &&
+  window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
 const PostActions = ({
   post,
@@ -35,141 +59,178 @@ const PostActions = ({
   onToggleSave,
 }) => {
   const hoverTimerRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const longPressTriggeredRef = useRef(false);
   const { t } = useContext(LanguageContext);
+  const uid = auth?.currentUser?.uid;
+  const [shareOpen, setShareOpen] = useState(false);
 
-  const openReactions = () => {
+  const clearHoverTimer = () => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
+  };
+
+  const openReactions = useCallback(() => {
+    clearHoverTimer();
     setShowReactions(true);
-  };
+  }, [setShowReactions]);
 
-  const closeReactionsDelayed = (delay = 350) => {
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-    hoverTimerRef.current = setTimeout(() => {
-      setShowReactions(false);
-      hoverTimerRef.current = null;
-    }, delay);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-    };
-  }, []);
-
-  // Reaction icons (emoji)
-  const reactions = useMemo(
-    () => ({
-      Like: "👍",
-      Love: "❤️",
-      Haha: "😂",
-      Wow: "😮",
-      Sad: "😢",
-      Angry: "😠",
-    }),
-    []
+  const closeReactionsDelayed = useCallback(
+    (delay = 220) => {
+      clearHoverTimer();
+      hoverTimerRef.current = setTimeout(() => {
+        setShowReactions(false);
+        hoverTimerRef.current = null;
+      }, delay);
+    },
+    [setShowReactions],
   );
 
-  const currentReaction = post.reactedBy?.[auth.currentUser?.uid];
-  const barBorder = isLight ? "border-gray-200" : "border-zinc-800";
+  useEffect(
+    () => () => {
+      clearHoverTimer();
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    },
+    [],
+  );
 
-  // Map key -> translation key (fallback nếu bạn chưa khai báo đủ)
-  const getReactionLabel = (key) => {
-    const map = {
-      Like: "like",
-      Love: "love",
-      Haha: "haha",
-      Wow: "wow",
-      Sad: "sad",
-      Angry: "angry",
+  // Lock body scroll when mobile sheet is open
+  useEffect(() => {
+    if (!showReactions && !shareOpen) return undefined;
+    if (!isCoarsePointer()) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
     };
-    const k = map[key];
+  }, [showReactions, shareOpen]);
+
+  const currentReaction = useMemo(
+    () => (uid ? post.reactedBy?.[uid] : undefined),
+    [post.reactedBy, uid],
+  );
+
+  const getReactionLabel = (key) => {
+    const k = REACTION_I18N[key];
     return k ? t(k) : key;
   };
 
   const isLikeActive = currentReaction === "Like";
-  const isAnyReactionActive = !!currentReaction;
+  const isAnyReactionActive = Boolean(currentReaction);
+  const isCommentActive = selectedPostId === post.id;
 
-  // Icon hiển thị:
-  // - Chưa react: SlLike
-  // - React Like: SlLike (xanh)
-  // - React khác: emoji tương ứng
   const renderLikeIcon = () => {
-    if (!currentReaction) {
-      return <SlLike />;
+    if (!currentReaction || currentReaction === "Like") {
+      return <SlLike className="post-action__icon-svg" />;
     }
-    if (currentReaction === "Like") {
-      return <SlLike />;
-    }
-    return reactions[currentReaction] || <SlLike />;
+    return (
+      <span className="post-action__emoji" aria-hidden>
+        {REACTION_ICONS[currentReaction] || "👍"}
+      </span>
+    );
   };
 
+  const handleLikeClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Long-press already opened picker — don't double-toggle like
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
+      return;
+    }
+    onReaction(post.id, "Like");
+  };
+
+  const handlePickReaction = (e, key) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowReactions(false);
+    onReaction(post.id, key);
+  };
+
+  const onLikePointerDown = (e) => {
+    // Mobile long-press → reaction sheet
+    if (e.pointerType === "mouse") return;
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      openReactions();
+      if (navigator.vibrate) navigator.vibrate(12);
+    }, 380);
+  };
+
+  const onLikePointerUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const themeClass = isLight ? "is-light" : "is-dark";
+
   return (
-    <div className={`post-item-actions grid grid-cols-4 border-t ${barBorder} pt-1`}>
-      {/* LIKE SECTION */}
+    <div className={`post-actions ${themeClass}`}>
+      {/* LIKE */}
       <div
-        className="relative col-span-1 flex items-center justify-center"
-        onMouseEnter={openReactions}
-        onMouseLeave={() => closeReactionsDelayed(350)}
+        className="post-actions__slot post-actions__slot--like"
+        onMouseEnter={() => {
+          if (!isCoarsePointer()) openReactions();
+        }}
+        onMouseLeave={() => {
+          if (!isCoarsePointer()) closeReactionsDelayed(200);
+        }}
       >
         <button
-          onClick={() => onReaction(post.id, "Like")}
-          disabled={isReacting}
-          className={getActionButtonClass(isLight, isAnyReactionActive)}
+          type="button"
+          className={`post-action-btn ${isAnyReactionActive ? "is-active" : ""} ${
+            isReacting ? "is-busy" : ""
+          }`}
+          onClick={handleLikeClick}
+          onPointerDown={onLikePointerDown}
+          onPointerUp={onLikePointerUp}
+          onPointerCancel={onLikePointerUp}
+          onPointerLeave={onLikePointerUp}
+          aria-label={
+            currentReaction
+              ? getReactionLabel(currentReaction)
+              : t("like")
+          }
+          aria-pressed={isAnyReactionActive}
+          aria-busy={isReacting || undefined}
         >
           <span
-            className={`text-lg transition-colors ${
-              isLikeActive ? "text-blue-500" : ""
+            className={`post-action-btn__icon ${
+              isLikeActive || isAnyReactionActive ? "is-reacted" : ""
             }`}
           >
             {renderLikeIcon()}
           </span>
-
-          <span
-            className={`transition-colors ${
-              isAnyReactionActive ? "text-blue-500 font-semibold" : ""
-            }`}
-          >
+          <span className="post-action-btn__label">
             {currentReaction ? getReactionLabel(currentReaction) : t("like")}
           </span>
         </button>
 
-        {/* REACTION POPUP */}
-        {showReactions && (
+        {/* Desktop hover picker */}
+        {showReactions && !isCoarsePointer() && (
           <div
+            className={`reaction-picker reaction-picker--desktop ${themeClass}`}
             onMouseEnter={openReactions}
-            onMouseLeave={() => closeReactionsDelayed(350)}
-            className={`reaction-pop absolute z-[100] flex items-center gap-1 sm:gap-2 px-2 py-2 rounded-full border shadow-xl
-              ${isLight ? "bg-white border-gray-200" : "bg-zinc-900 border-zinc-700"}`}
-            style={{
-              bottom: "calc(100% + 8px)",
-              left: "0",
-              width: "max-content",
-              minWidth: "260px",
-              animation: "popUp 0.2s ease-out",
-            }}
+            onMouseLeave={() => closeReactionsDelayed(180)}
+            role="toolbar"
+            aria-label="Reactions"
           >
-            {/* Mũi tên nhỏ */}
-            <div
-              className={`absolute left-6 top-full h-3 w-3 rotate-45 -mt-1.5 pointer-events-none
-              ${isLight ? "bg-white border-b border-r border-gray-200" : "bg-zinc-900 border-b border-r border-zinc-700"}`}
-            />
-
-            {Object.entries(reactions).map(([key, icon]) => (
+            {Object.entries(REACTION_ICONS).map(([key, icon]) => (
               <button
                 key={key}
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReaction(post.id, key);
-                  setShowReactions(false);
-                }}
-                disabled={isReacting}
-                className="h-10 w-10 flex items-center justify-center rounded-full text-2xl
-                           hover:scale-125 transition-transform duration-150 active:scale-90"
+                className={`reaction-picker__btn ${
+                  currentReaction === key ? "is-selected" : ""
+                }`}
+                onClick={(e) => handlePickReaction(e, key)}
                 title={getReactionLabel(key)}
+                aria-label={getReactionLabel(key)}
               >
                 {icon}
               </button>
@@ -179,100 +240,209 @@ const PostActions = ({
       </div>
 
       {/* COMMENT */}
-      <div className="col-span-1 flex items-center justify-center">
+      <div className="post-actions__slot">
         <button
-          onClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)}
-          className={getActionButtonClass(isLight, selectedPostId === post.id)}
+          type="button"
+          className={`post-action-btn ${isCommentActive ? "is-active" : ""}`}
+          onClick={() =>
+            setSelectedPostId(selectedPostId === post.id ? null : post.id)
+          }
+          aria-label={t("comment")}
+          aria-pressed={isCommentActive}
         >
-          <FaComment className="text-base" />
-          <span>{t("comment")}</span>
+          <span className="post-action-btn__icon">
+            <FaComment className="post-action__icon-svg" />
+          </span>
+          <span className="post-action-btn__label">{t("comment")}</span>
         </button>
       </div>
 
-      <div className="col-span-1 flex items-center justify-center">
+      {/* SAVE / FAVORITE */}
+      <div className="post-actions__slot">
         <button
+          type="button"
+          className={`post-action-btn ${isSaved ? "is-active is-saved" : ""}`}
           onClick={onToggleSave}
           disabled={isSavingPost}
-          className={getActionButtonClass(isLight, isSaved)}
-          title={isSaved ? t("unsavePost") : t("savePost")}
+          aria-label={isSaved ? t("unsavePost") : t("savePost")}
+          aria-pressed={isSaved}
         >
-          {isSaved ? <FaBookmark /> : <FaRegBookmark />}
-          <span className="hidden sm:inline">{isSaved ? t("saved") : t("save")}</span>
+          <span className="post-action-btn__icon">
+            {isSaved ? (
+              <FaBookmark className="post-action__icon-svg" />
+            ) : (
+              <FaRegBookmark className="post-action__icon-svg" />
+            )}
+          </span>
+          <span className="post-action-btn__label">
+            {isSaved ? t("saved") : t("save")}
+          </span>
         </button>
       </div>
 
       {/* SHARE */}
-      <PostShareMenu isLight={isLight} onShare={onShare} onRepostToTimeline={onRepostToTimeline} />
-    </div>
-  );
-};
+      <div className="post-actions__slot">
+        <button
+          type="button"
+          className={`post-action-btn ${shareOpen ? "is-active" : ""}`}
+          onClick={() => setShareOpen(true)}
+          aria-label={t("share")}
+          aria-expanded={shareOpen}
+        >
+          <span className="post-action-btn__icon">
+            <FaShare className="post-action__icon-svg" />
+          </span>
+          <span className="post-action-btn__label">{t("share")}</span>
+        </button>
+      </div>
 
-const PostShareMenu = ({ isLight, onShare, onRepostToTimeline }) => {
-  const [showShareMenu, setShowShareMenu] = useState(false);
-  const { t } = useContext(LanguageContext);
-  const baseItem = "w-full px-4 py-2.5 flex items-center gap-3 text-sm transition-colors";
-
-  return (
-    <div className="relative col-span-1 flex items-center justify-center">
-      <button
-        onClick={() => setShowShareMenu((prev) => !prev)}
-        className={getActionButtonClass(isLight, showShareMenu)}
-      >
-        <FaShare className="text-base" />
-        <span> {t("share")} </span>
-      </button>
-
-      {showShareMenu && (
-        <>
-          <div className="fixed inset-0 z-20" onClick={() => setShowShareMenu(false)} />
+      {/* Mobile reaction bottom sheet */}
+      {showReactions && isCoarsePointer() && (
+        <div
+          className="post-sheet-backdrop"
+          role="presentation"
+          onClick={() => setShowReactions(false)}
+        >
           <div
-            className={`absolute right-0 bottom-full mb-2 w-60 max-w-[calc(100vw-2rem)]
-              rounded-2xl border shadow-[0_12px_28px_rgba(0,0,0,0.25)] z-30 py-2
-              ${isLight ? "bg-white border-gray-100" : "bg-zinc-900 border-zinc-700"}`}
+            className={`post-sheet reaction-sheet ${themeClass}`}
+            role="dialog"
+            aria-label="Reactions"
+            onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => onShare("copy")}
-              className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
-            >
-              <FaLink className="text-sm" />
-              <span>{t("copyLink")}</span>
-            </button>
-
-            <button
-              onClick={() => onShare("copyWithContent")}
-              className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
-            >
-              <FaCopy className="text-sm" />
-              <span>{t("copyContent")}</span>
-            </button>
-
-            {navigator.share && (
-              <button
-                onClick={() => onShare("native")}
-                className={`${baseItem} ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-800 text-gray-100"}`}
-              >
-                <FaShare className="text-sm" />
-                <span>{t("systemShare")}</span>
-              </button>
-            )}
-
-            <button
-              onClick={() => {
-                setShowShareMenu(false);
-                onRepostToTimeline();
-              }}
-              className={`${baseItem} text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20`}
-            >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-500">
-                @
-              </span>
-              <span>{t("shareToTimeline")}</span>
-            </button>
+            <div className="post-sheet__handle" />
+            <p className="post-sheet__title">{t("like")}</p>
+            <div className="reaction-sheet__row">
+              {Object.entries(REACTION_ICONS).map(([key, icon]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`reaction-sheet__btn ${
+                    currentReaction === key ? "is-selected" : ""
+                  }`}
+                  onClick={(e) => handlePickReaction(e, key)}
+                  aria-label={getReactionLabel(key)}
+                >
+                  <span className="reaction-sheet__emoji">{icon}</span>
+                  <span className="reaction-sheet__name">
+                    {getReactionLabel(key)}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-        </>
+        </div>
+      )}
+
+      {/* Share sheet / popover */}
+      {shareOpen && (
+        <SharePanel
+          isLight={isLight}
+          onClose={() => setShareOpen(false)}
+          onShare={(mode) => {
+            onShare(mode);
+            setShareOpen(false);
+          }}
+          onRepost={() => {
+            setShareOpen(false);
+            onRepostToTimeline();
+          }}
+        />
       )}
     </div>
   );
 };
 
-export default PostActions;
+function SharePanel({ isLight, onClose, onShare, onRepost }) {
+  const { t } = useContext(LanguageContext);
+  const themeClass = isLight ? "is-light" : "is-dark";
+  const mobile = isCoarsePointer();
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const items = [
+    {
+      key: "copy",
+      icon: <FaLink />,
+      label: t("copyLink"),
+      onClick: () => onShare("copy"),
+    },
+    {
+      key: "copyContent",
+      icon: <FaCopy />,
+      label: t("copyContent"),
+      onClick: () => onShare("copyWithContent"),
+    },
+    ...(typeof navigator !== "undefined" && navigator.share
+      ? [
+          {
+            key: "native",
+            icon: <FaShare />,
+            label: t("systemShare"),
+            onClick: () => onShare("native"),
+          },
+        ]
+      : []),
+    {
+      key: "repost",
+      icon: (
+        <span className="share-panel__at" aria-hidden>
+          @
+        </span>
+      ),
+      label: t("shareToTimeline"),
+      onClick: onRepost,
+      accent: true,
+    },
+  ];
+
+  return (
+    <div
+      className="post-sheet-backdrop"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        className={`post-sheet share-sheet ${themeClass} ${
+          mobile ? "share-sheet--mobile" : "share-sheet--desktop"
+        }`}
+        role="dialog"
+        aria-label={t("share")}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {mobile && <div className="post-sheet__handle" />}
+        <div className="share-sheet__header">
+          <p className="post-sheet__title">{t("share")}</p>
+          <button
+            type="button"
+            className="share-sheet__close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <FaTimes />
+          </button>
+        </div>
+        <div className="share-sheet__list">
+          {items.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={`share-sheet__item ${item.accent ? "is-accent" : ""}`}
+              onClick={item.onClick}
+            >
+              <span className="share-sheet__item-icon">{item.icon}</span>
+              <span className="share-sheet__item-label">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default memo(PostActions);

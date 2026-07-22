@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { memo, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query,
@@ -29,7 +29,12 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReacting, setIsReacting] = useState(false);
   const [localPost, setLocalPost] = useState(post);
-  const [commentCount, setCommentCount] = useState(post.comments?.length || 0);
+  const [commentCount, setCommentCount] = useState(
+    post.commentCount ?? post.comments?.length ?? 0,
+  );
+  /** Prevent parent snapshot from wiping optimistic reaction UI mid-flight */
+  const reactionPendingRef = useRef(false);
+  const reactionInFlightRef = useRef(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(post.title || "");
   const [editContent, setEditContent] = useState(getPostHtml(post));
@@ -62,79 +67,195 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     };
   }, [isReposting, showRepostModal]);
 
-  useEffect(() => setLocalPost(post), [post]);
+  // Sync server post → local; keep optimistic likes/reactedBy while reaction is in flight
+  useEffect(() => {
+    setLocalPost((prev) => {
+      if (!reactionPendingRef.current || prev?.id !== post.id) return post;
+      return {
+        ...post,
+        likes: prev.likes,
+        reactedBy: prev.reactedBy,
+      };
+    });
+    if (typeof post.commentCount === "number") {
+      setCommentCount(post.commentCount);
+    } else if (Array.isArray(post.comments)) {
+      setCommentCount(post.comments.length);
+    }
+  }, [post]);
 
   useEffect(() => {
     if (!isDetailView || !post.id) return undefined;
     return onSnapshot(doc(db, "Posts", post.id), (snapshot) => {
-      if (snapshot.exists()) setLocalPost({ id: snapshot.id, ...snapshot.data() });
-      else onPostDeleted?.(post.id);
+      if (!snapshot.exists()) {
+        onPostDeleted?.(post.id);
+        return;
+      }
+      const next = { id: snapshot.id, ...snapshot.data() };
+      setLocalPost((prev) => {
+        if (reactionPendingRef.current && prev?.id === next.id) {
+          return { ...next, likes: prev.likes, reactedBy: prev.reactedBy };
+        }
+        return next;
+      });
     });
   }, [isDetailView, onPostDeleted, post.id]);
 
+  // Comment count: prefer denormalized field; full count only on detail (not N queries on feed)
   useEffect(() => {
     if (!isDetailView || !post.id) return undefined;
     return onSnapshot(query(collection(db, "Posts", post.id, "comments")), (snapshot) => {
-      setCommentCount(snapshot.docs.reduce((total, item) => total + 1 + (item.data().replyCount || 0), 0));
+      setCommentCount(
+        snapshot.docs.reduce(
+          (total, item) => total + 1 + (item.data().replyCount || 0),
+          0,
+        ),
+      );
     });
   }, [isDetailView, post.id]);
 
+  // Saved flag: one-shot getDoc (not a permanent listener per feed card)
   useEffect(() => {
     const userId = auth?.currentUser?.uid;
-    if (!userId || !post.id) return undefined;
-    return onSnapshot(doc(db, "SavedPosts", `${userId}_${post.id}`), (snapshot) => setIsSaved(snapshot.exists()));
+    if (!userId || !post.id) {
+      setIsSaved(false);
+      return undefined;
+    }
+    let cancelled = false;
+    getDoc(doc(db, "SavedPosts", `${userId}_${post.id}`))
+      .then((snap) => {
+        if (!cancelled) setIsSaved(snap.exists());
+      })
+      .catch(() => {
+        if (!cancelled) setIsSaved(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [auth?.currentUser?.uid, post.id]);
 
+  // Shared original post: getDoc once (not live listener)
   useEffect(() => {
     const originalId = localPost.sharedPostId || localPost.sharedFrom?.postId;
     if (localPost.type !== "share" || !originalId) {
       setSharedPost(null);
+      setSharedPostLoading(false);
       return undefined;
     }
+    let cancelled = false;
     setSharedPostLoading(true);
-    return onSnapshot(doc(db, "Posts", originalId), (snapshot) => {
-      setSharedPost(snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null);
-      setSharedPostLoading(false);
-    }, () => {
-      setSharedPost(null);
-      setSharedPostLoading(false);
-    });
+    getDoc(doc(db, "Posts", originalId))
+      .then((snapshot) => {
+        if (cancelled) return;
+        setSharedPost(
+          snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null,
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setSharedPost(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSharedPostLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [localPost.sharedFrom?.postId, localPost.sharedPostId, localPost.type]);
 
-  const handleReaction = async (postId, reaction) => {
-    if (isReacting) return;
-    const user = requireLogin({
-      navigate,
-      message: t("loginRequired"),
-    });
-    if (!user) return;
-    const userId = user.uid;
-    setIsReacting(true);
-    try {
-      const postRef = doc(db, "Posts", postId);
-      await runTransaction(db, async (transaction) => {
-        const snapshot = await transaction.get(postRef);
-        if (!snapshot.exists()) throw new Error(t("originalPostNotFound"));
-        const data = snapshot.data();
-        const likes = { ...data.likes };
-        const reactedBy = { ...data.reactedBy };
-        const previous = reactedBy[userId];
-        if (previous) likes[previous] = Math.max(0, (likes[previous] || 0) - 1);
-        if (previous === reaction) delete reactedBy[userId];
-        else {
-          likes[reaction] = (likes[reaction] || 0) + 1;
-          reactedBy[userId] = reaction;
-        }
-        transaction.update(postRef, { likes, reactedBy });
-      });
-      setShowReactions(false);
-    } catch (error) {
-      console.error("React error", error);
-      toast.error(error.message || t("reactionFailed"));
-    } finally {
-      setIsReacting(false);
+  const applyReactionLocally = useCallback((prevPost, userId, reaction) => {
+    const likes = {
+      Like: 0,
+      Love: 0,
+      Haha: 0,
+      Wow: 0,
+      Sad: 0,
+      Angry: 0,
+      ...(prevPost.likes || {}),
+    };
+    const reactedBy = { ...(prevPost.reactedBy || {}) };
+    const previous = reactedBy[userId];
+    if (previous) likes[previous] = Math.max(0, (likes[previous] || 0) - 1);
+    if (previous === reaction) {
+      delete reactedBy[userId];
+    } else {
+      likes[reaction] = (likes[reaction] || 0) + 1;
+      reactedBy[userId] = reaction;
     }
-  };
+    return { likes, reactedBy, previous };
+  }, []);
+
+  /**
+   * Optimistic reaction: UI updates immediately, Firestore transaction runs in background.
+   * Avoids waiting on network + feed-wide comment reloads for a snappy like.
+   */
+  const handleReaction = useCallback(
+    async (postId, reaction) => {
+      if (reactionInFlightRef.current) return;
+      const user = requireLogin({
+        navigate,
+        title: t("loginToastTitle"),
+        message: t("loginToReact"),
+        loginLabel: t("login"),
+      });
+      if (!user) return;
+      const userId = user.uid;
+
+      const snapshotBefore = localPost;
+      const { likes: nextLikes, reactedBy: nextReactedBy } = applyReactionLocally(
+        snapshotBefore,
+        userId,
+        reaction,
+      );
+
+      // Optimistic UI first
+      reactionPendingRef.current = true;
+      reactionInFlightRef.current = true;
+      setIsReacting(true);
+      setShowReactions(false);
+      setLocalPost((prev) =>
+        prev.id === postId
+          ? { ...prev, likes: nextLikes, reactedBy: nextReactedBy }
+          : prev,
+      );
+
+      try {
+        const postRef = doc(db, "Posts", postId);
+        const committed = await runTransaction(db, async (transaction) => {
+          const snapshot = await transaction.get(postRef);
+          if (!snapshot.exists()) throw new Error(t("originalPostNotFound"));
+          const data = snapshot.data();
+          const { likes, reactedBy } = applyReactionLocally(data, userId, reaction);
+          // Only write reaction fields — smaller payload, less contention
+          transaction.update(postRef, { likes, reactedBy });
+          return { likes, reactedBy };
+        });
+        // Align UI with server truth (handles concurrent reactions)
+        setLocalPost((prev) =>
+          prev.id === postId
+            ? { ...prev, likes: committed.likes, reactedBy: committed.reactedBy }
+            : prev,
+        );
+      } catch (error) {
+        console.error("React error", error);
+        // Rollback optimistic state
+        setLocalPost((prev) =>
+          prev.id === postId
+            ? {
+                ...prev,
+                likes: snapshotBefore.likes,
+                reactedBy: snapshotBefore.reactedBy,
+              }
+            : prev,
+        );
+        toast.error(error.message || t("reactionFailed"));
+      } finally {
+        reactionPendingRef.current = false;
+        reactionInFlightRef.current = false;
+        setIsReacting(false);
+      }
+    },
+    [applyReactionLocally, localPost, navigate, t],
+  );
 
   const loadFriendsForTagging = async () => {
     const currentUser = auth?.currentUser;
@@ -245,14 +366,18 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     const user = requireLogin({ navigate, message: t("loginToSave") });
     if (!user) return;
     const userId = user.uid;
+    const prev = isSaved;
+    // Optimistic save toggle
+    setIsSaved(!prev);
     setIsSavingPost(true);
     try {
       const savedRef = doc(db, "SavedPosts", `${userId}_${post.id}`);
-      if (isSaved) await deleteDoc(savedRef);
+      if (prev) await deleteDoc(savedRef);
       else await setDoc(savedRef, { userId, postId: post.id, savedAt: serverTimestamp() });
-      toast.success(isSaved ? t("postUnsaved") : t("postSaved"));
+      toast.success(prev ? t("postUnsaved") : t("postSaved"));
     } catch (error) {
       console.error("Save post error", error);
+      setIsSaved(prev);
       toast.error(t("savePostFailed"));
     } finally {
       setIsSavingPost(false);
@@ -468,4 +593,27 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   );
 };
 
-export default PostItem;
+// Avoid re-rendering every card when parent feed re-renders for unrelated reasons
+export default memo(PostItem, (prev, next) => {
+  if (prev.post?.id !== next.post?.id) return false;
+  if (prev.isDetailView !== next.isDetailView) return false;
+  if (prev.auth?.currentUser?.uid !== next.auth?.currentUser?.uid) return false;
+  if (prev.userDetails !== next.userDetails) return false;
+  if (prev.onPostDeleted !== next.onPostDeleted) return false;
+  // Re-render when server post fields that matter for the card change
+  const a = prev.post;
+  const b = next.post;
+  if (a === b) return true;
+  return (
+    a?.title === b?.title &&
+    a?.content === b?.content &&
+    a?.contentHtml === b?.contentHtml &&
+    a?.updatedAt === b?.updatedAt &&
+    a?.likes === b?.likes &&
+    a?.reactedBy === b?.reactedBy &&
+    a?.mediaFiles === b?.mediaFiles &&
+    a?.status === b?.status &&
+    a?.commentCount === b?.commentCount &&
+    a?.type === b?.type
+  );
+});

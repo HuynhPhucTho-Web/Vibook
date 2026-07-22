@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../components/firebase";
-import { doc, onSnapshot, query, collection, where, getDocs, orderBy } from "firebase/firestore";
+import { doc, onSnapshot, query, collection, where, orderBy } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import PostItem from "../components/PostItem";
@@ -34,17 +34,14 @@ function UserDetailPage() {
       }
     });
 
-    // Fetch user's posts
-    const postsQuery = query(collection(db, "Posts"), where("userId", "==", uid), orderBy("createdAt", "desc"));
-    const unsubPosts = onSnapshot(postsQuery, async (qs) => {
-      const userPosts = await Promise.all(qs.docs.map(async (d) => {
-        const post = { id: d.id, ...d.data() };
-        // Fetch comments for each post
-        const commentsSnapshot = await getDocs(collection(db, "Posts", d.id, "comments"));
-        post.comments = commentsSnapshot.docs.map(c => ({ id: c.id, ...c.data() }));
-        return post;
-      }));
-      setPosts(userPosts);
+    // Posts only — do not fan-out comment loads (slow + re-runs on every post update)
+    const postsQuery = query(
+      collection(db, "Posts"),
+      where("userId", "==", uid),
+      orderBy("createdAt", "desc"),
+    );
+    const unsubPosts = onSnapshot(postsQuery, (qs) => {
+      setPosts(qs.docs.map((d) => ({ id: d.id, ...d.data() })));
       setLoading(false);
     });
 
