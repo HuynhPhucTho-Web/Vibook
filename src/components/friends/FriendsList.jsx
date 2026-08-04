@@ -10,17 +10,17 @@ import {
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { toast } from "react-toastify";
-import { FaComments, FaUserMinus, FaUser, FaSearch } from "react-icons/fa";
+import { FaComments, FaUserMinus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useSearch } from "../../context/SearchContext";
 
 const FriendsList = ({ currentUser, theme }) => {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { keyword: searchTerm } = useSearch();
   const navigate = useNavigate();
 
-  // Load friendships + thông tin user của bạn bè
   useEffect(() => {
     if (!currentUser) return;
 
@@ -95,8 +95,7 @@ const FriendsList = ({ currentUser, theme }) => {
 
   const handleMessage = () => {
     if (!currentUser) return;
-    // Điều hướng tới trang Messenger
-    navigate('/messenger');
+    navigate("/messenger");
   };
 
   if (loading) {
@@ -107,91 +106,75 @@ const FriendsList = ({ currentUser, theme }) => {
     );
   }
 
-  if (!friends.length) {
-    return (
-      <div className="text-center py-5">
-        <p className="text-muted mb-0">
-          You have no friends yet. Try sending some friend requests!
-        </p>
-      </div>
-    );
-  }
-
-  // Filter friends based on search term
   const filteredFriends = friends.filter((friend) => {
     if (!searchTerm) return true;
-    const fullName = friend.displayName.toLowerCase();
+    const fullName = (friend.displayName || "").toLowerCase();
     const search = searchTerm.toLowerCase();
     return fullName.includes(search);
   });
 
+  if (!friends.length) {
+    return (
+      <div className="friends-page__empty">
+        <p className="mb-0">You have no friends yet. Try sending some friend requests!</p>
+      </div>
+    );
+  }
+
   return (
     <div className="friends-list">
-      {/* Search Bar */}
-      <div className="mb-4">
-        <div className="input-group">
-          <span className="input-group-text">
-            <FaSearch />
-          </span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search friends..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {filteredFriends.length === 0 ? (
+        <div className="friends-page__empty">
+          <p className="mb-0">No friends match “{searchTerm}”.</p>
         </div>
-      </div>
-
-      <div className="row">
-        {filteredFriends.map((friend) => (
-          <div key={friend.uid} className="col-md-6 col-lg-4 mb-3">
-            <div
-              className={`card ${
-                theme === "light" ? "bg-light" : "bg-dark text-white"
-              }`}
-            >
-              <div className="card-body">
-                <div className="d-flex align-items-center mb-3">
-                  <img
-                    src={friend.photo || "/default-avatar.png"}
-                    alt={friend.displayName || "User"}
-                    className="rounded-circle me-3"
-                    style={{ width: "50px", height: "50px", objectFit: "cover" }}
-                  />
-                  <div>
-                    <h6 className="card-title mb-0">
+      ) : (
+        <div className="friend-card-grid">
+          {filteredFriends.map((friend) => (
+            <div key={friend.uid} className="friend-card">
+              <div className="friend-card__body">
+                <div className="friend-card__header">
+                  <div className="friend-card__avatar">
+                    {friend.photo ? (
+                      <img src={friend.photo} alt={friend.displayName || "User"} />
+                    ) : (
+                      <span>{(friend.displayName || "U").charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="friend-card__meta">
+                    <div className="friend-card__name">
                       {friend.displayName || "Unknown User"}
-                    </h6>
-                    {/* <small className="text-muted">{friend.email}</small> */}
+                    </div>
+                    <div className="friend-card__subtitle">Friend</div>
                   </div>
                 </div>
 
-                <div className="d-flex justify-content-between align-items-center">
-                  <small className="text-muted">Friend</small>
-                  <div className="d-flex gap-2">
+                <div className="friend-card__footer">
+                  <span className="friend-card__pill">Connected</span>
+                  <div className="friend-card__actions">
                     <button
-                      className="btn btn-primary btn-sm"
+                      type="button"
+                      className="vb-btn vb-btn--primary vb-btn--sm"
                       onClick={() => handleMessage(friend)}
                     >
-                      <FaComments className="me-1" />
+                      <FaComments />
                       Message
                     </button>
                     <button
-                      className="btn btn-outline-danger btn-sm"
+                      type="button"
+                      className="vb-btn vb-btn--ghost vb-btn--sm"
                       disabled={processingId === friend.friendshipId}
                       onClick={() => handleUnfriend(friend)}
                     >
-                      <FaUserMinus className="me-1" />
+                      <FaUserMinus />
                       Unfriend
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

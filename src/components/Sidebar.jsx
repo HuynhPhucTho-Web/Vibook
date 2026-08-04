@@ -14,6 +14,7 @@ import {
   FaYoutube,
   FaCog,
   FaFacebookMessenger,
+  FaBlog,
 } from "react-icons/fa";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -36,12 +37,13 @@ const MOBILE_BREAKPOINT = 768;
 const MENU = [
   { path: "/homevibook", icon: FaHome, labelKey: "home", requiresAuth: false },
   { path: "/friends", icon: FaUserPlus, labelKey: "friends", requiresAuth: false },
-  { path: "/groups", icon: FaUsers, labelKey: "groups", requiresAuth: false },
+  { path: "/blog" , icon: FaBlog, labelKey: "blog", requiresAuth: false },
+  // { path: "/groups", icon: FaUsers, labelKey: "groups", requiresAuth: false },
   { path: "/events", icon: FaCalendarAlt, labelKey: "events", requiresAuth: false },
   { path: "/videos", icon: FaYoutube, labelKey: "video", requiresAuth: false },
   // { path: "/story", icon: FaVideo, labelKey: "story", requiresAuth: false },
   { path: "/playgame", icon: FaGamepad, labelKey: "playGame", requiresAuth: false },
-  { path: "/market", icon: FaShoppingBag, labelKey: "store", requiresAuth: false },
+  // { path: "/market", icon: FaShoppingBag, labelKey: "store", requiresAuth: false },
   {
     path: "/messenger",
     icon: FaFacebookMessenger,

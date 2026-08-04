@@ -1,9 +1,11 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
+  GoogleAuthProvider,
+  reauthenticateWithPopup,
 } from "firebase/auth";
 import {
   FaBell,
@@ -20,7 +22,8 @@ import {
   FaUserCog,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { auth } from "../components/firebase";
+import { auth, db } from "../components/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { LanguageContext } from "../context/LanguageContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { requireLogin } from "../utils/requireLogin";
@@ -68,11 +71,14 @@ const Toggle = ({ checked, onChange, label }) => (
 
 const Setting = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, language, setLanguage } = useContext(LanguageContext);
   const { theme, setTheme, background, setBackground } = useContext(ThemeContext);
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
   const [authReady, setAuthReady] = useState(Boolean(auth.currentUser));
-  const [activeSection, setActiveSection] = useState("appearance");
+  const [activeSection, setActiveSection] = useState(() => {
+    return location.state?.activeSection || "appearance";
+  });
   const [notifications, setNotifications] = useState(() =>
     readStoredObject("vibook_notification_preferences", NOTIFICATION_DEFAULTS),
   );
@@ -109,8 +115,21 @@ const Setting = () => {
   const isGuest = authReady && !currentUser;
 
   const passwordProvider = currentUser?.providerData?.some(
-    (provider) => provider.providerId === "password",
+    (p) => p.providerId === "password"
   );
+  
+  const [dbUser, setDbUser] = useState(null);
+  const hasPassword = passwordProvider || dbUser?.hasPassword;
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const userRef = doc(db, "Users", currentUser.uid);
+    getDoc(userRef).then((snap) => {
+      if (snap.exists()) {
+        setDbUser(snap.data());
+      }
+    });
+  }, [currentUser]);
 
   const sections = useMemo(
     () => [
@@ -121,6 +140,24 @@ const Setting = () => {
       { id: "security", icon: FaLock, label: t("settingSecurity"), private: true },
     ],
     [t],
+  );
+
+  const selectedBackgroundOption = useMemo(
+    () => BACKGROUNDS.find((option) => option.id === background) || BACKGROUNDS[0],
+    [background],
+  );
+
+  const pageStyle = useMemo(
+    () => ({
+      "--setting-card": theme === "dark" ? "rgba(12, 14, 21, 0.78)" : "rgba(255, 255, 255, 0.86)",
+      "--setting-border": theme === "dark" ? "rgba(255, 255, 255, 0.14)" : "rgba(15, 23, 42, 0.12)",
+      "--setting-text": theme === "dark" ? "#e3e1ec" : "#162033",
+      "--setting-muted": theme === "dark" ? "#cdc3d6" : "#687386",
+      "--setting-accent-soft": theme === "dark" ? "rgba(142, 84, 233, 0.16)" : "rgba(142, 84, 233, 0.12)",
+      "--setting-page-background": "transparent",
+      "--setting-page-background-strong": "transparent",
+    }),
+    [theme],
   );
 
   useEffect(() => {
@@ -187,7 +224,7 @@ const Setting = () => {
   const handlePasswordChange = async (event) => {
     event.preventDefault();
     if (!currentUser) {
-      promptLoginForPrivate();
+      toast.error(t("settingLoginRequired"));
       return;
     }
     if (passwordForm.next.length < 6) {
@@ -198,20 +235,42 @@ const Setting = () => {
       toast.error(t("settingPasswordMismatch"));
       return;
     }
-    if (!currentUser.email || !passwordProvider) {
-      toast.error(t("settingPasswordProviderUnsupported"));
-      return;
-    }
 
     setChangingPassword(true);
     try {
-      const credential = EmailAuthProvider.credential(currentUser.email, passwordForm.current);
-      await reauthenticateWithCredential(currentUser, credential);
-      await updatePassword(currentUser, passwordForm.next);
+      if (hasPassword) {
+        if (!currentUser.email) {
+          toast.error(t("settingPasswordProviderUnsupported"));
+          return;
+        }
+        const credential = EmailAuthProvider.credential(currentUser.email, passwordForm.current);
+        await reauthenticateWithCredential(currentUser, credential);
+      }
+      
+      try {
+        await updatePassword(currentUser, passwordForm.next);
+      } catch (err) {
+        if (err.code === "auth/requires-recent-login") {
+          if (!hasPassword) {
+            const provider = new GoogleAuthProvider();
+            toast.info("Xác thực bảo mật: Vui lòng xác nhận tài khoản Google của bạn...");
+            await reauthenticateWithPopup(currentUser, provider);
+            await updatePassword(currentUser, passwordForm.next);
+          } else {
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
+
+      await setDoc(doc(db, "Users", currentUser.uid), { hasPassword: true }, { merge: true });
+      setDbUser((prev) => ({ ...prev, hasPassword: true }));
+
       setPasswordForm({ current: "", next: "", confirm: "" });
-      toast.success(t("settingPasswordChanged"));
+      toast.success(hasPassword ? t("settingPasswordChanged") : "Thiết lập mật khẩu thành công!");
     } catch (error) {
-      console.error("Unable to change password", error);
+      console.error("Unable to update password", error);
       toast.error(
         error.code === "auth/invalid-credential" || error.code === "auth/wrong-password"
           ? t("settingCurrentPasswordWrong")
@@ -263,7 +322,7 @@ const Setting = () => {
     isGuest && PRIVATE_SECTION_IDS.has(activeSection) && !PUBLIC_SECTION_IDS.has(activeSection);
 
   return (
-    <div className={`setting-page setting-page--${theme}`}>
+    <div className={`page-shell setting-page setting-page--${theme}`} style={pageStyle}>
       <header className="setting-hero">
         <div className="setting-hero__icon">
           <FaUserCog />
@@ -534,60 +593,66 @@ const Setting = () => {
                   <small>{currentUser.email}</small>
                 </span>
               </div>
-              {passwordProvider ? (
-                <form className="setting-password-form" onSubmit={handlePasswordChange}>
-                  <h3>{t("settingChangePassword")}</h3>
-                  {[
-                    ["current", "settingCurrentPassword"],
-                    ["next", "settingNewPassword"],
-                    ["confirm", "settingConfirmNewPassword"],
-                  ].map(([field, labelKey]) => (
-                    <label key={field}>
-                      <span>{t(labelKey)}</span>
-                      <div>
-                        <input
-                          type={showPasswords ? "text" : "password"}
-                          autoComplete={
-                            field === "current" ? "current-password" : "new-password"
-                          }
-                          value={passwordForm[field]}
-                          onChange={(event) =>
-                            setPasswordForm((current) => ({
-                              ...current,
-                              [field]: event.target.value,
-                            }))
-                          }
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPasswords((visible) => !visible)}
-                          aria-label={t(
-                            showPasswords ? "settingHidePassword" : "settingShowPassword",
-                          )}
-                        >
-                          {showPasswords ? <FaEyeSlash /> : <FaEye />}
-                        </button>
+              {(() => {
+                const fields = hasPassword
+                  ? [
+                      ["current", "settingCurrentPassword"],
+                      ["next", "settingNewPassword"],
+                      ["confirm", "settingConfirmNewPassword"],
+                    ]
+                  : [
+                      ["next", "settingNewPassword"],
+                      ["confirm", "settingConfirmNewPassword"],
+                    ];
+
+                return (
+                  <form className="setting-password-form" onSubmit={handlePasswordChange}>
+                    {location.state?.forceSetPassword && !hasPassword && (
+                      <div className="setting-info alert alert-info py-2 px-3 mb-3" style={{ fontSize: "14px" }}>
+                        Bạn đã đăng nhập bằng Google. Hãy thiết lập mật khẩu mới để có thể đăng nhập bằng email trong tương lai.
                       </div>
-                    </label>
-                  ))}
-                  <button
-                    className="vb-btn vb-btn--primary"
-                    type="submit"
-                    disabled={changingPassword}
-                  >
-                    {changingPassword ? t("settingSaving") : t("settingUpdatePassword")}
-                  </button>
-                </form>
-              ) : (
-                <div className="setting-info">
-                  <FaLock />
-                  <span>
-                    <strong>{t("settingExternalAccount")}</strong>
-                    <small>{t("settingExternalAccountDescription")}</small>
-                  </span>
-                </div>
-              )}
+                    )}
+                    <h3>{hasPassword ? t("settingChangePassword") : "Thiết lập mật khẩu mới"}</h3>
+                    {fields.map(([field, labelKey]) => (
+                      <label key={field}>
+                        <span>{t(labelKey)}</span>
+                        <div>
+                          <input
+                            type={showPasswords ? "text" : "password"}
+                            autoComplete={
+                              field === "current" ? "current-password" : "new-password"
+                            }
+                            value={passwordForm[field]}
+                            onChange={(event) =>
+                              setPasswordForm((current) => ({
+                                ...current,
+                                [field]: event.target.value,
+                              }))
+                            }
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswords((visible) => !visible)}
+                            aria-label={t(
+                              showPasswords ? "settingHidePassword" : "settingShowPassword",
+                            )}
+                          >
+                            {showPasswords ? <FaEyeSlash /> : <FaEye />}
+                          </button>
+                        </div>
+                      </label>
+                    ))}
+                    <button
+                      className="vb-btn vb-btn--primary"
+                      type="submit"
+                      disabled={changingPassword}
+                    >
+                      {changingPassword ? t("settingSaving") : (hasPassword ? t("settingUpdatePassword") : "Thiết lập mật khẩu")}
+                    </button>
+                  </form>
+                );
+              })()}
               <div className="setting-danger-zone">
                 <div>
                   <strong>{t("settingLogout")}</strong>

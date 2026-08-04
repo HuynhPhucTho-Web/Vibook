@@ -27,6 +27,7 @@ import GroupPage from "./pages/GroupPage";
 import { auth } from "./components/firebase";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import { SearchProvider } from "./context/SearchContext";
 import GroupMembers from "./pages/group/GroupMembers";
 import GroupMedia from "./pages/group/GroupMedia";
 import GroupEvents from "./pages/group/GroupEvents";
@@ -46,6 +47,7 @@ import { CartProvider } from "./context/CartContext";
 import Video from "./pages/video/VideoHub";
 import Setting from "./pages/Setting";
 import RequireAuth from "./components/auth/RequireAuth";
+import BlogPages from "./pages/blog/BlogPages";
 import { clearLoginRedirect, getLoginRedirect } from "./utils/requireLogin";
 
 // Layout for authentication pages
@@ -117,7 +119,8 @@ function App() {
   return (
     <LanguageProvider>
       <ThemeProvider>
-        <CartProvider>
+        <SearchProvider>
+          <CartProvider>
           <Router>
             <Routes>
               {/* Default entry: home for everyone (guests included) */}
@@ -153,6 +156,8 @@ function App() {
                 <Route path="/groups" element={<Groups />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/story" element={<Storys />} />
+                <Route path="/blog" element={<BlogPages />} />
+                <Route path="/blog/:slug" element={<BlogPages />} />
                 <Route path="/playgame" element={<PlayGame />} />
                 <Route path="/market" element={<Store />} />
                 <Route path="/product/:id" element={<ProductPage />} />
@@ -200,7 +205,8 @@ function App() {
               bodyClassName="custom-toast-body"
             />
           </Router>
-        </CartProvider>
+          </CartProvider>
+        </SearchProvider>
       </ThemeProvider>
     </LanguageProvider>
   );

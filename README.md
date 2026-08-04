@@ -76,3 +76,29 @@ npx cap sync ios
 npx cap run ios
 npm install react-player
 firebase deploy --only firestore:rules
+
+## Design System & UI Standards
+
+Tham khảo đầy đủ: [`DESIGN.md`](./DESIGN.md)
+
+### Kích thước container chuẩn (đồng bộ mọi trang)
+
+| Loại | max-width | Căn giữa | Padding |
+|------|-----------|----------|---------|
+| Trang chính (Home/Blog/Profile/…) | `1200px` | `margin: 0 auto` | `var(--vb-space-2)` |
+| Dashboard | `1400px` | `margin: 0 auto` | `var(--vb-space-2)` |
+| Modal | `680px` | `margin: x auto` | `var(--vb-space-3)` |
+| Mobile (≤820px) | `100%` | — | `0.5rem` |
+
+Pattern container chuẩn:
+
+```css
+.container-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--vb-space-2) var(--vb-space-2) var(--vb-space-4);
+}
+```
+
+**Quy tắc:** Không hardcode width nhỏ (`680px`) cho container trang — chỉ dùng `680px` cho modal. Luôn có `@media (max-width: 820px)` cho mobile. Xem chi tiết breakpoints & spacing trong `DESIGN.md`.

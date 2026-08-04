@@ -5,6 +5,7 @@ import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import PostItem from "../components/PostItem";
+import "../style/Home.css";
 
 function PostDetail() {
   const { theme } = useContext(ThemeContext);
@@ -81,10 +82,8 @@ function PostDetail() {
   }
 
   return (
-    <div
-      className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"} flex justify-center`}
-    >
-      <div className="w-full p-[13px] pt-4" style={{ maxWidth: 680 }}>
+    <div className="page-shell">
+      <div className="posts-list">
         <PostItem
           post={post}
           auth={auth}

@@ -22,8 +22,9 @@ import {
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
+import staticBlogData from "../../Staticblogposts.json";
 import PostCreator from "../components/PostCreate";
-import PostItem from "../components/PostItem";
+import PostItem, { BlogPromoStrip } from "../components/PostItem";
 import {
   FEED_PAGE_SIZE,
   mapPostDocs,
@@ -58,7 +59,10 @@ function Home() {
   const [searchParams] = useSearchParams();
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [blogPromos, setBlogPromos] = useState([]);
+  const [isPostsLoading, setIsPostsLoading] = useState(true);
+  const [isBlogsLoading, setIsBlogsLoading] = useState(true);
+  const [blogLimit, setBlogLimit] = useState(5);
   const [lastVisible, setLastVisible] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -78,7 +82,6 @@ function Home() {
     hasMoreRef.current = hasMore;
   }, [hasMore]);
 
-  // User profile — one-shot getDoc (feed doesn't need live profile stream)
   useEffect(() => {
     let cancelled = false;
     const unsubAuth = auth.onAuthStateChanged(async (user) => {
@@ -101,6 +104,55 @@ function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const fetchBlogPromos = async () => {
+      try {
+        const snapshot = await getDocs(
+          query(collection(db, "BlogPosts"), orderBy("createdAt", "desc"), limit(blogLimit)),
+        );
+        const blogs = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+          createdAt: docSnap.data().createdAt?.toDate ? docSnap.data().createdAt.toDate() : docSnap.data().createdAt,
+        }));
+        if (!cancelled) {
+          const staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
+            ...post,
+            createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
+            isStatic: true,
+          }));
+          const mergedBlogs = [...staticBlogs];
+          blogs.forEach((blog) => {
+            const key = blog.slug || blog.id || blog.title;
+            const exists = mergedBlogs.some((item) => (item.slug || item.id || item.title) === key);
+            if (!exists) {
+              mergedBlogs.push(blog);
+            }
+          });
+          setBlogPromos(mergedBlogs);
+          setIsBlogsLoading(false);
+        }
+      } catch (error) {
+        console.error("Blog promo load error", error);
+        if (!cancelled) {
+          const staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
+            ...post,
+            createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
+            isStatic: true,
+          }));
+          setBlogPromos(staticBlogs);
+          setIsBlogsLoading(false);
+        }
+      }
+    };
+
+    fetchBlogPromos();
+    return () => {
+      cancelled = true;
+    };
+  }, [blogLimit]);
+
   // Feed load: fast getDocs first → then live onSnapshot for first page only
   useEffect(() => {
     const postId = searchParams.get("postId");
@@ -108,7 +160,7 @@ function Home() {
     let cancelled = false;
 
     const finishLoading = () => {
-      if (!cancelled) setIsLoading(false);
+      if (!cancelled) setIsPostsLoading(false);
     };
 
     if (postId) {
@@ -240,7 +292,7 @@ function Home() {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [loadMorePosts, searchParams, isLoading, posts.length]);
+  }, [loadMorePosts, searchParams, isPostsLoading, posts.length]);
 
   // Scroll to deep-linked post
   useEffect(() => {
@@ -257,54 +309,65 @@ function Home() {
     return () => clearTimeout(t);
   }, [posts, searchParams]);
 
-  const postList = useMemo(
-    () =>
-      posts.map((post) => (
-        <PostItem
-          key={post.id}
-          post={post}
-          auth={auth}
-          userDetails={userDetails}
-          onPostDeleted={handlePostDeleted}
-        />
-      )),
-    [posts, userDetails, handlePostDeleted],
-  );
+  const postList = useMemo(() => {
+    return posts.map((post) => (
+      <PostItem
+        key={post.id}
+        post={post}
+        auth={auth}
+        userDetails={userDetails}
+        onPostDeleted={handlePostDeleted}
+      />
+    ));
+  }, [posts, userDetails, handlePostDeleted]);
 
   return (
-    <div className={`home-container home-container--${theme}`}>
-      <PostCreator onPostCreated={handlePostCreated} />
+    <div className="page-shell">
+      <div className={`home-container home-container--${theme}`}>
+        <PostCreator onPostCreated={handlePostCreated} />
 
-      <div className="posts-list">
-        {isLoading && posts.length === 0 ? (
-          <FeedSkeleton count={3} />
-        ) : posts.length > 0 ? (
-          postList
-        ) : (
-          <div className="text-center py-5 feed-empty">
-            <h5 className="text-muted mb-2">No posts available</h5>
-            <p className="text-muted mb-0">Be the first to share something!</p>
-          </div>
-        )}
+        {isBlogsLoading ? (
+          <BlogPromoStrip loading={true} isLight={theme === "light"} title="Blog nổi bật" />
+        ) : blogPromos.length > 0 ? (
+          <BlogPromoStrip
+            blogs={blogPromos}
+            isLight={theme === "light"}
+            title="Blog nổi bật"
+            onLoadMore={() => setBlogLimit((prev) => prev + 5)}
+          />
+        ) : null}
 
-        {/* Sentinel for infinite scroll */}
-        {!searchParams.get("postId") && hasMore && posts.length > 0 && (
-          <div ref={loadMoreRef} className="feed-load-sentinel" aria-hidden="true">
-            {loadingMore && (
-              <div className="feed-load-more">
-                <div className="feed-load-more__dot" />
-                <div className="feed-load-more__dot" />
-                <div className="feed-load-more__dot" />
-              </div>
-            )}
-          </div>
-        )}
+        <div className="posts-list">
+          {isPostsLoading && posts.length === 0 ? (
+            <FeedSkeleton count={3} />
+          ) : posts.length > 0 ? (
+            postList
+          ) : (
+            <div className="text-center py-5 feed-empty">
+              <h5 className="text-muted mb-2">No posts available</h5>
+              <p className="text-muted mb-0">Be the first to share something!</p>
+            </div>
+          )}
 
-        {!hasMore && posts.length > 0 && !searchParams.get("postId") && (
-          <p className="feed-end-hint text-muted text-center py-3">
-            You’re all caught up
-          </p>
-        )}
+          {/* Sentinel for infinite scroll */}
+          {!searchParams.get("postId") && hasMore && posts.length > 0 && (
+            <div ref={loadMoreRef} className="feed-load-sentinel" aria-hidden="true">
+              {loadingMore && (
+                <div className="feed-load-more">
+                  <div className="feed-load-more__dot" />
+                  <div className="feed-load-more__dot" />
+                  <div className="feed-load-more__dot" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {!hasMore && posts.length > 0 && !searchParams.get("postId") && (
+            <p className="feed-end-hint text-muted text-center py-3">
+              You’re all caught up
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

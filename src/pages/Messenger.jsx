@@ -25,6 +25,11 @@ import MessageInput from "../components/messenger/MessageInput";
 import WelcomeScreen from "../components/messenger/WelcomeScreen";
 import "../style/Messenger.css";
 
+const getDefaultChatTheme = (theme) =>
+  theme === "dark"
+    ? { backgroundColor: "#0e1116", messageColor: "#8e54e9" }
+    : { backgroundColor: "#eef0f5", messageColor: "#0d6efd" };
+
 const Messenger = () => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
@@ -36,7 +41,8 @@ const Messenger = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [replyMessage, setReplyMessage] = useState(null);
-  const [chatTheme, setChatTheme] = useState({ backgroundColor: "#ffffff", messageColor: "#0d6efd" });
+  const [chatTheme, setChatTheme] = useState(() => getDefaultChatTheme(theme));
+  const chatThemeCustomizedRef = useRef(false);
   const [showRecallModal, setShowRecallModal] = useState(false);
   const [recallMessageId, setRecallMessageId] = useState(null);
 
@@ -297,9 +303,17 @@ const Messenger = () => {
     setReplyMessage(message);
   }, []);
 
-  const handleApplyTheme = useCallback((newTheme) => {
+const handleApplyTheme = useCallback((newTheme) => {
+    chatThemeCustomizedRef.current = true;
     setChatTheme(newTheme);
   }, []);
+
+  // Re-sync chat theme to the app theme default when the theme changes,
+  // unless the user has explicitly applied a custom chat theme.
+  useEffect(() => {
+    if (chatThemeCustomizedRef.current) return;
+    setChatTheme(getDefaultChatTheme(theme));
+  }, [theme]);
 
   const handleRecallMessage = useCallback((messageId) => {
     // Show confirmation modal
@@ -396,7 +410,7 @@ const Messenger = () => {
   const isChatActive = !!selectedUser;
 
   return (
-    <div className={`messenger-container ${theme}`}>
+    <div className={`page-shell messenger-container ${theme}`}>
         <div className={`sidebar-container ${isChatActive ? 'chat-active' : ''}`}>
             <UserList 
                 users={filteredUsers}
@@ -439,12 +453,12 @@ const Messenger = () => {
 
         {/* Recall Confirmation Modal */}
         {showRecallModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
+            <div className="vb-glass p-6 max-w-sm mx-4 rounded-xl text-inherit">
+              <h3 className="text-lg font-semibold mb-4">
                 Thu hồi tin nhắn
               </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
+              <p className="opacity-75 mb-6">
                 Bạn có muốn thu hồi tin nhắn này không?
               </p>
               <div className="flex justify-end gap-3">
@@ -453,13 +467,13 @@ const Messenger = () => {
                     setShowRecallModal(false);
                     setRecallMessageId(null);
                   }}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="vb-btn vb-btn--ghost vb-btn--sm"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={confirmRecallMessage}
-                  className="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                  className="vb-btn vb-btn--primary vb-btn--sm bg-red-600 border-red-500 hover:bg-red-700"
                 >
                   Thu hồi
                 </button>

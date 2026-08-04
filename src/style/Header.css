@@ -7,7 +7,7 @@
   --header-pad-y: 16px;
 
   /* khoảng cách logo -> search (để không dính sidebar) */
-  --search-left-gap: 12px;
+  --search-left-gap: 8px;
 
   /* độ rộng search hợp lý theo màn hình */
   --search-max: 920px;
@@ -23,21 +23,31 @@
   gap: 16px;
   min-width: 0;
   box-sizing: border-box;
+  justify-content: space-between;
 }
 
 /* Slot bọc search */
 .header-search-slot{
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
   min-width: 0;
   padding-left: var(--search-left-gap);
+  padding-right: var(--search-left-gap);
 }
 
 /* Wrap giới hạn độ rộng search */
 .header-search-wrap{
+  flex: 1 1 auto;
   width: 100%;
   max-width: var(--search-max);
   min-width: var(--search-min);
+  margin: 0 auto;
+}
+
+.header-search-box {
+  width: 100%;
 }
 
 .header-search-input-wrap { position: relative; display: flex; align-items: center; }
@@ -139,7 +149,7 @@
 @media (min-width: 1280px){
   :root{
     --search-max: 880px;
-    --search-left-gap: 20px;
+    --search-left-gap: 12px;
   }
 }
 
@@ -147,7 +157,7 @@
 @media (min-width: 1024px) and (max-width: 1279px){
   :root{
     --search-max: 760px;
-    --search-left-gap: 14px;
+    --search-left-gap: 10px;
   }
 }
 
@@ -155,7 +165,7 @@
 @media (min-width: 768px) and (max-width: 1023px){
   :root{
     --search-max: 520px;
-    --search-left-gap: 10px;
+    --search-left-gap: 8px;
   }
 }
 

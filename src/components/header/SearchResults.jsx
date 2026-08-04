@@ -23,8 +23,9 @@ const Highlight = ({ text = "", query = "" }) => {
   );
 };
 
-const SearchResults = ({ theme, t, query, results, isSearching, onSelect }) => {
+const SearchResults = ({ theme, t, query, results, isSearching, onSelect, mode = "global" }) => {
   const isLight = theme === "light";
+  const isFriendsMode = mode === "friends";
   const users = results.filter((result) => result.type === "user");
   const posts = results.filter((result) => result.type === "post");
 
@@ -32,7 +33,7 @@ const SearchResults = ({ theme, t, query, results, isSearching, onSelect }) => {
     return (
       <div className="search-state" role="status">
         <span className="search-spinner" />
-        <div><strong>{t("searching")}</strong><small>Đang tìm người dùng và bài viết phù hợp</small></div>
+        <div><strong>{t("searching")}</strong><small>{isFriendsMode ? "Đang tìm bạn bè phù hợp" : "Đang tìm người dùng và bài viết phù hợp"}</small></div>
       </div>
     );
   }
@@ -41,9 +42,36 @@ const SearchResults = ({ theme, t, query, results, isSearching, onSelect }) => {
     return (
       <div className="search-empty-state">
         <span className={`search-empty-icon ${isLight ? "light" : "dark"}`}><FaSearch /></span>
-        <strong>{t("noResults")}</strong>
+        <strong>{isFriendsMode ? "Không tìm thấy bạn bè phù hợp" : t("noResults")}</strong>
         <small>“{query}”</small>
-        <p>Thử tên người dùng, tiêu đề hoặc từ khóa ngắn hơn.</p>
+        <p>{isFriendsMode ? "Thử tên người dùng hoặc từ khóa ngắn hơn." : "Thử tên người dùng, tiêu đề hoặc từ khóa ngắn hơn."}</p>
+      </div>
+    );
+  }
+
+  if (isFriendsMode) {
+    return (
+      <div className="search-results-content">
+        <div className="search-results-summary">Tìm thấy {users.length} kết quả</div>
+        {!!users.length && (
+          <section className="search-result-section" aria-label="Bạn bè">
+            <div className="search-section-heading"><span>Bạn bè</span><span>{users.length}</span></div>
+            {users.map((user) => (
+              <Link key={`friend-${user.id}`} to={`/user/${user.id}`} className="search-result-item" onClick={onSelect}>
+                {user.photoURL || user.photo ? (
+                  <img src={user.photoURL || user.photo} alt="" className="search-result-avatar" />
+                ) : (
+                  <span className="search-result-avatar search-result-avatar--fallback"><FaUser /></span>
+                )}
+                <span className="search-result-main">
+                  <strong><Highlight text={user.displayName || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Người dùng"} query={query} /></strong>
+                  <small>{user.email || "Xem trang cá nhân"}</small>
+                </span>
+                <span className="search-result-kind">Bạn bè</span>
+              </Link>
+            ))}
+          </section>
+        )}
       </div>
     );
   }

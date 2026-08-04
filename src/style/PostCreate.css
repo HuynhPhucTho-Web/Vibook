@@ -5,10 +5,10 @@
   border-radius: var(--vb-radius-xl, 1.5rem);
   backdrop-filter: var(--vb-glass-blur, blur(20px));
   -webkit-backdrop-filter: var(--vb-glass-blur, blur(20px));
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: border-color 0.25s ease;
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: var(--vb-shadow-elevated, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+  box-shadow: none;
   border: 1px solid var(--vb-glass-border, rgba(255, 255, 255, 0.12));
 }
 

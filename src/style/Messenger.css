@@ -1,34 +1,67 @@
 /* src/style/Messenger.css */
 .messenger-container {
-  height: calc(100vh - 78px); /* Full height minus header */
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100dvh - var(--app-header-height, 72px) - 32px);
   display: flex;
-  background-color: #f8f9fa;
-  color: #212529;
-  padding: 13px;
+  gap: 16px;
+  box-sizing: border-box;
+  border-radius: var(--vb-radius-xl, 1.5rem);
+  overflow: hidden;
+  background: transparent;
+  color: var(--vb-on-surface, #e3e1ec);
+  transition: color 0.25s ease;
 }
 
 .messenger-container.dark {
-  background-color: #212529;
-  color: #f8f9fa;
+  color: var(--vb-on-surface, #f8f9fa);
+}
+
+.messenger-container.light {
+  color: var(--vb-on-surface, #162033);
 }
 
 .sidebar-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 320px;
-  border-right: 1px solid #dee2e6;
+  width: min(320px, 100%);
+  min-width: 0;
   flex-shrink: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
-.sidebar-container.dark {
-  border-right: 1px solid #343a40;
+
+.messenger-container.light .sidebar-container,
+.messenger-container.light .chat-container {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.messenger-container.light .sidebar-container {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .chat-container {
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 10, 18, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.messenger-container.light .chat-container {
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* Responsive */
@@ -37,27 +70,32 @@
     width: 100%;
     border-right: none;
   }
+
   .chat-container {
-    display: none; /* Hide chat view on mobile by default */
+    display: none;
   }
+
   .messenger-container {
-    height: calc(100vh - 60px); /* Adjust for mobile header if different */
+    height: calc(100vh - 60px);
+    padding: 12px;
+    gap: 12px;
   }
 }
 
-/* Special class to show chat view on mobile when a user is selected */
 @media (max-width: 768px) {
-    .sidebar-container.chat-active {
-        display: none;
-    }
-    .chat-container.chat-active {
-        display: flex;
-        width: 100%;
-        height: calc(100vh - 60px); /* Ensure full height minus header */
-        position: absolute;
-        top: 60px; /* Position below the app header */
-        left: 0;
-        z-index: 100;
-        padding-top: 0; /* Remove any extra padding that might hide the header */
-    }
+  .sidebar-container.chat-active {
+    display: none;
+  }
+
+  .chat-container.chat-active {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 60px);
+    position: absolute;
+    top: 60px;
+    left: 0;
+    z-index: 100;
+    padding-top: 0;
+    border-radius: 0;
+  }
 }

@@ -154,8 +154,13 @@ function LoginPromptToast({
         type: "button",
         className: "tech-toast__close",
         "aria-label": "Close",
-        onClick: () => {
+        onClick: (event) => {
+          event.preventDefault();
+          event.stopPropagation();
           if (typeof closeToast === "function") closeToast();
+          window.setTimeout(() => {
+            toast.dismiss(TOAST_ID);
+          }, 0);
         },
       },
       React.createElement(CloseIcon),
@@ -205,10 +210,10 @@ export function requireLogin(options = {}) {
   const toastOpts = {
     toastId: TOAST_ID,
     position: "top-center",
-    autoClose: 8000,
+    autoClose: 3000,
     closeOnClick: false,
     closeButton: false,
-    draggable: true,
+    draggable: false,
     hideProgressBar: true,
     icon: false,
     className: "tech-toast-container",
@@ -216,13 +221,10 @@ export function requireLogin(options = {}) {
   };
 
   if (toast.isActive(TOAST_ID)) {
-    toast.update(TOAST_ID, {
-      ...toastOpts,
-      render: renderToast,
-    });
-  } else {
-    toast(renderToast, toastOpts);
+    return null;
   }
+
+  toast(renderToast, toastOpts);
 
   return null;
 }

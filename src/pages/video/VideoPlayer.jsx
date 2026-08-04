@@ -41,11 +41,11 @@ function VideoPlayer() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${theme === "light" ? "bg-white text-gray-900" : "bg-[#0f0f0f] text-gray-100"}`}>
+    <div className="page-shell">
       
       {/* HEADER: Thanh tìm kiếm cố định */}
-      <header className={`border-b border-gray-800 sticky top-0 z-50 py-3 ${theme === "light" ? "bg-white" : "bg-[#0f0f0f]"}`}>
-        <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between gap-4">
+      <header className="vb-glass sticky top-0 z-50 py-3 mb-4 rounded-xl">
+        <div className="mx-auto px-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-1 cursor-pointer" onClick={() => setSelectedVideo(null)}>
             <span className="text-3xl font-black text-red-600">V</span>
             <span className="text-xl font-bold tracking-tight hidden md:block">VideoTube</span>
@@ -57,23 +57,21 @@ function VideoPlayer() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm kiếm video..."
-              className={`w-full border border-gray-700 rounded-full py-2 px-11 focus:outline-none focus:border-blue-500 transition ${
-                theme === "light" ? "bg-gray-100 text-black" : "bg-[#121212] text-white"
-              }`}
+              className="w-full vb-input rounded-full py-2 px-11 focus:outline-none"
             />
-            <button type="submit" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500">
+            <button type="submit" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-500">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </button>
           </form>
 
-          <div className="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center font-bold">U</div>
+          <div className="w-9 h-9 bg-purple-600 rounded-full flex items-center justify-center font-bold text-white">U</div>
         </div>
       </header>
 
-      <main className="max-w-[1400px] mx-auto px-4 py-6">
+      <main className="mx-auto py-6">
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-red-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
           </div>
         ) : !selectedVideo ? (
           /* --- GIAO DIỆN 1: DANH SÁCH VIDEO (GRID) --- */
@@ -95,11 +93,13 @@ function VideoPlayer() {
                   />
                 </div>
                 <div className="flex gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gray-700 flex-shrink-0"></div>
+                  <div className="w-9 h-9 rounded-full flex-shrink-0 bg-purple-600/20 border border-purple-500/30 flex items-center justify-center font-semibold">
+                    {video.snippet.channelTitle?.charAt(0)}
+                  </div>
                   <div>
                     <h3 className="font-bold line-clamp-2 leading-tight mb-1">{video.snippet.title}</h3>
-                    <p className="text-sm text-gray-400">{video.snippet.channelTitle}</p>
-                    <p className="text-xs text-gray-500">Video mới</p>
+                    <p className="text-sm opacity-75">{video.snippet.channelTitle}</p>
+                    <p className="text-xs opacity-50">Video mới</p>
                   </div>
                 </div>
               </div>
@@ -121,17 +121,17 @@ function VideoPlayer() {
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold">{selectedVideo.snippet.title}</h1>
-                <div className="mt-4 flex items-center justify-between border-b border-gray-800 pb-4">
+                <div className="mt-4 flex items-center justify-between border-b border-purple-500/20 pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-bold">C</div>
+                    <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center font-bold text-white">C</div>
                     <div>
                       <p className="font-bold">{selectedVideo.snippet.channelTitle}</p>
-                      <p className="text-xs text-gray-400">1.2M subscribers</p>
+                      <p className="text-xs opacity-70">1.2M subscribers</p>
                     </div>
                   </div>
-                  <button className="bg-white text-black px-4 py-2 rounded-full font-bold hover:bg-gray-200">Subscribe</button>
+                  <button className="vb-btn vb-btn--primary py-2 px-4 rounded-full font-bold">Subscribe</button>
                 </div>
-                <div className={`mt-4 p-4 rounded-xl text-sm ${theme === 'light' ? 'bg-gray-100' : 'bg-[#272727]'}`}>
+                <div className="mt-4 p-4 vb-glass rounded-xl text-sm">
                   <p className="font-bold mb-1">Mô tả video:</p>
                   <p className="whitespace-pre-wrap">{selectedVideo.snippet.description}</p>
                 </div>
@@ -144,7 +144,7 @@ function VideoPlayer() {
               {videos.filter(v => v.id.videoId !== selectedVideo.id.videoId).map((video) => (
                 <div 
                   key={video.id.videoId} 
-                  className="flex gap-2 cursor-pointer hover:bg-white/10 p-1 rounded-lg transition"
+                  className="flex gap-2 cursor-pointer p-1.5 rounded-lg transition hover:bg-purple-500/10"
                   onClick={() => {
                     setSelectedVideo(video);
                     window.scrollTo(0, 0);
@@ -157,7 +157,7 @@ function VideoPlayer() {
                   />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold line-clamp-2 leading-tight">{video.snippet.title}</h4>
-                    <p className="text-xs text-gray-400 mt-1">{video.snippet.channelTitle}</p>
+                    <p className="text-xs mt-1 opacity-70">{video.snippet.channelTitle}</p>
                   </div>
                 </div>
               ))}

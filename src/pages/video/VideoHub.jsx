@@ -4,11 +4,25 @@ import VideoHeader from '../../components/video/VideoHeader';
 import VideoGrid from '../../components/video/VideoGrid';
 import VideoDetail from '../../components/video/VideoDetail';
 import VideoSidebar from '../../components/video/VideoSidebar';
+import { useSearch } from '../../context/SearchContext';
 
 const API_KEY = import.meta.env.VITE_REACT_APP_YOUTUBE_API_KEY;
 
 function VideoPlayer() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const { keyword: searchTerm, setSearchConfig } = useSearch();
+
+  useEffect(() => {
+    setSearchConfig({
+      placeholder: "Tìm kiếm video...",
+    });
+    return () => setSearchConfig(null);
+  }, [setSearchConfig]);
+
+  useEffect(() => {
+    if (searchTerm) {
+      fetchVideos(searchTerm);
+    }
+  }, [searchTerm]);
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [comments, setComments] = useState([]);
@@ -71,37 +85,28 @@ function VideoPlayer() {
 
   useEffect(() => { fetchVideos("Lofi music 2026"); }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchVideos(searchTerm);
-    setIsMobileSearch(false);
-  };
+
 
   return (
-    <div className={`min-h-screen ${theme === "light" ? "bg-white text-gray-900" : "bg-[#0f0f0f] text-gray-100"}`}>
+    <div className="page-shell">
 
       <VideoHeader
         theme={theme}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        handleSearch={handleSearch}
-        isMobileSearch={isMobileSearch}
-        setIsMobileSearch={setIsMobileSearch}
         user={user}
         handleLogin={handleLogin}
         onLogoClick={() => setSelectedVideo(null)}
       />
 
-      <main className="max-w-[1400px] mx-auto px-4 py-6">
+      <main className="mx-auto py-6">
         {!selectedVideo ? (
           <VideoGrid videos={videos} setSelectedVideo={setSelectedVideo} />
         ) : (
           /* CHI TIẾT VIDEO */
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1">
               <VideoDetail selectedVideo={selectedVideo} videoStats={videoStats} comments={comments} user={user} />
             </div>
-            <div className="w-64 flex-shrink-0">
+            <div className="w-full lg:w-80 flex-shrink-0">
               <VideoSidebar videos={videos} selectedVideo={selectedVideo} setSelectedVideo={setSelectedVideo} />
             </div>
           </div>

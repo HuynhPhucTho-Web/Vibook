@@ -279,8 +279,7 @@ function Profile() {
       : ownPosts;
 
   return (
-    <div className={`min-h-screen transition-colors ${theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
-      <div className="container-fluid mx-auto py-4 ">
+    <div className="page-shell">
         <ProfileHeader
           user={userDetails}
           isOwner={isOwner}
@@ -305,7 +304,7 @@ function Profile() {
           </div>
         )}
 
-        <div className={`mt-4 flex gap-2 overflow-x-auto rounded-xl p-2 ${theme === "dark" ? "bg-zinc-900" : "bg-white"}`}>
+        <div className="mt-4 flex gap-2 overflow-x-auto rounded-xl p-2 vb-glass">
           {[
             { id: "posts", label: `Bài viết (${ownPosts.length})` },
             { id: "shared", label: `Đã chia sẻ (${sharedPosts.length})` },
@@ -315,7 +314,7 @@ function Profile() {
               key={tab.id}
               type="button"
               onClick={() => setActivePostTab(tab.id)}
-              className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${activePostTab === tab.id ? "bg-blue-600 text-white" : theme === "dark" ? "text-gray-300 hover:bg-zinc-800" : "text-gray-600 hover:bg-gray-100"}`}
+              className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${activePostTab === tab.id ? "bg-purple-600 text-white" : "text-inherit hover:bg-purple-500/10"}`}
             >
               {tab.label}
             </button>
@@ -333,7 +332,6 @@ function Profile() {
             </p>
           )}
         </div>
-      </div>
     </div>
   );
 }

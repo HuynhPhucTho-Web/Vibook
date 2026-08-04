@@ -180,7 +180,7 @@ const Notifications = () => {
 
   if (!userDetails) {
     return (
-      <div className={`container py-4 ${theme}`}>
+      <div className="page-shell">
         <h5 className="text-muted text-center">Please login to view notifications</h5>
       </div>
     );
@@ -189,7 +189,7 @@ const Notifications = () => {
   const unreadCount = notifications.filter(notif => !notif.read).length;
 
   return (
-    <div className={`container py-4 ${theme}`}>
+    <div className="page-shell">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="h3 mb-0">Notifications</h1>

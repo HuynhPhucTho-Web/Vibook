@@ -1,8 +1,11 @@
 import React from "react";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import SearchResults from "./SearchResults";
+import { useSearch } from "../../context/SearchContext";
 
-const SearchBox = ({ theme, t, searchRef, searchFocused, setSearchFocused, searchValue, setSearchValue, searchResults, isSearching }) => {
+const SearchBox = ({ theme, t, searchRef, searchFocused, setSearchFocused, searchValue, setSearchValue, searchResults, isSearching, placeholder, mode = "global" }) => {
+  const { searchConfig } = useSearch();
+
   const closeResults = () => {
     setSearchValue("");
     setSearchFocused(false);
@@ -14,10 +17,13 @@ const SearchBox = ({ theme, t, searchRef, searchFocused, setSearchFocused, searc
         <FaSearch className="header-search-leading-icon" aria-hidden="true" />
         <input
           type="search"
-          placeholder={t("searchPlaceholder")}
+          placeholder={placeholder || t("searchPlaceholder")}
           className="header-search-input"
           value={searchValue}
-          onChange={(event) => setSearchValue(event.target.value)}
+          onChange={(event) => {
+            setSearchValue(event.target.value);
+            searchConfig?.onSearch?.(event.target.value);
+          }}
           onFocus={() => setSearchFocused(true)}
           aria-label={t("searchPlaceholder")}
           aria-expanded={searchFocused && !!searchValue.trim()}
@@ -26,9 +32,9 @@ const SearchBox = ({ theme, t, searchRef, searchFocused, setSearchFocused, searc
         <span className="header-search-shortcut">Ctrl K</span>
       </div>
 
-      {searchFocused && searchValue.trim() && (
+      {searchFocused && searchValue.trim() && !searchConfig && (
         <div className={`search-results-panel ${theme === "light" ? "light" : "dark"}`}>
-          <SearchResults theme={theme} t={t} query={searchValue} results={searchResults} isSearching={isSearching} onSelect={closeResults} />
+          <SearchResults theme={theme} t={t} query={searchValue} results={searchResults} isSearching={isSearching} onSelect={closeResults} mode={mode} />
         </div>
       )}
     </div>

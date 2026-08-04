@@ -5,6 +5,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../../context/ThemeContext";
 import { LanguageContext } from "../../context/LanguageContext";
 import { requireLogin } from "../../utils/requireLogin";
+import "../../style/Friends.css";
+import { useSearch } from "../../context/SearchContext";
 
 import FriendRequests from "../../components/friends/FriendRequests";
 import FriendsList from "../../components/friends/FriendsList";
@@ -22,12 +24,19 @@ const Friends = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [activeTab, setActiveTab] = useState("find");
+  const { setSearchConfig } = useSearch();
+
+  useEffect(() => {
+    setSearchConfig({
+      placeholder: "Tìm bạn bè...",
+    });
+    return () => setSearchConfig(null);
+  }, [setSearchConfig]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setAuthReady(true);
-      // Guests stay on "find"; logged-in users land on my friends
       if (user) setActiveTab((tab) => (tab === "find" ? "friends" : tab));
       else setActiveTab("find");
     });
@@ -67,76 +76,56 @@ const Friends = () => {
   }
 
   return (
-    <div className={`friends-page ${theme}`}>
-      <div className="container-fluid py-4">
-        <div className="row">
-          <div className="col-12">
-            <div className="friends-page__header d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
-              <div>
-                <h1 className="mb-1">{t("friends")}</h1>
-                {isGuest && (
-                  <p className="friends-page__guest-hint mb-0">
-                    {t("guestFriendsHint")}
-                  </p>
-                )}
-              </div>
-            </div>
+    <div className={`page-shell friends-page ${theme}`}>
+      <div className="friends-page__header">
+        <div className="friends-page__header-content">
+          <h1>{t("friends")}</h1>
+          {isGuest && <p className="friends-page__guest-hint">{t("guestFriendsHint")}</p>}
+        </div>
+      </div>
 
-            <ul className="nav nav-tabs mb-4" role="tablist">
-              <li className="nav-item" role="presentation">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "friends"}
-                  className={`nav-link ${activeTab === "friends" ? "active" : ""} ${
-                    isGuest ? "is-locked" : ""
-                  }`}
-                  onClick={() => openPrivateTab("friends")}
-                >
-                  {t("myFriends")}
-                  {isGuest && <span className="friends-page__lock" aria-hidden> 🔒</span>}
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "requests"}
-                  className={`nav-link ${activeTab === "requests" ? "active" : ""} ${
-                    isGuest ? "is-locked" : ""
-                  }`}
-                  onClick={() => openPrivateTab("requests")}
-                >
-                  {t("friendRequests")}
-                  {isGuest && <span className="friends-page__lock" aria-hidden> 🔒</span>}
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "find"}
-                  className={`nav-link ${activeTab === "find" ? "active" : ""}`}
-                  onClick={() => setActiveTab("find")}
-                >
-                  {t("findFriends")}
-                </button>
-              </li>
-            </ul>
+      <div className="friends-page__layout">
+        <aside className="friends-page__sidebar">
+          <div className="friends-page__sidebar-title">Explore</div>
+          <nav className="friends-page__nav">
+            <button
+              type="button"
+              onClick={() => openPrivateTab("friends")}
+              className={`friends-page__nav-button ${activeTab === "friends" ? "is-active" : ""}`}
+            >
+              <span>{t("myFriends")}</span>
+              {isGuest && <span className="friends-page__nav-lock">🔒</span>}
+            </button>
 
-            <div className="tab-content">
-              {/* Guest always sees Find Friends only (BR §9 — no private data) */}
-              {(isGuest || activeTab === "find") && (
-                <FindFriends currentUser={currentUser} theme={theme} />
-              )}
-              {!isGuest && activeTab === "friends" && (
-                <FriendsList currentUser={currentUser} theme={theme} />
-              )}
-              {!isGuest && activeTab === "requests" && (
-                <FriendRequests currentUser={currentUser} theme={theme} />
-              )}
-            </div>
-          </div>
+            <button
+              type="button"
+              onClick={() => openPrivateTab("requests")}
+              className={`friends-page__nav-button ${activeTab === "requests" ? "is-active" : ""}`}
+            >
+              <span>{t("friendRequests")}</span>
+              {isGuest && <span className="friends-page__nav-lock">🔒</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("find")}
+              className={`friends-page__nav-button ${activeTab === "find" ? "is-active" : ""}`}
+            >
+              <span>{t("findFriends")}</span>
+            </button>
+          </nav>
+        </aside>
+
+        <div className="friends-page__content">
+          {(isGuest || activeTab === "find") && (
+            <FindFriends currentUser={currentUser} theme={theme} />
+          )}
+          {!isGuest && activeTab === "friends" && (
+            <FriendsList currentUser={currentUser} theme={theme} />
+          )}
+          {!isGuest && activeTab === "requests" && (
+            <FriendRequests currentUser={currentUser} theme={theme} />
+          )}
         </div>
       </div>
     </div>

@@ -15,18 +15,18 @@ import { FaUserPlus, FaSearch, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { requireLogin } from "../../utils/requireLogin";
 import { LanguageContext } from "../../context/LanguageContext";
+import { useSearch } from "../../context/SearchContext";
 
 const FindFriends = ({ currentUser, theme }) => {
   const navigate = useNavigate();
   const { t } = useContext(LanguageContext);
   const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { keyword: searchTerm } = useSearch();
   const [loading, setLoading] = useState(true);
   const [sentRequests, setSentRequests] = useState(new Set());
   const [friends, setFriends] = useState(new Set());
   const [showAll, setShowAll] = useState(false);
 
-  // Public directory — guests can browse users
   useEffect(() => {
     const usersQuery = query(
       collection(db, "Users"),
@@ -49,9 +49,7 @@ const FindFriends = ({ currentUser, theme }) => {
       },
       (error) => {
         console.error("Error loading users:", error);
-        toast.error(
-          "Không tải được danh sách người dùng (kiểm tra Firestore rules).",
-        );
+        toast.error("Không tải được danh sách người dùng (kiểm tra Firestore rules).");
         setLoading(false);
       },
     );
@@ -149,8 +147,7 @@ const FindFriends = ({ currentUser, theme }) => {
 
   const filteredUsers = users.filter((user) => {
     if (!searchTerm) return true;
-    const fullName =
-      `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
+    const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
     const email = (user.email || "").toLowerCase();
     const search = searchTerm.toLowerCase();
 
@@ -162,9 +159,7 @@ const FindFriends = ({ currentUser, theme }) => {
         nameWords.some((nameWord) => nameWord.includes(searchWord)) ||
         fullName.includes(searchWord),
     );
-    const matchesEmail = searchWords.every((searchWord) =>
-      email.includes(searchWord),
-    );
+    const matchesEmail = searchWords.every((searchWord) => email.includes(searchWord));
 
     return matchesName || matchesEmail;
   });
@@ -182,105 +177,61 @@ const FindFriends = ({ currentUser, theme }) => {
 
   return (
     <div className="find-friends">
-      <div className="mb-4">
-        <div className="input-group">
-          <span className="input-group-text">
-            <FaSearch />
-          </span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {filteredUsers.length === 0 ? (
+        <div className="friends-page__empty">
+          <p className="mb-0">
+            {searchTerm ? `No users found matching "${searchTerm}"` : "No users available to add."}
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="friend-card-grid">
+          {displayedUsers.map((user) => {
+            const isFriend = friends.has(user.uid);
+            const hasSentRequest = sentRequests.has(user.uid);
+            const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unknown User";
 
-      <div className="row">
-        {displayedUsers.map((user) => {
-          const isFriend = friends.has(user.uid);
-          const hasSentRequest = sentRequests.has(user.uid);
-
-          return (
-            <div key={user.uid} className="col-md-6 col-lg-4 mb-3">
-              <div
-                className={`card ${
-                  theme === "light" ? "bg-light" : "bg-dark text-white"
-                }`}
-              >
-                <div className="card-body">
-                  <div className="d-flex align-items-center mb-3">
-                    <div
-                      className="rounded-circle me-3 d-flex align-items-center justify-content-center"
-                      style={{
-                        width: "50px",
-                        height: "50px",
-                        backgroundColor:
-                          theme === "light" ? "#e9ecef" : "#495057",
-                        color: theme === "light" ? "#6c757d" : "#adb5bd",
-                        position: "relative",
-                      }}
-                    >
+            return (
+              <div key={user.uid} className="friend-card">
+                <div className="friend-card__body">
+                  <div className="friend-card__header">
+                    <div className="friend-card__avatar">
                       {user.photo ? (
-                        <img
-                          src={user.photo}
-                          alt={`${user.firstName || ""} ${user.lastName || ""}`}
-                          className="rounded-circle"
-                          style={{
-                            width: "50px",
-                            height: "50px",
-                            objectFit: "cover",
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                          }}
-                          onError={(e) => {
-                            e.target.style.display = "none";
-                          }}
-                        />
-                      ) : null}
-                      <FaUser
-                        size={24}
-                        style={{ display: user.photo ? "none" : "block" }}
-                      />
+                        <img src={user.photo} alt={fullName} />
+                      ) : (
+                        <FaUser />
+                      )}
                     </div>
-                    <div>
-                      <h6 className="card-title mb-0">
-                        {user.firstName} {user.lastName}
-                      </h6>
+                    <div className="friend-card__meta">
+                      <div className="friend-card__name">{fullName}</div>
+                      <div className="friend-card__subtitle">
+                        {isFriend ? "Already friends" : hasSentRequest ? "Request sent" : "Discover"}
+                      </div>
                     </div>
                   </div>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <small className="text-muted">
-                      {isFriend
-                        ? "Already friends"
-                        : hasSentRequest
-                          ? "Request sent"
-                          : ""}
-                    </small>
+
+                  <div className="friend-card__footer">
+                    <span className="friend-card__pill">
+                      {isFriend ? "Connected" : hasSentRequest ? "Pending" : "New"}
+                    </span>
                     {!isFriend && !hasSentRequest && (
                       <button
                         type="button"
                         className="vb-btn vb-btn--primary vb-btn--sm"
                         onClick={() =>
-                          handleSendRequest(
-                            user.uid,
-                            `${user.firstName} ${user.lastName}`,
-                          )
+                          handleSendRequest(user.uid, fullName)
                         }
                       >
-                        <FaUserPlus className="me-1" />
+                        <FaUserPlus />
                         Add Friend
                       </button>
                     )}
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {hasMoreUsers && !showAll && (
         <div className="text-center mt-4">
@@ -291,16 +242,6 @@ const FindFriends = ({ currentUser, theme }) => {
           >
             See More ({filteredUsers.length - 10} more users)
           </button>
-        </div>
-      )}
-
-      {filteredUsers.length === 0 && (
-        <div className="text-center py-5">
-          <p className="text-muted">
-            {searchTerm
-              ? `No users found matching "${searchTerm}"`
-              : "No users available to add."}
-          </p>
         </div>
       )}
     </div>

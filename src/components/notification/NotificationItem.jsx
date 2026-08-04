@@ -38,37 +38,42 @@ const UserAvatar = React.memo(({ src, alt, size = 40 }) => {
 const NotificationItem = ({ notification, onMarkAsRead, formatTimeAgo }) => {
   return (
     <div
-      className={`card shadow-sm ${notification.read ? "bg-light" : "bg-primary-subtle border-primary"}`}
-      style={{ borderRadius: "12px", overflow: "hidden" }}
+      className={`vb-glass d-flex align-items-center p-3 rounded-xl transition-all ${
+        notification.read
+          ? "opacity-80"
+          : "border-purple-500/40 bg-purple-500/5 shadow-sm"
+      }`}
+      style={{
+        border: "1px solid var(--vb-glass-border, rgba(255, 255, 255, 0.12))",
+        borderRadius: "12px"
+      }}
     >
-      <div className="card-body d-flex align-items-center p-3">
-        <UserAvatar
-          src={notification.actorPhoto}
-          alt={notification.actorName}
-          size={40}
-        />
-        <div className="flex-grow-1 ms-3">
-          <p className="mb-0" style={{
-            fontSize: "0.9rem",
-            fontWeight: notification.read ? "normal" : "600"
-          }}>
-            {notification.content}
-          </p>
-          <small className="text-muted">
-            {formatTimeAgo(notification.createdAt)}
-          </small>
-        </div>
-        {!notification.read && (
-          <button
-            className="btn btn-link text-primary p-1 ms-2"
-            onClick={() => onMarkAsRead(notification.id)}
-            title="Mark as read"
-            style={{ fontSize: '14px' }}
-          >
-            <FaCheckCircle />
-          </button>
-        )}
+      <UserAvatar
+        src={notification.actorPhoto}
+        alt={notification.actorName}
+        size={40}
+      />
+      <div className="flex-grow-1 ms-3">
+        <p className="mb-0 text-inherit" style={{
+          fontSize: "0.9rem",
+          fontWeight: notification.read ? "normal" : "600"
+        }}>
+          {notification.content}
+        </p>
+        <small className="text-muted block mt-1 opacity-75">
+          {formatTimeAgo(notification.createdAt)}
+        </small>
       </div>
+      {!notification.read && (
+        <button
+          className="btn btn-link text-primary p-1 ms-2 flex-shrink-0"
+          onClick={() => onMarkAsRead(notification.id)}
+          title="Mark as read"
+          style={{ fontSize: '14px' }}
+        >
+          <FaCheckCircle />
+        </button>
+      )}
     </div>
   );
 };

@@ -20,6 +20,7 @@ import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
 import ReactQuill from "react-quill-new";
+import { useSearch } from "../context/SearchContext";
 import "../style/event/Event.css";
 
 const quillModules = {
@@ -61,32 +62,34 @@ const Events = () => {
   const [eventLocation, setEventLocation] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const [eventBannerImage, setEventBannerImage] = useState("");
-  const [search, setSearch] = useState("");
+  const { keyword: search, setSearchConfig } = useSearch();
+
+  useEffect(() => {
+    setSearchConfig({
+      placeholder: "Tìm kiếm sự kiện...",
+    });
+    return () => setSearchConfig(null);
+  }, [setSearchConfig]);
   const modalRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [showOptions, setShowOptions] = useState(null);
-  const [setShowUpdateModal] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [participantsData, setParticipantsData] = useState([]);
   const isDark = theme === "dark";
 
   const cls = {
-    page: isDark ? "bg-neutral-900 text-neutral-100" : "bg-neutral-100 text-neutral-900",
-    surface: isDark ? "bg-neutral-800" : "bg-white",
-    border: isDark ? "border border-neutral-700" : "border border-neutral-200",
-    shadow: "shadow-md hover:shadow-lg transition",
-    muted: isDark ? "text-neutral-400" : "text-neutral-600",
-    input: `${isDark
-        ? "bg-neutral-700 border-neutral-600 text-neutral-100 placeholder-neutral-400"
-        : "bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-500"
-      } border rounded-lg`,
-    ringFocus: "focus:outline-none focus:ring-2 focus:ring-pink-500",
-    menu: isDark
-      ? "bg-neutral-800 border border-neutral-700 text-neutral-200"
-      : "bg-white border border-neutral-200 text-neutral-700",
-    backdrop: "fixed inset-0 bg-black/50 flex items-center justify-center z-50",
+    page: "",
+    surface: "vb-glass rounded-xl p-4",
+    border: "border border-purple-500/20",
+    shadow: "shadow-md hover:shadow-lg transition duration-200",
+    muted: "opacity-75",
+    input: "vb-input",
+    ringFocus: "",
+    menu: "vb-glass text-inherit",
+    backdrop: "fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm",
   };
 
   // Handle click outside to close modal
@@ -115,7 +118,6 @@ const Events = () => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         setShowCreateModal(false);
-        setShowUpdateModal(false);
         setShowEditModal(false); // đóng modal event nếu click ngoài
       }
 
@@ -146,6 +148,9 @@ const Events = () => {
           id: doc.id,
           ...doc.data(),
           attendees: doc.data().attendees || [],
+          startDateTime: doc.data().startDateTime || null,
+          endDateTime: doc.data().endDateTime || null,
+          bannerImage: doc.data().bannerImage || null,
         }));
         setEvents(eventList);
         setFilteredEvents(eventList);
@@ -164,24 +169,29 @@ const Events = () => {
     return () => unsubscribe();
   }, [t]);
 
-  // Search filter
+  // Filter active events (not ended)
   useEffect(() => {
-    if (!search.trim()) {
-      setFilteredEvents(events);
-    } else {
-      setFilteredEvents(
-        events.filter((e) =>
-          e.name.toLowerCase().includes(search.toLowerCase())
-        )
+    const now = new Date();
+    let filtered = events.filter((e) => {
+      if (!e.endDateTime) return true;
+      const endDate = new Date(e.endDateTime);
+      return now < endDate;
+    });
+
+    if (search.trim()) {
+      filtered = filtered.filter((e) =>
+        e.name.toLowerCase().includes(search.toLowerCase())
       );
     }
+
+    setFilteredEvents(filtered);
   }, [search, events]);
 
   // Create event
   const handleCreateEvent = useCallback(
     async (e) => {
       e.preventDefault();
-      if (!eventName.trim() || !eventDate.trim()) {
+      if (!eventName.trim() || !startDateTime.trim() || !endDateTime.trim()) {
         toast.error(t("eventNameRequired"), { position: "top-center" });
         return;
       }
@@ -202,9 +212,11 @@ const Events = () => {
 
         await addDoc(collection(db, "Events"), eventData);
         setEventName("");
-        setEventDate("");
+        setStartDateTime("");
+        setEndDateTime("");
         setEventLocation("");
         setEventDescription("");
+        setEventBannerImage("");
         setShowCreateModal(false);
         toast.success(t("eventCreated"), {
           position: "top-center",
@@ -215,7 +227,7 @@ const Events = () => {
         toast.error(t("eventCreateFailed"), { position: "top-center" });
       }
     },
-    [eventName, eventDate, eventLocation, eventDescription, navigate, t]
+    [eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, navigate, t]
   );
 
   // Update event
@@ -237,16 +249,18 @@ const Events = () => {
         setShowEditModal(false);
         setEditingEvent(null);
         setEventName("");
-        setEventDate("");
+        setStartDateTime("");
+        setEndDateTime("");
         setEventLocation("");
         setEventDescription("");
+        setEventBannerImage("");
         toast.success(t("eventUpdated"), { position: "top-center" });
       } catch (error) {
         console.error("Error updating event:", error);
         toast.error(t("eventUpdateFailed"), { position: "top-center" });
       }
     },
-    [editingEvent, eventName, eventDate, eventLocation, eventDescription, currentUser]
+    [editingEvent, eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, currentUser]
   );
 
   // Join event
@@ -335,18 +349,71 @@ const Events = () => {
     return date.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" });
   }, []);
 
-  // Format event date
-  const formatEventDate = useCallback((dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      weekday: "long",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  // Format event date (start and end)
+  const formatEventDates = useCallback((startDate, endDate) => {
+    const now = new Date();
+    let str = "Date: ";
+    if (startDate) {
+      const start = new Date(startDate);
+      str += `From ${start.toLocaleString("en-US", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })} `;
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      str += `to ${end.toLocaleString("en-US", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`;
+    } else {
+      str += "Ongoing";
+    }
+    return str;
   }, []);
+
+  // Format for display, using start/end
+  const formatEventDateDisplay = useCallback((event) => {
+    return formatEventDates(event.startDateTime, event.endDateTime);
+  }, [formatEventDates]);
+
+  // Real Cloudinary upload helper (shared utility)
+  const uploadToCloudinary = useCallback(async (file) => {
+    const cloudName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      toast.error(t("cloudinaryConfigMissing"), { position: "top-center" });
+      throw new Error("Missing Cloudinary config in .env");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+    formData.append("folder", "vibook-events"); // group banners under one folder
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        { method: "POST", body: formData }
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      return data.secure_url; // final Cloudinary URL
+    } catch (error) {
+      console.error("Cloudinary upload error:", error);
+      toast.error("Failed to upload image to Cloudinary", { position: "top-center" });
+      throw error;
+    }
+  }, [t]);
 
   // Show participants modal (viewable by guests)
   const handleShowParticipants = useCallback(async (event) => {
@@ -377,6 +444,37 @@ const Events = () => {
     }
   }, [t]);
 
+  // Show full details modal with Quill description and participants
+  const handleShowDetails = useCallback((event) => {
+    setSelectedEvent(event);
+    setShowDetailsModal(true);
+
+    const attendeeIds = event.attendees || [];
+    if (attendeeIds.length > 0) {
+      const userPromises = attendeeIds.map(async (uid) => {
+        const userDoc = await getDoc(doc(db, "Users", uid));
+        if (userDoc.exists()) {
+          return { uid, ...userDoc.data() };
+        }
+        return { uid, displayName: "Unknown User", photoURL: null };
+      });
+
+      Promise.all(userPromises).then(users => {
+        setParticipantsData(users);
+      }).catch(error => {
+        console.error("Error fetching participants:", error);
+        const fallbackUsers = attendeeIds.map(uid => ({
+          uid,
+          displayName: "Unknown User",
+          photoURL: null,
+        }));
+        setParticipantsData(fallbackUsers);
+      });
+    } else {
+      setParticipantsData([]);
+    }
+  }, []);
+
   // Loading state
   if (isLoading) {
     return (
@@ -387,15 +485,7 @@ const Events = () => {
   }
 
   return (
-    <div
-      className="min-h-screen p-4 transition-colors duration-300"
-      style={{
-        backgroundColor: "var(--theme-background)",
-        color: "var(--theme-text)",
-        transition: "background-color 0.3s ease, color 0.3s ease",
-      }}
-    >
-      <div className="max-w-7xl mx-auto">
+    <div className="page-shell">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
@@ -410,16 +500,7 @@ const Events = () => {
               className="w-full sm:w-64 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             /> */}
 
-            <div className="relative w-full md:w-1/2">
-              <input
-                type="text"
-                placeholder={t('searchEvents')}
-                className={`w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 focus:ring-orange-500 transition-all ${cls.input} ${cls.ringFocus}`}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <Search className={`absolute left-3 top-3 ${cls.input} ${cls.ringFocus} `} size={18} />
-            </div>
+
             <button
               onClick={() => setShowCreateModal(true)}
               className="create-group-btn"
@@ -435,7 +516,7 @@ const Events = () => {
         {showCreateModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div
-              className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md"
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto"
               ref={modalRef}
             >
               <div className="flex items-center justify-between mb-4">
@@ -489,13 +570,57 @@ const Events = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("bannerImage")}
                   </label>
-                  <input
-                    type="text"
-                    value={eventBannerImage}
-                    onChange={(e) => setEventBannerImage(e.target.value)}
-                    placeholder="Banner image URL (optional)"
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="flex gap-3 items-start">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const fileInput = document.createElement("input");
+                        fileInput.type = "file";
+                        fileInput.accept = "image/*";
+                        fileInput.onchange = async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          try {
+                            const bannerUrl = await uploadToCloudinary(file);
+                            setEventBannerImage(bannerUrl);
+                            toast.success("Banner uploaded successfully!");
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        };
+                        fileInput.click();
+                      }}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium"
+                    >
+                      📸 Upload Banner (Cloudinary)
+                    </button>
+
+                    {eventBannerImage && (
+                      <div>
+                        <img
+                          src={eventBannerImage}
+                          alt="Preview"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEventBannerImage("")}
+                          className="text-red-500 text-xs mt-1"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {eventBannerImage && (
+                    <input
+                      type="text"
+                      value={eventBannerImage}
+                      onChange={(e) => setEventBannerImage(e.target.value)}
+                      placeholder="Cloudinary secure URL (preview)"
+                      className="mt-3 w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -514,13 +639,13 @@ const Events = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("description")}
                   </label>
-                  <textarea
+                  <ReactQuill
                     value={eventDescription}
-                    onChange={(e) => setEventDescription(e.target.value)}
+                    onChange={setEventDescription}
                     placeholder={t("enterEventDescriptionOptional")}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={4}
-                    maxLength={500}
+                    className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                    modules={quillModules}
+                    formats={quillFormats}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
@@ -534,7 +659,7 @@ const Events = () => {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-colors"
-                    disabled={!eventName.trim() || !eventDate.trim()}
+                    disabled={!eventName.trim() || !startDateTime.trim() || !endDateTime.trim()}
                   >
                     {t("create")}
                   </button>
@@ -548,7 +673,7 @@ const Events = () => {
         {showEditModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div
-              className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md"
+              className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto"
               ref={modalRef}
             >
               <div className="flex items-center justify-between mb-4">
@@ -602,13 +727,57 @@ const Events = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("bannerImage")}
                   </label>
-                  <input
-                    type="text"
-                    value={eventBannerImage}
-                    onChange={(e) => setEventBannerImage(e.target.value)}
-                    placeholder="Banner image URL (optional)"
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="flex gap-3 items-start">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const fileInput = document.createElement("input");
+                        fileInput.type = "file";
+                        fileInput.accept = "image/*";
+                        fileInput.onchange = async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          try {
+                            const bannerUrl = await uploadToCloudinary(file);
+                            setEventBannerImage(bannerUrl);
+                            toast.success("Banner uploaded successfully!");
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        };
+                        fileInput.click();
+                      }}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium"
+                    >
+                      📸 Upload Banner (Cloudinary)
+                    </button>
+
+                    {eventBannerImage && (
+                      <div>
+                        <img
+                          src={eventBannerImage}
+                          alt="Preview"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEventBannerImage("")}
+                          className="text-red-500 text-xs mt-1"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {eventBannerImage && (
+                    <input
+                      type="text"
+                      value={eventBannerImage}
+                      onChange={(e) => setEventBannerImage(e.target.value)}
+                      placeholder="Cloudinary secure URL (preview)"
+                      className="mt-3 w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -627,13 +796,13 @@ const Events = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("description")}
                   </label>
-                  <textarea
+                  <ReactQuill
                     value={eventDescription}
-                    onChange={(e) => setEventDescription(e.target.value)}
+                    onChange={setEventDescription}
                     placeholder={t("enterEventDescriptionOptional")}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={4}
-                    maxLength={500}
+                    className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                    modules={quillModules}
+                    formats={quillFormats}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
@@ -647,7 +816,7 @@ const Events = () => {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-colors"
-                    disabled={!eventName.trim() || !eventDate.trim()}
+                    disabled={!eventName.trim() || !startDateTime.trim() || !endDateTime.trim()}
                   >
                     Save
                   </button>
@@ -697,6 +866,101 @@ const Events = () => {
           </div>
         )}
 
+        {/* Full Details Modal with React Quill content */}
+        {showDetailsModal && selectedEvent && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-xl max-h-[82vh] overflow-hidden flex flex-col">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                    {selectedEvent.name}
+                  </h3>
+                  <button
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      setSelectedEvent(null);
+                    }}
+                  >
+                    <FaTimes size={20} />
+                  </button>
+                </div>
+
+                {selectedEvent.bannerImage && (
+                  <img
+                    src={selectedEvent.bannerImage}
+                    alt="Event banner"
+                    className="w-full h-48 object-cover rounded-xl mb-6"
+                  />
+                )}
+
+                <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300">
+                  <div>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {t("date")}:
+                    </span>{" "}
+                    {formatEventDateDisplay(selectedEvent)}
+                  </div>
+                  {selectedEvent.location && (
+                    <div>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {t("location")}:
+                      </span>{" "}
+                      {selectedEvent.location}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 border-t pt-4">
+                  <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Description</h4>
+                  <div 
+                    className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
+                    dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }}
+                  />
+                </div>
+
+                {/* Participants section */}
+                <div className="mt-6 border-t pt-4">
+                  <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                    Participants ({selectedEvent.attendees?.length || 0})
+                  </h4>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {selectedEvent.attendees && selectedEvent.attendees.length > 0 ? (
+                      selectedEvent.attendees.map((uid) => {
+                        const user = participantsData.find(p => p.uid === uid) || { displayName: "Unknown User", photoURL: null };
+                        return (
+                          <div key={uid} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <img
+                              src={user.photoURL || "/default-avatar.png"}
+                              alt={user.displayName}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                            <p className="font-medium">{user.displayName}</p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p>No participants yet.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedEvent(null);
+                  }}
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Events List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.length > 0 ? (
@@ -710,10 +974,15 @@ const Events = () => {
               return (
                 <div
                   key={event.id}
-                  className={`relative w-full mb-6 p-6 rounded-xl shadow-lg border transition-colors duration-300 ${theme === "light"
-                    ? "bg-white border-gray-200 text-gray-900"
-                    : "bg-gray-800 border-gray-700 text-gray-100"
+                  className={`relative w-full mb-6 p-6 rounded-xl shadow-lg border transition-all duration-300 cursor-pointer ${theme === "light"
+                    ? "bg-white border-gray-200 text-gray-900 hover:shadow-xl"
+                    : "bg-gray-800 border-gray-700 text-gray-100 hover:shadow-2xl"
                     }`}
+                  onClick={(e) => {
+                    // Prevent clicking options menu from opening details
+                    if (e.target.closest('[data-options-id]')) return;
+                    handleShowDetails(event);
+                  }}
                 >
                   {/* Nút Options góc phải */}
                   {isOwner && (
@@ -733,9 +1002,11 @@ const Events = () => {
                             onClick={() => {
                               setEditingEvent(event);
                               setEventName(event.name);
-                              setEventDate(event.date);
+                              setStartDateTime(event.startDateTime || "");
+                              setEndDateTime(event.endDateTime || "");
                               setEventLocation(event.location);
                               setEventDescription(event.description);
+                              setEventBannerImage(event.bannerImage || "");
                               setShowEditModal(true);
                               setShowOptions(null);
                             }}
@@ -754,6 +1025,24 @@ const Events = () => {
                           </button>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Banner Image - outside card content but on card, clickable for details */}
+                  {event.bannerImage && (
+                    <div 
+                      className="mb-4 cursor-pointer overflow-hidden rounded-xl"
+                      onClick={(e) => {
+                        // Prevent opening options menu
+                        if (e.target.closest('[data-options-id]')) return;
+                        handleShowDetails(event);
+                      }}
+                    >
+                      <img
+                        src={event.bannerImage}
+                        alt="Event banner"
+                        className="w-full h-48 object-cover rounded-xl"
+                      />
                     </div>
                   )}
 
@@ -777,12 +1066,15 @@ const Events = () => {
 
                   <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                     <div>
-                      <span className="font-medium">{t("date")} {formatEventDate(event.date)}</span>
+                      <span className="font-medium">{t("date")} {formatEventDateDisplay(event)}</span>
                     </div>
                     <div>
                       <span className="font-medium">{t("location")}</span> {event.location}
                     </div>
-                    <p className="line-clamp-3">{event.description}</p>
+                    <div
+                      className="line-clamp-3 text-gray-600 dark:text-gray-300"
+                      dangerouslySetInnerHTML={{ __html: event.description || "No description" }}
+                    />
                   </div>
 
                   {/* join / leave */}
@@ -832,7 +1124,6 @@ const Events = () => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

@@ -24,7 +24,11 @@
   box-shadow: none !important;
   border-radius: var(--vb-radius-xl, 1.5rem) !important;
   overflow: visible !important;
-  animation: techToastSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.Toastify__toast--closing .tech-toast-container {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .tech-toast-body.Toastify__toast-body,
@@ -45,6 +49,7 @@
   padding: 10px 14px;
   border-radius: var(--vb-radius-xl, 1.5rem);
   background: rgba(18, 19, 28, 0.72);
+  animation: techToastSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   backdrop-filter: var(--vb-glass-blur, blur(20px));
   -webkit-backdrop-filter: var(--vb-glass-blur, blur(20px));
   border: 1px solid var(--vb-glass-border-strong, rgba(168, 85, 247, 0.4));

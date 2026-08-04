@@ -77,9 +77,9 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
 
             <div
               className={`message-bubble ${isOwnMessage ? "sent" : "received"} ${isLight ? "light" : "dark"} ${message.isRecalled ? "recalled" : ""}`}
-              style={message.isRecalled ?
+style={message.isRecalled ?
                 { backgroundColor: 'rgba(128, 128, 128, 0.3)', color: '#666' } :
-                (isOwnMessage ? { backgroundColor: chatTheme.messageColor, color: '#fff' } : { backgroundColor: chatTheme.messageColor, color: '#000' })
+                (isOwnMessage ? { backgroundColor: chatTheme.messageColor, color: '#fff' } : undefined)
               }
               onMouseEnter={() => !message.isRecalled && setHoveredMessage(message.id)}
               onMouseLeave={() => {

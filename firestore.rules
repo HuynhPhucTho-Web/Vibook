@@ -14,6 +14,8 @@ service cloud.firestore {
     /* ========= USERS ========= */
     // Public profiles / Find Friends / search: guest + user đều đọc được
     // Ghi (create/update/delete): chỉ chủ tài khoản
+    // Chứa trường `hasPassword` (boolean) để theo dõi nếu người dùng đã đặt mật khẩu
+    // (nhằm hiển thị giao diện Tạo Mật Khẩu (cho Google) hoặc Đổi Mật Khẩu (yêu cầu mật khẩu cũ)).
     match /Users/{userId} {
       allow read: if true;
 
@@ -234,6 +236,17 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
+    /* ========= FAVORITE BLOGS ========= */
+    match /FavoriteBlogs/{favoriteId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && favoriteId == request.auth.uid + '_' + request.resource.data.blogId;
+      allow update: if false;
+      allow delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
     /* ========= PRIVATE MESSAGES ========= */
     // Collection: Messages/{chatId}/messages/{messageId}
     // chatId = "uidA_uidB" (2 uid đã sort)
@@ -335,6 +348,12 @@ service cloud.firestore {
     }
     /* ========= GROUPS ========= */
     match /Groups/{groupId} {
+      function isGroupMember() {
+        // giả sử Group có field members: array<string>
+        return isSignedIn()
+          && (request.auth.uid in get(/databases/$(database)/documents/Groups/$(groupId)).data.members);
+      }
+
       allow read: if true;
       allow create: if isSignedIn();
 
@@ -349,12 +368,6 @@ service cloud.firestore {
 
       // Group posts
       match /Posts/{postId} {
-        function isGroupMember() {
-          // giả sử Group có field members: array<string>
-          return isSignedIn()
-            && (request.auth.uid in get(/databases/$(database)/documents/Groups/$(groupId)).data.members);
-        }
-
         // Public browse: guest + user xem post nhóm (join/create vẫn gated ở app + isGroupMember)
         // (app hiện không set isPublic; không khóa đọc theo field đó)
         allow read: if true;
@@ -444,16 +457,65 @@ service cloud.firestore {
           }
         }
       }
+
+      /* ========= GROUP SUBCOLLECTIONS (supplement) ========= */
+      match /Events/{eventId} {
+        function isGroupEventMember() {
+          return isSignedIn()
+            && (request.auth.uid in get(/databases/$(database)/documents/Groups/$(groupId)).data.members);
+        }
+        allow read: if true;
+        allow create: if isGroupEventMember()
+          && request.resource.data.groupId == groupId
+          && request.resource.data.ownerId == request.auth.uid;
+        allow update: if isGroupEventMember() && (
+          request.auth.uid == resource.data.ownerId
+        );
+        allow delete: if isGroupEventMember()
+          && request.auth.uid == resource.data.ownerId;
+      }
+
+      match /Media/{mediaId} {
+        allow read: if true;
+        allow create: if isGroupMember()
+          && request.resource.data.groupId == groupId
+          && request.resource.data.keys().hasAll(['groupId', 'createdAt', 'mediaUrls']);
+        allow update: if isGroupMember() && request.auth.uid == resource.data.uploaderId;
+        allow delete: if isGroupMember() && request.auth.uid == resource.data.uploaderId;
+      }
     }
 
     /* ========= EVENTS ========= */
     match /Events/{eventId} {
       allow read: if true;
-      allow create: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['name', 'startDateTime', 'endDateTime', 'ownerId', 'attendees', 'createdAt'])
+        && request.resource.data.startDateTime is string
+        && request.resource.data.endDateTime is string
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.attendees.size() == 1
+        && request.resource.data.attendees[0] == request.auth.uid;
+
       allow update: if isSignedIn() && (
-        request.auth.uid == resource.data.ownerId ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees'])
+        // Owner can update everything
+        (request.auth.uid == resource.data.ownerId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'name', 'startDateTime', 'endDateTime', 'location', 'description', 'bannerImage',
+              'attendees'
+            ])
+          && (!request.resource.data.keys().hasAny(['bannerImage'])
+              || request.resource.data.bannerImage.startsWith('https://')
+              && request.resource.data.bannerImage.size() <= 500)
+        )
+        ||
+        // Only update attendees (join/leave) — non-owners only
+        (request.auth.uid != resource.data.ownerId &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees'])
+        )
       );
+
       allow delete: if isSignedIn()
         && request.auth.uid == resource.data.ownerId;
     }
@@ -482,6 +544,37 @@ service cloud.firestore {
       allow update, delete: if isSignedIn()
         && request.auth.uid == resource.data.ownerId
         && !gameId.startsWith("default-");
+    }
+
+    /* ========= BLOG ========= */
+    match /BlogPosts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['title', 'slug', 'content', 'description', 'category', 'tags', 'createdAt', 'updatedAt', 'author'])
+        && request.resource.data.published is bool
+        && request.resource.data.author == request.auth.uid;
+      allow update: if isSignedIn() && (
+        // Author can update everything
+        (request.auth.uid == resource.data.author &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'title', 'slug', 'content', 'description', 'category', 'tags', 'coverImage', 'published', 'contentText', 'searchText', 'views', 'updatedAt', 'favoriteCount'
+          ])
+        )
+        ||
+        // Non-authors can only increment/decrement favoriteCount
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteCount']))
+      );
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.author;
+    }
+
+    match /BlogCategories/{catId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /BlogTags/{tagId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
   }
 }

@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "./UserAvatar";
 import {
@@ -40,12 +40,19 @@ const ChatHeader = ({ user, theme, onBack, onApplyTheme, initialTheme }) => {
   const [activePanel, setActivePanel] = useState(null);
 
   // theme state (local)
-  const [customBackgroundColor, setCustomBackgroundColor] = useState(
+const [customBackgroundColor, setCustomBackgroundColor] = useState(
     initialTheme?.backgroundColor || "#ffffff"
   );
   const [customMessageColor, setCustomMessageColor] = useState(
     initialTheme?.messageColor || "#0d6efd"
   );
+
+  // Sync local theme picker state when the applied chat theme changes
+  // (e.g. app-wide theme toggle or theme change from another panel).
+  useEffect(() => {
+    setCustomBackgroundColor(initialTheme?.backgroundColor || "#ffffff");
+    setCustomMessageColor(initialTheme?.messageColor || "#0d6efd");
+  }, [initialTheme?.backgroundColor, initialTheme?.messageColor]);
 
   // preview styles (hiển thị mini bubble trong panel)
   const previewStyle = useMemo(() => {

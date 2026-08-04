@@ -10,6 +10,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
+import { useSearch } from "../context/SearchContext";
 import "../style/game/Game.css";
 
 const Games = () => {
@@ -18,22 +19,16 @@ const Games = () => {
   const isDark = theme === "dark";
   const { t } = useContext(LanguageContext);
   const navigate = useNavigate();
-  // —— design tokens theo theme ——
   const cls = {
-    page: isDark ? "bg-neutral-900 text-neutral-100" : "bg-neutral-100 text-neutral-900",
-    surface: isDark ? "bg-neutral-800" : "bg-white",
-    border: isDark ? "border border-neutral-700" : "border border-neutral-200",
-    shadow: "shadow-md hover:shadow-lg transition",
-    muted: isDark ? "text-neutral-400" : "text-neutral-600",
-    input: `${isDark
-        ? "bg-neutral-700 border-neutral-600 text-neutral-100 placeholder-neutral-400"
-        : "bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-500"
-      } border rounded-lg`,
-    ringFocus: "focus:outline-none focus:ring-2 focus:ring-pink-500",
-    menu: isDark
-      ? "bg-neutral-800 border border-neutral-700 text-neutral-200"
-      : "bg-white border border-neutral-200 text-neutral-700",
-    backdrop: "fixed inset-0 bg-black/50 flex items-center justify-center z-50",
+    page: "",
+    surface: "vb-glass rounded-xl p-4",
+    border: "border border-purple-500/20",
+    shadow: "shadow-md hover:shadow-lg transition duration-200",
+    muted: "opacity-75",
+    input: "vb-input",
+    ringFocus: "",
+    menu: "vb-glass text-inherit",
+    backdrop: "fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm",
   };
 
   const [games, setGames] = useState([]);
@@ -56,7 +51,14 @@ const Games = () => {
   const [updatedImg, setUpdatedImg] = useState("");
 
   const [showOptions, setShowOptions] = useState(null);
-  const [search, setSearch] = useState("");
+  const { keyword: search, setSearchConfig } = useSearch();
+
+  useEffect(() => {
+    setSearchConfig({
+      placeholder: "Tìm kiếm trò chơi...",
+    });
+    return () => setSearchConfig(null);
+  }, [setSearchConfig]);
 
   const modalRef = useRef(null);
 
@@ -196,8 +198,7 @@ const Games = () => {
   }
 
   return (
-    <div className={`min-h-screen p-4 transition-colors duration-300 ${cls.page}`}>
-      <div className="max-w-7xl mx-auto">
+    <div className="page-shell">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -212,16 +213,7 @@ const Games = () => {
               className={`w-full sm:w-64 px-4 py-2 rounded-full ${cls.input} ${cls.ringFocus}`}
             /> */}
 
-            <div className="relative w-full md:w-1/2">
-              <input
-                type="text"
-                placeholder={t('searchProducts')}
-                className={`w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 focus:ring-orange-500 transition-all ${cls.input} ${cls.ringFocus}`}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <Search className={`absolute left-3 top-3 ${cls.input} ${cls.ringFocus} `} size={18} />
-            </div>
+
 
 
             <button
@@ -407,7 +399,6 @@ const Games = () => {
             <div className={`col-span-full text-center py-8 ${cls.muted}`}>{t("Nogamesfound")} </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

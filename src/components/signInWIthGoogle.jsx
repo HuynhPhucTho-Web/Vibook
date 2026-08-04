@@ -1,7 +1,7 @@
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "./firebase";
 import { toast } from "react-toastify";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, getDoc } from "firebase/firestore";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearLoginRedirect, getLoginRedirect } from "../utils/requireLogin";
 
@@ -15,15 +15,28 @@ function SignInwithGoogle() {
     signInWithPopup(auth, provider).then(async (result) => {
       const user = result.user;
       if (user) {
-        await setDoc(doc(db, "Users", user.uid), {
+        const userRef = doc(db, "Users", user.uid);
+        const snap = await getDoc(userRef);
+        const hasPassword = snap.exists() ? snap.data().hasPassword : false;
+
+        await setDoc(userRef, {
           email: user.email,
           firstName: user.displayName,
           photo: user.photoURL,
           lastName: "",
         }, { merge: true });
+
         toast.success("Đăng nhập thành công!", { position: "top-center" });
         clearLoginRedirect();
-        navigate(redirectTo, { replace: true });
+
+        if (!hasPassword) {
+          navigate("/settings", {
+            state: { activeSection: "security", forceSetPassword: true },
+            replace: true,
+          });
+        } else {
+          navigate(redirectTo, { replace: true });
+        }
       }
     }).catch((error) => {
       toast.error(error.message || "Google sign-in failed", { position: "bottom-center" });

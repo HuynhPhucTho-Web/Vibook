@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query,
   runTransaction, serverTimestamp, setDoc, updateDoc, where,
@@ -18,6 +18,151 @@ import PostComments from "./post/PostComments";
 import { getPostHtml, normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
 import { requireLogin } from "../utils/requireLogin";
 import "../style/PostItem.css";
+
+export function BlogPromoStrip({ blogs = [], isLight = false, title = "Bài viết blog mới", onLoadMore, loading = false }) {
+  const navigate = useNavigate();
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    const listEl = listRef.current;
+    if (!listEl) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    const handleMouseDown = (e) => {
+      isDown = true;
+      listEl.style.cursor = 'grabbing';
+      listEl.style.userSelect = 'none';
+      startX = e.pageX - listEl.offsetLeft;
+      scrollLeft = listEl.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+      listEl.style.cursor = 'grab';
+      listEl.style.removeProperty('user-select');
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+      listEl.style.cursor = 'grab';
+      listEl.style.removeProperty('user-select');
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - listEl.offsetLeft;
+      const walk = (x - startX) * 1.5; // scroll-fast multiplier
+      listEl.scrollLeft = scrollLeft - walk;
+    };
+
+    listEl.addEventListener('mousedown', handleMouseDown);
+    listEl.addEventListener('mouseleave', handleMouseLeave);
+    listEl.addEventListener('mouseup', handleMouseUp);
+    listEl.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      listEl.removeEventListener('mousedown', handleMouseDown);
+      listEl.removeEventListener('mouseleave', handleMouseLeave);
+      listEl.removeEventListener('mouseup', handleMouseUp);
+      listEl.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [loading, blogs]);
+
+  if (loading) {
+    return (
+      <div className={`blog-promo-strip ${isLight ? "light" : "dark"} loading-state`}>
+        <div className="blog-promo-strip__header">
+          <div>
+            <p className="blog-promo-strip__eyebrow">Khám phá blog</p>
+            <h4>{title}</h4>
+          </div>
+        </div>
+        <div className="blog-promo-strip__list">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <div key={idx} className="blog-promo-card-skeleton">
+              <div className="blog-promo-card-skeleton__image" />
+              <div className="blog-promo-card-skeleton__body">
+                <div className="blog-promo-card-skeleton__meta" />
+                <div className="blog-promo-card-skeleton__title" />
+                <div className="blog-promo-card-skeleton__text" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const validBlogs = (blogs || []).filter(Boolean);
+  if (!validBlogs.length) return null;
+
+  return (
+    <div className={`blog-promo-strip ${isLight ? "light" : "dark"}`}>
+      <div className="blog-promo-strip__header">
+        <div>
+          <p className="blog-promo-strip__eyebrow">Khám phá blog</p>
+          <h4>{title}</h4>
+        </div>
+        <button type="button" className="blog-promo-strip__view-all" onClick={() => navigate("/blog")}>
+          Xem tất cả
+        </button>
+      </div>
+
+      <div 
+        ref={listRef} 
+        className="blog-promo-strip__list" 
+        role="list"
+        style={{ cursor: 'grab' }}
+      >
+        {validBlogs.map((blog) => {
+          const safeBlog = blog || {};
+          const cover = safeBlog.coverImage || safeBlog.image || "/images/default-blog-cover.jpg";
+          const summary = safeBlog.description || safeBlog.contentText || "Đọc thêm để khám phá bài viết này.";
+          const titleText = safeBlog.title || "Bài viết blog";
+          const category = safeBlog.category || "Blog";
+          const dateLabel = safeBlog.createdAt?.toLocaleDateString?.() || "Mới";
+
+          return (
+            <Link
+              key={safeBlog.id || safeBlog.slug || titleText}
+              to={`/blog/${safeBlog.slug || safeBlog.id || ""}`}
+              className="blog-promo-card"
+              role="listitem"
+              onDragStart={(e) => e.preventDefault()}
+            >
+              <img src={cover} alt={titleText} className="blog-promo-card__image" onDragStart={(e) => e.preventDefault()} />
+              <div className="blog-promo-card__body">
+                <div className="blog-promo-card__meta">
+                  <span>{category}</span>
+                  <span>{dateLabel}</span>
+                </div>
+                <h5>{titleText}</h5>
+                <p>{summary}</p>
+              </div>
+            </Link>
+          );
+        })}
+
+        {onLoadMore && (
+          <button 
+            type="button" 
+            className="blog-promo-load-more-card" 
+            onClick={onLoadMore}
+          >
+            <div className="blog-promo-load-more-card__content">
+              <span className="plus-icon">+</span>
+              <span>Xem thêm</span>
+            </div>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, isDetailView = false, customBgColor = "" }) => {
   const { theme } = useContext(ThemeContext);

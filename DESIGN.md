@@ -149,3 +149,45 @@ Small, pill-shaped indicators using the monospaced font. They should have a high
 
 ### Scrollbars & Indicators
 Scrollbars should be minimized and styled as thin, glowing lines that only appear on interaction, maintaining the clean "head-up display" aesthetic.
+
+## Standard Layout & Container Widths
+Để đồng bộ bố cục giữa các trang (Home, Blog, Group, Profile, v.v.), mọi trang dùng layout chính (`MainLayout` với `Sidebar` + `Main`) nên tuân theo kích thước container chuẩn dưới đây.
+
+### Container chuẩn
+Mọi container trang (ví dụ: `.home-container`, `.blog-container`) phải dùng pattern:
+
+```css
+.container-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--vb-space-2) var(--vb-space-2) var(--vb-space-4);
+}
+```
+
+| Biến | Giá trị | Ghi chú |
+|------|---------|---------|
+| `--vb-space-1` | `4px` | Khoảng cách vi mô |
+| `--vb-space-2` | `8px` | Khoảng cách nhỏ |
+| `--vb-space-3` | `16px` | Khoảng cách vừa |
+| `--vb-space-4` | `24px` | Khoảng cách lớn |
+
+### Breakpoints chuẩn
+- **Mobile:** `≤ 820px` → `max-width: 100%`, `padding: 0.5rem`.
+- **Tablet:** `821px – 1023px` → container full, giữa.
+- **Desktop:** `1024px – 1200px` → `max-width: 1200px`, căn giữa.
+- **Ultra-wide:** `> 1200px` → container giới hạn tối đa `1200px`, căn giữa (không tràn full màn hình).
+
+### Bảng quy đổi container mẫu
+| Loại | max-width | Căn giữa | Padding |
+|------|-----------|----------|---------|
+| Trang chính (Home/Blog/Profile) | `1200px` | `margin: 0 auto` | `--vb-space-2` |
+| Bảng điều khiển (Dashboard) | `1400px` | `margin: 0 auto` | `--vb-space-2` |
+| Modal | `680px` | `margin: x auto` | `--vb-space-3` |
+| Mobile | `100%` | — | `0.5rem` |
+
+### Quy tắc áp dụng
+1. **Right-aligned grid:** Các card/khối con bên trong container dùng `width: 100%` + `max-width: 100%` để không tràn.
+2. **Không hardcode width nhỏ** (như `680px`) cho container trang; chỉ dùng `680px` cho modal.
+3. **Responsive:** Luôn có `@media (max-width: 820px)` để chuyển về `max-width: 100%` + padding phù hợp.
+4. **Box-sizing:** Mọi container dùng `box-sizing: border-box` để padding không làm nở vượt viewport.

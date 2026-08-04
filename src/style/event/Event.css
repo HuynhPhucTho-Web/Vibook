@@ -2,34 +2,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: #5f7fa8;
-  background: #e7eef6;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 40px;
-  padding: 14px 26px;
-  transition: all 0.2s ease;
+  color: #ffffff;
+  background: var(--vb-gradient);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--vb-radius-md, 0.75rem);
+  padding: 10px 20px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
-  box-shadow:
-    -6px -4px 16px rgba(255, 255, 255, 0.9),
-     6px  4px 16px rgba(95, 157, 231, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--vb-glow-purple);
 }
 
 .create-group-btn:hover {
-  color: #4a6a94;
-  background: #edf3fa;
-  box-shadow:
-    -3px -2px 8px rgba(255, 255, 255, 0.9),
-     3px  2px 8px rgba(95, 157, 231, 0.45);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), var(--vb-glow-purple-strong);
 }
 
 .create-group-btn:active {
-  box-shadow: inset
-    -3px -2px 6px rgba(255, 255, 255, 0.8),
-     inset 3px  2px 6px rgba(95, 157, 231, 0.35);
+  transform: scale(0.97);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .create-group-btn {
+    padding: 11px 18px;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .create-group-btn svg,
+  .create-group-btn span {
+    width: 16px;
+    height: 16px;
+  }
 }

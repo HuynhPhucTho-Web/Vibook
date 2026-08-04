@@ -40,3 +40,18 @@
     -3px -2px 6px rgba(255, 255, 255, 0.8),
      inset 3px  2px 6px rgba(95, 157, 231, 0.35);
 }
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .create-group-btn {
+    padding: 11px 18px;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .create-group-btn svg,
+  .create-group-btn span {
+    width: 16px;
+    height: 16px;
+  }
+}

@@ -2,10 +2,11 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   collection,
   getDocs,
@@ -23,15 +24,17 @@ import SearchBox from "./header/SearchBox";
 import SearchResults from "./header/SearchResults";
 import HeaderRightActions from "./header/HeaderRightActions";
 import { normalizeSearchText } from "../utils/postContent";
+import { useSearch } from "../context/SearchContext";
 import "../style/Header.css";
 
 const Header = () => {
   const { theme, setTheme } = useContext(ThemeContext);
   const { language, setLanguage, t } = useContext(LanguageContext);
+  const location = useLocation();
   const [authUser, setAuthUser] = useState(() => auth.currentUser);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { keyword: searchValue, setKeyword: setSearchValue, searchConfig } = useSearch();
   const [searchFocused, setSearchFocused] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -41,6 +44,17 @@ const Header = () => {
   const appHeaderRef = useRef(null);
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
+
+  const searchMode = useMemo(() => {
+    if (location.pathname.startsWith("/friends")) return "friends";
+    return "global";
+  }, [location.pathname]);
+
+  const searchPlaceholder = useMemo(() => {
+    if (searchConfig?.placeholder) return searchConfig.placeholder;
+    if (searchMode === "friends") return "Tìm bạn bè";
+    return t("searchPlaceholder") || "Tìm kiếm người dùng, bài viết...";
+  }, [searchMode, searchConfig, t]);
 
   useEffect(() => {
     const header = appHeaderRef.current;
@@ -121,7 +135,7 @@ const Header = () => {
 
   useEffect(() => {
     const keyword = searchValue.trim();
-    if (!keyword) {
+    if (!keyword || searchConfig?.onSearch) {
       setSearchResults([]);
       setIsSearching(false);
       return undefined;
@@ -133,6 +147,26 @@ const Header = () => {
       const normalized = normalizeSearchText(keyword);
       const userTerm = keyword.toLocaleLowerCase();
       try {
+        if (searchMode === "friends") {
+          const snapshot = await getDocs(
+            query(
+              collection(db, "Users"),
+              where("displayName_lowercase", ">=", userTerm),
+              where("displayName_lowercase", "<=", `${userTerm}\uf8ff`),
+              limit(10),
+            ),
+          );
+          if (!cancelled) {
+            const users = snapshot.docs.map((item) => ({
+              id: item.id,
+              ...item.data(),
+              type: "user",
+            }));
+            setSearchResults(users);
+          }
+          return;
+        }
+
         const requests = await Promise.allSettled([
           getDocs(
             query(
@@ -206,7 +240,7 @@ const Header = () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [searchValue]);
+  }, [searchValue, searchMode]);
 
   const closeAllPopups = useCallback(() => {
     setUserMenuOpen(false);
@@ -248,6 +282,8 @@ const Header = () => {
               setSearchValue={setSearchValue}
               searchResults={searchResults}
               isSearching={isSearching}
+              placeholder={searchPlaceholder}
+              mode={searchMode}
             />
           </div>
         </div>
@@ -298,11 +334,14 @@ const Header = () => {
               <FaSearch aria-hidden="true" />
               <input
                 type="search"
-                placeholder={t("searchPlaceholder")}
+                placeholder={searchPlaceholder}
                 value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                autoFocus
-                aria-label={t("searchPlaceholder")}
+                onChange={(e) => {
+                  setSearchValue(e.target.value);
+                  searchConfig?.onSearch?.(e.target.value);
+                }}
+                onFocus={() => setSearchFocused(true)}
+                aria-label={searchPlaceholder}
               />
               {searchValue && (
                 <button
@@ -314,7 +353,7 @@ const Header = () => {
                 </button>
               )}
             </div>
-            {searchValue.trim() ? (
+            {searchValue.trim() && !searchConfig ? (
               <div className="mobile-search-results">
                 <SearchResults
                   theme={theme}
@@ -323,13 +362,14 @@ const Header = () => {
                   results={searchResults}
                   isSearching={isSearching}
                   onSelect={closeSearch}
+                  mode={searchMode}
                 />
               </div>
-            ) : (
+            ) : !searchConfig ? (
               <div className="mobile-search-hint">
                 Nhập tên người dùng, tiêu đề hoặc nội dung bài viết.
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>

@@ -13,15 +13,15 @@ import {
 import { db } from "../../components/firebase";
 import { toast } from "react-toastify";
 import { FaCheck, FaTimes, FaUser, FaSearch } from "react-icons/fa";
+import { useSearch } from "../../context/SearchContext";
 
 const FriendRequests = ({ currentUser, theme }) => {
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { keyword: searchTerm } = useSearch();
 
-  // Load incoming friend requests (toUserId = currentUser.uid, status = pending)
   useEffect(() => {
     if (!currentUser) return;
 
@@ -46,7 +46,6 @@ const FriendRequests = ({ currentUser, theme }) => {
       }
     );
 
-    // Load sent friend requests (fromUserId = currentUser.uid, status = pending)
     const sentQuery = query(
       collection(db, "FriendRequests"),
       where("fromUserId", "==", currentUser.uid),
@@ -96,7 +95,6 @@ const FriendRequests = ({ currentUser, theme }) => {
         const chatId = createChatId(fromUserId, toUserId);
         const friendshipRef = doc(db, "Friendships", chatId);
 
-        // Tạo Friendship (status = accepted)
         await setDoc(friendshipRef, {
           participants: [fromUserId, toUserId],
           status: "accepted",
@@ -104,7 +102,6 @@ const FriendRequests = ({ currentUser, theme }) => {
           updatedAt: serverTimestamp(),
         });
 
-        // Cập nhật request → accepted
         await updateDoc(requestRef, {
           status: "accepted",
           updatedAt: serverTimestamp(),
@@ -159,13 +156,12 @@ const FriendRequests = ({ currentUser, theme }) => {
 
   if (hasNoRequests) {
     return (
-      <div className="text-center py-5">
-        <p className="text-muted mb-0">You have no pending friend requests.</p>
+      <div className="friends-page__empty">
+        <p className="mb-0">You have no pending friend requests.</p>
       </div>
     );
   }
 
-  // Filter requests based on search term
   const filteredIncomingRequests = incomingRequests.filter((req) => {
     if (!searchTerm) return true;
     const name = (req.fromUserName || "").toLowerCase();
@@ -180,178 +176,107 @@ const FriendRequests = ({ currentUser, theme }) => {
     return name.includes(search);
   });
 
+  const hasNoFilteredResults = filteredIncomingRequests.length === 0 && filteredSentRequests.length === 0;
+
   return (
     <div className="friend-requests">
-      {/* Search Bar */}
-      <div className="mb-4">
-        <div className="input-group">
-          <span className="input-group-text">
-            <FaSearch />
-          </span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search friend requests..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {hasNoFilteredResults ? (
+        <div className="friends-page__empty">
+          <p className="mb-0">No requests match “{searchTerm}”.</p>
         </div>
-      </div>
-
-      {/* Incoming Friend Requests */}
-      {filteredIncomingRequests.length > 0 && (
-        <div className="mb-4">
-          <h5 className="mb-3">Friend Requests ({incomingRequests.length})</h5>
-          <div className="row">
-            {incomingRequests.map((req) => (
-              <div key={req.id} className="col-md-6 col-lg-4 mb-3">
-                <div
-                  className={`card ${
-                    theme === "light" ? "bg-light" : "bg-dark text-white"
-                  }`}
-                >
-                  <div className="card-body">
-                    <div className="d-flex align-items-center mb-3">
-                      <div
-                        className="rounded-circle me-3 d-flex align-items-center justify-content-center"
-                        style={{
-                          width: "50px",
-                          height: "50px",
-                          backgroundColor: theme === "light" ? "#e9ecef" : "#495057",
-                          color: theme === "light" ? "#6c757d" : "#adb5bd",
-                          position: "relative",
-                        }}
-                      >
-                        {req.fromUserPhoto ? (
-                          <img
-                            src={req.fromUserPhoto}
-                            alt={req.fromUserName || "User"}
-                            className="rounded-circle"
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              objectFit: "cover",
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                            }}
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                            }}
-                          />
-                        ) : null}
-                        <FaUser size={24} style={{ display: req.fromUserPhoto ? "none" : "block" }} />
+      ) : (
+        <>
+          {filteredIncomingRequests.length > 0 && (
+            <div className="mb-4">
+              <h5 className="friends-page__section-title">Friend Requests ({incomingRequests.length})</h5>
+              <div className="friend-card-grid">
+                {filteredIncomingRequests.map((req) => (
+                  <div key={req.id} className="friend-card">
+                    <div className="friend-card__body">
+                      <div className="friend-card__header">
+                        <div className="friend-card__avatar">
+                          {req.fromUserPhoto ? (
+                            <img src={req.fromUserPhoto} alt={req.fromUserName || "User"} />
+                          ) : (
+                            <FaUser />
+                          )}
+                        </div>
+                        <div className="friend-card__meta">
+                          <div className="friend-card__name">{req.fromUserName || "Unknown User"}</div>
+                          <div className="friend-card__subtitle">sent you a friend request</div>
+                        </div>
                       </div>
-                      <div>
-                        <h6 className="card-title mb-0">
-                          {req.fromUserName || "Unknown User"}
-                        </h6>
-                        <small className="text-muted">
-                          sent you a friend request
-                        </small>
+
+                      <div className="friend-card__footer">
+                        <span className="friend-card__pill">Pending</span>
+                        <div className="friend-card__actions">
+                          <button
+                            type="button"
+                            className="vb-btn vb-btn--primary vb-btn--sm"
+                            disabled={processingId === req.id}
+                            onClick={() => handleRespond(req, "accept")}
+                          >
+                            <FaCheck />
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            className="vb-btn vb-btn--ghost vb-btn--sm"
+                            disabled={processingId === req.id}
+                            onClick={() => handleRespond(req, "decline")}
+                          >
+                            <FaTimes />
+                            Decline
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-                    <div className="d-flex justify-content-between align-items-center">
-                      <small className="text-muted">Pending</small>
-                      <div className="d-flex gap-2">
+          {filteredSentRequests.length > 0 && (
+            <div>
+              <h5 className="friends-page__section-title">Sent Requests ({sentRequests.length})</h5>
+              <div className="friend-card-grid">
+                {filteredSentRequests.map((req) => (
+                  <div key={req.id} className="friend-card">
+                    <div className="friend-card__body">
+                      <div className="friend-card__header">
+                        <div className="friend-card__avatar">
+                          {req.toUserPhoto ? (
+                            <img src={req.toUserPhoto} alt={req.toUserName || "User"} />
+                          ) : (
+                            <FaUser />
+                          )}
+                        </div>
+                        <div className="friend-card__meta">
+                          <div className="friend-card__name">{req.toUserName || "Unknown User"}</div>
+                          <div className="friend-card__subtitle">request sent</div>
+                        </div>
+                      </div>
+
+                      <div className="friend-card__footer">
+                        <span className="friend-card__pill">Pending</span>
                         <button
-                          className="btn btn-success btn-sm"
+                          type="button"
+                          className="vb-btn vb-btn--ghost vb-btn--sm"
                           disabled={processingId === req.id}
-                          onClick={() => handleRespond(req, "accept")}
+                          onClick={() => handleCancel(req)}
                         >
-                          <FaCheck className="me-1" />
-                          Accept
-                        </button>
-                        <button
-                          className="btn btn-outline-secondary btn-sm"
-                          disabled={processingId === req.id}
-                          onClick={() => handleRespond(req, "decline")}
-                        >
-                          <FaTimes className="me-1" />
-                          Decline
+                          <FaTimes />
+                          Cancel
                         </button>
                       </div>
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Sent Friend Requests */}
-      {filteredSentRequests.length > 0 && (
-        <div>
-          <h5 className="mb-3">Sent Requests ({sentRequests.length})</h5>
-          <div className="row">
-            {filteredSentRequests.map((req) => (
-              <div key={req.id} className="col-md-6 col-lg-4 mb-3">
-                <div
-                  className={`card ${
-                    theme === "light" ? "bg-light" : "bg-dark text-white"
-                  }`}
-                >
-                  <div className="card-body">
-                    <div className="d-flex align-items-center mb-3">
-                      <div
-                        className="rounded-circle me-3 d-flex align-items-center justify-content-center"
-                        style={{
-                          width: "50px",
-                          height: "50px",
-                          backgroundColor: theme === "light" ? "#e9ecef" : "#495057",
-                          color: theme === "light" ? "#6c757d" : "#adb5bd",
-                          position: "relative",
-                        }}
-                      >
-                        {req.toUserPhoto ? (
-                          <img
-                            src={req.toUserPhoto}
-                            alt={req.toUserName || "User"}
-                            className="rounded-circle"
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              objectFit: "cover",
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                            }}
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                            }}
-                          />
-                        ) : null}
-                        <FaUser size={24} style={{ display: req.toUserPhoto ? "none" : "block" }} />
-                      </div>
-                      <div>
-                        <h6 className="card-title mb-0">
-                          {req.toUserName || "Unknown User"}
-                        </h6>
-                        <small className="text-muted">
-                          Request sent
-                        </small>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-between align-items-center">
-                      <small className="text-muted">Pending</small>
-                      <button
-                        className="btn btn-outline-danger btn-sm"
-                        disabled={processingId === req.id}
-                        onClick={() => handleCancel(req)}
-                      >
-                        <FaTimes className="me-1" />
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
