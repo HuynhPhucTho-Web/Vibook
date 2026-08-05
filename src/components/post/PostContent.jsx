@@ -69,7 +69,9 @@ const PostContent = ({
   return (
     <div className={`post-item-content post-rich-content ${isLight ? "text-gray-800" : "text-gray-100"}`}>
       {post.title && <h1 className="post-article-title">{post.title}</h1>}
-      {safeHtml && <div dangerouslySetInnerHTML={{ __html: safeHtml }} />}
+      {safeHtml && (
+        <div className="post-content-scrollable-wrapper" dangerouslySetInnerHTML={{ __html: safeHtml }} />
+      )}
     </div>
   );
 };

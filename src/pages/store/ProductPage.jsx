@@ -7,6 +7,8 @@ import { useCart } from '../../context/CartContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { toast } from 'react-toastify';
 import {LanguageContext} from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
+import { useMemo } from 'react';
 
 const ProductPage = () => {
   const { theme } = useContext(ThemeContext);
@@ -18,6 +20,23 @@ const ProductPage = () => {
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const productSchema = useMemo(() => {
+    if (!product) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": product.name,
+      "image": product.imageUrl || product.image || "",
+      "description": product.description || "",
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "VND",
+        "price": product.price,
+        "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      }
+    };
+  }, [product]);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
@@ -98,6 +117,14 @@ const ProductPage = () => {
 
   return (
     <div className={`min-h-screen pb-20 ${isLight ? "bg-gray-50" : "bg-gray-900"}`}>
+      <SEO
+        title={product.name}
+        description={product.description || `Mua sản phẩm ${product.name} chất lượng cao tại ViBook Market.`}
+        image={product.imageUrl || product.image || ""}
+        slug={`/product/${product.id}`}
+        type="product"
+        schema={productSchema}
+      />
       {/* Navbar di động / Back button */}
       <div className={`${isLight ? "bg-white" : "bg-gray-800"} border-b sticky top-0 z-30`}>
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">

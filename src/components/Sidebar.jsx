@@ -15,6 +15,7 @@ import {
   FaCog,
   FaFacebookMessenger,
   FaBlog,
+  FaInfoCircle,
 } from "react-icons/fa";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -37,7 +38,7 @@ const MOBILE_BREAKPOINT = 768;
 const MENU = [
   { path: "/homevibook", icon: FaHome, labelKey: "home", requiresAuth: false },
   { path: "/friends", icon: FaUserPlus, labelKey: "friends", requiresAuth: false },
-  { path: "/blog" , icon: FaBlog, labelKey: "blog", requiresAuth: false },
+  { path: "/blog", icon: FaBlog, labelKey: "blog", requiresAuth: false },
   // { path: "/groups", icon: FaUsers, labelKey: "groups", requiresAuth: false },
   { path: "/events", icon: FaCalendarAlt, labelKey: "events", requiresAuth: false },
   { path: "/videos", icon: FaYoutube, labelKey: "video", requiresAuth: false },
@@ -52,6 +53,9 @@ const MENU = [
     loginMessageKey: "loginToMessenger",
   },
   { path: "/settings", icon: FaCog, labelKey: "settings", requiresAuth: false },
+
+  { path: "/about", icon: FaInfoCircle, labelKey: "about", requiresAuth: false },
+
 ];
 
 export default function Sidebar() {
@@ -82,7 +86,15 @@ export default function Sidebar() {
   const [fabPosition, setFabPosition] = useState(() => {
     try {
       const saved = localStorage.getItem("sidebar_fab_position");
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          typeof parsed.top === "number" && !isNaN(parsed.top) &&
+          typeof parsed.left === "number" && !isNaN(parsed.left)
+        ) {
+          return parsed;
+        }
+      }
     } catch {
       // Silently ignore parsing errors for stored position
     }
@@ -316,8 +328,8 @@ export default function Sidebar() {
           onMouseDown={handleFabMouseDown}
           onTouchStart={handleFabTouchStart}
           style={{
-            top: Math.max(headerHeight + 8, fabPosition.top),
-            left: fabPosition.left,
+            top: `${Math.max(headerHeight + 8, fabPosition.top)}px`,
+            left: `${fabPosition.left}px`,
           }}
         >
           <FaBars />

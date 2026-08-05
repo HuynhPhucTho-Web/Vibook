@@ -5,6 +5,8 @@ import {
   where,
   onSnapshot,
   addDoc,
+  doc,
+  getDoc,
   getDocs,
   orderBy,
   limit,
@@ -69,7 +71,7 @@ export const cleanupOldNotifications = async (userId) => {
 const processedNotifications = new Set();
 
 export const createNotificationIfNotExists = async (notificationData) => {
-  const notificationKey = `${notificationData.type}_${notificationData.actorId}_${notificationData.requestId || notificationData.messageId || notificationData.postId || 'global'}_${Math.floor(notificationData.createdAt / 60000)}`; // Group theo phút
+  const notificationKey = `${notificationData.type}_${notificationData.actorId}_${notificationData.requestId || notificationData.messageId || notificationData.postId || notificationData.blogId || 'global'}_${Math.floor(notificationData.createdAt / 60000)}`; // Group theo phút
 
   if (processedNotifications.has(notificationKey)) {
     return; // Đã xử lý rồi, bỏ qua
@@ -100,6 +102,13 @@ export const createNotificationIfNotExists = async (notificationData) => {
         where("userId", "==", notificationData.userId),
         where("type", "==", "friend_post"),
         where("postId", "==", notificationData.postId)
+      );
+    } else if (notificationData.type === "new_blog" && notificationData.blogId) {
+      q = query(
+        collection(db, "Notifications"),
+        where("userId", "==", notificationData.userId),
+        where("type", "==", "new_blog"),
+        where("blogId", "==", notificationData.blogId)
       );
     }
 
@@ -218,6 +227,54 @@ export const setupNotificationListeners = (user, createNotificationIfNotExists) 
     });
   });
   activeListeners.add(unsubscribeMessages);
+
+  // Setup blog post listeners
+  let blogChangeTimeout;
+  const blogsQuery = query(collection(db, "BlogPosts"), orderBy("createdAt", "desc"), limit(20));
+  const unsubscribeBlogs = onSnapshot(blogsQuery, (snapshot) => {
+    clearTimeout(blogChangeTimeout);
+    blogChangeTimeout = setTimeout(() => {
+      snapshot.docChanges().forEach(async (change) => {
+        if (change.type === "added") {
+          const blogData = change.doc.data();
+          const blogCreatedAt = blogData.createdAt?.toDate ? blogData.createdAt.toDate() : (blogData.createdAt instanceof Date ? blogData.createdAt : new Date(blogData.createdAt));
+
+          // Chỉ tạo thông báo cho bài viết mới từ người khác (trong vòng 5 phút)
+          if (blogData.author && 
+              blogData.author !== user.uid &&
+              blogCreatedAt &&
+              (Date.now() - blogCreatedAt.getTime()) < 300000) {
+
+            let authorName = "Tác giả";
+            let authorPhoto = null;
+            try {
+              const authorSnap = await getDoc(doc(db, "Users", blogData.author));
+              if (authorSnap.exists()) {
+                authorName = authorSnap.data().displayName || authorSnap.data().name || "Anonymous";
+                authorPhoto = authorSnap.data().photoURL || null;
+              }
+            } catch (err) {
+              console.error("Error fetching blog author details", err);
+            }
+
+            createNotificationIfNotExists({
+              userId: user.uid,
+              type: "new_blog",
+              actorId: blogData.author,
+              actorName: authorName,
+              actorPhoto: authorPhoto,
+              blogId: change.doc.id,
+              blogSlug: blogData.slug || "",
+              content: `${authorName} đã đăng bài viết blog mới: "${blogData.title}"`,
+              createdAt: Date.now(),
+              read: false,
+            });
+          }
+        }
+      });
+    }, 1000);
+  });
+  activeListeners.add(unsubscribeBlogs);
 
   return { activeListeners };
 };

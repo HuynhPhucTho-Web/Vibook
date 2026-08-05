@@ -18,6 +18,7 @@ import {
   orderBy,
   limit,
   startAfter,
+  where,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -31,6 +32,7 @@ import {
   mergeFirstPageIntoFeed,
   mergeUniquePosts,
 } from "../utils/feedPosts";
+import SEO from "../components/SEO";
 import "../style/Home.css";
 
 function FeedSkeleton({ count = 3 }) {
@@ -60,6 +62,7 @@ function Home() {
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
   const [blogPromos, setBlogPromos] = useState([]);
+  const [friendUids, setFriendUids] = useState(new Set());
   const [isPostsLoading, setIsPostsLoading] = useState(true);
   const [isBlogsLoading, setIsBlogsLoading] = useState(true);
   const [blogLimit, setBlogLimit] = useState(5);
@@ -70,6 +73,47 @@ function Home() {
   const lastVisibleRef = useRef(null);
   const loadingMoreRef = useRef(false);
   const hasMoreRef = useRef(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const currentUid = auth.currentUser?.uid;
+    if (!currentUid) {
+      setFriendUids(new Set());
+      return undefined;
+    }
+    const q = query(
+      collection(db, "Friendships"),
+      where("participants", "array-contains", currentUid),
+      where("status", "==", "accepted")
+    );
+    const unsub = onSnapshot(q, (snapshot) => {
+      if (cancelled) return;
+      const uids = new Set();
+      snapshot.docs.forEach((docSnap) => {
+        const parts = docSnap.data().participants || [];
+        parts.forEach((uid) => {
+          if (uid !== currentUid) uids.add(uid);
+        });
+      });
+      setFriendUids(uids);
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [userDetails]);
+
+  const visiblePosts = useMemo(() => {
+    const currentUid = auth.currentUser?.uid;
+    return posts.filter((post) => {
+      if (!post.status || post.status === "public") return true;
+      if (currentUid && post.userId === currentUid) return true;
+      if (post.status === "friends") {
+        return friendUids.has(post.userId);
+      }
+      return false;
+    });
+  }, [posts, friendUids]);
 
   // Keep refs in sync for IntersectionObserver (stable callback)
   useEffect(() => {
@@ -115,12 +159,16 @@ function Home() {
           id: docSnap.id,
           ...docSnap.data(),
           createdAt: docSnap.data().createdAt?.toDate ? docSnap.data().createdAt.toDate() : docSnap.data().createdAt,
+          favoriteCount: docSnap.data().favoriteCount || 0,
+          views: docSnap.data().views || 0,
         }));
         if (!cancelled) {
           const staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
             ...post,
             createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
             isStatic: true,
+            favoriteCount: post.favoriteCount || 0,
+            views: post.views || 0,
           }));
           const mergedBlogs = [...staticBlogs];
           blogs.forEach((blog) => {
@@ -130,17 +178,57 @@ function Home() {
               mergedBlogs.push(blog);
             }
           });
+
+          // Fetch actual favorite counts from FavoriteBlogs
+          try {
+            const favsSnapshot = await getDocs(collection(db, "FavoriteBlogs"));
+            const countsMap = {};
+            favsSnapshot.docs.forEach(doc => {
+              const data = doc.data();
+              if (data.blogId) {
+                countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+              }
+            });
+            mergedBlogs.forEach(p => {
+              const key = p.isStatic ? p.slug : p.id;
+              p.favoriteCount = countsMap[key] || 0;
+            });
+          } catch (favErr) {
+            console.error("Error loading promo favorite counts", favErr);
+          }
+
           setBlogPromos(mergedBlogs);
           setIsBlogsLoading(false);
         }
       } catch (error) {
         console.error("Blog promo load error", error);
         if (!cancelled) {
-          const staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
+          let staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
             ...post,
             createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
             isStatic: true,
+            favoriteCount: post.favoriteCount || 0,
+            views: post.views || 0,
           }));
+
+          // Fetch actual favorite counts for fallback
+          try {
+            const favsSnapshot = await getDocs(collection(db, "FavoriteBlogs"));
+            const countsMap = {};
+            favsSnapshot.docs.forEach(doc => {
+              const data = doc.data();
+              if (data.blogId) {
+                countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+              }
+            });
+            staticBlogs = staticBlogs.map(p => ({
+              ...p,
+              favoriteCount: countsMap[p.slug] || 0
+            }));
+          } catch (favErr) {
+            console.error("Error loading static fallback favorite counts", favErr);
+          }
+
           setBlogPromos(staticBlogs);
           setIsBlogsLoading(false);
         }
@@ -310,7 +398,7 @@ function Home() {
   }, [posts, searchParams]);
 
   const postList = useMemo(() => {
-    return posts.map((post) => (
+    return visiblePosts.map((post) => (
       <PostItem
         key={post.id}
         post={post}
@@ -319,10 +407,15 @@ function Home() {
         onPostDeleted={handlePostDeleted}
       />
     ));
-  }, [posts, userDetails, handlePostDeleted]);
+  }, [visiblePosts, userDetails, handlePostDeleted]);
 
   return (
     <div className="page-shell">
+      <SEO
+        title="Trang chủ"
+        description="Bảng tin ViBook - Mạng xã hội chia sẻ & kết nối bạn bè, cập nhật bài viết blog nổi bật và trò chuyện trực tuyến."
+        slug="/homevibook"
+      />
       <div className={`home-container home-container--${theme}`}>
         <PostCreator onPostCreated={handlePostCreated} />
 

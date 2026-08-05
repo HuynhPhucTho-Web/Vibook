@@ -6,6 +6,7 @@ import { db } from '../../components/firebase';
 import { useCart } from '../../context/CartContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { LanguageContext } from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
 import '../../style/store/Store.css';
 
 const Store = () => {
@@ -53,6 +54,11 @@ const Store = () => {
 
   return (
     <div className={`min-h-screen ${isLight ? "bg-gray-50" : "bg-gray-900"}`}>
+      <SEO
+        title="Chợ mua sắm Market"
+        description="Khám phá hàng ngàn sản phẩm chất lượng, giá tốt và nhiều chương trình ưu đãi hấp dẫn tại Chợ trực tuyến ViBook Market."
+        slug="/market"
+      />
       {/* Search & Header Section */}
       <div className={`${isLight ? "bg-white" : "bg-gray-800"} border-b sticky top-0 z-30`}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">

@@ -79,8 +79,8 @@ const HeaderRightActions = ({
             className={`text-lg ${isLight ? "text-black" : "text-white"}`}
           />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
-              {unreadCount > 9 ? unreadCount : ""}
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm">
+              {unreadCount}
             </span>
           )}
         </div>

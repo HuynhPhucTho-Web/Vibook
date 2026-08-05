@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../components/firebase";
-import { FaEllipsisH, FaEdit, FaLock, FaTrash, FaUser } from "react-icons/fa";
+import { FaEllipsisH, FaEdit, FaLock, FaTrash, FaUser, FaGlobeAmericas, FaUserFriends, FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { LanguageContext } from "../../context/LanguageContext";
 
@@ -11,10 +11,17 @@ const PostHeader = ({
   isLight,
   isDeleting,
   onEdit,
-  onPrivate,
+  onPrivacyChange,
   onDelete
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showPrivacySubmenu, setShowPrivacySubmenu] = useState(false);
+
+  useEffect(() => {
+    if (!showDropdown) {
+      setShowPrivacySubmenu(false);
+    }
+  }, [showDropdown]);
  const { t, language } = useContext(LanguageContext);
   const formatTimeAgo = (timestamp) => {
     const value = timestamp?.toMillis ? timestamp.toMillis() : timestamp;
@@ -90,7 +97,12 @@ const PostHeader = ({
               {post.userName}
             </p>
           </Link>
-          <p className="text-sm text-gray-500">{formatTimeAgo(post.createdAt)}</p>
+          <p className="text-sm text-gray-500 d-flex align-items-center gap-1">
+            {formatTimeAgo(post.createdAt)}
+            <span className="ms-1" title={post.status === "private" ? t("privateVisibility") : post.status === "friends" ? t("friendsVisibility") : t("publicVisibility")}>
+              {post.status === "private" ? <FaLock size={12} /> : post.status === "friends" ? <FaUserFriends size={12} /> : <FaGlobeAmericas size={12} />}
+            </span>
+          </p>
         </div>
       </div>
 
@@ -127,15 +139,54 @@ const PostHeader = ({
                   <FaEdit /> {t("editPost")}
                 </button>
                 <button
-                  onClick={() => {
-                    onPrivate();
-                    setShowDropdown(false);
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPrivacySubmenu(!showPrivacySubmenu);
                   }}
-                  className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
+                  className={`w-full px-4 py-2.5 flex items-center justify-between transition-colors ${isLight ? "hover:bg-gray-50 text-gray-700" : "hover:bg-zinc-700 text-gray-200"
                     }`}
                 >
-                  <FaLock /> {t("privatePost")}
+                  <span className="flex items-center gap-3">
+                    {post.status === "private" ? <FaLock /> : post.status === "friends" ? <FaUserFriends /> : <FaGlobeAmericas />}
+                    {t("privacy") || "Quyền riêng tư"}
+                  </span>
+                  <FaChevronRight size={12} className={`transition-transform duration-200 ${showPrivacySubmenu ? "rotate-90" : ""}`} />
                 </button>
+
+                {showPrivacySubmenu && (
+                  <div className={`py-1 flex flex-col ${isLight ? "bg-gray-50/70" : "bg-zinc-900/50"}`} style={{ borderTop: isLight ? "1px solid #f1f5f9" : "1px solid #27272a", borderBottom: isLight ? "1px solid #f1f5f9" : "1px solid #27272a" }}>
+                    <button
+                      onClick={() => {
+                        onPrivacyChange("public");
+                        setShowDropdown(false);
+                      }}
+                      className={`w-full px-5 py-2 flex items-center gap-3 text-sm transition-colors ${isLight ? "hover:bg-gray-100 text-gray-600" : "hover:bg-zinc-700 text-gray-300"
+                        } ${post.status === "public" ? "font-bold text-purple-600" : ""}`}
+                    >
+                      <FaGlobeAmericas size={12} /> {t("publicVisibility")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        onPrivacyChange("friends");
+                        setShowDropdown(false);
+                      }}
+                      className={`w-full px-5 py-2 flex items-center gap-3 text-sm transition-colors ${isLight ? "hover:bg-gray-100 text-gray-600" : "hover:bg-zinc-700 text-gray-300"
+                        } ${post.status === "friends" ? "font-bold text-purple-600" : ""}`}
+                    >
+                      <FaUserFriends size={12} /> {t("friendsVisibility")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        onPrivacyChange("private");
+                        setShowDropdown(false);
+                      }}
+                      className={`w-full px-5 py-2 flex items-center gap-3 text-sm transition-colors ${isLight ? "hover:bg-gray-100 text-gray-600" : "hover:bg-zinc-700 text-gray-300"
+                        } ${post.status === "private" ? "font-bold text-purple-600" : ""}`}
+                    >
+                      <FaLock size={12} /> {t("privateVisibility")}
+                    </button>
+                  </div>
+                )}
                 <button
                   onClick={() => {
                     onDelete();

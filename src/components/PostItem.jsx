@@ -4,7 +4,7 @@ import {
   addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query,
   runTransaction, serverTimestamp, setDoc, updateDoc, where,
 } from "firebase/firestore";
-import { FaCheck, FaGlobeAmericas, FaLock, FaSearch, FaTag, FaTimes, FaUserFriends } from "react-icons/fa";
+import { FaCheck, FaGlobeAmericas, FaLock, FaSearch, FaTag, FaTimes, FaUserFriends, FaHeart, FaEye } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { db } from "../components/firebase";
 import { ThemeContext } from "../context/ThemeContext";
@@ -142,6 +142,26 @@ export function BlogPromoStrip({ blogs = [], isLight = false, title = "Bài vi�
                 </div>
                 <h5>{titleText}</h5>
                 <p>{summary}</p>
+                <div 
+                  className="blog-promo-card__stats" 
+                  style={{ 
+                    marginTop: "auto", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: "10px", 
+                    fontSize: "0.75rem", 
+                    opacity: 0.72,
+                    paddingTop: "6px",
+                    borderTop: "1px dashed var(--vb-glass-border, rgba(128,128,128,0.1))"
+                  }}
+                >
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <FaEye /> {safeBlog.views || 0}
+                  </span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "var(--vb-error, #ffb4ab)" }}>
+                    <FaHeart /> {safeBlog.favoriteCount || 0}
+                  </span>
+                </div>
               </div>
             </Link>
           );
@@ -592,6 +612,19 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     }
   };
 
+  const handlePrivacyChange = async (newPrivacy) => {
+    try {
+      await updateDoc(doc(db, "Posts", post.id), {
+        status: newPrivacy,
+      });
+      setLocalPost((prev) => ({ ...prev, status: newPrivacy }));
+      toast.success(t("postUpdated") || "Cập nhật quyền riêng tư thành công");
+    } catch (e) {
+      console.error("Error updating post privacy", e);
+      toast.error(t("updatePostFailed") || "Không thể cập nhật quyền riêng tư");
+    }
+  };
+
   const filteredFriends = friends.filter((friend) =>
     friend.name.toLocaleLowerCase().includes(friendSearch.trim().toLocaleLowerCase())
   );
@@ -604,7 +637,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         isLight={isLight}
         isDeleting={isDeleting}
         onEdit={() => { setIsEditing(true); setEditTitle(localPost.title || ""); setEditContent(getPostHtml(localPost)); }}
-        onPrivate={handlePrivatePost}
+        onPrivacyChange={handlePrivacyChange}
         onDelete={handleDeletePost}
       />
       {localPost.taggedFriends?.length > 0 && (

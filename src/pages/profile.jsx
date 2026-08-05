@@ -10,6 +10,8 @@ import PostItem from "../components/PostItem";
 import ProfileHeader from "../components/profile/UpdateProfile";
 import ProfileStories from "../components/profile/ProfileStories";
 import { requireLogin } from "../utils/requireLogin";
+import SEO from "../components/SEO";
+import { useMemo } from "react";
 
 
 function Profile() {
@@ -267,11 +269,34 @@ function Profile() {
     return () => cleanup && cleanup();
   }, [routeUid, fetchUserData]);
 
+  const profileSchema = useMemo(() => {
+    if (!userDetails) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      "mainEntity": {
+        "@type": "Person",
+        "name": `${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim() || userDetails.displayName || userDetails.email,
+        "image": userDetails.photoURL || userDetails.photo || "",
+        "description": userDetails.bio || ""
+      }
+    };
+  }, [userDetails]);
+
   if (loading) return <p>Loading...</p>;
   if (!userDetails) return <p>User not found</p>;
 
-  const ownPosts = posts.filter((post) => post.type !== "share");
-  const sharedPosts = posts.filter((post) => post.type === "share");
+  const filteredPostsByPrivacy = useMemo(() => {
+    return posts.filter((post) => {
+      if (!post.status || post.status === "public") return true;
+      if (isOwner) return true;
+      if (post.status === "friends" && isFriend) return true;
+      return false;
+    });
+  }, [posts, isOwner, isFriend]);
+
+  const ownPosts = useMemo(() => filteredPostsByPrivacy.filter((post) => post.type !== "share"), [filteredPostsByPrivacy]);
+  const sharedPosts = useMemo(() => filteredPostsByPrivacy.filter((post) => post.type === "share"), [filteredPostsByPrivacy]);
   const visiblePosts = activePostTab === "shared"
     ? sharedPosts
     : activePostTab === "saved"
@@ -280,6 +305,14 @@ function Profile() {
 
   return (
     <div className="page-shell">
+        <SEO
+          title={`Trang cá nhân của ${`${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim() || userDetails.displayName || "Người dùng"}`}
+          description={userDetails.bio || `Trang cá nhân của ${`${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim() || userDetails.displayName || "Người dùng"} trên mạng xã hội ViBook.`}
+          image={userDetails.photoURL || userDetails.photo || ""}
+          slug={`/profile/${userDetails.id}`}
+          type="profile"
+          schema={profileSchema}
+        />
         <ProfileHeader
           user={userDetails}
           isOwner={isOwner}

@@ -165,3 +165,28 @@ html:not(.dark) .feed-skeleton__card {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(15, 23, 42, 0.08);
 }
+
+/* Scrollable wrapper for long post body text */
+.post-content-scrollable-wrapper {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Custom scrollbar for post content */
+.post-content-scrollable-wrapper::-webkit-scrollbar {
+  width: 5px;
+}
+
+.post-content-scrollable-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.post-content-scrollable-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(142, 84, 233, 0.25);
+  border-radius: 10px;
+}
+
+.post-content-scrollable-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(142, 84, 233, 0.45);
+}

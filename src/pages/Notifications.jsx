@@ -63,9 +63,9 @@ const Notifications = () => {
                 id: doc.id,
                 ...doc.data(),
               }));
-              // Filter chỉ lấy friend_request, friend_post, friend_message
+              // Filter chỉ lấy friend_request, friend_post, friend_message, new_blog
               const filteredNotifications = allNotifications.filter(notif =>
-                ["friend_request", "friend_post", "friend_message"].includes(notif.type)
+                ["friend_request", "friend_post", "friend_message", "new_blog"].includes(notif.type)
               );
               setNotifications(filteredNotifications);
               setIsLoading(false);

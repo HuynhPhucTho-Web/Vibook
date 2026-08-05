@@ -11,6 +11,13 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isFriendOf(authorId, dbVar) {
+      return isSignedIn() && (
+        exists(/databases/$(dbVar)/documents/Friendships/$(request.auth.uid) + '_' + authorId)
+        || exists(/databases/$(dbVar)/documents/Friendships/$(authorId) + '_' + request.auth.uid)
+      );
+    }
+
     /* ========= USERS ========= */
     // Public profiles / Find Friends / search: guest + user đều đọc được
     // Ghi (create/update/delete): chỉ chủ tài khoản
@@ -121,7 +128,12 @@ service cloud.firestore {
           && newLikes.get('Angry', 0) >= 0;
       }
 
-      allow read: if true;
+      allow get: if !resource.data.keys().hasAny(['status'])
+        || resource.data.status == 'public'
+        || (isSignedIn() && request.auth.uid == resource.data.userId)
+        || (resource.data.status == 'friends' && isFriendOf(resource.data.userId, database));
+
+      allow list: if true;
 
       // Chỉ user đăng nhập mới tạo được post
       allow create: if isSignedIn()
@@ -238,7 +250,7 @@ service cloud.firestore {
 
     /* ========= FAVORITE BLOGS ========= */
     match /FavoriteBlogs/{favoriteId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && favoriteId == request.auth.uid + '_' + request.resource.data.blogId;
