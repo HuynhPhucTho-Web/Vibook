@@ -128,20 +128,18 @@ html:not(.dark) .blog-controls .filters select {
   backdrop-filter: var(--vb-glass-blur);
   -webkit-backdrop-filter: var(--vb-glass-blur);
   border: 1px solid var(--vb-glass-border);
-  border-radius: var(--vb-radius-xl);
+  border-radius: var(--vb-radius-md);
   box-shadow: var(--vb-shadow-elevated);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .blog-card:hover {
   border-color: var(--vb-glass-border-strong);
-  box-shadow:
-    var(--vb-shadow-elevated),
-    var(--vb-glow-border);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12), var(--vb-glow-purple);
+  transform: translateY(-4px);
 }
 
 .blog-card .cover-image {
@@ -758,7 +756,9 @@ html:not(.dark) .blog-controls .filters select {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 1100;
+  width: 100vw !important;
+  max-width: none !important;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -1174,4 +1174,163 @@ html:not(.dark) .modal-content .quill-editor .ql-container {
   0% { transform: scale(1); }
   50% { transform: scale(1.3); }
   100% { transform: scale(1); }
+}
+
+/* ==========================================================
+   VIBOOK PREMIUM UI/UX IMPROVEMENTS (BlogPages & BlogDetail)
+   ========================================================== */
+
+/* 1. BlogCard Cover Zoom & Overflow */
+.blog-card__cover-container {
+  position: relative;
+  overflow: hidden;
+  height: 180px;
+}
+.blog-card__cover-container .cover-image {
+  width: 100%;
+  height: 100% !important;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+.blog-card:hover .blog-card__cover-container .cover-image {
+  transform: scale(1.06);
+}
+
+/* 2. Glassmorphic Back Button in Detail Page */
+.blog-detail-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 16px;
+  border-radius: var(--vb-radius-full, 9999px);
+  font-family: var(--vb-font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--vb-on-surface, #ffffff);
+  background: var(--vb-glass-surface, rgba(255, 255, 255, 0.05));
+  backdrop-filter: var(--vb-glass-blur, blur(12px));
+  -webkit-backdrop-filter: var(--vb-glass-blur, blur(12px));
+  border: 1px solid var(--vb-glass-border, rgba(255, 255, 255, 0.08));
+  cursor: pointer;
+  margin-bottom: var(--vb-space-3, 16px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+.blog-detail-back-btn:hover {
+  border-color: var(--vb-glass-border-strong, rgba(255, 255, 255, 0.2));
+  background: rgba(142, 84, 233, 0.12);
+  color: var(--vb-primary, #8e54e9);
+}
+.blog-detail-back-btn .arrow-icon {
+  transition: transform 0.2s ease;
+}
+.blog-detail-back-btn:hover .arrow-icon {
+  transform: translateX(-4px);
+}
+
+/* 3. Author Widget Styles */
+.author-meta-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 10px 4px 6px;
+  border-radius: var(--vb-radius-full, 9999px);
+  border: 1px solid var(--vb-glass-border, rgba(255, 255, 255, 0.08));
+  transition: all 0.2s ease;
+  vertical-align: middle;
+}
+.author-meta-widget:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--vb-glass-border-strong, rgba(255, 255, 255, 0.2));
+}
+.author-avatar-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.author-avatar-icon-placeholder {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(142, 84, 233, 0.15);
+  color: var(--vb-primary, #8e54e9);
+  border: 1px solid rgba(142, 84, 233, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.author-name-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-text, #ffffff);
+}
+html:not(.dark) .author-meta-widget {
+  background: rgba(0, 0, 0, 0.03);
+}
+html:not(.dark) .author-name-text {
+  color: #162033;
+}
+
+/* 4. Table of Contents Premium Look */
+@media (min-width: 768px) {
+  .toc-sidebar {
+    border-left: 2px solid rgba(142, 84, 233, 0.12);
+    padding-left: 14px !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    border: none;
+    border-left: 2px solid rgba(142, 84, 233, 0.15) !important;
+  }
+  .toc-sidebar h4 {
+    margin-bottom: 12px !important;
+  }
+  .toc-sidebar ul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .toc-sidebar a {
+    border-left: 2px solid transparent;
+    padding: 4px 8px !important;
+    margin-left: -16px;
+    border-radius: 0 6px 6px 0 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  .toc-sidebar a:hover {
+    border-left-color: var(--vb-primary, #8e54e9) !important;
+    background: rgba(142, 84, 233, 0.08) !important;
+    color: var(--vb-primary, #8e54e9) !important;
+    padding-left: 12px !important;
+  }
+}
+
+/* 5. Typography Readability for Article Content */
+.article-content .ql-editor {
+  line-height: 1.85 !important;
+  letter-spacing: -0.003em !important;
+  font-size: 1.05rem !important;
+  text-align: justify;
+}
+.article-content .ql-editor h1,
+.article-content .ql-editor h2,
+.article-content .ql-editor h3 {
+  letter-spacing: -0.02em !important;
+  margin-top: 1.8em !important;
+  margin-bottom: 0.6em !important;
+  color: var(--app-text) !important;
+}
+.article-content .ql-editor p {
+  margin-bottom: 1.25rem !important;
+}
+.article-content .ql-editor blockquote {
+  border-left: 4px solid var(--vb-primary, #8e54e9) !important;
+  background: rgba(142, 84, 233, 0.05);
+  padding: 12px 18px !important;
+  border-radius: 0 var(--vb-radius-md) var(--vb-radius-md) 0;
+  margin: 1.5rem 0 !important;
 }

@@ -54,14 +54,14 @@ const HeaderRightActions = ({
       {/* Messenger icon - hidden on mobile */}
       <Link to="/messenger" title="Messenger" className="hidden md:block">
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
+          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
             isLight
-              ? "bg-black/10 hover:bg-black/20"
+              ? "bg-black/5 hover:bg-black/10"
               : "bg-white/10 hover:bg-white/20"
           }`}
         >
           <FaFacebookMessenger
-            className={`text-lg ${isLight ? "text-black" : "text-white"}`}
+            className={`text-base sm:text-lg ${isLight ? "text-black" : "text-white"}`}
           />
         </div>
       </Link>
@@ -69,17 +69,17 @@ const HeaderRightActions = ({
       {/* Notifications icon */}
       <Link to="/notifications" className="relative" title="Notifications">
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
+          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
             isLight
               ? "bg-black/5 hover:bg-black/10"
               : "bg-white/10 hover:bg-white/20"
           }`}
         >
           <FaBell
-            className={`text-lg ${isLight ? "text-black" : "text-white"}`}
+            className={`text-base sm:text-lg ${isLight ? "text-black" : "text-white"}`}
           />
           {unreadCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm">
+            <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-red-500 text-white rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-bold shadow-sm">
               {unreadCount}
             </span>
           )}

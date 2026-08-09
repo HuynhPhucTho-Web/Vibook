@@ -191,3 +191,10 @@
   .search-result-item { padding: .65rem .55rem; }
   .search-result-main strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 }
+
+/* Hide online text label on small mobile screens */
+@media (max-width: 480px) {
+  .online-count-text {
+    display: none !important;
+  }
+}

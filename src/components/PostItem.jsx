@@ -17,6 +17,7 @@ import PostActions from "./post/PostActions";
 import PostComments from "./post/PostComments";
 import { getPostHtml, normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
 import { requireLogin } from "../utils/requireLogin";
+import { getOptimizedCloudinaryUrl } from "../utils/cloudinary";
 import "../style/PostItem.css";
 
 export function BlogPromoStrip({ blogs = [], isLight = false, title = "Bài viết blog mới", onLoadMore, loading = false }) {
@@ -77,7 +78,6 @@ export function BlogPromoStrip({ blogs = [], isLight = false, title = "Bài vi�
       <div className={`blog-promo-strip ${isLight ? "light" : "dark"} loading-state`}>
         <div className="blog-promo-strip__header">
           <div>
-            <p className="blog-promo-strip__eyebrow">Khám phá blog</p>
             <h4>{title}</h4>
           </div>
         </div>
@@ -104,7 +104,6 @@ export function BlogPromoStrip({ blogs = [], isLight = false, title = "Bài vi�
     <div className={`blog-promo-strip ${isLight ? "light" : "dark"}`}>
       <div className="blog-promo-strip__header">
         <div>
-          <p className="blog-promo-strip__eyebrow">Khám phá blog</p>
           <h4>{title}</h4>
         </div>
         <button type="button" className="blog-promo-strip__view-all" onClick={() => navigate("/blog")}>
@@ -134,7 +133,14 @@ export function BlogPromoStrip({ blogs = [], isLight = false, title = "Bài vi�
               role="listitem"
               onDragStart={(e) => e.preventDefault()}
             >
-              <img src={cover} alt={titleText} className="blog-promo-card__image" onDragStart={(e) => e.preventDefault()} />
+              <img
+                src={getOptimizedCloudinaryUrl(cover, 360)}
+                alt={titleText}
+                className="blog-promo-card__image"
+                loading="lazy"
+                decoding="async"
+                onDragStart={(e) => e.preventDefault()}
+              />
               <div className="blog-promo-card__body">
                 <div className="blog-promo-card__meta">
                   <span>{category}</span>

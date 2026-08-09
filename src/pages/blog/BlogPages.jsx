@@ -13,6 +13,7 @@ import {
   deleteDoc,
   increment,
   limit,
+  startAt,
   setDoc,
   onSnapshot,
 } from "firebase/firestore";
@@ -42,11 +43,9 @@ const formats = [
   "strike",
   "blockquote",
   "list",
-  "bullet",
   "indent",
   "link",
   "image",
-  "clean",
 ];
 
 const modules = {
@@ -100,6 +99,9 @@ const BlogPages = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [cursors, setCursors] = useState([null]);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
   const [loading, setLoading] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -129,7 +131,8 @@ const BlogPages = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+    setCursors([null]);
+  }, [searchTerm, selectedCategory, selectedTags, sortBy, showFavoritesOnly]);
 
   // Load User Favorites
   useEffect(() => {
@@ -185,35 +188,95 @@ const BlogPages = () => {
     }
   }, [formData.title, formData.slug]);
 
+  const isSearchActive = !!searchTerm || showFavoritesOnly || selectedTags.length > 0 || !!selectedCategory;
+
   // Fetch posts
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const snapshot = await getDocs(
-          query(collection(db, "BlogPosts"), orderBy("createdAt", "desc"))
-        );
-        let fetchedPosts = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt,
-          favoriteCount: doc.data().favoriteCount || 0,
-        }));
+        let q = query(collection(db, "BlogPosts"));
 
-        const dynamicSlugs = new Set(fetchedPosts.map((p) => p.slug));
-        const staticToAppend = STATIC_POSTS.filter((p) => !dynamicSlugs.has(p.slug));
-        fetchedPosts = [...fetchedPosts, ...staticToAppend];
+        // Apply Firestore sorting
+        if (sortBy === "favorites") {
+          q = query(q, orderBy("favoriteCount", "desc"));
+        } else if (sortBy === "oldest") {
+          q = query(q, orderBy("createdAt", "asc"));
+        } else {
+          q = query(q, orderBy("createdAt", "desc"));
+        }
 
-        // Load favorite counts from FavoriteBlogs to ensure accuracy (including static posts)
+        if (isSearchActive) {
+          q = query(q, limit(100));
+        } else {
+          const startCursor = cursors[currentPage - 1];
+          if (startCursor) {
+            q = query(q, startAt(startCursor));
+          }
+          q = query(q, limit(11));
+        }
+
+        const snapshot = await getDocs(q);
+        const docs = snapshot.docs;
+
+        let fetchedPosts = [];
+        if (isSearchActive) {
+          fetchedPosts = docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt,
+            favoriteCount: doc.data().favoriteCount || 0,
+          }));
+          setHasMore(false);
+          setNextCursor(null);
+        } else {
+          const hasNext = docs.length > 10;
+          setHasMore(hasNext);
+
+          const pageDocs = hasNext ? docs.slice(0, 10) : docs;
+          fetchedPosts = pageDocs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt,
+            favoriteCount: doc.data().favoriteCount || 0,
+          }));
+
+          if (hasNext) {
+            setNextCursor(docs[10]);
+          } else {
+            setNextCursor(null);
+          }
+        }
+
+        if (currentPage === 1 || isSearchActive) {
+          const dynamicSlugs = new Set(fetchedPosts.map((p) => p.slug));
+          const staticToAppend = STATIC_POSTS.filter((p) => !dynamicSlugs.has(p.slug));
+          fetchedPosts = [...fetchedPosts, ...staticToAppend];
+        }
+
+        // Load favorite counts from FavoriteBlogs to ensure accuracy
         try {
-          const favsSnapshot = await getDocs(collection(db, "FavoriteBlogs"));
+          const blogIds = fetchedPosts.map((p) => (p.isStatic ? p.slug : p.id)).filter(Boolean);
           const countsMap = {};
-          favsSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.blogId) {
-              countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+          if (blogIds.length > 0) {
+            const chunks = [];
+            for (let i = 0; i < blogIds.length; i += 30) {
+              chunks.push(blogIds.slice(i, i + 30));
             }
-          });
+            const snapshots = await Promise.all(
+              chunks.map((chunk) =>
+                getDocs(query(collection(db, "FavoriteBlogs"), where("blogId", "in", chunk)))
+              )
+            );
+            snapshots.forEach((snapshot) => {
+              snapshot.docs.forEach((docSnap) => {
+                const data = docSnap.data();
+                if (data.blogId) {
+                  countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+                }
+              });
+            });
+          }
           fetchedPosts = fetchedPosts.map(p => {
             const key = p.isStatic ? p.slug : p.id;
             return {
@@ -231,16 +294,28 @@ const BlogPages = () => {
         console.error("Error fetching posts", e);
         let fallback = [...STATIC_POSTS];
         
-        // Count fallback favorites if possible
         try {
-          const favsSnapshot = await getDocs(collection(db, "FavoriteBlogs"));
+          const blogIds = fallback.map((p) => p.slug).filter(Boolean);
           const countsMap = {};
-          favsSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.blogId) {
-              countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+          if (blogIds.length > 0) {
+            const chunks = [];
+            for (let i = 0; i < blogIds.length; i += 30) {
+              chunks.push(blogIds.slice(i, i + 30));
             }
-          });
+            const snapshots = await Promise.all(
+              chunks.map((chunk) =>
+                getDocs(query(collection(db, "FavoriteBlogs"), where("blogId", "in", chunk)))
+              )
+            );
+            snapshots.forEach((snapshot) => {
+              snapshot.docs.forEach((docSnap) => {
+                const data = docSnap.data();
+                if (data.blogId) {
+                  countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+                }
+              });
+            });
+          }
           fallback = fallback.map(p => ({
             ...p,
             favoriteCount: countsMap[p.slug] || 0
@@ -256,7 +331,7 @@ const BlogPages = () => {
     };
 
     fetchPosts();
-  }, []);
+  }, [selectedCategory, sortBy, currentPage, cursors, isSearchActive]);
 
   const getReadTime = (content = "") => {
     const text = postHtmlToText(content);
@@ -312,9 +387,12 @@ const BlogPages = () => {
   }, [posts, selectedCategory, selectedTags, searchTerm, sortBy, showFavoritesOnly, favoriteBlogIds]);
 
   const filteredAndPagedPosts = useMemo(() => {
-    const start = (currentPage - 1) * 10;
-    return filteredPosts.slice(start, start + 10);
-  }, [filteredPosts, currentPage]);
+    if (isSearchActive) {
+      const start = (currentPage - 1) * 10;
+      return filteredPosts.slice(start, start + 10);
+    }
+    return filteredPosts;
+  }, [filteredPosts, currentPage, isSearchActive]);
 
   const totalPosts = filteredPosts.length;
 
@@ -462,19 +540,31 @@ const BlogPages = () => {
       };
 
       if (editingPost) {
-        await updateDoc(doc(db, "BlogPosts", editingPost.id), {
-          ...postData,
-          createdAt: editingPost.createdAt, // Preserve creation date
-        });
-        toast.success(t("postUpdated"));
+        const updateData = {
+          title: formData.title,
+          slug: formData.slug,
+          description: formData.description,
+          category: formData.category,
+          tags: formData.tags,
+          content: formData.content,
+          coverImage: formData.coverImage,
+          published: formData.published,
+          contentText: postHtmlToText(formData.content),
+          searchText: normalizeSearchText(
+            formData.title + " " + formData.description + " " + postHtmlToText(formData.content)
+          ),
+          updatedAt: serverTimestamp(),
+        };
+        await updateDoc(doc(db, "BlogPosts", editingPost.id), updateData);
+        toast.success(t("postUpdated") || "Post updated successfully");
         // Update local list
         setPosts((prev) =>
           prev.map((p) =>
             p.id === editingPost.id
               ? {
                   ...p,
-                  ...postData,
-                  createdAt: editingPost.createdAt,
+                  ...updateData,
+                  updatedAt: new Date(),
                 }
               : p
           )
@@ -709,20 +799,30 @@ const BlogPages = () => {
     fetchRelated();
   }, [currentPost]);
 
-  // TOC for detail
-  const getTOC = (content) => {
-    if (!content) return [];
+  // TOC and content processing for detail smooth scroll
+  const { tocItems, processedContent } = useMemo(() => {
+    if (!currentPost?.content) return { tocItems: [], processedContent: "" };
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, "text/html");
-    const headings = doc.querySelectorAll("h1, h2, h3");
-    return Array.from(headings).map((h) => ({
-      id: h.id || `heading-${Date.now()}`,
-      text: h.textContent,
-      level: parseInt(h.tagName[1]),
-    }));
-  };
-
-  const tocItems = getTOC(currentPost?.content || "");
+    const htmlDoc = parser.parseFromString(currentPost.content, "text/html");
+    const headings = htmlDoc.querySelectorAll("h1, h2, h3");
+    const toc = Array.from(headings).map((h, idx) => {
+      const cleanText = (h.textContent || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-");
+      const id = h.id || `heading-${cleanText || idx}`;
+      h.id = id; // Inject id in content
+      return {
+        id,
+        text: h.textContent,
+        level: parseInt(h.tagName[1]),
+      };
+    });
+    return {
+      tocItems: toc,
+      processedContent: htmlDoc.body.innerHTML,
+    };
+  }, [currentPost?.content]);
 
   const blogDetailSchema = useMemo(() => {
     if (!currentPost) return null;
@@ -851,15 +951,32 @@ const BlogPages = () => {
               )}
             </div>
           </div>
+          
+          {searchTerm && (
+            <div className="search-banner mb-4 d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: "rgba(142, 84, 233, 0.08)", border: "1px solid var(--vb-glass-border, rgba(255,255,255,0.08))", backdropFilter: "blur(8px)", color: "var(--app-text)" }}>
+              <span className="d-flex align-items-center gap-2">
+                <span style={{ fontSize: "14px" }}>Tìm kiếm bài viết: <strong>"{searchTerm}"</strong></span>
+              </span>
+              <button 
+                type="button"
+                className="btn btn-sm btn-link text-decoration-none p-0"
+                onClick={() => setSearchConfig(null)}
+                style={{ color: "var(--vb-primary, #8e54e9)", fontWeight: "600" }}
+              >
+                Xóa tìm kiếm ×
+              </button>
+            </div>
+          )}
 
           {loading ? (
             <p>{t("loading")}</p>
           ) : (
             <div className="blog-grid">
-              {filteredAndPagedPosts.map((post) => (
+              {filteredAndPagedPosts.map((post, index) => (
                 <BlogCard
                   key={post.id || post.slug}
                   post={post}
+                  index={index}
                   isFavorite={favoriteBlogIds.has(post.isStatic ? post.slug : post.id)}
                   onToggleFavorite={handleToggleFavorite}
                   onEdit={openEditModal}
@@ -872,13 +989,32 @@ const BlogPages = () => {
             </div>
           )}
 
-          {totalPosts > 10 && (
+          {(isSearchActive ? totalPosts > 10 : (currentPage > 1 || hasMore)) && (
             <div className="pagination">
-              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || loading}
+              >
                 {t("previous")}
               </button>
               <span>Page {currentPage}</span>
-              <button onClick={() => setCurrentPage((p) => p + 1)} disabled={currentPage * 10 >= totalPosts}>
+              <button
+                onClick={() => {
+                  if (isSearchActive) {
+                    setCurrentPage((p) => p + 1);
+                  } else {
+                    if (hasMore && nextCursor) {
+                      setCursors((prev) => {
+                        const newCursors = [...prev];
+                        newCursors[currentPage] = nextCursor;
+                        return newCursors;
+                      });
+                      setCurrentPage((p) => p + 1);
+                    }
+                  }
+                }}
+                disabled={isSearchActive ? (currentPage * 10 >= totalPosts) : (!hasMore || loading)}
+              >
                 {t("next")}
               </button>
             </div>
@@ -889,8 +1025,8 @@ const BlogPages = () => {
       {/* Detail view */}
       {isDetailView && currentPost && (
         <div>
-          <BlogDetail
-            post={currentPost}
+           <BlogDetail
+            post={{ ...currentPost, content: processedContent }}
             isFavorite={favoriteBlogIds.has(currentPost.isStatic ? currentPost.slug : currentPost.id)}
             onToggleFavorite={handleToggleFavorite}
             t={t}

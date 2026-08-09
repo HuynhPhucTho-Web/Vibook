@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback, useRef } from "react";
+import React, { useState, useEffect, useContext, useCallback, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import {
@@ -11,11 +11,16 @@ import {
   doc,
   serverTimestamp,
   getDoc,
+  getDocs,
+  orderBy,
+  where,
+  limit,
+  startAt,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
-import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes } from "react-icons/fa";
+import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes, FaClock, FaMapMarkerAlt, FaUsers, FaUser } from "react-icons/fa";
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
@@ -41,7 +46,6 @@ const quillFormats = [
   "underline",
   "strike",
   "list",
-  "bullet",
   "align",
   "link",
   "image",
@@ -49,10 +53,14 @@ const quillFormats = [
 
 const Events = () => {
   const { theme } = useContext(ThemeContext);
-  const { t } = useContext(LanguageContext);
+  const { t, language } = useContext(LanguageContext);
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [cursors, setCursors] = useState([null]);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -137,26 +145,75 @@ const Events = () => {
 
 
 
-  // Load events (public browse)
+  const isSearchActive = !!search.trim();
+
+  // Reset pagination on search change
   useEffect(() => {
-    setIsLoading(true);
-    const eventsQuery = query(collection(db, "Events"));
-    const unsubscribe = onSnapshot(
-      eventsQuery,
-      (snapshot) => {
-        const eventList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          attendees: doc.data().attendees || [],
-          startDateTime: doc.data().startDateTime || null,
-          endDateTime: doc.data().endDateTime || null,
-          bannerImage: doc.data().bannerImage || null,
-        }));
+    setCurrentPage(1);
+    setCursors([null]);
+  }, [search]);
+
+  // Load events
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      try {
+        let q = query(collection(db, "Events"));
+
+        // Sort by startDateTime ascending (Upcoming events first)
+        q = query(q, orderBy("startDateTime", "asc"));
+
+        if (isSearchActive) {
+          // Fetch up to 100 events to filter client-side if searching
+          q = query(q, limit(100));
+        } else {
+          // Normal page-by-page cursor pagination
+          const startCursor = cursors[currentPage - 1];
+          if (startCursor) {
+            q = query(q, startAt(startCursor));
+          }
+          q = query(q, limit(7)); // Page size 6 + 1 for hasMore check
+        }
+
+        const snapshot = await getDocs(q);
+        const docs = snapshot.docs;
+
+        let eventList = [];
+        if (isSearchActive) {
+          eventList = docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            attendees: doc.data().attendees || [],
+            startDateTime: doc.data().startDateTime || null,
+            endDateTime: doc.data().endDateTime || null,
+            bannerImage: doc.data().bannerImage || null,
+          }));
+          setHasMore(false);
+          setNextCursor(null);
+        } else {
+          const hasNext = docs.length > 6;
+          setHasMore(hasNext);
+
+          const pageDocs = hasNext ? docs.slice(0, 6) : docs;
+          eventList = pageDocs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            attendees: doc.data().attendees || [],
+            startDateTime: doc.data().startDateTime || null,
+            endDateTime: doc.data().endDateTime || null,
+            bannerImage: doc.data().bannerImage || null,
+          }));
+
+          if (hasNext) {
+            setNextCursor(docs[6]);
+          } else {
+            setNextCursor(null);
+          }
+        }
+
         setEvents(eventList);
-        setFilteredEvents(eventList);
         setIsLoading(false);
-      },
-      (error) => {
+      } catch (error) {
         console.error("Error fetching events:", error);
         toast.error(t("unableToLoadEvents"), {
           position: "top-center",
@@ -164,10 +221,10 @@ const Events = () => {
         });
         setIsLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [t]);
+    fetchEvents();
+  }, [search, currentPage, cursors, isSearchActive, t]);
 
   // Filter active events (not ended)
   useEffect(() => {
@@ -186,6 +243,16 @@ const Events = () => {
 
     setFilteredEvents(filtered);
   }, [search, events]);
+
+  const pagedEvents = useMemo(() => {
+    if (isSearchActive) {
+      const start = (currentPage - 1) * 6;
+      return filteredEvents.slice(start, start + 6);
+    }
+    return filteredEvents;
+  }, [filteredEvents, currentPage, isSearchActive]);
+
+  const totalEvents = filteredEvents.length;
 
   // Create event
   const handleCreateEvent = useCallback(
@@ -351,11 +418,13 @@ const Events = () => {
 
   // Format event date (start and end)
   const formatEventDates = useCallback((startDate, endDate) => {
-    const now = new Date();
-    let str = "Date: ";
+    const isVi = language === "vi";
+    let str = "";
     if (startDate) {
       const start = new Date(startDate);
-      str += `From ${start.toLocaleString("en-US", {
+      const locale = isVi ? "vi-VN" : "en-US";
+      const fromStr = isVi ? "Từ" : "From";
+      str += `${fromStr} ${start.toLocaleString(locale, {
         weekday: "long",
         day: "2-digit",
         month: "2-digit",
@@ -366,7 +435,9 @@ const Events = () => {
     }
     if (endDate) {
       const end = new Date(endDate);
-      str += `to ${end.toLocaleString("en-US", {
+      const locale = isVi ? "vi-VN" : "en-US";
+      const toStr = isVi ? "đến" : "to";
+      str += `${toStr} ${end.toLocaleString(locale, {
         weekday: "long",
         day: "2-digit",
         month: "2-digit",
@@ -375,10 +446,10 @@ const Events = () => {
         minute: "2-digit",
       })}`;
     } else {
-      str += "Ongoing";
+      str += isVi ? "Đang diễn ra" : "Ongoing";
     }
     return str;
-  }, []);
+  }, [language]);
 
   // Format for display, using start/end
   const formatEventDateDisplay = useCallback((event) => {
@@ -425,7 +496,10 @@ const Events = () => {
       const userPromises = attendeeIds.map(async (uid) => {
         const userDoc = await getDoc(doc(db, "Users", uid));
         if (userDoc.exists()) {
-          return { uid, ...userDoc.data() };
+          const data = userDoc.data();
+          const fullName = ((data.firstName || "") + " " + (data.lastName || "")).trim() || data.displayName || "Unknown User";
+          const photoURL = data.photo || data.photoURL || null;
+          return { uid, ...data, displayName: fullName, photoURL };
         }
         return { uid, displayName: "Unknown User", photoURL: null };
       });
@@ -454,7 +528,10 @@ const Events = () => {
       const userPromises = attendeeIds.map(async (uid) => {
         const userDoc = await getDoc(doc(db, "Users", uid));
         if (userDoc.exists()) {
-          return { uid, ...userDoc.data() };
+          const data = userDoc.data();
+          const fullName = ((data.firstName || "") + " " + (data.lastName || "")).trim() || data.displayName || "Unknown User";
+          const photoURL = data.photo || data.photoURL || null;
+          return { uid, ...data, displayName: fullName, photoURL };
         }
         return { uid, displayName: "Unknown User", photoURL: null };
       });
@@ -514,116 +591,141 @@ const Events = () => {
 
         {/* Create Event Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="event-modal-overlay p-4">
             <div
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700"
               ref={modalRef}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                   {t("createNewEvent")}
                 </h3>
                 <button
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                   onClick={() => setShowCreateModal(false)}
                 >
-                  <FaTimes size={20} />
+                  <FaTimes size={18} />
                 </button>
               </div>
               <form onSubmit={handleCreateEvent}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("eventName")}
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t("eventName")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
                     placeholder={t("enterEventName")}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={100}
                     required
                   />
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("eventNameHint")}
+                  </small>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("dateAndTime")}
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={startDateTime}
-                    onChange={(e) => setStartDateTime(e.target.value)}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-                    placeholder="Start"
-                    required
-                  />
-                  <input
-                    type="datetime-local"
-                    value={endDateTime}
-                    onChange={(e) => setEndDateTime(e.target.value)}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="End"
-                  />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      {t("startDateTime")} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={startDateTime}
+                      onChange={(e) => setStartDateTime(e.target.value)}
+                      className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {t("startDateTimeHint")}
+                    </small>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      {t("endDateTime")} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={endDateTime}
+                      onChange={(e) => setEndDateTime(e.target.value)}
+                      className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {t("endDateTimeHint")}
+                    </small>
+                  </div>
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("bannerImage")}
                   </label>
-                  <div className="flex gap-3 items-start">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const fileInput = document.createElement("input");
-                        fileInput.type = "file";
-                        fileInput.accept = "image/*";
-                        fileInput.onchange = async (e) => {
-                          const file = e.target.files[0];
-                          if (!file) return;
-                          try {
-                            const bannerUrl = await uploadToCloudinary(file);
-                            setEventBannerImage(bannerUrl);
-                            toast.success("Banner uploaded successfully!");
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        };
-                        fileInput.click();
-                      }}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium"
-                    >
-                      📸 Upload Banner (Cloudinary)
-                    </button>
-
-                    {eventBannerImage && (
-                      <div>
+                  <div className="space-y-3">
+                    {!eventBannerImage ? (
+                      <div
+                        onClick={async () => {
+                          const fileInput = document.createElement("input");
+                          fileInput.type = "file";
+                          fileInput.accept = "image/*";
+                          fileInput.onchange = async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            try {
+                              const bannerUrl = await uploadToCloudinary(file);
+                              setEventBannerImage(bannerUrl);
+                              toast.success("Banner uploaded successfully!");
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          };
+                          fileInput.click();
+                        }}
+                        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      >
+                        <div className="text-2xl mb-1">📸</div>
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                          {language === "vi" ? "Tải lên ảnh bìa (Cloudinary)" : "Upload Banner (Cloudinary)"}
+                        </span>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          PNG, JPG, GIF (Max 5MB)
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 group">
                         <img
                           src={eventBannerImage}
-                          alt="Preview"
-                          className="w-20 h-20 object-cover rounded-lg border"
+                          alt="Banner Preview"
+                          className="w-full h-40 object-cover"
                         />
                         <button
                           type="button"
                           onClick={() => setEventBannerImage("")}
-                          className="text-red-500 text-xs mt-1"
+                          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-lg p-1.5 shadow-md text-xs font-semibold flex items-center gap-1 transition"
                         >
-                          Remove
+                          <FaTimes size={12} /> {t("delete") || "Xóa"}
                         </button>
                       </div>
                     )}
+                    {eventBannerImage && (
+                      <input
+                        type="text"
+                        value={eventBannerImage}
+                        onChange={(e) => setEventBannerImage(e.target.value)}
+                        placeholder="Banner secure URL (Cloudinary)"
+                        className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                      />
+                    )}
                   </div>
-                  {eventBannerImage && (
-                    <input
-                      type="text"
-                      value={eventBannerImage}
-                      onChange={(e) => setEventBannerImage(e.target.value)}
-                      placeholder="Cloudinary secure URL (preview)"
-                      className="mt-3 w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  )}
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("bannerImageHint")}
+                  </small>
                 </div>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("location")}
                   </label>
                   <input
@@ -631,34 +733,44 @@ const Events = () => {
                     value={eventLocation}
                     onChange={(e) => setEventLocation(e.target.value)}
                     placeholder={t("enterLocationOptional")}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={200}
                   />
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("locationHint")}
+                  </small>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+
+                <div className="mb-5">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("description")}
                   </label>
-                  <ReactQuill
-                    value={eventDescription}
-                    onChange={setEventDescription}
-                    placeholder={t("enterEventDescriptionOptional")}
-                    className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                    modules={quillModules}
-                    formats={quillFormats}
-                  />
+                  <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                    <ReactQuill
+                      value={eventDescription}
+                      onChange={setEventDescription}
+                      placeholder={t("enterEventDescriptionOptional")}
+                      className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                      modules={quillModules}
+                      formats={quillFormats}
+                    />
+                  </div>
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("eventDescriptionHint")}
+                  </small>
                 </div>
-                <div className="flex justify-end gap-2">
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                   <button
                     type="button"
-                    className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    className="px-5 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium transition"
                     onClick={() => setShowCreateModal(false)}
                   >
                     {t("cancel")}
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-colors"
+                    className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400 dark:disabled:text-gray-500 text-sm font-semibold transition"
                     disabled={!eventName.trim() || !startDateTime.trim() || !endDateTime.trim()}
                   >
                     {t("create")}
@@ -671,116 +783,141 @@ const Events = () => {
 
         {/* Edit Event Modal */}
         {showEditModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="event-modal-overlay p-4">
             <div
-              className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm max-h-[85vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700"
               ref={modalRef}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                   {t("updateEvent")}
                 </h3>
                 <button
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                   onClick={() => setShowEditModal(false)}
                 >
-                  <FaTimes size={20} />
+                  <FaTimes size={18} />
                 </button>
               </div>
               <form onSubmit={handleUpdateEvent}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("eventName")}
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {t("eventName")} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
                     placeholder={t("enterEventName")}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={100}
                     required
                   />
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("eventNameHint")}
+                  </small>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("dateAndTime")}
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={startDateTime}
-                    onChange={(e) => setStartDateTime(e.target.value)}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-                    placeholder="Start"
-                    required
-                  />
-                  <input
-                    type="datetime-local"
-                    value={endDateTime}
-                    onChange={(e) => setEndDateTime(e.target.value)}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="End"
-                  />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      {t("startDateTime")} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={startDateTime}
+                      onChange={(e) => setStartDateTime(e.target.value)}
+                      className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {t("startDateTimeHint")}
+                    </small>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      {t("endDateTime")} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={endDateTime}
+                      onChange={(e) => setEndDateTime(e.target.value)}
+                      className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                    <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {t("endDateTimeHint")}
+                    </small>
+                  </div>
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("bannerImage")}
                   </label>
-                  <div className="flex gap-3 items-start">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const fileInput = document.createElement("input");
-                        fileInput.type = "file";
-                        fileInput.accept = "image/*";
-                        fileInput.onchange = async (e) => {
-                          const file = e.target.files[0];
-                          if (!file) return;
-                          try {
-                            const bannerUrl = await uploadToCloudinary(file);
-                            setEventBannerImage(bannerUrl);
-                            toast.success("Banner uploaded successfully!");
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        };
-                        fileInput.click();
-                      }}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium"
-                    >
-                      📸 Upload Banner (Cloudinary)
-                    </button>
-
-                    {eventBannerImage && (
-                      <div>
+                  <div className="space-y-3">
+                    {!eventBannerImage ? (
+                      <div
+                        onClick={async () => {
+                          const fileInput = document.createElement("input");
+                          fileInput.type = "file";
+                          fileInput.accept = "image/*";
+                          fileInput.onchange = async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            try {
+                              const bannerUrl = await uploadToCloudinary(file);
+                              setEventBannerImage(bannerUrl);
+                              toast.success("Banner uploaded successfully!");
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          };
+                          fileInput.click();
+                        }}
+                        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                      >
+                        <div className="text-2xl mb-1">📸</div>
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                          {language === "vi" ? "Tải lên ảnh bìa (Cloudinary)" : "Upload Banner (Cloudinary)"}
+                        </span>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          PNG, JPG, GIF (Max 5MB)
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 group">
                         <img
                           src={eventBannerImage}
-                          alt="Preview"
-                          className="w-20 h-20 object-cover rounded-lg border"
+                          alt="Banner Preview"
+                          className="w-full h-40 object-cover"
                         />
                         <button
                           type="button"
                           onClick={() => setEventBannerImage("")}
-                          className="text-red-500 text-xs mt-1"
+                          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-lg p-1.5 shadow-md text-xs font-semibold flex items-center gap-1 transition"
                         >
-                          Remove
+                          <FaTimes size={12} /> {t("delete") || "Xóa"}
                         </button>
                       </div>
                     )}
+                    {eventBannerImage && (
+                      <input
+                        type="text"
+                        value={eventBannerImage}
+                        onChange={(e) => setEventBannerImage(e.target.value)}
+                        placeholder="Banner secure URL (Cloudinary)"
+                        className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                      />
+                    )}
                   </div>
-                  {eventBannerImage && (
-                    <input
-                      type="text"
-                      value={eventBannerImage}
-                      onChange={(e) => setEventBannerImage(e.target.value)}
-                      placeholder="Cloudinary secure URL (preview)"
-                      className="mt-3 w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  )}
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("bannerImageHint")}
+                  </small>
                 </div>
+
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("location")}
                   </label>
                   <input
@@ -788,37 +925,47 @@ const Events = () => {
                     value={eventLocation}
                     onChange={(e) => setEventLocation(e.target.value)}
                     placeholder={t("enterLocationOptional")}
-                    className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={200}
                   />
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("locationHint")}
+                  </small>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+
+                <div className="mb-5">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("description")}
                   </label>
-                  <ReactQuill
-                    value={eventDescription}
-                    onChange={setEventDescription}
-                    placeholder={t("enterEventDescriptionOptional")}
-                    className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                    modules={quillModules}
-                    formats={quillFormats}
-                  />
+                  <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                    <ReactQuill
+                      value={eventDescription}
+                      onChange={setEventDescription}
+                      placeholder={t("enterEventDescriptionOptional")}
+                      className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                      modules={quillModules}
+                      formats={quillFormats}
+                    />
+                  </div>
+                  <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {t("eventDescriptionHint")}
+                  </small>
                 </div>
-                <div className="flex justify-end gap-2">
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                   <button
                     type="button"
-                    className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    className="px-5 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium transition"
                     onClick={() => setShowEditModal(false)}
                   >
                     {t("cancel")}
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 transition-colors"
+                    className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-400 dark:disabled:text-gray-500 text-sm font-semibold transition"
                     disabled={!eventName.trim() || !startDateTime.trim() || !endDateTime.trim()}
                   >
-                    Save
+                    {t("save")}
                   </button>
                 </div>
               </form>
@@ -828,7 +975,7 @@ const Events = () => {
 
         {/* Participants Modal */}
         {showParticipantsModal && selectedEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="event-modal-overlay">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -844,11 +991,30 @@ const Events = () => {
               <div className="space-y-3">
                 {participantsData.map((user) => (
                   <div key={user.uid} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <img
-                      src={user.photoURL || "/default-avatar.png"}
-                      alt={user.displayName}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+                    {user.photoURL ? (
+                      <div className="relative w-10 h-10 shrink-0">
+                        <img
+                          src={user.photoURL}
+                          alt={user.displayName}
+                          className="w-10 h-10 rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            const fallback = e.target.parentNode.querySelector(".avatar-fallback");
+                            if (fallback) {
+                              fallback.style.display = "flex";
+                              fallback.style.setProperty("display", "flex", "important");
+                            }
+                          }}
+                        />
+                        <div className="avatar-fallback w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 align-items-center justify-center border border-blue-100 dark:border-blue-900/50" style={{ display: "none" }}>
+                          <FaUser size={16} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/50">
+                        <FaUser size={16} />
+                      </div>
+                    )}
                     <div>
                       <p className="font-medium text-gray-800 dark:text-gray-200">
                         {user.displayName}
@@ -868,93 +1034,123 @@ const Events = () => {
 
         {/* Full Details Modal with React Quill content */}
         {showDetailsModal && selectedEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-auto">
+          <div className="event-modal-overlay p-4 overflow-auto">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-xl max-h-[82vh] overflow-hidden flex flex-col">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                    {selectedEvent.name}
-                  </h3>
-                  <button
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                    onClick={() => {
-                      setShowDetailsModal(false);
-                      setSelectedEvent(null);
-                    }}
-                  >
-                    <FaTimes size={20} />
-                  </button>
-                </div>
+              {/* Sticky Header */}
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white truncate pr-4">
+                  {selectedEvent.name}
+                </h3>
+                <button
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-250 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedEvent(null);
+                  }}
+                >
+                  <FaTimes size={18} />
+                </button>
+              </div>
 
+              {/* Scrollable Body Container */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-5">
                 {selectedEvent.bannerImage && (
-                  <img
-                    src={selectedEvent.bannerImage}
-                    alt="Event banner"
-                    className="w-full h-48 object-cover rounded-xl mb-6"
-                  />
+                  <div className="overflow-hidden rounded-xl aspect-[16/9] w-full">
+                    <img
+                      src={selectedEvent.bannerImage}
+                      alt="Event banner"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
 
-                <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300">
-                  <div>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {t("date")}:
-                    </span>{" "}
-                    {formatEventDateDisplay(selectedEvent)}
+                {/* Info metadata with icons */}
+                <div className="space-y-3 bg-gray-55 dark:bg-gray-800/80 p-4 rounded-xl">
+                  <div className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300">
+                    <FaClock className="text-blue-500 mt-0.5 shrink-0" size={15} />
+                    <div>
+                      <span className="font-semibold block text-gray-900 dark:text-white">{t("date")}</span>
+                      <span className="text-xs leading-relaxed">{formatEventDateDisplay(selectedEvent)}</span>
+                    </div>
                   </div>
                   {selectedEvent.location && (
-                    <div>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
-                        {t("location")}:
-                      </span>{" "}
-                      {selectedEvent.location}
+                    <div className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200/50 dark:border-gray-700/50 pt-3">
+                      <FaMapMarkerAlt className="text-red-500 mt-0.5 shrink-0" size={15} />
+                      <div>
+                        <span className="font-semibold block text-gray-900 dark:text-white">{t("location")}</span>
+                        <span className="text-xs leading-relaxed">{selectedEvent.location}</span>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-6 border-t pt-4">
-                  <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Description</h4>
+                {/* Description */}
+                <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+                  <h4 className="font-bold text-gray-900 dark:text-white mb-2.5">
+                    Mô tả sự kiện
+                  </h4>
                   <div 
-                    className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
-                    dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }}
+                    className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 text-sm leading-relaxed event-desc-content"
+                    dangerouslySetInnerHTML={{ __html: selectedEvent.description || "No description" }}
                   />
                 </div>
 
                 {/* Participants section */}
-                <div className="mt-6 border-t pt-4">
-                  <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                    Participants ({selectedEvent.attendees?.length || 0})
+                <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+                  <h4 className="font-bold text-gray-900 dark:text-white mb-3">
+                    Người tham gia ({selectedEvent.attendees?.length || 0})
                   </h4>
-                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedEvent.attendees && selectedEvent.attendees.length > 0 ? (
                       selectedEvent.attendees.map((uid) => {
                         const user = participantsData.find(p => p.uid === uid) || { displayName: "Unknown User", photoURL: null };
                         return (
-                          <div key={uid} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <img
-                              src={user.photoURL || "/default-avatar.png"}
-                              alt={user.displayName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                            <p className="font-medium">{user.displayName}</p>
+                          <div key={uid} className="flex items-center gap-2.5 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100/50 dark:border-gray-700/30">
+                            {user.photoURL ? (
+                              <div className="relative w-8 h-8 shrink-0">
+                                <img
+                                  src={user.photoURL}
+                                  alt={user.displayName}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = "none";
+                                    const fallback = e.target.parentNode.querySelector(".avatar-fallback");
+                                    if (fallback) {
+                                      fallback.style.display = "flex";
+                                      fallback.style.setProperty("display", "flex", "important");
+                                    }
+                                  }}
+                                />
+                                <div className="avatar-fallback w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 align-items-center justify-center border border-blue-100 dark:border-blue-900/50" style={{ display: "none" }}>
+                                  <FaUser size={12} />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/50">
+                                <FaUser size={12} />
+                              </div>
+                            )}
+                            <p className="font-semibold text-xs text-gray-800 dark:text-gray-200 truncate flex-1">{user.displayName}</p>
                           </div>
                         );
                       })
                     ) : (
-                      <p>No participants yet.</p>
+                      <p className="text-sm text-gray-500 col-span-full">Chưa có người tham gia.</p>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-700 p-4 flex justify-end">
+              {/* Sticky Footer */}
+              <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 flex justify-end shrink-0 border-t border-gray-100 dark:border-gray-700">
                 <button
                   onClick={() => {
                     setShowDetailsModal(false);
                     setSelectedEvent(null);
                   }}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="px-5 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors text-sm font-semibold shadow-md shadow-blue-500/10"
                 >
-                  Close
+                  Đóng
                 </button>
               </div>
             </div>
@@ -963,8 +1159,8 @@ const Events = () => {
 
         {/* Events List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => {
+          {pagedEvents.length > 0 ? (
+            pagedEvents.map((event) => {
               // Guest-safe: page remains viewable without login
               const uid = currentUser?.uid;
               const attendees = event.attendees || [];
@@ -974,24 +1170,24 @@ const Events = () => {
               return (
                 <div
                   key={event.id}
-                  className={`relative w-full mb-6 p-6 rounded-xl shadow-lg border transition-all duration-300 cursor-pointer ${theme === "light"
+                  className={`relative w-full mb-6 p-6 rounded-xl shadow-lg border transition-all duration-300 hover:-translate-y-1 cursor-pointer ${theme === "light"
                     ? "bg-white border-gray-200 text-gray-900 hover:shadow-xl"
                     : "bg-gray-800 border-gray-700 text-gray-100 hover:shadow-2xl"
                     }`}
                   onClick={(e) => {
-                    // Prevent clicking options menu from opening details
-                    if (e.target.closest('[data-options-id]')) return;
+                    if (e.target.closest('[data-options-id]') || e.target.closest('button') || e.target.closest('a')) return;
                     handleShowDetails(event);
                   }}
                 >
                   {/* Nút Options góc phải */}
                   {isOwner && (
-                    <div className="absolute top-4 right-4" data-options-id={event.id}>
+                    <div className="absolute top-4 right-4 z-10" data-options-id={event.id}>
                       <button
-                        onClick={() =>
-                          setShowOptions(showOptions === event.id ? null : event.id)
-                        }
-                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowOptions(showOptions === event.id ? null : event.id);
+                        }}
+                        className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors"
                       >
                         <FaEllipsisV />
                       </button>
@@ -999,7 +1195,8 @@ const Events = () => {
                       {showOptions === event.id && (
                         <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-700 border rounded-lg shadow-lg z-20">
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setEditingEvent(event);
                               setEventName(event.name);
                               setStartDateTime(event.startDateTime || "");
@@ -1010,16 +1207,17 @@ const Events = () => {
                               setShowEditModal(true);
                               setShowOptions(null);
                             }}
-                            className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm"
                           >
-                            <FaEdit className="inline mr-2 " /> {t("edit")}
+                            <FaEdit className="inline mr-2" /> {t("edit")}
                           </button>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleDeleteEvent(event.id, event.ownerId);
                               setShowOptions(null);
                             }}
-                            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                            className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm"
                           >
                             <FaTrash className="inline mr-2" /> {t("delete")}
                           </button>
@@ -1028,12 +1226,11 @@ const Events = () => {
                     </div>
                   )}
 
-                  {/* Banner Image - outside card content but on card, clickable for details */}
+                  {/* Banner Image */}
                   {event.bannerImage && (
                     <div 
-                      className="mb-4 cursor-pointer overflow-hidden rounded-xl"
+                      className="mb-4 cursor-pointer overflow-hidden rounded-xl aspect-[16/9] w-full"
                       onClick={(e) => {
-                        // Prevent opening options menu
                         if (e.target.closest('[data-options-id]')) return;
                         handleShowDetails(event);
                       }}
@@ -1041,77 +1238,87 @@ const Events = () => {
                       <img
                         src={event.bannerImage}
                         alt="Event banner"
-                        className="w-full h-48 object-cover rounded-xl"
+                        className="w-full h-full object-cover rounded-xl transition-transform duration-500 hover:scale-105"
                       />
                     </div>
                   )}
 
                   {/* Nội dung Event */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-blue-500 text-white rounded-full p-3">
-                      <FaCalendarAlt size={28} />
+                  <div className="flex items-center gap-3.5 mb-4">
+                    <div className="bg-gradient-to-tr from-blue-500 to-indigo-500 text-white rounded-xl p-2.5 shadow-md flex items-center justify-center shrink-0 w-11 h-11">
+                      <FaCalendarAlt size={20} />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-semibold truncate max-w-[400px]">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-snug line-clamp-1">
                         {event.name}
                       </h3>
                       <button
-                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer"
-                        onClick={() => handleShowParticipants(event)}
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer flex items-center gap-1.5 mt-0.5"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShowParticipants(event);
+                        }}
                       >
-                        {attendees.length} {t("participants")}
+                        <FaUsers size={12} className="text-blue-500" />
+                        <span>{attendees.length} {t("participants")}</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    <div>
-                      <span className="font-medium">{t("date")} {formatEventDateDisplay(event)}</span>
+                  <div className="space-y-2.5 text-sm text-gray-600 dark:text-gray-300 mb-4 border-t border-gray-50 dark:border-gray-700/50 pt-3">
+                    <div className="flex items-start gap-2.5">
+                      <FaClock className="text-blue-500 mt-0.5 shrink-0" size={13} />
+                      <span className="leading-normal">{formatEventDateDisplay(event)}</span>
                     </div>
-                    <div>
-                      <span className="font-medium">{t("location")}</span> {event.location}
-                    </div>
+                    {event.location && (
+                      <div className="flex items-start gap-2.5">
+                        <FaMapMarkerAlt className="text-red-500 mt-0.5 shrink-0" size={13} />
+                        <span className="leading-normal">{event.location}</span>
+                      </div>
+                    )}
                     <div
-                      className="line-clamp-3 text-gray-600 dark:text-gray-300"
+                      className="line-clamp-2 text-gray-500 dark:text-gray-400 pt-1 mt-1 text-xs border-t border-dashed border-gray-100 dark:border-gray-700"
                       dangerouslySetInnerHTML={{ __html: event.description || "No description" }}
                     />
                   </div>
 
                   {/* join / leave */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mt-4">
                     <a
                       href={`#event-chat/${event.id}`}
-                      className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                      className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 flex items-center justify-center transition-all hover:scale-105"
                       title="Event chat"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <FaComments size={20} />
+                      <FaComments size={18} />
                     </a>
                     <button
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${isAttendee
-                        ? "bg-red-500 text-white hover:bg-red-600"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-102 flex items-center gap-1.5 ${isAttendee
+                        ? "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20"
+                        : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30"
                         }`}
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         isAttendee
                           ? handleLeaveEvent(event.id, attendees)
-                          : handleJoinEvent(event.id, attendees)
-                      }
+                          : handleJoinEvent(event.id, attendees);
+                      }}
                     >
                       {isAttendee ? (
-                        <div className="flex items-center gap-1">
-                          <FaSignOutAlt size={14} />
-                          {t("leaveEvent")}
-                        </div>
+                        <>
+                          <FaSignOutAlt size={13} />
+                          <span>{t("leaveEvent")}</span>
+                        </>
                       ) : (
-                        <div className="flex items-center gap-1">
-                          <FaSignInAlt size={14} />
-                          {t("joinEvent")}
-                        </div>
+                        <>
+                          <FaSignInAlt size={13} />
+                          <span>{t("joinEvent")}</span>
+                        </>
                       )}
                     </button>
                   </div>
 
-                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-3">
+                  <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-4 border-t border-gray-50 dark:border-gray-700/50 pt-2">
                     Created: {formatTimeAgo(event.createdAt)}
                   </div>
                 </div>
@@ -1124,6 +1331,42 @@ const Events = () => {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {(isSearchActive ? totalEvents > 6 : (currentPage > 1 || hasMore)) && (
+          <div className="flex justify-center items-center gap-4 mt-8 pb-8">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1 || isLoading}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-semibold"
+            >
+              {t("previous")}
+            </button>
+            <span className="text-gray-600 dark:text-gray-300 text-sm font-semibold">
+              Page {currentPage}
+            </span>
+            <button
+              onClick={() => {
+                if (isSearchActive) {
+                  setCurrentPage((p) => p + 1);
+                } else {
+                  if (hasMore && nextCursor) {
+                    setCursors((prev) => {
+                      const newCursors = [...prev];
+                      newCursors[currentPage] = nextCursor;
+                      return newCursors;
+                    });
+                    setCurrentPage((p) => p + 1);
+                  }
+                }
+              }}
+              disabled={isSearchActive ? (currentPage * 6 >= totalEvents) : (!hasMore || isLoading)}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-semibold"
+            >
+              {t("next")}
+            </button>
+          </div>
+        )}
     </div>
   );
 };

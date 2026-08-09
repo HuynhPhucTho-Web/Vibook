@@ -1,193 +1,191 @@
 ---
-name: Futuristic Tech
+name: Vibook Content-First
+description: Minimalist, readable, and content-focused social book network.
 colors:
-  surface: '#12131a'
-  surface-dim: '#12131a'
-  surface-bright: '#383941'
-  surface-container-lowest: '#0d0e15'
-  surface-container-low: '#1a1b22'
-  surface-container: '#1e1f27'
-  surface-container-high: '#292931'
-  surface-container-highest: '#34343c'
-  on-surface: '#e3e1ec'
-  on-surface-variant: '#cdc3d6'
-  inverse-surface: '#e3e1ec'
-  inverse-on-surface: '#2f3038'
-  outline: '#968d9f'
-  outline-variant: '#4b4454'
-  surface-tint: '#d5baff'
-  primary: '#d5baff'
-  on-primary: '#42008a'
-  primary-container: '#8e54e9'
-  on-primary-container: '#fffeff'
-  inverse-primary: '#7639d0'
-  secondary: '#b2c5ff'
-  on-secondary: '#002b74'
-  secondary-container: '#054aba'
-  on-secondary-container: '#b2c5ff'
-  tertiary: '#ffb955'
-  on-tertiary: '#452b00'
-  tertiary-container: '#a26a00'
-  on-tertiary-container: '#fffeff'
-  error: '#ffb4ab'
-  on-error: '#690005'
-  error-container: '#93000a'
-  on-error-container: '#ffdad6'
-  primary-fixed: '#ecdcff'
-  primary-fixed-dim: '#d5baff'
-  on-primary-fixed: '#270057'
-  on-primary-fixed-variant: '#5d15b7'
-  secondary-fixed: '#dae2ff'
-  secondary-fixed-dim: '#b2c5ff'
-  on-secondary-fixed: '#001849'
-  on-secondary-fixed-variant: '#003fa3'
-  tertiary-fixed: '#ffddb4'
-  tertiary-fixed-dim: '#ffb955'
-  on-tertiary-fixed: '#291800'
-  on-tertiary-fixed-variant: '#633f00'
-  background: '#12131a'
-  on-background: '#e3e1ec'
-  surface-variant: '#34343c'
-  neon-purple: '#8e54e9'
-  electric-blue: '#4776e6'
-  glass-surface: rgba(255, 255, 255, 0.03)
-  glass-border: rgba(255, 255, 255, 0.12)
-  bg-deep: '#0c0d14'
+  primary: "#8e54e9"
+  primary-container: "#ecdcff"
+  secondary: "#4776e6"
+  surface: "#12131a"
+  surface-low: "#1a1b22"
+  surface-container: "#1e1f27"
+  on-surface: "#e3e1ec"
+  on-surface-variant: "#cdc3d6"
+  outline: "#968d9f"
+  outline-variant: "#4b4454"
+  deep: "#0c0d14"
+  white: "#ffffff"
+  light-bg: "#faf7f2"
+  light-border: "rgba(15, 23, 42, 0.1)"
+  light-text: "#162033"
 typography:
   headline-xl:
-    fontFamily: Hanken Grotesk
-    fontSize: 48px
-    fontWeight: '700'
-    lineHeight: 56px
-    letterSpacing: -0.02em
+    fontFamily: "Hanken Grotesk"
+    fontSize: "48px"
+    fontWeight: 700
+    lineHeight: "56px"
+    letterSpacing: "-0.02em"
   headline-lg:
-    fontFamily: Hanken Grotesk
-    fontSize: 32px
-    fontWeight: '600'
-    lineHeight: 40px
-    letterSpacing: -0.01em
-  headline-lg-mobile:
-    fontFamily: Hanken Grotesk
-    fontSize: 24px
-    fontWeight: '600'
-    lineHeight: 32px
+    fontFamily: "Hanken Grotesk"
+    fontSize: "32px"
+    fontWeight: 600
+    lineHeight: "40px"
+    letterSpacing: "-0.01em"
   body-md:
-    fontFamily: Hanken Grotesk
-    fontSize: 16px
-    fontWeight: '400'
-    lineHeight: 24px
+    fontFamily: "Hanken Grotesk"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: "24px"
   label-sm:
-    fontFamily: JetBrains Mono
-    fontSize: 12px
-    fontWeight: '500'
-    lineHeight: 16px
-    letterSpacing: 0.05em
+    fontFamily: "JetBrains Mono"
+    fontSize: "12px"
+    fontWeight: 500
+    lineHeight: "16px"
+    letterSpacing: "0.05em"
 rounded:
-  sm: 0.25rem
-  DEFAULT: 0.5rem
-  md: 0.75rem
-  lg: 1rem
-  xl: 1.5rem
-  full: 9999px
+  sm: "0.25rem"
+  DEFAULT: "0.5rem"
+  md: "0.75rem"
+  lg: "1rem"
+  xl: "1.5rem"
+  full: "9999px"
 spacing:
-  unit: 8px
-  gutter: 24px
-  margin-desktop: 64px
-  margin-mobile: 20px
+  unit: "8px"
+  gutter: "24px"
+  margin-desktop: "64px"
+  margin-mobile: "20px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.white}"
+    rounded: "{rounded.DEFAULT}"
+    padding: "10px 18px"
+  card-glass:
+    backgroundColor: "rgba(255, 255, 255, 0.03)"
+    rounded: "{rounded.DEFAULT}"
+    padding: "16px"
 ---
 
-## Brand & Style
-The design system is engineered for a high-performance, futuristic tech environment. It targets a tech-savvy audience that values innovation, speed, and cutting-edge aesthetics. 
+# Design System: Vibook
 
-The visual style is **Glassmorphism**, characterized by translucent surfaces, multi-layered depth, and vibrant background blurs. The interface should feel like a high-end digital cockpit, utilizing deep blacks for grounding and neon-infused gradients to direct attention. The emotional response is one of sophistication and technical mastery. High-contrast interactions and subtle glow effects reinforce the "living" nature of the software.
+## Overview
+
+**Creative North Star: "The Reader's Sanctuary"**
+
+Vibook's design system centers on a Modern Clean & Content-First layout. With book cataloging, feed posts, user-written blogs, and literary event coordination being the heart of the product, the user interface acts as a quiet, functional frame. Page clutter is minimized and typography layout is maximized to ensure readability during long reading and writing sessions.
+
+The system supports a dual-theme experience: a soft-light mode (warm, book-paper tone) for daytime reading, and a deep, low-contrast dark mode for night reading. The card-based UI divides complex structures into discrete units, simplifying grid structures and ensuring a flexible, responsive layout on mobile screens.
+
+**Key Characteristics:**
+- Content-first focus with visual elements taking a back seat.
+- Structured card-based grids with subtle borders.
+- Generous padding and margins (generous whitespace) to let the typography breathe.
+- High legibility pairing contemporary sans-serif with metadata-focused monospace.
+
+---
 
 ## Colors
-The palette is rooted in a "void-black" foundation to maximize the luminosity of the primary accents. 
 
-- **Primary & Secondary:** A gradient transition between Purple and Blue serves as the core brand identifier, used for active states, primary actions, and "glow" light sources.
-- **Surface Strategy:** Backgrounds are deep and opaque, while interactive layers use varying levels of transparency to create the glass effect.
-- **Functional Colors:** Success, warning, and error states should be tinted with the primary hue's saturation level to maintain visual harmony within the futuristic theme.
+The color palette is engineered to emphasize legibility and clear contrast boundaries in both dark and light modes.
+
+### Primary
+- **Deep Lavender** (#8e54e9): Used as the primary brand identifier for key actions, selected states, and main button backgrounds.
+
+### Secondary
+- **Electric Blue** (#4776e6): Used as a secondary interactive accent for inline focus outlines, link hover highlights, and active indicators.
+
+### Neutral
+- **Deep Canvas** (#12131a): The foundation of the dark mode interface.
+- **Warm Paper** (#faf7f2): The foundation of the light mode interface.
+- **Light Border** (rgba(15, 23, 42, 0.1)): Subtle gray outlines for containers in light mode.
+- **Dark Border** (rgba(255, 255, 255, 0.12)): Subtle outline styling for cards and layouts in dark mode.
+- **Dark Text** (#162033): High-contrast body color in light mode.
+- **Light Text** (#e3e1ec): High-contrast body color in dark mode.
+
+### Named Rules
+**The Subtle Accent Rule.** Gradient accent colors (Deep Lavender to Electric Blue) must be restricted to primary interactive elements and must never exceed 10% of any page surface. Backgrounds and major structural panels must rely entirely on clean neutrals.
+
+---
 
 ## Typography
-This design system utilizes **Hanken Grotesk** as its primary typeface to provide a clean, sharp, and contemporary feel that balances the organic nature of glass textures. 
 
-To reinforce the technical and developer-friendly nature of the product, **JetBrains Mono** is used for labels, metadata, and technical readouts. Headlines should use tight letter spacing and heavy weights to command attention against vibrant backgrounds. Body text maintains high legibility with generous line heights to ensure comfort during long reading sessions.
+**Display Font:** Hanken Grotesk (sans-serif)
+**Body Font:** Hanken Grotesk (sans-serif)
+**Label/Mono Font:** JetBrains Mono (monospace)
 
-## Layout & Spacing
-The layout follows a **fluid grid** system based on an 8px rhythmic scale. This ensures all components align perfectly across different screen sizes.
+**Character:** Hanken Grotesk provides a contemporary and crisp typeface that ensures high readability across book blurbs and posts. JetBrains Mono is utilized for tags, statistics, and metadata counters to communicate a technical yet clean layout style.
 
-- **Desktop:** A 12-column grid with 24px gutters and 64px side margins.
-- **Tablet:** An 8-column grid with 16px gutters and 32px side margins.
-- **Mobile:** A 4-column grid with 16px gutters and 20px side margins.
+### Hierarchy
+- **Display** (700, 48px, 56px): Used on splash headers, main landings, and book detail hero elements.
+- **Headline** (600, 32px, 40px): Used for primary page titles (e.g., Blog Index, Home Feed, Profile Header).
+- **Title** (600, 20px, 28px): Used inside card titles, widget labels, and section groupings.
+- **Body** (400, 16px, 24px): Standard text for blog articles, reviews, post descriptions, and commentary.
+- **Label** (500, 12px, 16px): Used for monospaced tags, publishing dates, count statistics, and input hints.
 
-Content is organized into modular "glass units." Vertical spacing between major sections should be generous (80px+) to allow the background blurs and ambient glows to breathe.
+### Named Rules
+**The Reading Comfort Rule.** Long-form textual content (specifically blog posts and book reviews) must be restricted to a maximum line length of 70 characters (70ch) and a 1.5 line height (24px) to reduce tracking fatigue.
+
+---
+
+## Layout
+
+The layout uses a fluid grid system driven by an 8px base spacing scale. Page structures are aligned horizontally inside standardized container blocks.
+
+- **Standard Grid Container:** Main layouts use `width: 100%`, `max-width: 1200px`, `margin: 0 auto`, and vertical page padding.
+- **Desktop Columns:** Sidebar navigation utilizes a fixed width of `200px` on desktop layouts, with a fluid content area displaying cards in a 3-column grid structure.
+- **Mobile Adaptive (≤ 820px):** Content wraps into a single column with a layout width of `100%` and a standard padding of `0.5rem (8px)`.
+
+---
 
 ## Elevation & Depth
-Depth is conveyed through **Glassmorphism** and light-source simulation rather than traditional shadows.
 
-1.  **Backdrop Blurs:** Every floating container must apply a `backdrop-filter: blur(20px)`.
-2.  **Tonal Stacking:** Surfaces closer to the user are lighter and more transparent; those further away are darker and more opaque.
-3.  **Neon Glow Borders:** Use 1px semi-transparent borders. For high-priority elements, apply a subtle outer glow (box-shadow) using the primary or secondary brand colors with a high spread and low opacity.
-4.  **Z-Index Logic:** Higher elevation elements should have a slightly higher border opacity to simulate light catching the "edge" of the glass.
+Vibook uses a flat-by-default visual strategy. Layout depth is established via tonal layering and thin borders instead of heavy box-shadow gradients.
+
+- **Tonal Layering (Dark Mode):** Base backgrounds use `#12131a`, cards rise to `#1e1f27` for standard grouping, and input containers sit at `#0c0d14` for a recessed input feel.
+- **Tonal Layering (Light Mode):** Base backgrounds use `#faf7f2`, cards use `#ffffff`, and inputs use `#ffffff` with a thin border.
+- **Elevation Shadow:** Card elements use a minimal elevated hover shadow (`box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05)`) in light mode to provide depth on interaction.
+
+### Named Rules
+**The Flat-by-Rest Rule.** Cards and elements sit flat at rest. Background blurs and glow borders appear only as hover states or structural overlays (modals) to prevent visual noise.
+
+---
 
 ## Shapes
-The shape language is "Softly Geometric." All containers and buttons use a **0.5rem (8px)** base radius. This prevents the UI from feeling too aggressive while maintaining a structural, engineered look. Larger components like cards and modals should scale up to **1.5rem (24px)** to emphasize their presence as floating glass panes.
+
+Shapes follow a consistent, soft-edged geometric framework based on an 8px radius scale to maintain a modern, friendly structure.
+
+- **Buttons & Chips:** Standard radius of `0.5rem (8px)` to ensure friendly touch targets.
+- **Content Cards:** Medium corner radius of `0.75rem (12px)` to frame posts and book lists cleanly.
+- **Modals & Dialogs:** Large corner radius of `1.5rem (24px)` to isolate modal views from the page grid.
+
+---
 
 ## Components
 
 ### Buttons
-Primary buttons use a linear gradient from `#8e54e9` to `#4776e6` with a subtle white inner-top border to simulate a light highlight. Secondary buttons use the "ghost" style: a transparent body with a glass-border and white text.
+- **Shape:** Medium curved edges (8px radius)
+- **Primary:** Lavender solid background with white text (`padding: 10px 18px`).
+- **Secondary:** Ghost outline style. Translucent background with a thin border and matching primary text color.
+- **Hover:** Subtle transition opacity change and light translate upward on hover.
 
-### Glass Cards
-Cards are the heart of the system. They feature a `20px` background blur, a `rgba(255, 255, 255, 0.05)` fill, and a `1px` border. On hover, the border color should shift toward the brand purple to create a "charging" effect.
+### Content Cards
+- **Corner Style:** Rounded corners (12px radius)
+- **Background:** White (`#ffffff`) in light mode; Deep surface (`#1e1f27`) with a thin border in dark mode.
+- **Interaction:** Shifts outline color to primary on hover.
 
 ### Input Fields
-Inputs are dark and recessed. They use a solid `bg-deep` fill but feature a "neon-glow" focus state where the entire border illuminates in electric blue.
+- **Style:** Flat, dark background recessed (`#0c0d14`) in dark mode; White (`#ffffff`) in light mode. Thin border.
+- **Focus:** 1px glow outline in secondary Electric Blue.
 
-### Chips & Badges
-Small, pill-shaped indicators using the monospaced font. They should have a high-contrast background (either full brand color or a very subtle tinted glass) to stand out against the deep background.
+---
 
-### Scrollbars & Indicators
-Scrollbars should be minimized and styled as thin, glowing lines that only appear on interaction, maintaining the clean "head-up display" aesthetic.
+## Do's and Don'ts
 
-## Standard Layout & Container Widths
-Để đồng bộ bố cục giữa các trang (Home, Blog, Group, Profile, v.v.), mọi trang dùng layout chính (`MainLayout` với `Sidebar` + `Main`) nên tuân theo kích thước container chuẩn dưới đây.
+### Do:
+- **Do** align all page container layouts to the standard `1200px` max-width.
+- **Do** maintain a strict 8px spacing rhythm for paddings and margins.
+- **Do** use `JetBrains Mono` exclusively for metadata fields, dates, and micro-counters.
 
-### Container chuẩn
-Mọi container trang (ví dụ: `.home-container`, `.blog-container`) phải dùng pattern:
-
-```css
-.container-page {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--vb-space-2) var(--vb-space-2) var(--vb-space-4);
-}
-```
-
-| Biến | Giá trị | Ghi chú |
-|------|---------|---------|
-| `--vb-space-1` | `4px` | Khoảng cách vi mô |
-| `--vb-space-2` | `8px` | Khoảng cách nhỏ |
-| `--vb-space-3` | `16px` | Khoảng cách vừa |
-| `--vb-space-4` | `24px` | Khoảng cách lớn |
-
-### Breakpoints chuẩn
-- **Mobile:** `≤ 820px` → `max-width: 100%`, `padding: 0.5rem`.
-- **Tablet:** `821px – 1023px` → container full, giữa.
-- **Desktop:** `1024px – 1200px` → `max-width: 1200px`, căn giữa.
-- **Ultra-wide:** `> 1200px` → container giới hạn tối đa `1200px`, căn giữa (không tràn full màn hình).
-
-### Bảng quy đổi container mẫu
-| Loại | max-width | Căn giữa | Padding |
-|------|-----------|----------|---------|
-| Trang chính (Home/Blog/Profile) | `1200px` | `margin: 0 auto` | `--vb-space-2` |
-| Bảng điều khiển (Dashboard) | `1400px` | `margin: 0 auto` | `--vb-space-2` |
-| Modal | `680px` | `margin: x auto` | `--vb-space-3` |
-| Mobile | `100%` | — | `0.5rem` |
-
-### Quy tắc áp dụng
-1. **Right-aligned grid:** Các card/khối con bên trong container dùng `width: 100%` + `max-width: 100%` để không tràn.
-2. **Không hardcode width nhỏ** (như `680px`) cho container trang; chỉ dùng `680px` cho modal.
-3. **Responsive:** Luôn có `@media (max-width: 820px)` để chuyển về `max-width: 100%` + padding phù hợp.
-4. **Box-sizing:** Mọi container dùng `box-sizing: border-box` để padding không làm nở vượt viewport.
+### Don't:
+- **Don't** use solid saturated black (#000000) or high contrast white backgrounds for main text canvas layouts; use the soft warm paper and deep canvas colors.
+- **Don't** add complex gradients or shadows to background layers. Keep them flat and content-focused.
+- **Don't** mix different corner border radii on sibling cards in the same grid.

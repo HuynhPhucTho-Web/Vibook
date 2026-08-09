@@ -23,9 +23,9 @@ import {
 import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
-import staticBlogData from "../../Staticblogposts.json";
 import PostCreator from "../components/PostCreate";
-import PostItem, { BlogPromoStrip } from "../components/PostItem";
+import PostItem from "../components/PostItem";
+import HomeBlogSection from "../components/HomeBlogSection";
 import {
   FEED_PAGE_SIZE,
   mapPostDocs,
@@ -61,11 +61,8 @@ function Home() {
   const [searchParams] = useSearchParams();
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [blogPromos, setBlogPromos] = useState([]);
   const [friendUids, setFriendUids] = useState(new Set());
   const [isPostsLoading, setIsPostsLoading] = useState(true);
-  const [isBlogsLoading, setIsBlogsLoading] = useState(true);
-  const [blogLimit, setBlogLimit] = useState(5);
   const [lastVisible, setLastVisible] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -148,98 +145,7 @@ function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchBlogPromos = async () => {
-      try {
-        const snapshot = await getDocs(
-          query(collection(db, "BlogPosts"), orderBy("createdAt", "desc"), limit(blogLimit)),
-        );
-        const blogs = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-          createdAt: docSnap.data().createdAt?.toDate ? docSnap.data().createdAt.toDate() : docSnap.data().createdAt,
-          favoriteCount: docSnap.data().favoriteCount || 0,
-          views: docSnap.data().views || 0,
-        }));
-        if (!cancelled) {
-          const staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
-            ...post,
-            createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
-            isStatic: true,
-            favoriteCount: post.favoriteCount || 0,
-            views: post.views || 0,
-          }));
-          const mergedBlogs = [...staticBlogs];
-          blogs.forEach((blog) => {
-            const key = blog.slug || blog.id || blog.title;
-            const exists = mergedBlogs.some((item) => (item.slug || item.id || item.title) === key);
-            if (!exists) {
-              mergedBlogs.push(blog);
-            }
-          });
 
-          // Fetch actual favorite counts from FavoriteBlogs
-          try {
-            const favsSnapshot = await getDocs(collection(db, "FavoriteBlogs"));
-            const countsMap = {};
-            favsSnapshot.docs.forEach(doc => {
-              const data = doc.data();
-              if (data.blogId) {
-                countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
-              }
-            });
-            mergedBlogs.forEach(p => {
-              const key = p.isStatic ? p.slug : p.id;
-              p.favoriteCount = countsMap[key] || 0;
-            });
-          } catch (favErr) {
-            console.error("Error loading promo favorite counts", favErr);
-          }
-
-          setBlogPromos(mergedBlogs);
-          setIsBlogsLoading(false);
-        }
-      } catch (error) {
-        console.error("Blog promo load error", error);
-        if (!cancelled) {
-          let staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
-            ...post,
-            createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
-            isStatic: true,
-            favoriteCount: post.favoriteCount || 0,
-            views: post.views || 0,
-          }));
-
-          // Fetch actual favorite counts for fallback
-          try {
-            const favsSnapshot = await getDocs(collection(db, "FavoriteBlogs"));
-            const countsMap = {};
-            favsSnapshot.docs.forEach(doc => {
-              const data = doc.data();
-              if (data.blogId) {
-                countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
-              }
-            });
-            staticBlogs = staticBlogs.map(p => ({
-              ...p,
-              favoriteCount: countsMap[p.slug] || 0
-            }));
-          } catch (favErr) {
-            console.error("Error loading static fallback favorite counts", favErr);
-          }
-
-          setBlogPromos(staticBlogs);
-          setIsBlogsLoading(false);
-        }
-      }
-    };
-
-    fetchBlogPromos();
-    return () => {
-      cancelled = true;
-    };
-  }, [blogLimit]);
 
   // Feed load: fast getDocs first → then live onSnapshot for first page only
   useEffect(() => {
@@ -282,23 +188,7 @@ function Home() {
       limit(FEED_PAGE_SIZE),
     );
 
-    // 1) Immediate fetch for first paint (often faster than waiting on listener attach)
-    (async () => {
-      try {
-        const snap = await getDocs(postsQuery);
-        if (cancelled) return;
-        const page = mapPostDocs(snap.docs);
-        setPosts((prev) => mergeFirstPageIntoFeed(prev, page));
-        setLastVisible(snap.docs[snap.docs.length - 1] || null);
-        setHasMore(snap.docs.length === FEED_PAGE_SIZE);
-        finishLoading();
-      } catch (error) {
-        console.error("Initial feed load error:", error);
-        // Still attach realtime; listener may succeed
-      }
-    })();
-
-    // 2) Live updates for newest page only (likes/new posts) — do not wipe "load more"
+    // Live updates for newest page only (likes/new posts) — do not wipe "load more"
     unsubPosts = onSnapshot(
       postsQuery,
       (snapshot) => {
@@ -419,16 +309,7 @@ function Home() {
       <div className={`home-container home-container--${theme}`}>
         <PostCreator onPostCreated={handlePostCreated} />
 
-        {isBlogsLoading ? (
-          <BlogPromoStrip loading={true} isLight={theme === "light"} title="Blog nổi bật" />
-        ) : blogPromos.length > 0 ? (
-          <BlogPromoStrip
-            blogs={blogPromos}
-            isLight={theme === "light"}
-            title="Blog nổi bật"
-            onLoadMore={() => setBlogLimit((prev) => prev + 5)}
-          />
-        ) : null}
+        <HomeBlogSection theme={theme} />
 
         <div className="posts-list">
           {isPostsLoading && posts.length === 0 ? (

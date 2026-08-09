@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-09T15:01:30Z",
+  "title": "Design System: Vibook Content-First",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Deep Lavender",
+        "canonical": "#8e54e9",
+        "tonalRamp": ["#38117a", "#4b1c9a", "#5d27ba", "#7233da", "#8e54e9", "#ab7bf7", "#ca9eff", "#ecdcff"]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Electric Blue",
+        "canonical": "#4776e6",
+        "tonalRamp": ["#00247d", "#0c359d", "#1e4abd", "#3260dd", "#4776e6", "#6c94f0", "#95b3fa", "#dae2ff"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Deep Canvas",
+        "canonical": "#12131a",
+        "tonalRamp": ["#09090d", "#12131a", "#1a1b22", "#1e1f27", "#292931", "#34343c", "#968d9f", "#e3e1ec"]
+      },
+      "light-bg": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#faf7f2",
+        "tonalRamp": ["#ffffff", "#faf7f2", "#f0ece3", "#e3ded3", "#c7c2b5", "#aba698", "#787467", "#162033"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Title",
+        "purpose": "Hero and splash typography headers only."
+      },
+      "headline": {
+        "displayName": "Section Heading",
+        "purpose": "Primary page labels and widget headings."
+      },
+      "body": {
+        "displayName": "Body Readable",
+        "purpose": "Extended reading elements including reviews and post text."
+      },
+      "label": {
+        "displayName": "Technical Metadata",
+        "purpose": "Date stamps, badge tags, and numeric micro-counters."
+      }
+    },
+    "shadows": [
+      {
+        "name": "vb-glow",
+        "value": "0 0 12px rgba(142, 84, 233, 0.4)",
+        "purpose": "Micro-glow for active navigation and input selection states."
+      },
+      {
+        "name": "vb-elevated",
+        "value": "0 8px 32px rgba(0, 0, 0, 0.4)",
+        "purpose": "Ambient overlay backing for modals and pop-up menus."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "General transitions for layouts and button responses."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "820px"
+      },
+      {
+        "name": "desktop",
+        "value": "1200px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard action button for form submissions, saving progress, or posting updates.",
+      "html": "<button class=\"ds-btn-primary\">POST REVIEW</button>",
+      "css": ".ds-btn-primary { background: #8e54e9; color: #ffffff; padding: 10px 18px; font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease; } .ds-btn-primary:hover { background: #ab7bf7; transform: translateY(-1px); } .ds-btn-primary:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Content Card",
+      "kind": "card",
+      "refersTo": "card-glass",
+      "description": "Content block container used for displaying books, posts, reviews, and event details.",
+      "html": "<div class=\"ds-content-card\"><h3 class=\"ds-card-title\">Wuthering Heights</h3><p class=\"ds-card-desc\">A classic tale of passion and revenge in the desolate moors.</p><span class=\"ds-card-meta\">READ BY 12 USERS</span></div>",
+      "css": ".ds-content-card { background: #1e1f27; border: 1px solid rgba(255, 255, 255, 0.12); padding: 16px; border-radius: 12px; font-family: 'Hanken Grotesk', sans-serif; transition: border-color 0.2s ease; } .ds-card-title { margin: 0 0 8px 0; color: #e3e1ec; font-size: 18px; font-weight: 600; } .ds-card-desc { margin: 0 0 12px 0; color: #cdc3d6; font-size: 14px; line-height: 1.4; } .ds-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8e54e9; font-weight: 500; letter-spacing: 0.05em; } .ds-content-card:hover { border-color: #8e54e9; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Reader's Sanctuary",
+    "overview": "Vibook's design system centers on a Modern Clean & Content-First layout. With book cataloging, feed posts, user-written blogs, and literary event coordination being the heart of the product, the user interface acts as a quiet, functional frame. Page clutter is minimized and typography layout is maximized to ensure readability during long reading and writing sessions.",
+    "keyCharacteristics": [
+      "Content-first focus with visual elements taking a back seat.",
+      "Structured card-based grids with subtle borders.",
+      "Generous padding and margins (generous whitespace) to let the typography breathe.",
+      "High legibility pairing contemporary sans-serif with metadata-focused monospace."
+    ],
+    "rules": [
+      {
+        "name": "The Subtle Accent Rule",
+        "body": "Gradient accent colors (Deep Lavender to Electric Blue) must be restricted to primary interactive elements and must never exceed 10% of any page surface. Backgrounds and major structural panels must rely entirely on clean neutrals.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reading Comfort Rule",
+        "body": "Long-form textual content (specifically blog posts and book reviews) must be restricted to a maximum line length of 70 characters (70ch) and a 1.5 line height (24px) to reduce tracking fatigue.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-by-Rest Rule",
+        "body": "Cards and elements sit flat at rest. Background blurs and glow borders appear only as hover states or structural overlays (modals) to prevent visual noise.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do align all page container layouts to the standard 1200px max-width.",
+      "Do maintain a strict 8px spacing rhythm for paddings and margins.",
+      "Do use JetBrains Mono exclusively for metadata fields, dates, and micro-counters."
+    ],
+    "donts": [
+      "Don't use solid saturated black (#000000) or high contrast white backgrounds for main text canvas layouts; use the soft warm paper and deep canvas colors.",
+      "Don't add complex gradients or shadows to background layers. Keep them flat and content-focused.",
+      "Don't mix different corner border radii on sibling cards in the same grid."
+    ]
+  }
+}

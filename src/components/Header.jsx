@@ -15,6 +15,11 @@ import {
   orderBy,
   query,
   where,
+  setDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  increment,
 } from "firebase/firestore";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
@@ -44,6 +49,78 @@ const Header = () => {
   const appHeaderRef = useRef(null);
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
+  const [onlineCount, setOnlineCount] = useState(1);
+
+  // Manage user presence registration
+  useEffect(() => {
+    let sessionId = sessionStorage.getItem("vibook_session_id");
+    if (!sessionId) {
+      sessionId = "sess_" + Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem("vibook_session_id", sessionId);
+    }
+
+    const userDocRef = doc(db, "OnlineUsers", sessionId);
+
+    const updatePresence = async () => {
+      try {
+        await setDoc(userDocRef, {
+          lastActive: new Date(),
+          userId: auth.currentUser?.uid || "guest",
+        }, { merge: true });
+      } catch (e) {
+        console.error("Error updating presence:", e);
+      }
+    };
+
+    updatePresence();
+    const presenceInterval = setInterval(updatePresence, 30000);
+
+    const removePresence = async () => {
+      try {
+        await deleteDoc(userDocRef);
+      } catch (e) {
+        console.error("Error removing presence:", e);
+      }
+    };
+
+    window.addEventListener("beforeunload", removePresence);
+
+    return () => {
+      clearInterval(presenceInterval);
+      window.removeEventListener("beforeunload", removePresence);
+      removePresence();
+    };
+  }, []);
+
+  // Query online user counts
+  useEffect(() => {
+    const fetchOnlineCount = async () => {
+      try {
+        const oneMinuteAgo = new Date(Date.now() - 60000);
+        const q = query(
+          collection(db, "OnlineUsers"),
+          where("lastActive", ">=", oneMinuteAgo)
+        );
+        const snapshot = await getDocs(q);
+        setOnlineCount(Math.max(1, snapshot.size));
+      } catch (e) {
+        console.error("Error fetching online count:", e);
+      }
+    };
+
+    fetchOnlineCount();
+    const countInterval = setInterval(fetchOnlineCount, 30000);
+    return () => clearInterval(countInterval);
+  }, []);
+
+  // Calculate fake display count that fluctuates naturally
+  const displayOnlineCount = useMemo(() => {
+    const now = new Date();
+    const min = now.getMinutes();
+    const hour = now.getHours();
+    const baseOffset = 25 + ((min + hour) % 15) + (hour % 6);
+    return onlineCount + baseOffset;
+  }, [onlineCount]);
 
   const searchMode = useMemo(() => {
     if (location.pathname.startsWith("/friends")) return "friends";
@@ -262,12 +339,19 @@ const Header = () => {
       className={`sticky top-0 z-[998] transition-all duration-300 backdrop-blur-[20px] ${theme === "light" ? "bg-white/95 border-b border-black/10 shadow-[0_8px_32px_rgba(0,0,0,0.1)]" : "bg-black/80 border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"}`}
     >
       <div className="header-row relative">
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center flex-shrink-0 gap-3">
           <Link to="/homevibook" className="no-underline flex items-center">
             <h1 className="mb-0 font-extrabold tracking-tight text-2xl sm:text-3xl bg-gradient-to-br from-blue-500 to-purple-600 bg-clip-text text-transparent">
               ViBook
             </h1>
           </Link>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold select-none ${theme === "light" ? "bg-green-50 text-green-700 border border-green-200" : "bg-green-950/40 text-green-400 border border-green-900/30"}`}>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span>{displayOnlineCount} <span className="online-count-text">{language === "vi" ? "đang online" : "online"}</span></span>
+          </div>
         </div>
 
         <div className="header-search-slot hidden md:flex flex-1 min-w-0">
@@ -289,12 +373,10 @@ const Header = () => {
         </div>
 
         <div className="flex items-center flex-shrink-0 ml-auto">
-          <div
-            className={`flex items-center rounded-full px-1.5 py-1 gap-2 sm:gap-3 backdrop-blur-xl ${theme === "light" ? "bg-black/5" : "bg-white/10"}`}
-          >
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             <button
               type="button"
-              className={`md:hidden w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 ${theme === "light" ? "bg-black/10 hover:bg-black/20" : "bg-white/10 hover:bg-white/20"}`}
+              className={`md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all active:scale-95 ${theme === "light" ? "bg-black/5 hover:bg-black/10" : "bg-white/10 hover:bg-white/20"}`}
               onClick={() => {
                 setMobileSearchOpen((open) => !open);
                 setUserMenuOpen(false);
@@ -303,7 +385,7 @@ const Header = () => {
               aria-label="Tìm kiếm"
             >
               <FaSearch
-                className={`text-lg ${theme === "light" ? "text-black" : "text-white"}`}
+                className={`text-base sm:text-lg ${theme === "light" ? "text-black" : "text-white"}`}
               />
             </button>
             <HeaderRightActions

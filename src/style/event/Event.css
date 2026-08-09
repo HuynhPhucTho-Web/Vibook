@@ -41,3 +41,26 @@
     height: 16px;
   }
 }
+
+/* Event Modal Overlay - Fullscreen overlay fix */
+.event-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1100 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+/* Force word boundary wrapping to prevent split letters */
+.event-desc-content,
+.event-desc-content * {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}

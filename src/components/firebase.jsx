@@ -1,7 +1,7 @@
 // firebase.jsx
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Firebase configuration from environment variables
@@ -33,6 +33,17 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Enable offline persistence for Firestore if we are in browser environment
+if (typeof window !== "undefined") {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === "failed-precondition") {
+      console.warn("Firestore persistence failed-precondition: Multiple tabs open");
+    } else if (err.code === "unimplemented") {
+      console.warn("Firestore persistence unimplemented: Browser not supported");
+    }
+  });
+}
 
 // Set language
 auth.languageCode = 'vi'; // Vietnamese or 'en' for English

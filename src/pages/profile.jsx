@@ -283,9 +283,6 @@ function Profile() {
     };
   }, [userDetails]);
 
-  if (loading) return <p>Loading...</p>;
-  if (!userDetails) return <p>User not found</p>;
-
   const filteredPostsByPrivacy = useMemo(() => {
     return posts.filter((post) => {
       if (!post.status || post.status === "public") return true;
@@ -297,6 +294,9 @@ function Profile() {
 
   const ownPosts = useMemo(() => filteredPostsByPrivacy.filter((post) => post.type !== "share"), [filteredPostsByPrivacy]);
   const sharedPosts = useMemo(() => filteredPostsByPrivacy.filter((post) => post.type === "share"), [filteredPostsByPrivacy]);
+
+  if (loading) return <p>Loading...</p>;
+  if (!userDetails) return <p>User not found</p>;
   const visiblePosts = activePostTab === "shared"
     ? sharedPosts
     : activePostTab === "saved"

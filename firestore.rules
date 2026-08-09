@@ -588,5 +588,15 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isSignedIn();
     }
+
+    /* ========= ONLINE USERS ========= */
+    match /OnlineUsers/{sessionId} {
+      allow read, write: if true;
+    }
+
+    /* ========= SYSTEM STATS ========= */
+    match /SystemStats/{statsId} {
+      allow read, write: if true;
+    }
   }
 }

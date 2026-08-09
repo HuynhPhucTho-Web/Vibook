@@ -1,20 +1,22 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaHeart, FaRegHeart, FaEdit, FaTrash, FaEye, FaRegClock } from "react-icons/fa";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
-const BlogCard = ({ post, isFavorite, onToggleFavorite, onEdit, onDelete, t, getReadTime, auth }) => {
+const BlogCard = ({ post, isFavorite, onToggleFavorite, onEdit, onDelete, t, getReadTime, auth, index = 1 }) => {
   const isAuthor = auth.currentUser && auth.currentUser.uid === post.author;
   const favoriteCount = post.favoriteCount || 0;
 
   return (
     <div className="blog-card">
-      {/* Ảnh bìa + badge overlay */}
       {post.coverImage && (
-        <div style={{ position: "relative" }}>
+        <div className="blog-card__cover-container">
           <img
-            src={post.coverImage}
+            src={getOptimizedCloudinaryUrl(post.coverImage, 500)}
             alt={post.title}
             className="cover-image"
+            fetchPriority={index === 0 ? "high" : "auto"}
+            loading={index === 0 ? "eager" : "lazy"}
           />
           {post.isStatic && (
             <span 

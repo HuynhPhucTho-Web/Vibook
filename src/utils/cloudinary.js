@@ -41,3 +41,15 @@ export const cloudinaryUrl = (publicId, options = {}) => {
   // Sử dụng @cloudinary/url-gen nếu cần
   return `https://res.cloudinary.com/${import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}`;
 };
+
+// Optimizes Cloudinary URLs to reduce image payload and improve Largest Contentful Paint (LCP)
+export const getOptimizedCloudinaryUrl = (url, width = 800) => {
+  if (!url || typeof url !== "string") return url;
+  if (url.includes("res.cloudinary.com")) {
+    if (url.includes("/upload/f_auto")) {
+      return url;
+    }
+    return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
+  }
+  return url;
+};

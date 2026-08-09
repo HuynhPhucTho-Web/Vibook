@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { FaFile, FaEye } from "react-icons/fa";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
 const PostMedia = ({ post, isLight }) => {
   const videoRef = useRef(null);
@@ -64,7 +65,7 @@ const PostMedia = ({ post, isLight }) => {
             return (
               <img
                 key={idx}
-                src={item.url}
+                src={getOptimizedCloudinaryUrl(item.url, mediaFiles.length === 1 ? 800 : 400)}
                 alt={item.originalName || "Image"}
                 loading="lazy"
                 decoding="async"

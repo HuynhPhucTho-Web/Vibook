@@ -35,15 +35,15 @@ const UserMenu = ({
             <img
               src={auth.currentUser.photoURL}
               alt="User Avatar"
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-              <FaUser className="text-gray-600 text-lg" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-300 flex items-center justify-center">
+              <FaUser className="text-gray-600 text-sm sm:text-lg" />
             </div>
           )}
           <div
-            className={`absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 ${
+            className={`absolute bottom-0 right-0 w-2.5 h-2.5 sm:bottom-0.5 sm:right-0.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 ${
               theme === "light" ? "border-white" : "border-black"
             }`}
           />

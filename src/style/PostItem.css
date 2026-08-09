@@ -306,7 +306,7 @@
 
 /* ========== Post action bar (Like / Comment / Save / Share) ========== */
 .blog-promo-strip {
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--vb-space-3, 24px);
   padding: 0;
   border-radius: var(--vb-radius-xl, 1.5rem);
   border: none;
@@ -384,22 +384,22 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: var(--vb-radius-md, 0.75rem);
+  background: var(--vb-glass-surface, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--vb-glass-border, rgba(255, 255, 255, 0.12));
   text-decoration: none;
   color: inherit;
   scroll-snap-align: start;
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 100%;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .blog-promo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08), var(--vb-glow-purple);
+  border-color: var(--vb-glass-border-strong, rgba(168, 85, 247, 0.4));
 }
 
 .blog-promo-card:active {
