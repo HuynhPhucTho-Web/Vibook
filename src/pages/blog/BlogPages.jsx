@@ -32,7 +32,7 @@ import BlogCard from "../../components/blogcomponent/BlogCard";
 import SEO from "../../components/SEO";
 import BlogDetail from "../../components/blogcomponent/BlogDetail";
 import BlogFormModal from "../../components/blogcomponent/BlogFormModal";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaPlus } from "react-icons/fa";
 import "../../style/Blog.css";
 
 const formats = [
@@ -916,8 +916,9 @@ const BlogPages = () => {
           <div className="blog-header">
             <h1>{t("blogListTitle")}</h1>
             {auth.currentUser && (
-              <button onClick={openAddModal} className="add-post-btn">
-                + {t("addPost")}
+              <button onClick={openAddModal} className="vb-btn vb-btn--primary">
+                <FaPlus size={14} />
+                {t("addPost")}
               </button>
             )}
           </div>

@@ -1,0 +1,1127 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>DPS201c Quiz</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --brand: #2563eb;
+      --brand-soft: #eff6ff;
+      --ok: #16a34a;
+      --ok-soft: #f0fdf4;
+      --bad: #dc2626;
+      --bad-soft: #fef2f2;
+      --warn: #d97706;
+      --warn-soft: #fffbeb;
+      --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .app {
+      width: min(900px, 100%);
+      margin: 0 auto;
+      padding: 12px 12px 40px;
+    }
+
+    /* Topbar compact */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+      color: var(--brand);
+    }
+
+    .summary {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .summary strong {
+      color: var(--ok);
+    }
+
+    /* Mode Tabs - Horizontal scroll on mobile */
+    .controls {
+      margin-top: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .mode-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mode-tabs button {
+      white-space: nowrap;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: #e2e8f0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+    }
+
+    .mode-tabs button.active {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .search-filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 8px;
+    }
+
+    .search input, .select-wrap select {
+      width: 100%;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search input:focus, .select-wrap select:focus {
+      border-color: var(--brand);
+    }
+
+    /* Setup Panels */
+    .batch-setup, .exam-setup {
+      margin-top: 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .batch-setup h2, .exam-setup h2 {
+      font-size: 14px;
+      margin: 0 0 2px;
+    }
+
+    .batch-setup p, .exam-setup p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .batch-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .batch-controls button, .primary {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .batch-controls button:disabled {
+      opacity: 0.4;
+    }
+
+    /* Progress bar */
+    .progress-panel {
+      margin-top: 10px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .progress-track {
+      height: 6px;
+      border-radius: 99px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0;
+      background: var(--brand);
+      transition: width 0.2s ease;
+    }
+
+    /* Auto TTS Tool - Compact */
+    .auto-panel {
+      margin-top: 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 16px;
+      font-size: 12px;
+    }
+
+    .auto-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .auto-main button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .auto-main button.playing {
+      background: var(--bad);
+    }
+
+    .auto-speed {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .auto-options {
+      display: flex;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .auto-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .auto-status {
+      width: 100%;
+      margin: 0;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .auto-status.active {
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    /* Question Card */
+    .quiz {
+      margin-top: 10px;
+    }
+
+    .question-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .question-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .icon-button {
+      background: transparent;
+      font-size: 20px;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+
+    .icon-button.active {
+      color: #f59e0b;
+    }
+
+    #questionText {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.4;
+      margin: 0 0 6px;
+    }
+
+    .question-text-vi {
+      font-size: 14px;
+      color: var(--ok);
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+
+    .note {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--warn-soft);
+      color: var(--warn);
+      margin: 0 0 8px;
+    }
+
+    .note-vi {
+      font-size: 12px;
+      color: var(--ok);
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+
+    /* Options */
+    .options {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .option {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      text-align: left;
+      transition: border-color 0.15s ease;
+    }
+
+    .option:active {
+      background: #f1f5f9;
+    }
+
+    .option .key {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .option .text {
+      font-size: 14px;
+    }
+
+    .option .text-vi {
+      display: block;
+      font-size: 12px;
+      color: var(--ok);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .option.selected {
+      border-color: var(--brand);
+      background: var(--brand-soft);
+    }
+
+    .option.correct {
+      border-color: var(--ok);
+      background: var(--ok-soft);
+    }
+
+    .option.correct .key {
+      background: var(--ok);
+      color: #fff;
+    }
+
+    .option.wrong {
+      border-color: var(--bad);
+      background: var(--bad-soft);
+    }
+
+    .option.wrong .key {
+      background: var(--bad);
+      color: #fff;
+    }
+
+    /* Feedback */
+    .feedback {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .feedback.ok { color: var(--ok); background: var(--ok-soft); }
+    .feedback.bad { color: var(--bad); background: var(--bad-soft); }
+    .feedback.info { color: var(--brand); background: var(--brand-soft); }
+
+    /* Actions Bottom Bar */
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .actions button {
+      padding: 10px 4px;
+      border-radius: 8px;
+      background: #e2e8f0;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .submit, .danger {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .submit { background: var(--brand); color: #fff; }
+    .danger { background: var(--bad-soft); color: var(--bad); }
+
+    /* Flashcard UI */
+    .flashcard {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 16px;
+      text-align: left;
+    }
+
+    .flashcard-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .flashcard-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 8px 0 12px;
+    }
+
+    .flashcard-answers {
+      display: grid;
+      gap: 6px;
+    }
+
+    .flashcard-answer {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 6px;
+      background: #f8fafc;
+      font-size: 13px;
+    }
+
+    .flashcard-answer.correct {
+      border: 1px solid var(--ok);
+      background: var(--ok-soft);
+    }
+
+    .flashcard-answer.muted { opacity: 0.5; }
+
+    /* Desktop Side Nav */
+    .side-nav-button {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 24px;
+      color: var(--brand);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      z-index: 10;
+    }
+
+    .side-nav-button.left { left: 10px; }
+    .side-nav-button.right { right: 10px; }
+    .side-nav-button:disabled { opacity: 0.2; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 768px) {
+      .side-nav-button { display: none; } /* Ẩn nút hông trên điện thoại để không bị chạm nhầm */
+      .actions button { font-size: 12px; padding: 10px 2px; }
+      .auto-options { flex-direction: column; gap: 4px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="topbar">
+      <h1 class="brand-title">DPS201c Quiz</h1>
+      <div class="summary">
+        <span id="totalCount">0 câu</span>
+        <strong id="scoreSummary">0 đúng</strong>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Điều khiển">
+      <div class="mode-tabs" role="tablist">
+        <button id="practiceModeBtn" class="active" type="button">Luyện tập</button>
+        <button id="batchModeBtn" type="button">50 câu</button>
+        <button id="wrongModeBtn" type="button">Câu sai</button>
+        <button id="flashcardModeBtn" type="button">Flashcard</button>
+        <button id="examModeBtn" type="button">Thi thử</button>
+      </div>
+
+      <div class="search-filter-grid">
+        <div class="search">
+          <input id="searchInput" type="search" placeholder="Tìm từ khóa..." autocomplete="off" />
+        </div>
+        <div class="select-wrap">
+          <select id="filterSelect">
+            <option value="all">Tất cả</option>
+            <option value="correct">Câu đúng</option>
+            <option value="wrong">Câu sai</option>
+            <option value="unanswered">Chưa làm</option>
+            <option value="bookmarked">Bookmark</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section id="batchSetup" class="batch-setup hidden">
+      <div>
+        <h2 id="batchTitle">Chặng 50 câu</h2>
+        <p id="batchDescription">Ôn theo ID 1-50.</p>
+      </div>
+      <div class="batch-controls">
+        <button id="batchPrevBtn" type="button">Chặng trước</button>
+        <button id="batchRestartBtn" type="button">Làm lại</button>
+        <button id="batchNextBtn" type="button">Chặng sau</button>
+      </div>
+    </section>
+
+    <section id="examSetup" class="exam-setup hidden">
+      <div>
+        <h2>Chế độ thi thử</h2>
+        <p>Đề 60 câu ngẫu nhiên, chấm điểm khi nộp bài.</p>
+      </div>
+      <button id="startExamBtn" class="primary" type="button">Bắt đầu</button>
+    </section>
+
+    <section class="progress-panel">
+      <div class="progress-meta">
+        <span id="modeLabel">Luyện tập</span>
+        <span id="progressText">0/0</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressBar"></div>
+      </div>
+    </section>
+
+    <section class="auto-panel" aria-label="Tự động đọc">
+      <div class="auto-main">
+        <button id="autoPlayBtn" type="button">▶ Auto đọc</button>
+        <div class="auto-speed">
+          <span id="autoSpeedLabel">1.0×</span>
+          <input id="autoSpeedInput" type="range" min="0.5" max="2" step="0.1" value="1" style="width: 70px;" />
+        </div>
+      </div>
+      <div class="auto-options">
+        <label><input id="autoReadOptions" type="checkbox" /> Đọc A/B/C/D</label>
+        <label><input id="autoRevealAnswer" type="checkbox" checked /> Hiện & đọc đáp án</label>
+        <label><input id="autoNext" type="checkbox" checked /> Tự sang câu</label>
+      </div>
+      <p id="autoStatus" class="auto-status hidden"></p>
+    </section>
+
+    <section class="quiz">
+      <article class="question-card">
+        <div class="question-head">
+          <span id="questionIndex">Câu 1</span>
+          <button id="bookmarkBtn" class="icon-button" type="button" aria-label="Bookmark">☆</button>
+        </div>
+
+        <h2 id="questionText">Đang tải câu hỏi...</h2>
+        <p id="questionTextVi" class="question-text-vi hidden"></p>
+        <p id="questionNote" class="note hidden"></p>
+        <p id="questionNoteVi" class="note-vi hidden"></p>
+
+        <div id="options" class="options"></div>
+        <div id="feedback" class="feedback hidden" role="status"></div>
+      </article>
+
+      <nav class="actions" aria-label="Điều hướng câu hỏi">
+        <button id="prevBtn" type="button">Trước</button>
+        <button id="randomBtn" type="button">Ngẫu nhiên</button>
+        <button id="showAnswerBtn" type="button">Đáp án</button>
+        <button id="nextBtn" type="button">Tiếp</button>
+      </nav>
+
+      <button id="submitExamBtn" class="submit hidden" type="button">Nộp bài thi</button>
+      <button id="resetBtn" class="danger" type="button">Reset tiến độ</button>
+    </section>
+  </main>
+
+  <button id="sidePrevBtn" class="side-nav-button left" type="button" aria-label="Câu trước">&lsaquo;</button>
+  <button id="sideNextBtn" class="side-nav-button right" type="button" aria-label="Câu tiếp">&rsaquo;</button>
+
+  <script>
+    const QUESTIONS = [
+        {
+          "id": 1,
+          "answer": ["A"],
+          "sourcePage": 1,
+          "needsReview": false,
+          "question": "In Aristotle's Rhetorical Triangle, which element focuses on establishing the speaker's credibility, legitimacy, and competence?",
+          "question_vi": "Trong Tam giác Tu từ của Aristotle, yếu tố nào tập trung vào việc xây dựng uy tín, tính hợp pháp và năng lực của người nói?",
+          "note": "Ethos refers to building credibility, legitimacy, and competence of the speaker.",
+          "note_vi": "Ethos là xây dựng uy tín, tính chính đáng và năng lực của người nói.",
+          "options": [
+            { "key": "A", "text": "Ethos", "text_vi": "Ethos (uy tín người nói)" },
+            { "key": "B", "text": "Logos", "text_vi": "Logos (lý lẽ, logic)" },
+            { "key": "C", "text": "Pathos", "text_vi": "Pathos (cảm xúc)" },
+            { "key": "D", "text": "Kairos", "text_vi": "Kairos (thời điểm thích hợp)" }
+          ]
+        },
+        {
+          "id": 2,
+          "answer": ["B"],
+          "sourcePage": 1,
+          "needsReview": false,
+          "question": "Which component of the Rhetorical Triangle uses evidence, logical structure, sharp arguments, and empirical data?",
+          "question_vi": "Thành phần nào của Tam giác Tu từ dùng bằng chứng, cấu trúc logic, lập luận sắc bén và dữ liệu thực nghiệm?",
+          "note": "Logos involves logical reasoning, evidence, sharper arguments, and empirical data.",
+          "note_vi": "Logos liên quan đến lập luận logic, bằng chứng, lập luận sắc bén và dữ liệu thực nghiệm.",
+          "options": [
+            { "key": "A", "text": "Ethos", "text_vi": "Ethos (uy tín người nói)" },
+            { "key": "B", "text": "Logos", "text_vi": "Logos (lý lẽ, logic)" },
+            { "key": "C", "text": "Pathos", "text_vi": "Pathos (cảm xúc)" },
+            { "key": "D", "text": "Mythos", "text_vi": "Mythos (huyền thoại / câu chuyện cộng đồng)" }
+          ]
+        },
+        {
+          "id": 3,
+          "answer": ["C"],
+          "sourcePage": 1,
+          "needsReview": false,
+          "question": "Which element of the Rhetorical Triangle focuses on appealing to the audience's emotions, psychology, and deep core values?",
+          "question_vi": "Yếu tố nào của Tam giác Tu từ tập trung vào việc tác động đến cảm xúc, tâm lý và giá trị cốt lõi sâu xa của khán giả?",
+          "note": "Pathos targets psychological impact, emotions, beliefs, and deep core values of the listeners.",
+          "note_vi": "Pathos nhắm vào tác động tâm lý, cảm xúc, niềm tin và giá trị cốt lõi của người nghe.",
+          "options": [
+            { "key": "A", "text": "Ethos", "text_vi": "Ethos (uy tín người nói)" },
+            { "key": "B", "text": "Logos", "text_vi": "Logos (lý lẽ, logic)" },
+            { "key": "C", "text": "Pathos", "text_vi": "Pathos (cảm xúc)" },
+            { "key": "D", "text": "Chronos", "text_vi": "Chronos (thời gian tuyến tính)" }
+          ]
+        }
+    ];
+
+    const STORAGE_KEY = "DPS201c_quiz_state_v2";
+    const AUTO_SPEED_KEY = "DPS201c_auto_speed";
+    const AUTO_OPTS_KEY = "DPS201c_auto_opts";
+
+    const rawQuestions = typeof QUESTIONS !== "undefined" && Array.isArray(QUESTIONS) ? QUESTIONS : [];
+
+    const source = rawQuestions.map((item, index) => ({
+      id: index + 1,
+      originalId: item.id ?? index + 1,
+      question: item.question || "",
+      question_vi: item.question_vi || item.questionVi || "",
+      options: Array.isArray(item.options)
+        ? item.options.map((option) =>
+          typeof option === "string"
+            ? { key: "", text: option, text_vi: "" }
+            : { key: option.key, text: option.text || "", text_vi: option.text_vi || option.textVi || "" }
+        )
+        : Object.entries(item.options || {}).map(([key, text]) => ({
+          key,
+          text: typeof text === "string" ? text : text?.text || "",
+          text_vi: typeof text === "object" ? text?.text_vi || text?.textVi || "" : "",
+        })),
+      answer: Array.isArray(item.answer) ? item.answer : String(item.answer || "").split(""),
+      note: item.note || "",
+      note_vi: item.note_vi || item.noteVi || "",
+      sourcePage: item.sourcePage || "",
+      needsReview: Boolean(item.needsReview),
+    }));
+
+    const TOTAL_QUESTIONS = source.length;
+    const BATCH_SIZE = 50;
+    const EXAM_SIZE = Math.min(60, TOTAL_QUESTIONS);
+    const MIN_QUESTION_ID = Math.min(...source.map((q) => q.id), 1);
+    const MAX_QUESTION_ID = Math.max(...source.map((q) => q.id), 1);
+
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      totalCount: $("totalCount"),
+      scoreSummary: $("scoreSummary"),
+      practiceModeBtn: $("practiceModeBtn"),
+      batchModeBtn: $("batchModeBtn"),
+      wrongModeBtn: $("wrongModeBtn"),
+      flashcardModeBtn: $("flashcardModeBtn"),
+      examModeBtn: $("examModeBtn"),
+      searchInput: $("searchInput"),
+      filterSelect: $("filterSelect"),
+      batchSetup: $("batchSetup"),
+      batchTitle: $("batchTitle"),
+      batchDescription: $("batchDescription"),
+      batchPrevBtn: $("batchPrevBtn"),
+      batchRestartBtn: $("batchRestartBtn"),
+      batchNextBtn: $("batchNextBtn"),
+      examSetup: $("examSetup"),
+      startExamBtn: $("startExamBtn"),
+      progressText: $("progressText"),
+      progressBar: $("progressBar"),
+      modeLabel: $("modeLabel"),
+      questionIndex: $("questionIndex"),
+      bookmarkBtn: $("bookmarkBtn"),
+      questionText: $("questionText"),
+      questionTextVi: $("questionTextVi"),
+      questionNote: $("questionNote"),
+      questionNoteVi: $("questionNoteVi"),
+      options: $("options"),
+      feedback: $("feedback"),
+      prevBtn: $("prevBtn"),
+      randomBtn: $("randomBtn"),
+      showAnswerBtn: $("showAnswerBtn"),
+      nextBtn: $("nextBtn"),
+      sidePrevBtn: $("sidePrevBtn"),
+      sideNextBtn: $("sideNextBtn"),
+      submitExamBtn: $("submitExamBtn"),
+      resetBtn: $("resetBtn"),
+      autoPlayBtn: $("autoPlayBtn"),
+      autoSpeedInput: $("autoSpeedInput"),
+      autoSpeedLabel: $("autoSpeedLabel"),
+      autoReadOptions: $("autoReadOptions"),
+      autoRevealAnswer: $("autoRevealAnswer"),
+      autoNext: $("autoNext"),
+      autoStatus: $("autoStatus"),
+    };
+
+    function createDefaultState() {
+      return {
+        mode: "practice",
+        filter: "all",
+        query: "",
+        index: 0,
+        answers: {},
+        checked: {},
+        bookmarks: [],
+        examSize: EXAM_SIZE,
+        examIds: [],
+        examAnswers: {},
+        examSubmitted: false,
+        flashcardFlipped: false,
+        modeIndexes: {},
+        batchStartId: 1,
+      };
+    }
+
+    let state = loadState();
+    let currentList = [];
+    let autoPlaying = false;
+    let autoToken = 0;
+    let autoTimer = null;
+    let autoFromSelf = false;
+
+    function loadState() {
+      try {
+        return { ...createDefaultState(), ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+      } catch {
+        return createDefaultState();
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function rememberModeIndex(mode = state.mode) {
+      state.modeIndexes[mode] = state.index;
+    }
+
+    function savedModeIndex(mode) {
+      const idx = Number(state.modeIndexes?.[mode]);
+      return Number.isFinite(idx) && idx >= 0 ? idx : 0;
+    }
+
+    function normalizeAnswer(ans) {
+      return [...new Set(ans || [])].map(String).sort().join("");
+    }
+
+    function answersForMode(mode = state.mode) {
+      return mode === "exam" ? state.examAnswers : state.answers;
+    }
+
+    function selectedAnswer(q, mode = state.mode) {
+      return answersForMode(mode)[q.id] || [];
+    }
+
+    function isCorrect(q) {
+      return normalizeAnswer(selectedAnswer(q)) === normalizeAnswer(q.answer);
+    }
+
+    function isChecked(q) {
+      return state.mode === "exam" ? state.examSubmitted : Boolean(state.checked[q.id]);
+    }
+
+    function isBookmarked(q) {
+      return state.bookmarks.includes(q.id);
+    }
+
+    function byFilter(q) {
+      if (state.filter === "correct") return isChecked(q) && isCorrect(q);
+      if (state.filter === "wrong") return isChecked(q) && !isCorrect(q);
+      if (state.filter === "unanswered") return selectedAnswer(q).length === 0;
+      if (state.filter === "bookmarked") return isBookmarked(q);
+      return true;
+    }
+
+    function buildList() {
+      let list = [...source];
+      if (state.mode === "wrong") {
+        list = list.filter((q) => Boolean(state.checked[q.id]) && !isCorrect(q));
+      } else if (state.mode === "batch") {
+        const endId = Math.min(state.batchStartId + BATCH_SIZE - 1, MAX_QUESTION_ID);
+        list = list.filter((q) => q.id >= state.batchStartId && q.id <= endId && byFilter(q));
+      } else if (state.mode === "exam") {
+        if (state.examIds.length === 0) makeExam();
+        list = state.examIds.map((id) => source.find((q) => q.id === id)).filter(Boolean);
+      } else {
+        list = list.filter((q) => byFilter(q));
+      }
+
+      if (state.query.trim()) {
+        const qLower = state.query.toLowerCase().trim();
+        list = list.filter((q) =>
+          [q.id, q.question, q.question_vi, ...q.options.map((o) => o.text)].join(" ").toLowerCase().includes(qLower)
+        );
+      }
+
+      currentList = list;
+      if (state.index >= currentList.length) state.index = Math.max(0, currentList.length - 1);
+    }
+
+    function currentQuestion() {
+      return currentList[state.index] || null;
+    }
+
+    function setMode(mode) {
+      if (autoPlaying) stopAuto();
+      rememberModeIndex();
+      state.mode = mode;
+      state.index = savedModeIndex(mode);
+      saveState();
+      render();
+    }
+
+    function makeExam() {
+      const shuffled = [...source].sort(() => Math.random() - 0.5);
+      state.examIds = shuffled.slice(0, EXAM_SIZE).map((q) => q.id);
+      state.examAnswers = {};
+      state.examSubmitted = false;
+      state.index = 0;
+    }
+
+    function chooseOption(key) {
+      const q = currentQuestion();
+      if (!q || (state.mode === "exam" && state.examSubmitted)) return;
+
+      const answers = answersForMode();
+      const selected = selectedAnswer(q);
+
+      if (q.answer.length > 1) {
+        answers[q.id] = selected.includes(key) ? selected.filter((k) => k !== key) : [...selected, key];
+      } else {
+        answers[q.id] = [key];
+        if (state.mode !== "exam") state.checked[q.id] = true;
+      }
+
+      saveState();
+      render();
+    }
+
+    function showAnswer() {
+      const q = currentQuestion();
+      if (!q) return;
+
+      if (state.mode === "flashcard") {
+        state.flashcardFlipped = !state.flashcardFlipped;
+      } else if (state.mode !== "exam") {
+        state.checked[q.id] = true;
+      }
+
+      saveState();
+      render();
+    }
+
+    function move(delta) {
+      if (autoPlaying && !autoFromSelf) stopAuto();
+      state.flashcardFlipped = false;
+      state.index = Math.max(0, Math.min(currentList.length - 1, state.index + delta));
+      saveState();
+      render();
+    }
+
+    function toggleBookmark() {
+      const q = currentQuestion();
+      if (!q) return;
+      state.bookmarks = isBookmarked(q) ? state.bookmarks.filter((id) => id !== q.id) : [...state.bookmarks, q.id];
+      saveState();
+      render();
+    }
+
+    function stopAuto() {
+      autoPlaying = false;
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      els.autoPlayBtn.classList.remove("playing");
+      els.autoPlayBtn.textContent = "▶ Auto đọc";
+    }
+
+    function render() {
+      buildList();
+      els.totalCount.textContent = `${TOTAL_QUESTIONS} câu`;
+      const checkedCount = source.filter((q) => state.checked[q.id] && isCorrect(q)).length;
+      els.scoreSummary.textContent = `${checkedCount} đúng`;
+
+      els.practiceModeBtn.classList.toggle("active", state.mode === "practice");
+      els.batchModeBtn.classList.toggle("active", state.mode === "batch");
+      els.wrongModeBtn.classList.toggle("active", state.mode === "wrong");
+      els.flashcardModeBtn.classList.toggle("active", state.mode === "flashcard");
+      els.examModeBtn.classList.toggle("active", state.mode === "exam");
+
+      els.batchSetup.classList.toggle("hidden", state.mode !== "batch");
+      els.examSetup.classList.toggle("hidden", state.mode !== "exam");
+      els.submitExamBtn.classList.toggle("hidden", state.mode !== "exam" || state.examSubmitted);
+
+      const total = currentList.length;
+      const pos = total ? state.index + 1 : 0;
+      els.progressText.textContent = `${pos}/${total}`;
+      els.progressBar.style.width = total ? `${(pos / total) * 100}%` : "0%";
+
+      els.prevBtn.disabled = state.index <= 0;
+      els.nextBtn.disabled = state.index >= total - 1;
+      els.sidePrevBtn.disabled = els.prevBtn.disabled;
+      els.sideNextBtn.disabled = els.nextBtn.disabled;
+
+      const q = currentQuestion();
+      if (!q) {
+        els.questionIndex.textContent = "Không có câu";
+        els.questionText.textContent = "Không tìm thấy câu hỏi phù hợp.";
+        els.options.innerHTML = "";
+        return;
+      }
+
+      els.questionIndex.textContent = `Câu ${pos}/${total}`;
+      els.bookmarkBtn.textContent = isBookmarked(q) ? "★" : "☆";
+      els.bookmarkBtn.classList.toggle("active", isBookmarked(q));
+
+      if (state.mode === "flashcard") {
+        renderFlashcard(q);
+      } else {
+        renderStandardQuestion(q);
+      }
+    }
+
+    function renderStandardQuestion(q) {
+      els.questionText.textContent = q.question;
+      const reveal = isChecked(q);
+
+      if (reveal && q.question_vi) {
+        els.questionTextVi.textContent = q.question_vi;
+        els.questionTextVi.classList.remove("hidden");
+      } else {
+        els.questionTextVi.classList.add("hidden");
+      }
+
+      if (reveal && q.note) {
+        els.questionNote.textContent = q.note;
+        els.questionNote.classList.remove("hidden");
+      } else {
+        els.questionNote.classList.add("hidden");
+      }
+
+      els.options.innerHTML = "";
+      const selected = selectedAnswer(q);
+
+      q.options.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.type = "button";
+
+        if (selected.includes(opt.key)) btn.classList.add("selected");
+        if (reveal && q.answer.includes(opt.key)) btn.classList.add("correct");
+        if (reveal && selected.includes(opt.key) && !q.answer.includes(opt.key)) btn.classList.add("wrong");
+
+        btn.innerHTML = `
+          <span class="key">${opt.key}</span>
+          <div>
+            <span class="text">${opt.text}</span>
+            ${reveal && opt.text_vi ? `<span class="text-vi">${opt.text_vi}</span>` : ""}
+          </div>
+        `;
+
+        btn.onclick = () => chooseOption(opt.key);
+        els.options.appendChild(btn);
+      });
+
+      if (reveal) {
+        els.feedback.classList.remove("hidden");
+        const correct = isCorrect(q);
+        els.feedback.className = `feedback ${correct ? "ok" : "bad"}`;
+        els.feedback.textContent = `${correct ? "Chính xác!" : "Chưa đúng."} Đáp án: ${q.answer.join(", ")}`;
+      } else {
+        els.feedback.classList.add("hidden");
+      }
+    }
+
+    function renderFlashcard(q) {
+      els.questionText.textContent = "";
+      els.questionTextVi.classList.add("hidden");
+      els.questionNote.classList.add("hidden");
+      els.feedback.classList.add("hidden");
+
+      const showBack = state.flashcardFlipped;
+
+      els.options.innerHTML = `
+        <div class="flashcard">
+          <div class="flashcard-label">${showBack ? "Mặt sau (Đáp án)" : "Mặt trước (Câu hỏi)"}</div>
+          <div class="flashcard-title">${q.question}</div>
+          ${showBack && q.question_vi ? `<div style="color:var(--ok); font-size:13px; font-weight:600; margin-bottom:10px;">${q.question_vi}</div>` : ""}
+          <div class="flashcard-answers">
+            ${q.options
+              .map(
+                (opt) => `
+              <div class="flashcard-answer ${showBack ? (q.answer.includes(opt.key) ? "correct" : "muted") : ""}">
+                <strong style="color:var(--brand);">${opt.key}</strong>
+                <div>
+                  <span>${opt.text}</span>
+                  ${showBack && opt.text_vi ? `<span style="display:block; font-size:11px; color:var(--ok);">${opt.text_vi}</span>` : ""}
+                </div>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    // Handlers
+    els.practiceModeBtn.onclick = () => setMode("practice");
+    els.batchModeBtn.onclick = () => setMode("batch");
+    els.wrongModeBtn.onclick = () => setMode("wrong");
+    els.flashcardModeBtn.onclick = () => setMode("flashcard");
+    els.examModeBtn.onclick = () => setMode("exam");
+
+    els.prevBtn.onclick = () => move(-1);
+    els.nextBtn.onclick = () => move(1);
+    els.sidePrevBtn.onclick = () => move(-1);
+    els.sideNextBtn.onclick = () => move(1);
+    els.showAnswerBtn.onclick = showAnswer;
+    els.bookmarkBtn.onclick = toggleBookmark;
+
+    els.searchInput.oninput = (e) => {
+      state.query = e.target.value;
+      state.index = 0;
+      render();
+    };
+
+    els.filterSelect.onchange = (e) => {
+      state.filter = e.target.value;
+      state.index = 0;
+      render();
+    };
+
+    els.resetBtn.onclick = () => {
+      if (confirm("Reset lại toàn bộ tiến độ làm bài?")) {
+        localStorage.removeItem(STORAGE_KEY);
+        state = createDefaultState();
+        render();
+      }
+    };
+
+    render();
+  </script>
+</body>
+
+</html>

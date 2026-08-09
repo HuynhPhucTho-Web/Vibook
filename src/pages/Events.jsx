@@ -20,7 +20,7 @@ import {
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
-import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes, FaClock, FaMapMarkerAlt, FaUsers, FaUser } from "react-icons/fa";
+import { FaCalendarAlt, FaPlus, FaSignInAlt, FaSignOutAlt, FaComments, FaTimes, FaClock, FaMapMarkerAlt, FaUsers, FaUser, FaVideo, FaLink } from "react-icons/fa";
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
@@ -70,6 +70,8 @@ const Events = () => {
   const [eventLocation, setEventLocation] = useState("");
   const [eventDescription, setEventDescription] = useState("");
   const [eventBannerImage, setEventBannerImage] = useState("");
+  const [isOnline, setIsOnline] = useState(false);
+  const [eventOnlineLink, setEventOnlineLink] = useState("");
   const { keyword: search, setSearchConfig } = useSearch();
 
   useEffect(() => {
@@ -275,6 +277,8 @@ const Events = () => {
           ownerId: auth.currentUser.uid,
           attendees: [auth.currentUser.uid],
           createdAt: serverTimestamp(),
+          isOnline: isOnline,
+          onlineLink: eventOnlineLink.trim() || null,
         };
 
         await addDoc(collection(db, "Events"), eventData);
@@ -284,6 +288,8 @@ const Events = () => {
         setEventLocation("");
         setEventDescription("");
         setEventBannerImage("");
+        setIsOnline(false);
+        setEventOnlineLink("");
         setShowCreateModal(false);
         toast.success(t("eventCreated"), {
           position: "top-center",
@@ -294,7 +300,7 @@ const Events = () => {
         toast.error(t("eventCreateFailed"), { position: "top-center" });
       }
     },
-    [eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, navigate, t]
+    [eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, isOnline, eventOnlineLink, navigate, t]
   );
 
   // Update event
@@ -312,6 +318,8 @@ const Events = () => {
           location: eventLocation.trim(),
           description: eventDescription.trim(),
           bannerImage: eventBannerImage.trim() || null,
+          isOnline: isOnline,
+          onlineLink: eventOnlineLink.trim() || null,
         });
         setShowEditModal(false);
         setEditingEvent(null);
@@ -321,13 +329,15 @@ const Events = () => {
         setEventLocation("");
         setEventDescription("");
         setEventBannerImage("");
+        setIsOnline(false);
+        setEventOnlineLink("");
         toast.success(t("eventUpdated"), { position: "top-center" });
       } catch (error) {
         console.error("Error updating event:", error);
         toast.error(t("eventUpdateFailed"), { position: "top-center" });
       }
     },
-    [editingEvent, eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, currentUser]
+    [editingEvent, eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, isOnline, eventOnlineLink, currentUser]
   );
 
   // Join event
@@ -580,9 +590,9 @@ const Events = () => {
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="create-group-btn"
+              className="vb-btn vb-btn--primary"
             >
-              <FaPlus size={15} />
+              <FaPlus size={14} />
               {t("createEvent")}
             </button>
 
@@ -740,6 +750,37 @@ const Events = () => {
                     {t("locationHint")}
                   </small>
                 </div>
+
+                <div className="mb-4 flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="isOnline"
+                    checked={isOnline}
+                    onChange={(e) => setIsOnline(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="isOnline" className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                    Sự kiện online (Cuộc họp trực tuyến)
+                  </label>
+                </div>
+
+                {isOnline && (
+                  <div className="mb-4 animate-fadeIn">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Link cuộc họp online (Google Meet, Zoom,...)
+                    </label>
+                    <input
+                      type="url"
+                      value={eventOnlineLink}
+                      onChange={(e) => setEventOnlineLink(e.target.value)}
+                      placeholder="https://meet.google.com/..."
+                      className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Cung cấp link Google Meet, Zoom, MS Teams,... để người tham gia truy cập trực tiếp.
+                    </small>
+                  </div>
+                )}
 
                 <div className="mb-5">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -933,6 +974,37 @@ const Events = () => {
                   </small>
                 </div>
 
+                <div className="mb-4 flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="isOnlineEdit"
+                    checked={isOnline}
+                    onChange={(e) => setIsOnline(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="isOnlineEdit" className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                    Sự kiện online (Cuộc họp trực tuyến)
+                  </label>
+                </div>
+
+                {isOnline && (
+                  <div className="mb-4 animate-fadeIn">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Link cuộc họp online (Google Meet, Zoom,...)
+                    </label>
+                    <input
+                      type="url"
+                      value={eventOnlineLink}
+                      onChange={(e) => setEventOnlineLink(e.target.value)}
+                      placeholder="https://meet.google.com/..."
+                      className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <small className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Cung cấp link Google Meet, Zoom, MS Teams,... để người tham gia truy cập trực tiếp.
+                    </small>
+                  </div>
+                )}
+
                 <div className="mb-5">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("description")}
@@ -1082,6 +1154,26 @@ const Events = () => {
                       </div>
                     </div>
                   )}
+                  {selectedEvent.isOnline && (
+                    <div className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200/50 dark:border-gray-700/50 pt-3">
+                      <FaVideo className="text-green-500 mt-0.5 shrink-0" size={15} />
+                      <div>
+                        <span className="font-semibold block text-gray-900 dark:text-white">Hình thức tổ chức</span>
+                        <span className="text-xs text-green-600 dark:text-green-400 font-semibold block mb-2">Trực tuyến (Online)</span>
+                        {selectedEvent.onlineLink && (
+                          <a
+                            href={selectedEvent.onlineLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                          >
+                            <FaLink size={10} />
+                            Tham gia cuộc họp ngay
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -1135,7 +1227,7 @@ const Events = () => {
                         );
                       })
                     ) : (
-                      <p className="text-sm text-gray-500 col-span-full">Chưa có người tham gia.</p>
+                      <p className="text-sm text-gray-50 col-span-full">Chưa có người tham gia.</p>
                     )}
                   </div>
                 </div>
@@ -1204,6 +1296,8 @@ const Events = () => {
                               setEventLocation(event.location);
                               setEventDescription(event.description);
                               setEventBannerImage(event.bannerImage || "");
+                              setIsOnline(Boolean(event.isOnline));
+                              setEventOnlineLink(event.onlineLink || "");
                               setShowEditModal(true);
                               setShowOptions(null);
                             }}
@@ -1274,6 +1368,24 @@ const Events = () => {
                       <div className="flex items-start gap-2.5">
                         <FaMapMarkerAlt className="text-red-500 mt-0.5 shrink-0" size={13} />
                         <span className="leading-normal">{event.location}</span>
+                      </div>
+                    )}
+                    {event.isOnline && (
+                      <div className="flex items-start gap-2.5">
+                        <FaVideo className="text-green-500 mt-0.5 shrink-0" size={13} />
+                        {event.onlineLink ? (
+                          <a
+                            href={event.onlineLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Tham gia Meet <FaLink size={9} />
+                          </a>
+                        ) : (
+                          <span className="text-green-600 dark:text-green-400 font-semibold">Online Meeting</span>
+                        )}
                       </div>
                     )}
                     <div

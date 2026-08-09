@@ -229,9 +229,9 @@ const Games = () => {
                 }
                 setShowCreateModal(true);
               }}
-              className="create-neo-btn create-neo-btn--pink"
+              className="vb-btn vb-btn--primary"
             >
-              <FaPlus size={15} />
+              <FaPlus size={14} />
               {t("addGame")}
             </button>
 
