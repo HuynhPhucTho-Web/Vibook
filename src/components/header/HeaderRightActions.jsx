@@ -27,7 +27,7 @@ const HeaderRightActions = ({
 }) => {
   const isLight = theme === "light";
 
-  // Guest: Login + Register only (hide messenger / notifications / user menu)
+  // Guest: Login only (hide messenger / notifications / user menu)
   if (!isAuthenticated) {
     return (
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -37,13 +37,6 @@ const HeaderRightActions = ({
           className="vb-btn vb-btn--primary vb-btn--sm vb-btn--pill no-underline"
         >
           {t("login")}
-        </Link>
-        <Link
-          to="/register"
-          onClick={closeAllPopups}
-          className="vb-btn vb-btn--ghost vb-btn--sm vb-btn--pill no-underline"
-        >
-          {t("register")}
         </Link>
       </div>
     );

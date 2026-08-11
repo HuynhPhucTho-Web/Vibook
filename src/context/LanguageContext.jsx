@@ -23,6 +23,7 @@ const translations = {
     story: "Story",
     playGame: "Play Game",
     store: "Store",
+    source: "Library",
 
     // Common
     loading: "Loading ViBook...",
@@ -536,6 +537,7 @@ const translations = {
     story: "Story",
     playGame: "Chơi game",
     store: "Cửa hàng",
+    source: "Kho tài liệu",
 
     // Common
     loading: "Đang tải ViBook...",

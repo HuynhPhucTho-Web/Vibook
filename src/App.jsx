@@ -50,6 +50,7 @@ import Setting from "./pages/Setting";
 import RequireAuth from "./components/auth/RequireAuth";
 import BlogPages from "./pages/blog/BlogPages";
 import AboutPage from "./pages/AboutPages";
+import SourcePage from "./pages/source/SourcePage";
 import { clearLoginRedirect, getLoginRedirect } from "./utils/requireLogin";
 
 // Layout for authentication pages
@@ -168,8 +169,9 @@ function App() {
                   <Route path="/videos" element={<Video />} />
                   {/* Friends: public browse; friend-request actions gated in UI/handlers */}
                   <Route path="/friends" element={<Friends />} />
-                  {/* Settings: guest may open page; private sections gated in UI */}
                   <Route path="/settings" element={<Setting />} />
+                  <Route path="/source" element={<SourcePage />} />
+                  <Route path="/source/:subjectCode" element={<SourcePage />} />
 
                   <Route path="groups/:groupId" element={<GroupPage />}>
                     <Route index element={<GroupHome />} />

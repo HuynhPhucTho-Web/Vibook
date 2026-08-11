@@ -7,6 +7,7 @@ import React, {
   memo,
   useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   FaBookmark,
   FaComment,
@@ -297,7 +298,7 @@ const PostActions = ({
       </div>
 
       {/* Mobile reaction bottom sheet */}
-      {showReactions && isCoarsePointer() && (
+      {showReactions && isCoarsePointer() && createPortal(
         <div
           className="post-sheet-backdrop"
           role="presentation"
@@ -330,7 +331,8 @@ const PostActions = ({
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Share sheet / popover */}
@@ -401,7 +403,7 @@ function SharePanel({ isLight, onClose, onShare, onRepost }) {
     },
   ];
 
-  return (
+  return createPortal(
     <div
       className="post-sheet-backdrop"
       role="presentation"
@@ -441,7 +443,8 @@ function SharePanel({ isLight, onClose, onShare, onRepost }) {
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

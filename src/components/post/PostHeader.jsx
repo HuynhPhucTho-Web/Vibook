@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { FaEllipsisH, FaEdit, FaLock, FaTrash, FaUser, FaGlobeAmericas, FaUserFriends, FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -35,45 +35,70 @@ const PostHeader = ({
     if (days < 7) return t("dayAgo").replace("{count}", days);
     return new Date(value).toLocaleDateString({ en: "en-US", vi: "vi-VN", ja: "ja-JP" }[language] || "en-US");
   };
+  const [authorName, setAuthorName] = useState(post.userName || "Anonymous");
+  const [authorPhoto, setAuthorPhoto] = useState(post.userPhoto || null);
+  const [imgFailed, setImgFailed] = useState(false);
+
   useEffect(() => {
+    setImgFailed(false);
+  }, [authorPhoto]);
+
+  useEffect(() => {
+    if (!post.userId) {
+      setAuthorName(post.userName || "Anonymous");
+      setAuthorPhoto(post.userPhoto || null);
+      return;
+    }
     let mounted = true;
-    (async () => {
-      try {
-        // Nếu đã có sẵn trong post thì dùng luôn
-        if (post.userName && post.userPhoto) {
-          return;
-        }
-        // Fetch từ Users/{userId} nếu thiếu
-        if (post.userId) {
-          const snap = await getDoc(doc(db, "Users", post.userId));
-          if (mounted && snap.exists()) {
-            // Update post.userName if needed, but for now we just ensure it's available
+    const userDocRef = doc(db, "Users", post.userId);
+    const unsub = onSnapshot(
+      userDocRef,
+      (snap) => {
+        if (mounted) {
+          if (snap.exists()) {
+            const userData = snap.data();
+            const displayName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || userData.displayName || post.userName || "Anonymous";
+            const photo = userData.photo || userData.photoURL || post.userPhoto || null;
+            setAuthorName(displayName);
+            setAuthorPhoto(photo);
+          } else {
+            setAuthorName(post.userName || "Anonymous");
+            setAuthorPhoto(post.userPhoto || null);
           }
         }
-      } catch (e) {
-        // bỏ qua lỗi: fallback phía dưới sẽ hiển thị "Anonymous"
-        console.log("fetch author error", e);
+      },
+      (err) => {
+        console.log("Error fetching post author info:", err);
+        if (mounted) {
+          setAuthorName(post.userName || "Anonymous");
+          setAuthorPhoto(post.userPhoto || null);
+        }
       }
-    })();
-    return () => { mounted = false; };
+    );
+    return () => {
+      mounted = false;
+      unsub();
+    };
   }, [post.userId, post.userName, post.userPhoto]);
+
+  const hasNoAvatar = !authorPhoto || authorPhoto === "/default-avatar.png" || imgFailed;
 
   return (
     <div className="post-item-header">
       <div className="post-item-author">
         <Link to={`/profile/${post.userId}`} className="no-underline hover:no-underline">
-          {post.userPhoto ? (
+          {!hasNoAvatar ? (
             <img
-              src={post.userPhoto}
-              alt={post.userName}
+              src={authorPhoto}
+              alt={authorName}
               className="rounded-circle"
               style={{
                 width: "40px",
                 height: "40px",
                 objectFit: "cover",
               }}
-              onError={(e) => {
-                e.target.style.display = "none";
+              onError={() => {
+                setImgFailed(true);
               }}
             />
           ) : (
@@ -94,7 +119,7 @@ const PostHeader = ({
         <div>
           <Link to={`/profile/${post.userId}`} className="no-underline hover:no-underline">
             <p className={`font-semibold text-base ${isLight ? "text-gray-900" : "text-white"}`}>
-              {post.userName}
+              {authorName}
             </p>
           </Link>
           <p className="text-sm text-gray-500 d-flex align-items-center gap-1">
