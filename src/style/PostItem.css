@@ -194,7 +194,7 @@
 .post-share-modal-header button:hover { background: rgb(148 163 184 / .3); }
 .post-share-modal-header button:active { transform: scale(.94); }
 
-.post-share-modal-body { padding: 1rem; overflow-y: auto; }
+.post-share-modal-body { padding: 1rem; overflow-y: auto; flex: 1; min-height: 0; }
 .post-share-owner-row { display: flex; align-items: center; gap: .7rem; }
 .post-share-owner-row > img { width: 44px; height: 44px; flex: 0 0 auto; border-radius: 999px; object-fit: cover; }
 .post-share-owner-row strong { display: block; font-size: .92rem; }
@@ -556,6 +556,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+.post-action-btn__count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 /* Desktop reaction strip */

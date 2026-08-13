@@ -1,0 +1,521 @@
+Which of these steps follows the most logical order for a low-to-high sorting algorithm?
+
+A. 1. Scan to find the smallest number
+2. Set to O in the index in the output array
+3. Remove that number from the input array
+
+B. 1. Scan to find the smallest number
+2. Set the length of the array in the index in the output array
+3. Remove that number from the input
+4. Repeat steps 1-3, but add 1 to the index number for each loop
+
+C. 1. Scan to find the smallest number
+2. Set to 0 in the index in the output array
+3. Remove that number from the input array
+4. Repeat steps 1-3, but add 1 to the index number for each loop
+
+D. 1. Scan to find the largest number
+2. Set to 0 in the index in the output array
+3. Remove that number from the input array
+4. Repeat steps 1-3, but add 1 to the index number for each loop
+
+C
+
+The Data minimization principle requires that you limit data collection to only what is
+
+A. necessary for differential privacy
+B. optional for a chain of command
+C. needed to have k-anonymity
+D. required to fulfill a specific purpose
+
+D
+
+Which of the following are likely benefits of having defined organizational policies? (Select two.)
+
+A. It supports profitable research innovations and intellectual property.
+B. It supports accountability and makes it more explicit.
+C. It supports consistency of behavior and unification of culture.
+D. It supports improved sales and marketing results.
+
+B,C
+
+Which of the following describes the purpose of a STEEPV analysis?
+
+A. To perform a strategic analysis of user needs and behaviors.
+B. To perform a strategic analysis of how external environments impact business operations.
+C. To perform a strategic analysis of how internal office politics impact business operations.
+D. To perform a strategic analysis of how bias can manifest in Al products.
+
+B
+
+What is the function of a red team in a penetration testing exercise?
+
+A. To conduct the simulated attacks
+B. To defend against the simulated attacks.
+C. To officiate the simulated attacks.
+D. To disable the attacks.
+
+A
+
+The Netflix prize privacy scandal is an example of reidentification through
+
+A. k-anonymity
+B. database leaks
+C. multiple datasets
+D. sensitive columns
+
+C
+
+In a classification model that determines whether or not a customer qualifies for a coupon, a significantly lower
+percentage of males qualified than females. Which of the following types of discrimination does this outcome
+potentially represent?
+
+A. Disparate treatment
+B. Disparate non-impact
+C. Disparate mistreatment
+D. Disparate impact
+
+D
+
+Which of the following is a reason to periodically update a code of ethics document?
+
+A. It allows you to capture the evolving nature of the ethical risks of the product or service that you are
+developing.
+B. It signals that you care about ethics to internal and external stakeholders.
+C. It reinforces the presence of the code of ethics in the minds of the employees.
+D. It is a fiduciary and regulatory responsibility for the organization to do so.
+
+A
+
+Why are environmental concerns important to consider in the ethical development of data-driven technologies?
+
+A. Data-driven technologies can cause secondary, indirect, or cumulative effects on the environment that
+might impact people in the long term.
+B. Data-driven technologies directly impact the environment through the invasive mining of resources to
+create the technologies.
+C. Data-driven technologies directly impact the environment through pollution.
+D. Data-driven technologies directly impact living things via displacement.
+
+A
+
+Which of the following is a key element of communications with internal and external stakeholders regarding
+an organization's ethics policies?
+
+A. Simple to follow examples
+B. Daily communications
+C. Dense procedural descriptions
+D. Flexible verbiage 
+
+A
+
+Which of the following is a key element of communications with internal and external stakeholders regarding
+an organization's ethics policies?
+
+A. Simple to follow examples
+B. Daily communications
+C. Dense procedural descriptions
+D. Flexible verbiage
+
+A
+
+Which of the following is an important action needed for the finalization of internal and external ethics policies
+before approval?
+
+A. Discarding open issues to provide a clean slate for the next iteration of the policies
+B. Documenting the assumptions and choices made in the drafting of the policies
+C. Testing the policy in an already deployed project setting
+D. Ensuring the policies are the same as those from other peer organizations 
+
+B
+
+Which of the following is an important reason for continually refreshing an organization's internal and external
+ethics policies?
+A. It helps internal stakeholders justify the release of new product features or service upgrades.
+B. It helps maintain alignment of the policies with the cultural and contextual values of the organization's
+employees.
+C. It helps maintain alignment with the emergent risks and changing ethical posture of the products and
+services of the organization.
+D. It helps demonstrate to senior management that work is being done on the internal and external ethics
+policies.
+
+C
+
+Which of the following might be a risk of not having an ethical organizational culture?
+
+A. Employees might be less interested in their careers.
+B. Employees might face cognitive dissonance.
+C. Employees will experience a faster approval process to get a product launched.
+D. Employees are more likely to express their opinions about the company. 
+
+B
+
+-- SP26-FE-RE --
+
+An example of a public dataset at risk of an algorithmic privacy violation is the
+
+A. Google Maps satellite view dataset
+B. Google search view dataset
+C. Stanford hospital dataset
+D. Fidelity Bank lending dataset
+
+A
+
+During cross-validation, which of the following dataset splits is used to tune the
+performance of a model?
+
+A. Training set
+B. Test set
+C. Validation test
+D. Unit test
+
+C
+
+Which of the following are potential ethical benefits of conducting pilot testing
+prior to the release of emerging technologies? (Select two.)
+A. It certifies that a product's developers are legally accountable.
+B. It minimizes the impact of any ethical issues which may emerge.
+C. It demonstrates that the system is functional as early as possible in order to satisfy senior
+management and investor stakeholders.
+D. It reveals any gaps in accountability or auditability.
+
+B,D
+
+Why is it important to consider Goodhart's law?
+
+A. A model might optimize one metric at the expense of others.
+B. A model might be ineffective in its application domain.
+C. A model might change its task from classification to regression, or vice versa
+D. A model very famous and can be apply to all domain.
+
+A
+
+Which of the following elements should be communicated with end users when
+negotiating ethical access to a user's data? (Select two.)
+
+A. The monetary value of that data
+B. An offer of money or other incentives to relinquish user's rights
+C. The intention behind a certain activity or request
+D. A request for consent to perform an action
+
+C,D
+
+What are the limitations of training and testing an Al model in a specific context?
+
+A. Models may perform poorly when applied to different contexts
+B. Models require less computational power in limited contexts
+C. Models reduce training data requirements when context is specified
+D. Models automatically improve when tested in the same context
+
+A
+
+What does the acronym RACI stand for?
+
+A. Relatable, Agreeable, Commendable, Irascible
+B. Responsible, Accessible, Consulted, Improvised
+C. Redesignable, Accessible, Collected, Informative?
+D. Responsible, Accountable, Consulted, Informed
+
+D
+
+What are the essential steps involved in creating personas for user-centric
+marketing?
+
+A. Define target audience, conduct research, build fictional personas based on insights,
+validate personas
+B. Identify privacy risks, analyze data, implement policies, conduct training
+C. Conduct surveys, run focus groups, implement findings, analyze result
+D. Develop marketing strategies, execute campaigns, evaluate outcomes, adjust tactics
+
+A
+
+Which of the following is a recommended security practice for machine learning
+datasets?
+
+A. Ensure your team is full of different perspectives
+B. Enact a sound data governance structure
+C. Perform threat modeling with beneficial algorithms
+D. Create a chain of command
+
+A
+
+You're training a model to classify whether or not a bridge is likely to collapse
+given several factors. You have a dataset of thousands of existing bridges and
+their attributes, where each bridge is labeled as having collapsed or not
+collapsed. Only a handful of bridges in the dataset are labeled as having
+collapsed-the rest are labeled as not collapsed. Given your goal of minimizing
+bridge collapse and the severe harm it can cause, which of the following metrics
+would be most useful for evaluating the model?
+
+A. Accuracy
+B. Confusion matrix
+C. Precision
+D. Recall
+
+D
+
+Which of the following describes extrajudicial judgment?
+
+A. A ruling or scoring made outside of a court.
+B. Transferring defendants from one jurisdiction to another for trial.
+C. Applying law from one jurisdiction within another.
+D. Unusual interpretation of law outside of its typical meaning.
+
+a
+
+Differential privacy works by adding what to a dataset?
+
+A. filters
+B. fairness scoring
+C. noise
+D. k-anonymity
+
+When it comes to protecting private data, which of the following could be the
+root cause of a problem?
+
+A. The data was stored insecurely.
+B. The data was leaked online.
+C. The data was deleted from storage.
+D. The data was broken.
+
+A
+
+What is the role of interdisciplinary collaboration in tech ethics?
+
+A. It's unnecessary complexity
+B. It brings diverse expertise to ethical challenges
+C. It slows down development processes
+D. It creates conflicting viewpoints only
+
+B
+
+What role does communication play in ethical leadership?
+
+A. Preventing conflict resolution
+B. Encouraging silence during ethical issues
+C. Building trust and ethical alignment
+D. Reducing transparency in strategy
+
+C
+
+What can happen if users are excluded from Al impact discussions?
+
+A. They contribute less
+B. Systems may not reflect public values
+C. Faster deployment
+D. Lower training costs
+
+
+Which approach promotes inclusive communication?
+
+A. Using a single communication channel
+B. Considering diverse cultural and accessibility needs
+C. Focusing only on majority perspectives
+D. Standardizing all messages
+
+Which of the following are important qualities of a press release? (Select two.)
+A. It's in a digital format
+
+B. It's non-interactive
+
+C. It's delivered on a single platform
+
+D. It's concise
+
+What is a challenge of explainability in complex Al systems?
+
+A. It makes models faster
+
+B. Users don't care about explanations
+
+C. Black-box algorithms are hard to interpret
+
+D. It improves transparency instantly
+
+How can sentiment analysis be useful in social media communication?
+
+A. It can shape the content and delivery of the message based on users' perceptions of the
+organization or technology.
+
+B. It can classify customers as loyal or disloyal, helping you target customers differently in
+your communications.
+
+C. It can determine which users have the largest influence on your reputation, and therefore
+which users you should communicate with.
+
+D. It can determine how to construct a message that influences users to be more positive
+about the organization or technology.
+
+
+Which of the following are useful strategies for communicating ethical risks to
+the organization? (Select two.)
+
+A. Communicate information through a single voice
+B. Disseminate information in multiple formats
+C. Communicate information in real time
+D. Provide information only when solicited
+
+
+What is the purpose of a holding statement in crisis and media communications?
+
+A. To order the business to temporarily halt certain operations
+B. To retain the services of specific media outlets
+C. To pre-write communications before they are needed
+D. To prevent personnel from communicating prematurely
+
+Which of the following communication tactics help uphold transparency and
+explainability from the customer perspective? (Select two.)
+
+A. Providing prompt responses to customer questions about the decisions made by data-
+driven systems.
+
+B. Providing information about data-driven systems in simple, easy-to-understand terms.
+
+C. Providing in-depth white papers on the algorithms that underlie data-driven systems.
+
+D. Providing guidelines for how customers can keep their private data secure when using
+data-driven systems.
+
+
+What role does social media play in promoting products and building brand
+reputation?
+
+A. Facilitates direct engagement with consumers
+
+B. Guarantees higher sales numbers
+
+C. Eliminates the need for customer feedback
+
+D. Focuses solely on aesthetic appeal
+
+Chobse 2 ansvers
+
+Multip
+
+Why are deep learning and machine learning called narrow? Select two options.
+
+A. Narrow can only perform the specific tasks it was designed to do.
+
+B. Narrow Al can't handle situations that its training data didn't prepare it for.
+
+C. Narrow Al is dependent on hand-coding of its algorithms.
+
+The optimistic view of general Al could be accurately summarized as Al as a
+
+A. utility
+
+B. peace-keeping tool
+
+C. human right
+
+D. weapon
+
+Which of the following are examples of how Al can limit human autonomy?
+(Select two.)
+
+A. Weapon systems can limit human autonomy as humans may not have decision-making
+capability or understand the decision making.
+
+B. Al systems might impact certain vulnerable groups such as the elderly and children
+differently than the rest of the population, which could limit those groups' autonomy.
+
+C. Al systems can assist individuals with automated, repetitive, or dangerous tasks.
+
+D. Al systems can perform tasks that humans cannot, such as processing millions of data
+records in a matter of seconds.
+
+For a model to clean, parse, and self-train it's own dataset while remaining
+impartial, the model needs
+
+A. more powerful computing algorithms to auto-scrub data
+
+B. a list of bias and domain tests to run and adjust for
+
+C. 10x the amount of data
+
+D. a test for recency bias
+
+Which of the following best distinguishes between responsibility, accountability,
+and liability?
+
+A. Responsibility is the duty to complete a task, accountability is ownership of outcomes, and
+liability is legal obligation for any potential damages
+
+B. Responsibility is managing outcomes, accountability involves delegating tasks, and liability
+is financial responsibility
+C. Responsibility and accountability are synonymous, while liability is the duty to perform
+tasks
+
+D. Liability and accountability are the same, whereas responsibility is irrelevant in business
+
+Which of the following, by itself, qualifies as personally identifiable information
+(PII)?
+
+A. System events added to a log
+
+B. A user's home address
+
+C. Temperature readings for an office building
+
+D. A user's customer ID in an online ordering system
+
+Which of the following are actions that can help combat implicit bias? (Select
+three.)
+
+A. Obtaining your information from the same one or two media sources that your family and
+friends access.
+
+B. Cultivating awareness of your own biases.
+
+C. Interacting with diverse groups of people.
+
+D. Exposing yourself to "counter-stereotypical" examples.
+
+
+Model inputs of address with "City + State" as separate inputs from a dataset
+would violate which accuracy guideline?
+
+A. Domain expertise
+
+B. No correlating data
+
+C. First principles
+
+D. Objective summarization
+
+Which type of bias causes people to trust an automated decision-making system
+(ADS) over a human's decision?
+
+A. Implicit bias
+
+B. Automation bias
+
+C. Complacency bias
+
+D. Confirmation bias
+
+A predictive model's false negative result can be defined as
+
+A. the predicted result was positive, and the actual result was positive
+
+B. the predicted result was negative, and the actual result was negative
+
+C. the predicted result was positive, and the actual result was negative
+
+D. the predicted result was negative, and the actual result was positive
+
+
+se 2
+
++
+
+How can confirmation bias impact us socially? (Select two.)
+
+A. It can lead to a diverse set of friends.
+
+B. It can prevent us from being social with other people.
+
+C. It can impede socio-political cooperation.
+
+D. It can lead to groupthink, which can in turn halt forward progress.
+
+

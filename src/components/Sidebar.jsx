@@ -37,7 +37,7 @@ const MOBILE_BREAKPOINT = 768;
 // Guest: public items + Settings (page open; private sections gated inside page).
 // Messenger locked → toast; /messenger URL still behind RequireAuth.
 const MENU = [
-  { path: "/homevibook", icon: FaHome, labelKey: "home", requiresAuth: false },
+  { path: "/feed", icon: FaHome, labelKey: "home", requiresAuth: false },
   { path: "/friends", icon: FaUserPlus, labelKey: "friends", requiresAuth: false },
   { path: "/blog", icon: FaBlog, labelKey: "blog", requiresAuth: false },
   { path: "/source", icon: FaBookOpen, labelKey: "source", requiresAuth: false },
@@ -443,20 +443,21 @@ export default function Sidebar() {
             })}
           </ul>
 
-          {/* BR §4: Logout always visible; disabled for guest */}
-          <button
-            className={
-              "sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")
-            }
-            onClick={handleLogout}
-            disabled={!isAuthenticated}
-            title={isCollapsed && !isMobile ? t("logout") : undefined}
-          >
-            <FaSignOutAlt className="sidebar__icon" />
-            {(!isCollapsed || isMobile) && (
-              <span className="sidebar__label">{t("logout")}</span>
-            )}
-          </button>
+          {/* BR §4: Logout hidden for guest */}
+          {isAuthenticated && (
+            <button
+              className={
+                "sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")
+              }
+              onClick={handleLogout}
+              title={isCollapsed && !isMobile ? t("logout") : undefined}
+            >
+              <FaSignOutAlt className="sidebar__icon" />
+              {(!isCollapsed || isMobile) && (
+                <span className="sidebar__label">{t("logout")}</span>
+              )}
+            </button>
+          )}
         </nav>
       </aside>
 

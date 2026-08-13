@@ -1,7 +1,8 @@
 import React, { memo, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query,
+  addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, onSnapshot, query,
   runTransaction, serverTimestamp, setDoc, updateDoc, where,
 } from "firebase/firestore";
 import { FaCheck, FaGlobeAmericas, FaLock, FaSearch, FaTag, FaTimes, FaUserFriends, FaHeart, FaEye } from "react-icons/fa";
@@ -285,6 +286,30 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     });
   }, [isDetailView, post.id]);
 
+  useEffect(() => {
+    if (isDetailView || !post.id) return undefined;
+    if (typeof post.commentCount === "number") return undefined;
+
+    let active = true;
+    const fetchCount = async () => {
+      try {
+        const snap = await getDocs(collection(db, "Posts", post.id, "comments"));
+        if (!active) return;
+        const count = snap.docs.reduce(
+          (total, item) => total + 1 + (item.data().replyCount || 0),
+          0,
+        );
+        setCommentCount(count);
+      } catch (err) {
+        console.error("Error fetching comment count for feed", err);
+      }
+    };
+    fetchCount();
+    return () => {
+      active = false;
+    };
+  }, [post.id, post.commentCount, isDetailView]);
+
   // Saved flag: one-shot getDoc (not a permanent listener per feed card)
   useEffect(() => {
     const userId = auth?.currentUser?.uid;
@@ -521,6 +546,15 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         taggedFriendIds: taggedFriends.map((friend) => friend.uid),
         taggedFriends: taggedFriends.map(({ uid, name, photo }) => ({ uid, name, photo })),
       });
+
+      setLocalPost((prevPost) => ({
+        ...prevPost,
+        shareCount: (prevPost.shareCount || 0) + 1,
+      }));
+      await updateDoc(doc(db, "Posts", originalId), {
+        shareCount: increment(1),
+      });
+
       setShowRepostModal(false);
       setShareDescription("");
       setTaggedFriends([]);
@@ -543,8 +577,22 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     setIsSavingPost(true);
     try {
       const savedRef = doc(db, "SavedPosts", `${userId}_${post.id}`);
-      if (prev) await deleteDoc(savedRef);
-      else await setDoc(savedRef, { userId, postId: post.id, savedAt: serverTimestamp() });
+      const postRef = doc(db, "Posts", post.id);
+      if (prev) {
+        await deleteDoc(savedRef);
+        setLocalPost((prevPost) => ({
+          ...prevPost,
+          saveCount: Math.max(0, (prevPost.saveCount || 0) - 1)
+        }));
+        await updateDoc(postRef, { saveCount: increment(-1) });
+      } else {
+        await setDoc(savedRef, { userId, postId: post.id, savedAt: serverTimestamp() });
+        setLocalPost((prevPost) => ({
+          ...prevPost,
+          saveCount: (prevPost.saveCount || 0) + 1
+        }));
+        await updateDoc(postRef, { saveCount: increment(1) });
+      }
       toast.success(prev ? t("postUnsaved") : t("postSaved"));
     } catch (error) {
       console.error("Save post error", error);
@@ -674,10 +722,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
 
       <PostStats post={localPost} commentCount={commentCount} isLight={isLight} onCommentClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)} />
       <div className={`mx-4 border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`} />
-      <PostActions post={localPost} auth={auth} isLight={isLight} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} showReactions={showReactions} setShowReactions={setShowReactions} isReacting={isReacting} onReaction={handleReaction} onShare={handleShare} onRepostToTimeline={handleRepostToTimeline} isSaved={isSaved} isSavingPost={isSavingPost} onToggleSave={handleToggleSave} />
+      <PostActions post={localPost} auth={auth} isLight={isLight} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} showReactions={showReactions} setShowReactions={setShowReactions} isReacting={isReacting} onReaction={handleReaction} onShare={handleShare} onRepostToTimeline={handleRepostToTimeline} isSaved={isSaved} isSavingPost={isSavingPost} onToggleSave={handleToggleSave} commentCount={commentCount} />
       <PostComments postId={post.id} auth={auth} userDetails={userDetails} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} />
 
-      {showRepostModal && (
+      {showRepostModal && createPortal(
         <div className="post-share-modal-backdrop" onMouseDown={closeRepostModal}>
           <section
             className={`post-share-modal ${isLight ? "light" : "dark"}`}
@@ -771,7 +819,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
               </button>
             </footer>
           </section>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -798,6 +847,8 @@ export default memo(PostItem, (prev, next) => {
     a?.mediaFiles === b?.mediaFiles &&
     a?.status === b?.status &&
     a?.commentCount === b?.commentCount &&
+    a?.saveCount === b?.saveCount &&
+    a?.shareCount === b?.shareCount &&
     a?.type === b?.type
   );
 });

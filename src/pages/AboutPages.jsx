@@ -362,37 +362,38 @@ export default function AboutPage() {
                   {
                     id: 'content',
                     title: 'Chính sách nội dung',
-                    desc: 'Cơ chế kiểm duyệt bài viết, chống spam khiêu dâm, bạo lực và bản quyền.',
-                    icon: Shield
+                    desc: 'Quy định bản quyền, chống spam và nội dung do người dùng tự tạo.',
+                    icon: Shield,
+                    path: '/content-policy'
                   },
                   {
                     id: 'behavior',
                     title: 'Chính sách về hành vi',
                     desc: 'Cam kết vị trí quảng cáo an toàn, ngăn chặn click ảo và điều hướng minh bạch.',
-                    icon: Users
+                    icon: Users,
+                    path: '/terms-of-service'
                   },
                   {
                     id: 'privacy',
                     title: 'Chính sách quyền riêng tư',
                     desc: 'Minh bạch thu thập dữ liệu người dùng và chính sách Cookie Google AdSense.',
-                    icon: Layers
+                    icon: Layers,
+                    path: '/privacy-policy'
                   },
                   {
                     id: 'standards',
                     title: 'Yêu cầu & Tiêu chuẩn khác',
                     desc: 'Cấu trúc menu điều hướng rõ ràng, bài viết nguyên bản và độ mượt di động.',
-                    icon: UserCheck
+                    icon: UserCheck,
+                    path: '/other-standards'
                   }
                 ].map((p) => {
                   const IconComp = p.icon;
                   return (
-                    <button
+                    <Link
                       key={p.id}
-                      onClick={() => {
-                        setActivePolicy(p.id);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="vb-glass feature-card"
+                      to={p.path}
+                      className="vb-glass feature-card no-underline"
                       style={{
                         padding: '2rem',
                         borderRadius: '18px',
@@ -404,7 +405,9 @@ export default function AboutPage() {
                         textAlign: 'left',
                         width: '100%',
                         cursor: 'pointer',
-                        transition: 'transform 0.2s ease, border-color 0.2s ease'
+                        transition: 'transform 0.2s ease, border-color 0.2s ease',
+                        color: 'inherit',
+                        textDecoration: 'none'
                       }}
                     >
                       <div style={{
@@ -427,7 +430,7 @@ export default function AboutPage() {
                       <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#8e54e9', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: 'auto' }}>
                         Đọc chi tiết <ChevronRight size={14} />
                       </span>
-                    </button>
+                    </Link>
                   );
                 })}
               </div>
@@ -484,6 +487,58 @@ export default function AboutPage() {
               </div>
             </section>
 
+            {/* Contact Info & E-E-A-T operator info */}
+            <section className="vb-glass" style={{
+              padding: '3rem 2.5rem',
+              borderRadius: '24px',
+              border: `1px solid ${isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'}`,
+              background: isLight ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.02)',
+              marginBottom: '4rem',
+            }}>
+              <h2 style={{
+                fontSize: '1.8rem',
+                fontWeight: '800',
+                textAlign: 'center',
+                marginBottom: '1.5rem',
+                background: 'linear-gradient(135deg, #8e54e9 0%, #4776e6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                Thông Tin Liên Hệ & Vận Hành
+              </h2>
+              <p style={{ textAlign: 'center', opacity: 0.85, fontSize: '0.95rem', maxWidth: '650px', margin: '0 auto 2rem' }}>
+                ViBook cam kết vận hành nền tảng một cách minh bạch, an toàn và bảo mật. Mọi phản hồi hoặc yêu cầu hỗ trợ, vui lòng liên hệ với ban quản trị theo các kênh chính thức sau đây.
+              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '1.5rem',
+                marginTop: '1.5rem'
+              }}>
+                <div style={{
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}`
+                }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '0.5rem', color: '#8e54e9' }}>📧 Email Hỗ Trợ</h4>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>support@vibook.net</p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>Từ 8:00 - 17:30 (Thứ 2 - Thứ 6)</p>
+                </div>
+                <div style={{
+                  padding: '1.5rem',
+                  borderRadius: '16px',
+                  background: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}`
+                }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '0.5rem', color: '#8e54e9' }}>📍 Đơn Vị Vận Hành</h4>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>ViBook Platform Development Team</p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh, Việt Nam</p>
+                </div>
+              </div>
+            </section>
+
             {/* CTA */}
             <section style={{
               textAlign: 'center',
@@ -501,7 +556,7 @@ export default function AboutPage() {
               </p>
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link 
-                  to="/homevibook" 
+                  to="/feed" 
                   style={{
                     padding: '0.85rem 2rem',
                     backgroundColor: '#fff',
@@ -544,5 +599,61 @@ export default function AboutPage() {
         )}
       </main>
     </>
+  );
+}
+
+export function PrivacyPolicyPage() {
+  const { theme } = useContext(ThemeContext);
+  const isLight = theme === 'light';
+  return (
+    <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      <Helmet>
+        <title>Chính Sách Quyền Riêng Tư | ViBook</title>
+        <meta name="description" content="Đọc về cơ chế thu thập dữ liệu người dùng và chính sách Cookie phân phối quảng cáo trên ViBook." />
+      </Helmet>
+      <PrivacyPolicy isLight={isLight} onBack={() => window.history.back()} />
+    </div>
+  );
+}
+
+export function TermsOfServicePage() {
+  const { theme } = useContext(ThemeContext);
+  const isLight = theme === 'light';
+  return (
+    <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      <Helmet>
+        <title>Chính Sách Về Hành Vi & Điều Khoản | ViBook</title>
+        <meta name="description" content="Tìm hiểu chính sách về hành vi, click tặc và vị trí quảng cáo an toàn trên ViBook." />
+      </Helmet>
+      <BehavioralPolicy isLight={isLight} onBack={() => window.history.back()} />
+    </div>
+  );
+}
+
+export function ContentPolicyPage() {
+  const { theme } = useContext(ThemeContext);
+  const isLight = theme === 'light';
+  return (
+    <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      <Helmet>
+        <title>Chính Sách Nội Dung | ViBook</title>
+        <meta name="description" content="Xem chi tiết quy định và chính sách nội dung trên mạng xã hội ViBook để tuân thủ Google AdSense." />
+      </Helmet>
+      <ContentPolicy isLight={isLight} onBack={() => window.history.back()} />
+    </div>
+  );
+}
+
+export function OtherStandardsPage() {
+  const { theme } = useContext(ThemeContext);
+  const isLight = theme === 'light';
+  return (
+    <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+      <Helmet>
+        <title>Các Yêu Cầu & Tiêu Chuẩn Khác | ViBook</title>
+        <meta name="description" content="Các tiêu chuẩn kỹ thuật, thiết kế responsive và chất lượng nội dung trên ViBook." />
+      </Helmet>
+      <OtherStandards isLight={isLight} onBack={() => window.history.back()} />
+    </div>
   );
 }

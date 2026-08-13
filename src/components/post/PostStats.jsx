@@ -14,8 +14,10 @@ const PostStats = ({ post, commentCount, isLight, onCommentClick }) => {
   const { t } = useContext(LanguageContext);
 
   const totalReactions = Object.values(post.likes || {}).reduce((s, c) => s + c, 0);
+  const saveCount = post.saveCount || 0;
+  const shareCount = post.shareCount || 0;
 
-  if (totalReactions === 0 && commentCount === 0) return null;
+  if (totalReactions === 0 && commentCount === 0 && saveCount === 0 && shareCount === 0) return null;
 
   return (
     <div className="post-stats px-3 sm:px-4 pb-1.5 sm:pb-2 flex items-center justify-between gap-2 text-xs sm:text-sm">
@@ -40,15 +42,27 @@ const PostStats = ({ post, commentCount, isLight, onCommentClick }) => {
           </span>
         </div>
       )}
-      {commentCount > 0 && (
-        <button
-          type="button"
-          onClick={onCommentClick}
-          className="shrink-0 text-gray-500 hover:text-blue-500 transition-colors py-1 px-1 min-h-[32px]"
-        >
-          {commentCount} {t("comment")}
-        </button>
-      )}
+      <div className="post-stats__meta flex items-center gap-3 ml-auto shrink-0 text-gray-500">
+        {commentCount > 0 && (
+          <button
+            type="button"
+            onClick={onCommentClick}
+            className="hover:text-blue-500 transition-colors py-1 px-1 min-h-[32px]"
+          >
+            {commentCount} {t("comment")}
+          </button>
+        )}
+        {saveCount > 0 && (
+          <span className="py-1 px-1">
+            {saveCount} {t("saveCountLabel") === "saveCountLabel" ? "lượt lưu" : t("saveCountLabel")}
+          </span>
+        )}
+        {shareCount > 0 && (
+          <span className="py-1 px-1">
+            {shareCount} {t("shareCountLabel") === "shareCountLabel" ? "chia sẻ" : t("shareCountLabel")}
+          </span>
+        )}
+      </div>
     </div>
   );
 };

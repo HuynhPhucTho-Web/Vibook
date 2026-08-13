@@ -59,6 +59,7 @@ function FeedSkeleton({ count = 3 }) {
 function Home() {
   const { theme } = useContext(ThemeContext);
   const [searchParams] = useSearchParams();
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
   const [userDetails, setUserDetails] = useState(null);
   const [posts, setPosts] = useState([]);
   const [friendUids, setFriendUids] = useState(new Set());
@@ -126,6 +127,7 @@ function Home() {
   useEffect(() => {
     let cancelled = false;
     const unsubAuth = auth.onAuthStateChanged(async (user) => {
+      if (!cancelled) setCurrentUser(user);
       if (!user) {
         if (!cancelled) setUserDetails(null);
         return;
@@ -304,10 +306,10 @@ function Home() {
       <SEO
         title="Trang chủ"
         description="Bảng tin ViBook - Mạng xã hội chia sẻ & kết nối bạn bè, cập nhật bài viết blog nổi bật và trò chuyện trực tuyến."
-        slug="/homevibook"
+        slug="/feed"
       />
       <div className={`home-container home-container--${theme}`}>
-        <PostCreator onPostCreated={handlePostCreated} />
+        {currentUser && <PostCreator onPostCreated={handlePostCreated} />}
 
         <HomeBlogSection theme={theme} />
 

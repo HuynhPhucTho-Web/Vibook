@@ -26,6 +26,7 @@ import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
 import ReactQuill from "react-quill-new";
 import { useSearch } from "../context/SearchContext";
+import SEO from "../components/SEO";
 import "../style/event/Event.css";
 
 const quillModules = {
@@ -343,8 +344,11 @@ const Events = () => {
   // Join event
   const handleJoinEvent = useCallback(
     async (eventId, attendees) => {
-      const user = requireLogin({ navigate, message: t("loginToJoinEvent") });
-      if (!user) return;
+      if (!auth.currentUser) {
+        navigate("/login", { state: { from: "/events" } });
+        return;
+      }
+      const user = auth.currentUser;
 
       try {
         const eventRef = doc(db, "Events", eventId);
@@ -366,8 +370,11 @@ const Events = () => {
   // Leave event
   const handleLeaveEvent = useCallback(
     async (eventId, attendees) => {
-      const user = requireLogin({ navigate, message: t("loginToLeaveEvent") });
-      if (!user) return;
+      if (!auth.currentUser) {
+        navigate("/login", { state: { from: "/events" } });
+        return;
+      }
+      const user = auth.currentUser;
 
       try {
         const eventRef = doc(db, "Events", eventId);
@@ -562,6 +569,47 @@ const Events = () => {
     }
   }, []);
 
+  const eventSchema = useMemo(() => {
+    if (!events || events.length === 0) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "itemListElement": events.map((event, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "item": {
+          "@type": "Event",
+          "name": event.name,
+          "startDate": event.startDateTime,
+          "endDate": event.endDateTime,
+          "eventAttendanceMode": event.isOnline ? "https://schema.org/OnlineEventAttendanceMode" : "https://schema.org/OfflineEventAttendanceMode",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "location": event.isOnline
+            ? {
+                "@type": "VirtualLocation",
+                "url": event.onlineLink || "https://vibook.net/events"
+              }
+            : {
+                "@type": "Place",
+                "name": event.location,
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": event.location,
+                  "addressCountry": "VN"
+                }
+              },
+          "image": event.bannerImage || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200",
+          "description": event.description || "Sự kiện được tổ chức bởi thành viên ViBook",
+          "organizer": {
+            "@type": "Organization",
+            "name": "ViBook",
+            "url": "https://vibook.net"
+          }
+        }
+      }))
+    };
+  }, [events]);
+
   // Loading state
   if (isLoading) {
     return (
@@ -573,6 +621,12 @@ const Events = () => {
 
   return (
     <div className="page-shell">
+      <SEO
+        title="Sự kiện & Hội thảo Công nghệ"
+        description="Khám phá các sự kiện và hội thảo công nghệ thông tin nổi bật trên ViBook. Tham gia và kết nối ngay với cộng đồng IT."
+        slug="/events"
+        schema={eventSchema}
+      />
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
@@ -589,7 +643,13 @@ const Events = () => {
 
 
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => {
+                if (!auth.currentUser) {
+                  navigate("/login", { state: { from: "/events" } });
+                } else {
+                  setShowCreateModal(true);
+                }
+              }}
               className="vb-btn vb-btn--primary"
             >
               <FaPlus size={14} />
@@ -707,7 +767,7 @@ const Events = () => {
                       <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 group">
                         <img
                           src={eventBannerImage}
-                          alt="Banner Preview"
+                          alt={language === "vi" ? "Xem trước ảnh bìa sự kiện" : "Event banner preview"}
                           className="w-full h-40 object-cover"
                         />
                         <button
@@ -930,7 +990,7 @@ const Events = () => {
                       <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 group">
                         <img
                           src={eventBannerImage}
-                          alt="Banner Preview"
+                          alt={language === "vi" ? "Xem trước ảnh bìa sự kiện" : "Event banner preview"}
                           className="w-full h-40 object-cover"
                         />
                         <button
@@ -1061,44 +1121,40 @@ const Events = () => {
                 </button>
               </div>
               <div className="space-y-3">
-                {participantsData.map((user) => (
-                  <div key={user.uid} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    {user.photoURL ? (
-                      <div className="relative w-10 h-10 shrink-0">
-                        <img
-                          src={user.photoURL}
-                          alt={user.displayName}
-                          className="w-10 h-10 rounded-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = "none";
-                            const fallback = e.target.parentNode.querySelector(".avatar-fallback");
-                            if (fallback) {
-                              fallback.style.display = "flex";
-                              fallback.style.setProperty("display", "flex", "important");
-                            }
-                          }}
-                        />
-                        <div className="avatar-fallback w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 align-items-center justify-center border border-blue-100 dark:border-blue-900/50" style={{ display: "none" }}>
-                          <FaUser size={16} />
+                {participantsData.map((user) => {
+                  const displayPhoto = auth.currentUser ? user.photoURL : null;
+                  const displayDisplayName = auth.currentUser ? (user.displayName || user.email) : "Thành viên ViBook";
+                  return (
+                    <div key={user.uid} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      {displayPhoto ? (
+                        <div className="relative w-10 h-10 shrink-0">
+                          <img
+                            src={displayPhoto}
+                            alt={`Ảnh đại diện của ${displayDisplayName}`}
+                            className="w-10 h-10 rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                              const fallback = e.target.parentNode.querySelector(".avatar-fallback");
+                              if (fallback) {
+                                fallback.style.display = "flex";
+                              }
+                            }}
+                          />
+                          <div className="avatar-fallback w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm" style={{ display: "none" }}>
+                            {displayDisplayName.substring(0, 2).toUpperCase()}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/50">
-                        <FaUser size={16} />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
-                        {user.displayName}
-                      </p>
-                      {user.email && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {user.email}
-                        </p>
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+                          <FaUser size={14} />
+                        </div>
                       )}
+                      <div className="font-semibold text-gray-800 dark:text-gray-200">
+                        {displayDisplayName}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1130,7 +1186,7 @@ const Events = () => {
                   <div className="overflow-hidden rounded-xl aspect-[16/9] w-full">
                     <img
                       src={selectedEvent.bannerImage}
-                      alt="Event banner"
+                      alt={`Ảnh bìa mô tả sự kiện ${selectedEvent.name}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -1196,33 +1252,36 @@ const Events = () => {
                     {selectedEvent.attendees && selectedEvent.attendees.length > 0 ? (
                       selectedEvent.attendees.map((uid) => {
                         const user = participantsData.find(p => p.uid === uid) || { displayName: "Unknown User", photoURL: null };
+                        const displayPhoto = auth.currentUser ? user.photoURL : null;
+                        const displayDisplayName = auth.currentUser ? user.displayName : "Thành viên ViBook";
                         return (
                           <div key={uid} className="flex items-center gap-2.5 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100/50 dark:border-gray-700/30">
-                            {user.photoURL ? (
+                            {displayPhoto ? (
                               <div className="relative w-8 h-8 shrink-0">
                                 <img
-                                  src={user.photoURL}
-                                  alt={user.displayName}
+                                  src={displayPhoto}
+                                  alt={`Ảnh đại diện của ${displayDisplayName}`}
                                   className="w-8 h-8 rounded-full object-cover"
                                   onError={(e) => {
                                     e.target.style.display = "none";
                                     const fallback = e.target.parentNode.querySelector(".avatar-fallback");
                                     if (fallback) {
                                       fallback.style.display = "flex";
-                                      fallback.style.setProperty("display", "flex", "important");
                                     }
                                   }}
                                 />
-                                <div className="avatar-fallback w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 align-items-center justify-center border border-blue-100 dark:border-blue-900/50" style={{ display: "none" }}>
-                                  <FaUser size={12} />
+                                <div className="avatar-fallback w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs" style={{ display: "none" }}>
+                                  {displayDisplayName.substring(0, 2).toUpperCase()}
                                 </div>
                               </div>
                             ) : (
-                              <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/50">
+                              <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
                                 <FaUser size={12} />
                               </div>
                             )}
-                            <p className="font-semibold text-xs text-gray-800 dark:text-gray-200 truncate flex-1">{user.displayName}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{displayDisplayName}</p>
+                            </div>
                           </div>
                         );
                       })
@@ -1331,7 +1390,7 @@ const Events = () => {
                     >
                       <img
                         src={event.bannerImage}
-                        alt="Event banner"
+                        alt={`Ảnh bìa cho sự kiện ${event.name}`}
                         className="w-full h-full object-cover rounded-xl transition-transform duration-500 hover:scale-105"
                       />
                     </div>

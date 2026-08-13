@@ -9,11 +9,19 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            return id
-              .toString()
-              .split('node_modules/')[1]
-              .split('/')[0]
-              .replace('@', ''); // ví dụ: react-dom → reactdom
+            if (id.includes('firebase')) {
+              return 'firebase';
+            }
+            if (id.includes('quill') || id.includes('react-quill')) {
+              return 'quill';
+            }
+            if (id.includes('emoji-picker-react')) {
+              return 'emoji-picker';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor';
+            }
+            return 'vendor';
           }
         },
       },

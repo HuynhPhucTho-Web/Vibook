@@ -13,8 +13,8 @@ service cloud.firestore {
 
     function isFriendOf(authorId, dbVar) {
       return isSignedIn() && (
-        exists(/databases/$(dbVar)/documents/Friendships/$(request.auth.uid) + '_' + authorId)
-        || exists(/databases/$(dbVar)/documents/Friendships/$(authorId) + '_' + request.auth.uid)
+        exists(/databases/$(dbVar)/documents/Friendships/$(request.auth.uid + '_' + authorId))
+        || exists(/databases/$(dbVar)/documents/Friendships/$(authorId + '_' + request.auth.uid))
       );
     }
 
@@ -175,6 +175,8 @@ service cloud.firestore {
           && hasValidFriendTags(request.resource.data)
         )
         || isValidReactionUpdate()
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['saveCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shareCount'])
       );
 
       // Xóa: chỉ chủ post
@@ -518,7 +520,7 @@ service cloud.firestore {
               'attendees'
             ])
           && (!request.resource.data.keys().hasAny(['bannerImage'])
-              || request.resource.data.bannerImage.startsWith('https://')
+              || request.resource.data.bannerImage.matches('^https://.*')
               && request.resource.data.bannerImage.size() <= 500)
         )
         ||
@@ -555,7 +557,7 @@ service cloud.firestore {
       // Update/Delete: chỉ chủ game, và không phải game mặc định
       allow update, delete: if isSignedIn()
         && request.auth.uid == resource.data.ownerId
-        && !gameId.startsWith("default-");
+        && !gameId.matches('^default-.*');
     }
 
     /* ========= BLOG ========= */

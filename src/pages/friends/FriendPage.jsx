@@ -7,6 +7,7 @@ import { LanguageContext } from "../../context/LanguageContext";
 import { requireLogin } from "../../utils/requireLogin";
 import "../../style/Friends.css";
 import { useSearch } from "../../context/SearchContext";
+import SEO from "../../components/SEO";
 
 import FriendRequests from "../../components/friends/FriendRequests";
 import FriendsList from "../../components/friends/FriendsList";
@@ -45,20 +46,10 @@ const Friends = () => {
 
   const isGuest = authReady && !currentUser;
 
-  /** BR §9: private tabs → login toast (no content leak) */
+  /** BR §9: private tabs → smooth redirect to login (no content leak) */
   const openPrivateTab = (tab) => {
     if (!currentUser) {
-      const message =
-        tab === "requests"
-          ? t("loginToViewFriendRequests")
-          : t("loginToViewFriends");
-      requireLogin({
-        navigate,
-        title: t("loginToastTitle"),
-        message,
-        from: "/friends",
-        loginLabel: t("login"),
-      });
+      navigate("/login", { state: { from: "/friends" } });
       return;
     }
     setActiveTab(tab);
@@ -77,6 +68,12 @@ const Friends = () => {
 
   return (
     <div className={`page-shell friends-page ${theme}`}>
+      <SEO
+        title="Tìm kiếm bạn bè"
+        description="Tìm kiếm bạn bè, gửi lời mời kết bạn và mở rộng vòng kết nối xã hội của bạn trên ViBook."
+        slug="/friends"
+        noindex={true}
+      />
       <div className="friends-page__header">
         <div className="friends-page__header-content">
           <h1>{t("friends")}</h1>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   collection,
@@ -14,6 +14,7 @@ import {
   increment,
   limit,
   startAt,
+  startAfter,
   setDoc,
   onSnapshot,
 } from "firebase/firestore";
@@ -28,10 +29,10 @@ import {
 import { useContext } from "react";
 import { LanguageContext } from "../../context/LanguageContext";
 import staticBlogData from "../../../Staticblogposts.json";
-import BlogCard from "../../components/blogcomponent/BlogCard";
+import BlogCard from "../../components/blog/BlogCard";
 import SEO from "../../components/SEO";
-import BlogDetail from "../../components/blogcomponent/BlogDetail";
-import BlogFormModal from "../../components/blogcomponent/BlogFormModal";
+import BlogDetail from "../../components/blog/BlogDetail";
+import BlogFormModal from "../../components/blog/BlogFormModal";
 import { FaHeart, FaPlus } from "react-icons/fa";
 import "../../style/Blog.css";
 
@@ -48,15 +49,7 @@ const formats = [
   "image",
 ];
 
-const modules = {
-  toolbar: [
-    [{ header: [1, 2, false] }],
-    ["bold", "italic", "underline", "strike", "blockquote"],
-    [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }],
-    ["link", "image"],
-    ["clean"],
-  ],
-};
+// Modules defined inside BlogPages now to handle custom image handlers.
 
 const PRESET_CATEGORIES = [
   "React",
@@ -76,12 +69,40 @@ const PRESET_CATEGORIES = [
   "Open Source",
 ];
 
-const STATIC_POSTS = (staticBlogData.posts || []).map((p) => ({
-  ...p,
-  createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-  isStatic: true,
-  favoriteCount: p.favoriteCount || 0,
-}));
+const STATIC_POSTS = (staticBlogData.posts || []).map((p) => {
+  const wordCount = (p.content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).length;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200));
+  return {
+    ...p,
+    createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+    isStatic: true,
+    favoriteCount: p.favoriteCount || 0,
+    readTime,
+  };
+});
+
+const BlogCardSkeleton = () => (
+  <div className="blog-card-skeleton">
+    <div className="skeleton-image skeleton-shimmer"></div>
+    <div className="skeleton-content">
+      <div className="skeleton-meta">
+        <div className="skeleton-badge skeleton-shimmer"></div>
+        <div className="skeleton-date skeleton-shimmer"></div>
+      </div>
+      <div className="skeleton-title skeleton-shimmer"></div>
+      <div className="skeleton-desc skeleton-desc-1 skeleton-shimmer"></div>
+      <div className="skeleton-desc skeleton-desc-2 skeleton-shimmer"></div>
+      <div className="skeleton-desc skeleton-desc-3 skeleton-shimmer"></div>
+      <div className="skeleton-actions">
+        <div className="skeleton-btn skeleton-btn-read skeleton-shimmer"></div>
+        <div className="skeleton-btn skeleton-btn-fav skeleton-shimmer"></div>
+        <div className="skeleton-btn skeleton-btn-action skeleton-shimmer"></div>
+      </div>
+    </div>
+  </div>
+);
+
+let cachedBlogState = null;
 
 const BlogPages = () => {
   const { t } = useContext(LanguageContext);
@@ -89,19 +110,62 @@ const BlogPages = () => {
   const navigate = useNavigate();
   const isDetailView = !!slug;
 
+  const quillRef = useRef(null);
+  const isInitialMount = useRef(cachedBlogState ? false : true);
+  const hasRestoredState = useRef(cachedBlogState ? true : false);
+
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ header: [1, 2, false] }],
+        ["bold", "italic", "underline", "strike", "blockquote"],
+        [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }],
+        ["link", "image"],
+        ["clean"],
+      ],
+      handlers: {
+        image: () => {
+          const input = document.createElement("input");
+          input.setAttribute("type", "file");
+          input.setAttribute("accept", "image/*");
+          input.click();
+
+          input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+            try {
+              toast.info("Đang tải ảnh lên...");
+              const url = await uploadToCloudinary(file, { folder: "vibook/blog" });
+              
+              if (quillRef.current) {
+                const quill = quillRef.current.getEditor();
+                const range = quill.getSelection(true);
+                quill.insertEmbed(range.index, "image", url);
+                quill.setSelection(range.index + 1);
+              }
+              toast.success("Tải ảnh lên thành công!");
+            } catch (err) {
+              toast.error("Tải ảnh thất bại: " + err.message);
+            }
+          };
+        }
+      }
+    }
+  }), []);
+
   // States
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(() => cachedBlogState?.posts ?? STATIC_POSTS);
   const [categories, setCategories] = useState([]);
   const [tagsList, setTagsList] = useState([]);
   const { keyword: searchTerm, setSearchConfig } = useSearch();
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [sortBy, setSortBy] = useState("newest");
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [cursors, setCursors] = useState([null]);
-  const [hasMore, setHasMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(() => cachedBlogState?.selectedCategory ?? null);
+  const [selectedTags, setSelectedTags] = useState(() => cachedBlogState?.selectedTags ?? []);
+  const [sortBy, setSortBy] = useState(() => cachedBlogState?.sortBy ?? "newest");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(() => cachedBlogState?.showFavoritesOnly ?? false);
+  const [currentPage, setCurrentPage] = useState(() => cachedBlogState?.currentPage ?? 1);
+  const [cursors, setCursors] = useState(() => cachedBlogState?.cursors ?? [null]);
+  const [hasMore, setHasMore] = useState(() => cachedBlogState?.hasMore ?? false);
+  const [nextCursor, setNextCursor] = useState(() => cachedBlogState?.nextCursor ?? null);
   const [loading, setLoading] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -120,6 +184,34 @@ const BlogPages = () => {
     published: true,
   });
 
+  // Save state on unmount
+  useEffect(() => {
+    return () => {
+      cachedBlogState = {
+        posts,
+        selectedCategory,
+        selectedTags,
+        sortBy,
+        showFavoritesOnly,
+        currentPage,
+        cursors,
+        hasMore,
+        nextCursor,
+        scrollPosition: window.scrollY
+      };
+    };
+  }, [posts, selectedCategory, selectedTags, sortBy, showFavoritesOnly, currentPage, cursors, hasMore, nextCursor]);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (cachedBlogState?.scrollPosition) {
+      const t = setTimeout(() => {
+        window.scrollTo(0, cachedBlogState.scrollPosition);
+      }, 80);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   const [favoriteBlogIds, setFavoriteBlogIds] = useState(new Set());
 
   useEffect(() => {
@@ -130,8 +222,13 @@ const BlogPages = () => {
   }, [setSearchConfig]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     setCurrentPage(1);
     setCursors([null]);
+    setPosts(STATIC_POSTS);
   }, [searchTerm, selectedCategory, selectedTags, sortBy, showFavoritesOnly]);
 
   // Load User Favorites
@@ -192,6 +289,108 @@ const BlogPages = () => {
 
   // Fetch posts
   useEffect(() => {
+    if (hasRestoredState.current) {
+      hasRestoredState.current = false;
+      return undefined;
+    }
+
+    // 1. Live listener for page 1 default feed (like the home page)
+    if (currentPage === 1 && !isSearchActive) {
+      setLoading(true);
+      let q = query(collection(db, "BlogPosts"));
+      if (sortBy === "favorites") {
+        q = query(q, orderBy("favoriteCount", "desc"));
+      } else if (sortBy === "oldest") {
+        q = query(q, orderBy("createdAt", "asc"));
+      } else {
+        q = query(q, orderBy("createdAt", "desc"));
+      }
+      q = query(q, limit(7));
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const docs = snapshot.docs;
+          const hasNext = docs.length > 6;
+          setHasMore(hasNext);
+
+          const pageDocs = hasNext ? docs.slice(0, 6) : docs;
+          let fetchedPosts = pageDocs.map((doc) => {
+            const data = doc.data();
+            const content = data.content || "";
+            const wordCount = content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).length;
+            const readTime = data.readTime || Math.max(1, Math.ceil(wordCount / 200));
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+              favoriteCount: data.favoriteCount || 0,
+              readTime,
+            };
+          });
+
+          // Merge static posts
+          const dynamicSlugs = new Set(fetchedPosts.map((p) => p.slug));
+          const staticToAppend = STATIC_POSTS.filter((p) => !dynamicSlugs.has(p.slug));
+          fetchedPosts = [...fetchedPosts, ...staticToAppend];
+
+          setPosts(fetchedPosts);
+          if (hasNext) {
+            setNextCursor(docs[5]);
+          } else {
+            setNextCursor(null);
+          }
+          setLoading(false);
+
+          // Fetch favorite counts from FavoriteBlogs in the background
+          const fetchFavoriteCountsBg = async (postsList) => {
+            try {
+              const blogIds = postsList.map((p) => (p.isStatic ? p.slug : p.id)).filter(Boolean);
+              const countsMap = {};
+              if (blogIds.length > 0) {
+                const chunks = [];
+                for (let i = 0; i < blogIds.length; i += 30) {
+                  chunks.push(blogIds.slice(i, i + 30));
+                }
+                const snapshots = await Promise.all(
+                  chunks.map((chunk) =>
+                    getDocs(query(collection(db, "FavoriteBlogs"), where("blogId", "in", chunk)))
+                  )
+                );
+                snapshots.forEach((snapshot) => {
+                  snapshot.docs.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if (data.blogId) {
+                      countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+                    }
+                  });
+                });
+
+                setPosts((current) =>
+                  current.map((p) => {
+                    const key = p.isStatic ? p.slug : p.id;
+                    if (countsMap[key] !== undefined) {
+                      return { ...p, favoriteCount: countsMap[key] };
+                    }
+                    return p;
+                  })
+                );
+              }
+            } catch (favErr) {
+              console.error("Error loading favorite counts live in bg", favErr);
+            }
+          };
+          fetchFavoriteCountsBg(fetchedPosts);
+        },
+        (error) => {
+          console.error("Error loading posts live", error);
+          setLoading(false);
+        }
+      );
+      return () => unsubscribe();
+    }
+
+    // 2. One-shot fetch for search results or page 2+ pagination
     const fetchPosts = async () => {
       setLoading(true);
       try {
@@ -211,9 +410,9 @@ const BlogPages = () => {
         } else {
           const startCursor = cursors[currentPage - 1];
           if (startCursor) {
-            q = query(q, startAt(startCursor));
+            q = query(q, startAfter(startCursor));
           }
-          q = query(q, limit(11));
+          q = query(q, limit(7));
         }
 
         const snapshot = await getDocs(q);
@@ -221,28 +420,42 @@ const BlogPages = () => {
 
         let fetchedPosts = [];
         if (isSearchActive) {
-          fetchedPosts = docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt,
-            favoriteCount: doc.data().favoriteCount || 0,
-          }));
+          fetchedPosts = docs.map((doc) => {
+            const data = doc.data();
+            const content = data.content || "";
+            const wordCount = content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).length;
+            const readTime = data.readTime || Math.max(1, Math.ceil(wordCount / 200));
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+              favoriteCount: data.favoriteCount || 0,
+              readTime,
+            };
+          });
           setHasMore(false);
           setNextCursor(null);
         } else {
-          const hasNext = docs.length > 10;
+          const hasNext = docs.length > 6;
           setHasMore(hasNext);
 
-          const pageDocs = hasNext ? docs.slice(0, 10) : docs;
-          fetchedPosts = pageDocs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : doc.data().createdAt,
-            favoriteCount: doc.data().favoriteCount || 0,
-          }));
+          const pageDocs = hasNext ? docs.slice(0, 6) : docs;
+          fetchedPosts = pageDocs.map((doc) => {
+            const data = doc.data();
+            const content = data.content || "";
+            const wordCount = content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).length;
+            const readTime = data.readTime || Math.max(1, Math.ceil(wordCount / 200));
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+              favoriteCount: data.favoriteCount || 0,
+              readTime,
+            };
+          });
 
           if (hasNext) {
-            setNextCursor(docs[10]);
+            setNextCursor(docs[5]);
           } else {
             setNextCursor(null);
           }
@@ -254,84 +467,107 @@ const BlogPages = () => {
           fetchedPosts = [...fetchedPosts, ...staticToAppend];
         }
 
-        // Load favorite counts from FavoriteBlogs to ensure accuracy
-        try {
-          const blogIds = fetchedPosts.map((p) => (p.isStatic ? p.slug : p.id)).filter(Boolean);
-          const countsMap = {};
-          if (blogIds.length > 0) {
-            const chunks = [];
-            for (let i = 0; i < blogIds.length; i += 30) {
-              chunks.push(blogIds.slice(i, i + 30));
-            }
-            const snapshots = await Promise.all(
-              chunks.map((chunk) =>
-                getDocs(query(collection(db, "FavoriteBlogs"), where("blogId", "in", chunk)))
-              )
-            );
-            snapshots.forEach((snapshot) => {
-              snapshot.docs.forEach((docSnap) => {
-                const data = docSnap.data();
-                if (data.blogId) {
-                  countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
-                }
-              });
-            });
-          }
-          fetchedPosts = fetchedPosts.map(p => {
-            const key = p.isStatic ? p.slug : p.id;
-            return {
-              ...p,
-              favoriteCount: countsMap[key] || 0
-            };
+        if (currentPage === 1) {
+          setPosts(fetchedPosts);
+        } else {
+          setPosts((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id || p.slug));
+            const newPosts = fetchedPosts.filter((p) => !existingIds.has(p.id || p.slug));
+            return [...prev, ...newPosts];
           });
-        } catch (favErr) {
-          console.error("Error loading favorite counts, falling back to document values", favErr);
         }
-
-        setPosts(fetchedPosts);
         setLoading(false);
+
+        // Fetch favorite counts from FavoriteBlogs in the background
+        const fetchFavoriteCountsBg = async (postsList) => {
+          try {
+            const blogIds = postsList.map((p) => (p.isStatic ? p.slug : p.id)).filter(Boolean);
+            const countsMap = {};
+            if (blogIds.length > 0) {
+              const chunks = [];
+              for (let i = 0; i < blogIds.length; i += 30) {
+                chunks.push(blogIds.slice(i, i + 30));
+              }
+              const snapshots = await Promise.all(
+                chunks.map((chunk) =>
+                  getDocs(query(collection(db, "FavoriteBlogs"), where("blogId", "in", chunk)))
+                )
+              );
+              snapshots.forEach((snapshot) => {
+                snapshot.docs.forEach((docSnap) => {
+                  const data = docSnap.data();
+                  if (data.blogId) {
+                    countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+                  }
+                });
+              });
+
+              setPosts((current) =>
+                current.map((p) => {
+                  const key = p.isStatic ? p.slug : p.id;
+                  if (countsMap[key] !== undefined) {
+                    return { ...p, favoriteCount: countsMap[key] };
+                  }
+                  return p;
+                })
+              );
+            }
+          } catch (favErr) {
+            console.error("Error loading favorite counts in bg", favErr);
+          }
+        };
+        fetchFavoriteCountsBg(fetchedPosts);
       } catch (e) {
         console.error("Error fetching posts", e);
         let fallback = [...STATIC_POSTS];
-        
-        try {
-          const blogIds = fallback.map((p) => p.slug).filter(Boolean);
-          const countsMap = {};
-          if (blogIds.length > 0) {
-            const chunks = [];
-            for (let i = 0; i < blogIds.length; i += 30) {
-              chunks.push(blogIds.slice(i, i + 30));
-            }
-            const snapshots = await Promise.all(
-              chunks.map((chunk) =>
-                getDocs(query(collection(db, "FavoriteBlogs"), where("blogId", "in", chunk)))
-              )
-            );
-            snapshots.forEach((snapshot) => {
-              snapshot.docs.forEach((docSnap) => {
-                const data = docSnap.data();
-                if (data.blogId) {
-                  countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
-                }
-              });
-            });
-          }
-          fallback = fallback.map(p => ({
-            ...p,
-            favoriteCount: countsMap[p.slug] || 0
-          }));
-        } catch (favErr) {
-          console.log("Error loading fallback favorite counts", favErr);
-        }
-
         setPosts(fallback);
         setLoading(false);
         toast.warning("Đang hiển thị dữ liệu mẫu do không thể kết nối máy chủ");
+
+        // Fetch favorite counts in the background
+        const fetchFallbackFavoriteCountsBg = async (postsList) => {
+          try {
+            const blogIds = postsList.map((p) => p.slug).filter(Boolean);
+            const countsMap = {};
+            if (blogIds.length > 0) {
+              const chunks = [];
+              for (let i = 0; i < blogIds.length; i += 30) {
+                chunks.push(blogIds.slice(i, i + 30));
+              }
+              const snapshots = await Promise.all(
+                chunks.map((chunk) =>
+                  getDocs(query(collection(db, "FavoriteBlogs"), where("blogId", "in", chunk)))
+                )
+              );
+              snapshots.forEach((snapshot) => {
+                snapshot.docs.forEach((docSnap) => {
+                  const data = docSnap.data();
+                  if (data.blogId) {
+                    countsMap[data.blogId] = (countsMap[data.blogId] || 0) + 1;
+                  }
+                });
+              });
+
+              setPosts((current) =>
+                current.map((p) => {
+                  if (countsMap[p.slug] !== undefined) {
+                    return { ...p, favoriteCount: countsMap[p.slug] };
+                  }
+                  return p;
+                })
+              );
+            }
+          } catch (favErr) {
+            console.log("Error loading fallback favorite counts in bg", favErr);
+          }
+        };
+        fetchFallbackFavoriteCountsBg(fallback);
       }
     };
 
     fetchPosts();
-  }, [selectedCategory, sortBy, currentPage, cursors, isSearchActive]);
+    return undefined;
+  }, [selectedCategory, sortBy, currentPage, cursors, isSearchActive, isDetailView]);
 
   const getReadTime = (content = "") => {
     const text = postHtmlToText(content);
@@ -366,7 +602,7 @@ const BlogPages = () => {
     if (searchTerm) {
       const term = normalizeSearchText(searchTerm);
       result = result.filter((p) => {
-        const text = `${p.title || ""} ${p.description || ""} ${postHtmlToText(p.content || "")}`.toLowerCase();
+        const text = p.searchText || `${p.title || ""} ${p.description || ""} ${p.contentText || ""}`.toLowerCase();
         return text.includes(term);
       });
     }
@@ -388,13 +624,46 @@ const BlogPages = () => {
 
   const filteredAndPagedPosts = useMemo(() => {
     if (isSearchActive) {
-      const start = (currentPage - 1) * 10;
-      return filteredPosts.slice(start, start + 10);
+      const end = currentPage * 6;
+      return filteredPosts.slice(0, end);
     }
     return filteredPosts;
   }, [filteredPosts, currentPage, isSearchActive]);
 
   const totalPosts = filteredPosts.length;
+
+  const canLoadMore = isSearchActive ? (currentPage * 6 < totalPosts) : hasMore;
+
+  useEffect(() => {
+    if (isDetailView) return;
+
+    const handleScroll = () => {
+      if (loading) return;
+      if (!canLoadMore) return;
+
+      const threshold = 150;
+      const position = window.innerHeight + window.scrollY;
+      const height = document.documentElement.scrollHeight;
+
+      if (height - position < threshold) {
+        if (isSearchActive) {
+          setCurrentPage((p) => p + 1);
+        } else if (nextCursor) {
+          setCursors((prev) => {
+            const newCursors = [...prev];
+            newCursors[currentPage] = nextCursor;
+            return newCursors;
+          });
+          setCurrentPage((p) => p + 1);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, canLoadMore, nextCursor, currentPage, isSearchActive, isDetailView]);
+
+
 
   const filterCategories = useMemo(() => {
     const map = new Map();
@@ -517,8 +786,20 @@ const BlogPages = () => {
       return;
     }
 
+    if (formData.content && formData.content.includes("data:image/")) {
+      toast.error("Bài viết chứa ảnh chèn trực tiếp (base64) quá lớn. Vui lòng sử dụng tính năng tải ảnh lên của thanh công cụ!");
+      return;
+    }
+    if (formData.content && formData.content.length > 800000) {
+      toast.error("Bài viết quá dài (giới hạn Firestore là 1MB). Vui lòng giảm bớt hình ảnh hoặc chữ!");
+      return;
+    }
+
     setSubmitting(true);
     try {
+      const wordCount = postHtmlToText(formData.content).split(/\s+/).length;
+      const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
       const postData = {
         title: formData.title,
         slug: formData.slug,
@@ -528,6 +809,7 @@ const BlogPages = () => {
         content: formData.content,
         coverImage: formData.coverImage,
         published: formData.published,
+        readTime: readTime,
         contentText: postHtmlToText(formData.content),
         searchText: normalizeSearchText(
           formData.title + " " + formData.description + " " + postHtmlToText(formData.content)
@@ -549,6 +831,7 @@ const BlogPages = () => {
           content: formData.content,
           coverImage: formData.coverImage,
           published: formData.published,
+          readTime: readTime,
           contentText: postHtmlToText(formData.content),
           searchText: normalizeSearchText(
             formData.title + " " + formData.description + " " + postHtmlToText(formData.content)
@@ -683,12 +966,20 @@ const BlogPages = () => {
   };
 
   // For detail view, fetch specific post
-  const [currentPost, setCurrentPost] = useState(null);
+  const [currentPost, setCurrentPost] = useState(() => {
+    if (isDetailView && slug) {
+      return STATIC_POSTS.find((p) => p.slug === slug) || null;
+    }
+    return null;
+  });
   useEffect(() => {
     if (isDetailView && slug) {
-      setCurrentPost(null);
+      const staticPost = STATIC_POSTS.find((p) => p.slug === slug) || null;
+      if (!currentPost || currentPost.slug !== slug) {
+        setCurrentPost(staticPost);
+      }
 
-      const findStaticBySlug = () => STATIC_POSTS.find((p) => p.slug === slug) || null;
+      const findStaticBySlug = () => staticPost;
 
       const fetchPost = async () => {
         try {
@@ -887,7 +1178,16 @@ const BlogPages = () => {
   }, [isDetailView]);
 
   if (isDetailView && !currentPost) {
-    return <div className="blog-detail-loading">{t("loading")}</div>;
+    return (
+      <div className="page-shell">
+        <SEO
+          title="Đang tải bài viết..."
+          description="Đang tải nội dung bài viết từ ViBook..."
+          slug={`/blog/${slug}`}
+        />
+        <div className="blog-detail-loading">{t("loading")}</div>
+      </div>
+    );
   }
 
   return (
@@ -969,56 +1269,44 @@ const BlogPages = () => {
             </div>
           )}
 
-          {loading ? (
-            <p>{t("loading")}</p>
-          ) : (
+          {loading && posts.length === 0 ? (
             <div className="blog-grid">
-              {filteredAndPagedPosts.map((post, index) => (
-                <BlogCard
-                  key={post.id || post.slug}
-                  post={post}
-                  index={index}
-                  isFavorite={favoriteBlogIds.has(post.isStatic ? post.slug : post.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  onEdit={openEditModal}
-                  onDelete={handleDeletePost}
-                  t={t}
-                  getReadTime={getReadTime}
-                  auth={auth}
-                />
+              {Array.from({ length: 6 }).map((_, i) => (
+                <BlogCardSkeleton key={i} />
               ))}
             </div>
-          )}
+          ) : (
+            <>
+              <div className="blog-grid">
+                {filteredAndPagedPosts.map((post, index) => (
+                  <BlogCard
+                    key={post.id || post.slug}
+                    post={post}
+                    index={index}
+                    isFavorite={favoriteBlogIds.has(post.isStatic ? post.slug : post.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    onEdit={openEditModal}
+                    onDelete={handleDeletePost}
+                    t={t}
+                    getReadTime={getReadTime}
+                    auth={auth}
+                  />
+                ))}
+              </div>
 
-          {(isSearchActive ? totalPosts > 10 : (currentPage > 1 || hasMore)) && (
-            <div className="pagination">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1 || loading}
-              >
-                {t("previous")}
-              </button>
-              <span>Page {currentPage}</span>
-              <button
-                onClick={() => {
-                  if (isSearchActive) {
-                    setCurrentPage((p) => p + 1);
-                  } else {
-                    if (hasMore && nextCursor) {
-                      setCursors((prev) => {
-                        const newCursors = [...prev];
-                        newCursors[currentPage] = nextCursor;
-                        return newCursors;
-                      });
-                      setCurrentPage((p) => p + 1);
-                    }
-                  }
-                }}
-                disabled={isSearchActive ? (currentPage * 10 >= totalPosts) : (!hasMore || loading)}
-              >
-                {t("next")}
-              </button>
-            </div>
+              {loading && currentPage > 1 && (
+                <div className="text-center my-4 py-3" style={{ color: "var(--app-muted)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  <div className="spinner-border spinner-border-sm text-primary" role="status" style={{ width: "1.2rem", height: "1.2rem", color: "var(--vb-primary, #8e54e9)" }}></div>
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>Đang tải thêm bài viết...</span>
+                </div>
+              )}
+
+              {!loading && !canLoadMore && totalPosts > 0 && (
+                <div className="text-center my-5 py-3" style={{ color: "var(--app-muted)", fontSize: "13px", opacity: 0.6, letterSpacing: "0.05em" }}>
+                  — Đã hiển thị tất cả bài viết —
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1078,6 +1366,7 @@ const BlogPages = () => {
         setNewTagInput={setNewTagName}
         onCoverUpload={handleCoverUpload}
         t={t}
+        quillRef={quillRef}
       />
     </div>
   );

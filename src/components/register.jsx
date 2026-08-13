@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import InteractiveBlob from "./InteractiveBlob";
 import "../style/auth.css";
+import SEO from "./SEO";
 
 function Register() {
   const [email, setEmail] = useState("");
@@ -18,9 +19,24 @@ function Register() {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  // Custom Slider Captcha & Terms states
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [sliderVal, setSliderVal] = useState(0);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+
   const handleRegister = async (e) => {
     e.preventDefault();
     if (submitting) return;
+
+    if (!agreeTerms) {
+      toast.error("Bạn phải đồng ý với Điều khoản và Chính sách để đăng ký!", { position: "bottom-center" });
+      return;
+    }
+
+    if (!captchaVerified) {
+      toast.error("Vui lòng xác minh bạn không phải robot!", { position: "bottom-center" });
+      return;
+    }
 
     if (password.length < 8) {
       toast.error("Mật khẩu phải có ít nhất 8 ký tự!", { position: "bottom-center" });
@@ -85,6 +101,12 @@ function Register() {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-hidden p-4 sm:p-6">
+      <SEO
+        title="Đăng ký tài khoản"
+        description="Đăng ký tài khoản ViBook miễn phí để chia sẻ kiến thức, lưu trữ tài liệu học tập và tham gia các sự kiện công nghệ sôi nổi."
+        slug="/register"
+        noindex={true}
+      />
       {/* Background Blobs (Đồng bộ với trang Login) */}
       <InteractiveBlob color="#60a5fa" size={450} offset={{ x: -250, y: -150 }} />
       <InteractiveBlob color="#f472b6" size={400} offset={{ x: 250, y: 150 }} />
@@ -105,7 +127,7 @@ function Register() {
                 <span className="font-extrabold text-slate-800 text-lg tracking-tight">ViBook</span>
               </div>
               <Link
-                to="/homevibook"
+                to="/feed"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-600 bg-white/80 border border-slate-200/60 shadow-sm hover:bg-white hover:text-pink-600 hover:scale-[1.02] active:scale-95 transition-all no-underline"
               >
                 ← Trang chủ
@@ -133,6 +155,7 @@ function Register() {
                     placeholder="Nguyễn"
                     value={fname}
                     onChange={(e) => setFname(e.target.value)}
+                    autoComplete="family-name"
                     required
                   />
                 </div>
@@ -146,6 +169,7 @@ function Register() {
                     placeholder="Văn A"
                     value={lname}
                     onChange={(e) => setLname(e.target.value)}
+                    autoComplete="given-name"
                     required
                   />
                 </div>
@@ -162,6 +186,7 @@ function Register() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -178,6 +203,7 @@ function Register() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
                     required
                   />
                 </div>
@@ -191,18 +217,105 @@ function Register() {
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                     required
                   />
                 </div>
               </div>
 
+              {/* Terms and conditions agreement checkbox */}
+              <div className="flex items-start gap-2.5 py-1.5">
+                <input
+                  type="checkbox"
+                  id="agreeTerms"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-slate-300 text-pink-600 focus:ring-pink-500 accent-pink-500 cursor-pointer"
+                  required
+                />
+                <label htmlFor="agreeTerms" className="text-xs text-slate-600 leading-normal cursor-pointer select-none">
+                  Tôi đồng ý với{" "}
+                  <Link to="/terms-of-service" target="_blank" className="text-pink-600 hover:underline font-semibold">
+                    Điều khoản sử dụng
+                  </Link>{" "}
+                  và{" "}
+                  <Link to="/privacy-policy" target="_blank" className="text-pink-600 hover:underline font-semibold">
+                    Chính sách quyền riêng tư
+                  </Link>{" "}
+                  của ViBook.
+                </label>
+              </div>
+
+              {/* Custom Anti-Abuse Glassmorphic Slider Captcha */}
+              <div className="bg-white/30 border border-white/60 p-3 rounded-2xl shadow-sm backdrop-blur-md">
+                <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
+                  Xác minh bảo mật (Anti-Bot)
+                </label>
+                {captchaVerified ? (
+                  <div className="flex items-center justify-center gap-2 py-2 text-emerald-600 font-semibold text-xs animate-[pulse_1.5s_infinite]">
+                    <span>🛡️</span> Đã xác minh là con người
+                  </div>
+                ) : (
+                  <div className="relative flex items-center bg-slate-100/50 dark:bg-slate-900/10 border border-slate-200/50 rounded-xl h-10 overflow-hidden select-none">
+                    <div 
+                      className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-pink-500/20 to-rose-500/20 transition-all duration-75"
+                      style={{ width: `${sliderVal}%` }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-xs font-semibold text-slate-500">
+                      Kéo thanh trượt sang phải để mở khóa
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={sliderVal}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setSliderVal(val);
+                        if (val >= 98) {
+                          setCaptchaVerified(true);
+                          setSliderVal(100);
+                        }
+                      }}
+                      onMouseUp={() => {
+                        if (sliderVal < 98) {
+                          setSliderVal(0);
+                        }
+                      }}
+                      onTouchEnd={() => {
+                        if (sliderVal < 98) {
+                          setSliderVal(0);
+                        }
+                      }}
+                      className="w-full h-full opacity-0 cursor-ew-resize absolute inset-0 z-20"
+                    />
+                    <div 
+                      className="absolute top-1 bottom-1 w-8 h-8 rounded-lg bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-xs font-bold text-slate-600 pointer-events-none z-10 transition-all duration-75"
+                      style={{ left: `calc(${sliderVal}% - ${sliderVal * 0.32}px + 4px)` }}
+                    >
+                      ➔
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Nút Đăng ký */}
               <button
                 type="submit"
-                disabled={submitting}
-                className="w-full mt-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-sm shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:hover:scale-100 transition-all cursor-pointer"
+                disabled={submitting || !captchaVerified || !agreeTerms}
+                className="w-full mt-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-sm shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:hover:scale-100 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                {submitting ? "Đang xử lý..." : "Tạo tài khoản"}
+                {submitting ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  "Tạo tài khoản"
+                )}
               </button>
             </form>
           </div>
@@ -217,7 +330,7 @@ function Register() {
             </p>
             <p>
               <Link
-                to="/homevibook"
+                to="/feed"
                 className="text-slate-500 font-medium hover:text-slate-800 hover:underline transition-colors"
               >
                 Khám phá với tư cách khách →

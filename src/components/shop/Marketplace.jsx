@@ -4,6 +4,7 @@ import { FaShoppingCart, FaSearch, FaFilter, FaStar, FaBox, FaStore } from 'reac
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import '../../style/shop/Marketplace.css';
+import { getOptimizedCloudinaryUrl } from '../../utils/cloudinary';
 
 const Marketplace = () => {
   const [products, setProducts] = useState([]);
@@ -167,7 +168,7 @@ const Marketplace = () => {
             <div key={product.id} className="product-card">
               <div className="product-image">
                 <img
-                  src={product.imageUrl || '/placeholder-product.jpg'}
+                  src={getOptimizedCloudinaryUrl(product.imageUrl || '/placeholder-product.jpg', 360)}
                   alt={product.name}
                   onError={(e) => {
                     e.target.src = '/placeholder-product.jpg';

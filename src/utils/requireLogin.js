@@ -30,7 +30,7 @@ export function getLoginRedirect(stateFrom) {
   } catch {
     // ignore
   }
-  return "/homevibook";
+  return "/feed";
 }
 
 export function clearLoginRedirect() {

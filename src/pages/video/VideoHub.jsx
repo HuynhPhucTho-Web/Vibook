@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { ThemeContext } from '../../context/ThemeContext';
 import VideoHeader from '../../components/video/VideoHeader';
 import VideoGrid from '../../components/video/VideoGrid';
 import VideoDetail from '../../components/video/VideoDetail';
 import VideoSidebar from '../../components/video/VideoSidebar';
 import { useSearch } from '../../context/SearchContext';
+import SEO from '../../components/SEO';
+import { VideoPlayerContext } from '../../context/VideoPlayerContext';
 
 const API_KEY = import.meta.env.VITE_REACT_APP_YOUTUBE_API_KEY;
 
@@ -21,20 +23,17 @@ function VideoPlayer() {
   useEffect(() => {
     if (searchTerm) {
       fetchVideos(searchTerm);
+      setSelectedVideo(null); // Trở về danh sách lưới khi người dùng gõ tìm kiếm mới
     }
   }, [searchTerm]);
-  const [videos, setVideos] = useState([]);
-  const [selectedVideo, setSelectedVideo] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [videoStats, setVideoStats] = useState(null);
-  const [user, setUser] = useState(null); // Quản lý user đăng nhập
+  const {
+    videos, setVideos,
+    selectedVideo, setSelectedVideo,
+    comments, setComments,
+    videoStats, setVideoStats
+  } = useContext(VideoPlayerContext);
   const [isMobileSearch, setIsMobileSearch] = useState(false);
   const { theme } = useContext(ThemeContext);
-
-  // Giả lập Đăng nhập (Trong thực tế nên dùng @react-oauth/google)
-  const handleLogin = () => {
-    setUser({ name: "User Name", avatar: "https://ui-avatars.com/api/?name=User" });
-  };
 
   // 1. Lấy danh sách video kèm theo dữ liệu Channel để lấy Avatar ngay từ đầu
   const fetchVideos = async (query) => {
@@ -56,7 +55,6 @@ function VideoPlayer() {
       }));
 
       setVideos(enrichedVideos);
-      setSelectedVideo(null);
     } catch (error) { console.error(error); }
   };
 
@@ -83,17 +81,46 @@ function VideoPlayer() {
     }
   }, [selectedVideo]);
 
-  useEffect(() => { fetchVideos("Lofi music 2026"); }, []);
+  useEffect(() => {
+    // Chỉ tải danh sách mặc định khi ứng dụng khởi tạo nguội (chưa có video nào)
+    if (videos.length === 0) {
+      fetchVideos("Lofi music 2026");
+    }
+  }, []);
 
 
+
+  const videoSchema = useMemo(() => {
+    if (!videos || videos.length === 0) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "itemListElement": videos.map((video, idx) => ({
+        "@type": "ListItem",
+        "position": idx + 1,
+        "item": {
+          "@type": "VideoObject",
+          "name": video.snippet.title,
+          "description": video.snippet.description || "Video chia sẻ học tập/giải trí tại ViBook",
+          "thumbnailUrl": [video.snippet.thumbnails?.medium?.url || video.snippet.thumbnails?.default?.url],
+          "uploadDate": video.snippet.publishedAt || new Date().toISOString(),
+          "embedUrl": `https://www.youtube.com/embed/${video.id.videoId}`
+        }
+      }))
+    };
+  }, [videos]);
 
   return (
     <div className="page-shell">
+      <SEO
+        title="Kho Video & Nhạc Lofi Relax"
+        description="Thư giãn cùng kho video nhạc Lofi học tập, làm việc cực chất và các video chia sẻ công nghệ hữu ích tại ViBook."
+        slug="/videos"
+        schema={videoSchema}
+      />
 
       <VideoHeader
         theme={theme}
-        user={user}
-        handleLogin={handleLogin}
         onLogoClick={() => setSelectedVideo(null)}
       />
 
@@ -104,7 +131,7 @@ function VideoPlayer() {
           /* CHI TIẾT VIDEO */
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1">
-              <VideoDetail selectedVideo={selectedVideo} videoStats={videoStats} comments={comments} user={user} />
+              <VideoDetail selectedVideo={selectedVideo} videoStats={videoStats} comments={comments} />
             </div>
             <div className="w-full lg:w-80 flex-shrink-0">
               <VideoSidebar videos={videos} selectedVideo={selectedVideo} setSelectedVideo={setSelectedVideo} />

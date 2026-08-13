@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   sendEmailVerification,
   signInWithEmailAndPassword,
@@ -13,6 +13,7 @@ import SignInwithGoogle from "./signInWIthGoogle";
 import InteractiveBlob from "./InteractiveBlob";
 import "../style/auth.css";
 import { clearLoginRedirect, getLoginRedirect } from "../utils/requireLogin";
+import SEO from "./SEO";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -21,6 +22,42 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = getLoginRedirect(location.state?.from);
+
+  // Anti-bot Slider Captcha States
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [sliderVal, setSliderVal] = useState(0);
+
+  // Rate Limiting States (5 failed attempts = 60s lockout)
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    const attempts = parseInt(localStorage.getItem("vibook_login_failures") || "0");
+    const lockTime = parseInt(localStorage.getItem("vibook_login_locktime") || "0");
+    if (lockTime && Date.now() < lockTime) {
+      return attempts;
+    }
+    return 0;
+  });
+  const [lockoutTime, setLockoutTime] = useState(() => {
+    const lockTime = parseInt(localStorage.getItem("vibook_login_locktime") || "0");
+    if (lockTime && Date.now() < lockTime) {
+      return lockTime;
+    }
+    return 0;
+  });
+
+  // Countdown timer for lockout duration
+  useEffect(() => {
+    if (!lockoutTime) return;
+    const interval = setInterval(() => {
+      const remaining = lockoutTime - Date.now();
+      if (remaining <= 0) {
+        setLockoutTime(0);
+        setFailedAttempts(0);
+        localStorage.removeItem("vibook_login_failures");
+        localStorage.removeItem("vibook_login_locktime");
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutTime]);
 
   // Prefill email after register + show verify reminder
   useEffect(() => {
@@ -37,6 +74,16 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
+    if (lockoutTime && Date.now() < lockoutTime) {
+      const secs = Math.ceil((lockoutTime - Date.now()) / 1000);
+      toast.error(`Đăng nhập tạm thời bị khóa. Vui lòng thử lại sau ${secs} giây.`, { position: "top-center" });
+      return;
+    }
+    if (!captchaVerified) {
+      toast.error("Vui lòng hoàn thành xác minh bảo mật (anti-bot)!", { position: "top-center" });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -77,11 +124,26 @@ function Login() {
         // non-blocking
       }
 
+      // Success -> Reset failed attempts
+      setFailedAttempts(0);
+      localStorage.removeItem("vibook_login_failures");
+      localStorage.removeItem("vibook_login_locktime");
+
       toast.success("Đăng nhập thành công!", { position: "top-center" });
       clearLoginRedirect();
       navigate(redirectTo, { replace: true });
     } catch (error) {
-      toast.error(error.message, { position: "bottom-center" });
+      const nextAttempts = failedAttempts + 1;
+      setFailedAttempts(nextAttempts);
+      localStorage.setItem("vibook_login_failures", nextAttempts.toString());
+      if (nextAttempts >= 5) {
+        const lockUntil = Date.now() + 60000; // 60 seconds lock
+        setLockoutTime(lockUntil);
+        localStorage.setItem("vibook_login_locktime", lockUntil.toString());
+        toast.error("Tài khoản đã nhập sai mật khẩu 5 lần. Tạm khóa đăng nhập trong 60 giây để phòng chống Brute-Force.", { position: "top-center", autoClose: 8000 });
+      } else {
+        toast.error(`${error.message} (Còn ${5 - nextAttempts} lần thử trước khi bị khóa)`, { position: "bottom-center" });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -89,6 +151,12 @@ function Login() {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-hidden p-4 sm:p-6">
+      <SEO
+        title="Đăng nhập"
+        description="Đăng nhập tài khoản ViBook để kết nối bạn bè, chia sẻ tài liệu học tập và trải nghiệm các tiện ích học thuật trực tuyến."
+        slug="/login"
+        noindex={true}
+      />
       {/* Hiệu ứng nước nền */}
       <InteractiveBlob color="#60a5fa" size={450} offset={{ x: -200, y: -200 }} />
       <InteractiveBlob color="#d8b4fe" size={400} offset={{ x: 200, y: 200 }} />
@@ -103,20 +171,6 @@ function Login() {
         {/* CỘT TRÁI: FORM ĐĂNG NHẬP */}
         <div className="flex-1 p-8 sm:p-10 lg:p-12 flex flex-col justify-between">
           <div>
-            {/* Header Form */}
-            {/* <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-rose-400 shadow-md shadow-pink-500/20" />
-                <span className="font-extrabold text-slate-800 text-lg tracking-tight">ViBook</span>
-              </div>
-              <Link
-                to="/homevibook"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-600 bg-white/80 border border-slate-200/60 shadow-sm hover:bg-white hover:text-pink-600 hover:scale-[1.02] active:scale-95 transition-all no-underline"
-              >
-                ← Trang chủ
-              </Link>
-            </div> */}
-
             <div className="mb-6">
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Đăng nhập</h1>
               <p className="text-slate-500 text-sm mt-1">
@@ -136,7 +190,8 @@ function Login() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
+                  autoComplete="username"
+                  inputMode="email"
                   required
                 />
               </div>
@@ -176,13 +231,78 @@ function Login() {
                 </button>
               </div>
 
+              {/* Custom Anti-Abuse Glassmorphic Slider Captcha */}
+              <div className="bg-white/30 border border-white/60 p-3 rounded-2xl shadow-sm backdrop-blur-md">
+                <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2 text-center">
+                  Xác minh bảo mật (Anti-Bot)
+                </label>
+                {captchaVerified ? (
+                  <div className="flex items-center justify-center gap-2 py-2 text-emerald-600 font-semibold text-xs animate-[pulse_1.5s_infinite]">
+                    <span>🛡️</span> Đã xác minh là con người
+                  </div>
+                ) : (
+                  <div className="relative flex items-center bg-slate-100/50 dark:bg-slate-900/10 border border-slate-200/50 rounded-xl h-10 overflow-hidden select-none">
+                    <div 
+                      className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-pink-500/20 to-rose-500/20 transition-all duration-75"
+                      style={{ width: `${sliderVal}%` }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-xs font-semibold text-slate-500">
+                      Kéo thanh trượt sang phải để mở khóa
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={sliderVal}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setSliderVal(val);
+                        if (val >= 98) {
+                          setCaptchaVerified(true);
+                          setSliderVal(100);
+                        }
+                      }}
+                      onMouseUp={() => {
+                        if (sliderVal < 98) {
+                          setSliderVal(0);
+                        }
+                      }}
+                      onTouchEnd={() => {
+                        if (sliderVal < 98) {
+                          setSliderVal(0);
+                        }
+                      }}
+                      className="w-full h-full opacity-0 cursor-ew-resize absolute inset-0 z-20"
+                    />
+                    <div 
+                      className="absolute top-1 bottom-1 w-8 h-8 rounded-lg bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-xs font-bold text-slate-600 pointer-events-none z-10 transition-all duration-75"
+                      style={{ left: `calc(${sliderVal}% - ${sliderVal * 0.32}px + 4px)` }}
+                    >
+                      ➔
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Nút Đăng nhập chính */}
               <button
                 type="submit"
-                disabled={submitting}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-sm shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:hover:scale-100 transition-all cursor-pointer"
+                disabled={submitting || !captchaVerified || (lockoutTime && Date.now() < lockoutTime)}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-sm shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:hover:scale-100 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                {submitting ? "Đang xử lý..." : "Đăng nhập"}
+                {lockoutTime && Date.now() < lockoutTime ? (
+                  `Tạm khóa (${Math.ceil((lockoutTime - Date.now()) / 1000)}s)`
+                ) : submitting ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  "Đăng nhập"
+                )}
               </button>
 
               {/* Dải phân cách */}
@@ -212,7 +332,7 @@ function Login() {
             </p>
             <p>
               <Link
-                to="/homevibook"
+                to="/feed"
                 className="text-slate-500 font-medium hover:text-slate-800 hover:underline transition-colors"
               >
                 Khám phá với tư cách khách →

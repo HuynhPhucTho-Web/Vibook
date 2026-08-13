@@ -73,7 +73,7 @@ const BlogCard = ({ post, isFavorite, onToggleFavorite, onEdit, onDelete, t, get
         >
           <span className="inline-flex items-center gap-1" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
             <FaRegClock style={{ fontSize: "12px" }} />
-            {t("readTime").replace("{time}", getReadTime(post.content))}
+            {t("readTime").replace("{time}", post.readTime || (getReadTime ? getReadTime(post.content) : 1))}
           </span>
           <span className="inline-flex items-center gap-1" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
             <FaEye style={{ fontSize: "12px" }} />

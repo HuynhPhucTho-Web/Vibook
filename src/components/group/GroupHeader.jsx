@@ -3,7 +3,8 @@ import { FaUsers, FaImage, FaTimes } from "react-icons/fa";
 import { db, auth } from "../../components/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import "../../style/GroupHeader.css";
-import {LanguageContext} from "../../context/LanguageContext"
+import {LanguageContext} from "../../context/LanguageContext";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
 const uploadToCloudinary = async (file) => {
   const cloudName = import.meta.env.VITE_REACT_APP_CLOUDINARY_CLOUD_NAME;
@@ -75,7 +76,7 @@ export default function GroupHeader({ group }) {
     <header className="ghd-header">
       <div className="ghd-cover">
         {bannerPreview ? (
-          <img src={bannerPreview} alt="Group Banner" className="ghd-coverImg" />
+          <img src={getOptimizedCloudinaryUrl(bannerPreview, 1200)} alt={`Ảnh bìa nhóm ${group?.name || ""}`} className="ghd-coverImg" />
         ) : (
           <div className="ghd-coverFallback" />
         )}

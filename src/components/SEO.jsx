@@ -12,7 +12,8 @@ export default function SEO({
   slug = "",
   image,
   type = "website",
-  schema
+  schema,
+  noindex = false
 }) {
   const metaTitle = title ? `${title} | ViBook` : DEFAULT_TITLE;
   const metaDesc = description || DEFAULT_DESCRIPTION;
@@ -25,6 +26,7 @@ export default function SEO({
       <title>{metaTitle}</title>
       <meta name="description" content={metaDesc} />
       <link rel="canonical" href={canonicalUrl} />
+      {noindex && <meta name="robots" content="noindex, follow" />}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />

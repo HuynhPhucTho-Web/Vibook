@@ -13,6 +13,7 @@ import { db } from "../../components/firebase";
 import { ThemeContext } from "../../context/ThemeContext";
 import { LanguageContext } from "../../context/LanguageContext";
 import { requireLogin } from "../../utils/requireLogin";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 import { SlLike } from "react-icons/sl";
 import {
   FaComment,
@@ -404,8 +405,8 @@ export default function GroupPostItem({
           <Link to={`/profile/${localPost.userId}`} className="no-underline hover:no-underline">
             {localPost.userPhoto ? (
               <img
-                src={localPost.userPhoto}
-                alt={localPost.userName || "user"}
+                src={getOptimizedCloudinaryUrl(localPost.userPhoto, 120)}
+                alt={localPost.userName || "Ảnh đại diện"}
                 className="w-12 h-12 rounded-full object-cover ring-2 ring-offset-2 ring-gray-200 dark:ring-gray-700"
               />
             ) : (
@@ -548,8 +549,8 @@ export default function GroupPostItem({
                 return (
                   <img
                     key={idx}
-                    src={url}
-                    alt="media"
+                    src={getOptimizedCloudinaryUrl(url, media.length === 1 ? 800 : 400)}
+                    alt={localPost.title || "Hình ảnh bài đăng"}
                     className={`w-full cursor-pointer hover:opacity-95 transition-opacity ${media.length === 1
                       ? "object-contain max-h-[600px]"
                       : "rounded-xl object-cover aspect-square"

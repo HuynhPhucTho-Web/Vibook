@@ -2,7 +2,7 @@ export const subject = {
   id: "prm393c",
   code: "PRM393C",
   name: "	Mobile Programming_Lập trình di động",
-  icon: "briefcase",
+  icon: "laptop_code",
   color: "neon-green",
   badge: "CORE"
 };

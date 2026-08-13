@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { sourceData } from "./sourceData";
 import SourceDetail from "../../components/source/SourceDetail";
 import { LanguageContext } from "../../context/LanguageContext";
+import SEO from "../../components/SEO";
 import { ThemeContext } from "../../context/ThemeContext";
 import {
   FaSearch,
@@ -49,8 +50,9 @@ export default function SourcePage() {
     ? sourceData.find((s) => s.code.toLowerCase() === subjectCode.toLowerCase())
     : null;
 
-  // Filter subjects based on query
+  // Filter subjects based on query and hide subjects with 0 docs (Thin Content protection)
   const filteredSubjects = sourceData.filter((subject) => {
+    if (subject.docsCount === 0) return false;
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
     return (
@@ -191,10 +193,18 @@ export default function SourcePage() {
 
   if (activeSubject) {
     return (
-      <SourceDetail
-        subject={activeSubject}
-        onBack={() => navigate("/source")}
-      />
+      <div className="page-shell">
+        <SEO
+          title={activeSubject.name}
+          description={`Tải tài liệu môn học ${activeSubject.name} (${activeSubject.code}) - Giáo trình, đề cương, câu hỏi ôn tập tại ViBook.`}
+          slug={`/source/${activeSubject.code.toLowerCase()}`}
+          noindex={true}
+        />
+        <SourceDetail
+          subject={activeSubject}
+          onBack={() => navigate("/source")}
+        />
+      </div>
     );
   }
 
@@ -202,6 +212,12 @@ export default function SourcePage() {
     <div className={`min-h-screen w-full px-4 py-8 md:px-8 transition-colors duration-300 z-10 ${
       isDark ? "bg-[#12131a] text-[#e3e1ec]" : "bg-[#faf7f2] text-[#162033]"
     }`}>
+      <SEO
+        title="Kho Tài Liệu Học Tập"
+        description="Kho tài liệu ôn thi học thuật, đề cương, giáo trình và ngân hàng câu hỏi ôn tập trắc nghiệm trực tuyến chất lượng tại ViBook."
+        slug="/source"
+        noindex={true}
+      />
       <div className="max-w-7xl mx-auto flex flex-col gap-10">
         
         {/* Background Decorative Blobs (visible in dark mode only) */}

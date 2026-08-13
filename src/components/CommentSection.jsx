@@ -119,6 +119,7 @@ const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess,
 
       await addDoc(collection(db, "Posts", postId, "comments", commentId, "replies"), replyData);
       await updateDoc(doc(db, "Posts", postId, "comments", commentId), { replyCount: increment(1) });
+      await updateDoc(doc(db, "Posts", postId), { commentCount: increment(1) });
 
       setReplyText("");
       toast.success("Đã thêm phản hồi!");
@@ -287,9 +288,12 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
 
       if (isReply) {
         await updateDoc(doc(db, "Posts", postId, "comments", parentCommentId), { replyCount: increment(-1) });
+        await updateDoc(doc(db, "Posts", postId), { commentCount: increment(-1) });
       } else {
         const repliesSnapshot = await getDocs(collection(db, "Posts", postId, "comments", comment.id, "replies"));
         await Promise.all(repliesSnapshot.docs.map((replyDocument) => deleteDoc(replyDocument.ref)));
+        const deletedCount = 1 + (comment.replyCount || 0);
+        await updateDoc(doc(db, "Posts", postId), { commentCount: increment(-deletedCount) });
       }
 
       await deleteDoc(targetRef);
@@ -543,6 +547,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
         reactionCount: 0,
         replyCount: 0
       });
+      await updateDoc(doc(db, "Posts", postId), { commentCount: increment(1) });
 
       setCommentText("");
       toast.success("Đã thêm bình luận!");
@@ -609,9 +614,21 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
               ref={inputRef}
               type="text"
               value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
+              onChange={(e) => {
+                if (!auth.currentUser) {
+                  requireLogin({ navigate, message: "Vui lòng đăng nhập để bình luận" });
+                  return;
+                }
+                setCommentText(e.target.value);
+              }}
+              onFocus={() => {
+                if (!auth.currentUser) {
+                  requireLogin({ navigate, message: "Vui lòng đăng nhập để bình luận" });
+                  inputRef.current?.blur();
+                }
+              }}
               onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
-              placeholder={t("writeComment")}
+              placeholder={auth.currentUser ? t("writeComment") : "Vui lòng đăng nhập để bình luận..."}
               className={`w-full rounded-full pl-4 pr-24 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 isLight ? "bg-gray-100 text-gray-900" : "bg-zinc-800 text-white"
               }`}

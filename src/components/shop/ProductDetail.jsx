@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { FaShoppingCart, FaArrowLeft, FaStar, FaHeart } from 'react-icons/fa';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { getOptimizedCloudinaryUrl } from '../../utils/cloudinary';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -76,7 +77,7 @@ const ProductDetail = () => {
       <div className="product-detail-content">
         <div className="product-gallery">
           <img
-            src={product.imageUrl || '/placeholder-product.jpg'}
+            src={getOptimizedCloudinaryUrl(product.imageUrl || '/placeholder-product.jpg', 800)}
             alt={product.name}
             className="main-product-image"
             onError={(e) => {

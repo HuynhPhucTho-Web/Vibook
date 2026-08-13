@@ -5,8 +5,23 @@ import { BlogPromoStrip } from "./PostItem";
 import staticBlogData from "../../Staticblogposts.json";
 
 export default function HomeBlogSection({ theme }) {
-  const [blogPromos, setBlogPromos] = useState([]);
-  const [isBlogsLoading, setIsBlogsLoading] = useState(true);
+  const [blogPromos, setBlogPromos] = useState(() => {
+    try {
+      const cached = localStorage.getItem("vibook_home_blog_promos");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return parsed.map((item) => ({
+          ...item,
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+        }));
+      }
+      return [];
+    } catch (e) {
+      console.error("Error reading cached blogs", e);
+      return [];
+    }
+  });
+  const [isBlogsLoading, setIsBlogsLoading] = useState(blogPromos.length === 0);
   const [blogLimit, setBlogLimit] = useState(5);
 
   useEffect(() => {
@@ -66,6 +81,12 @@ export default function HomeBlogSection({ theme }) {
 
           // Đẩy những blog mới nhất lên trên cùng (Sort by Date Descending)
           mergedBlogs.sort((a, b) => b.createdAt - a.createdAt);
+
+          try {
+            localStorage.setItem("vibook_home_blog_promos", JSON.stringify(mergedBlogs));
+          } catch (e) {
+            console.error("Error caching blogs", e);
+          }
 
           setBlogPromos(mergedBlogs);
           setIsBlogsLoading(false);

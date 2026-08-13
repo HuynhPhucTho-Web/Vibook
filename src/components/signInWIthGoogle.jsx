@@ -49,7 +49,7 @@ function SignInwithGoogle() {
       onClick={googleLogin}
       className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/60 border border-white rounded-2xl hover:bg-white transition-all duration-300"
     >
-      <img src="/images/Google_Favicon_2025.svg.webp" alt="google" className="w-6 h-6" />
+      <img src="/images/Google_Favicon_2025.svg.webp" alt="Đăng nhập bằng Google" className="w-6 h-6" />
       <span className="font-semibold text-slate-700">Google</span>
     </button>
   );

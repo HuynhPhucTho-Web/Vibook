@@ -340,7 +340,7 @@ const Header = () => {
     >
       <div className="header-row relative">
         <div className="flex items-center flex-shrink-0 gap-3">
-          <Link to="/homevibook" className="no-underline flex items-center">
+          <Link to="/feed" className="no-underline flex items-center">
             <h1 className="mb-0 font-extrabold tracking-tight text-2xl sm:text-3xl bg-gradient-to-br from-blue-500 to-purple-600 bg-clip-text text-transparent">
               ViBook
             </h1>

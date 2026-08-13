@@ -21,7 +21,8 @@ const BlogFormModal = ({
   newTagInput,
   setNewTagInput,
   onCoverUpload,
-  t
+  t,
+  quillRef
 }) => {
   if (!showModal) return null;
 
@@ -172,6 +173,7 @@ const BlogFormModal = ({
             <label className="form-label font-weight-bold">{t("content")}</label>
             <div className="quill-editor">
               <ReactQuill
+                ref={quillRef}
                 value={formData.content}
                 onChange={(content) => setFormData({ ...formData, content })}
                 modules={modules}

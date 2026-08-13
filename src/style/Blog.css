@@ -774,11 +774,17 @@ html:not(.dark) .blog-controls .filters select {
   max-width: 680px;
   margin: var(--vb-space-3) auto;
   padding: var(--vb-space-3);
-  background: var(--vb-surface-container);
-  border: 1px solid var(--vb-glass-border);
+  background-color: var(--vb-surface-container) !important;
+  border: 1px solid var(--vb-outline-variant) !important;
   border-radius: var(--vb-radius-xl);
   box-shadow: var(--vb-shadow-elevated), var(--vb-glow-border);
   position: relative;
+  color: var(--app-text) !important;
+}
+
+html:not(.dark) .modal-content {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.15) !important;
 }
 
 .modal-content h2 {
@@ -1334,3 +1340,126 @@ html:not(.dark) .author-name-text {
   border-radius: 0 var(--vb-radius-md) var(--vb-radius-md) 0;
   margin: 1.5rem 0 !important;
 }
+
+/* ===== Skeleton Loader Shimmer ===== */
+.blog-card-skeleton {
+  background: var(--vb-glass-surface);
+  backdrop-filter: var(--vb-glass-blur);
+  -webkit-backdrop-filter: var(--vb-glass-blur);
+  border: 1px solid var(--vb-glass-border);
+  border-radius: var(--vb-radius-md);
+  box-shadow: var(--vb-shadow-elevated);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 440px;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+html:not(.dark) .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 25%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 180px;
+}
+
+.skeleton-content {
+  padding: var(--vb-space-2);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-meta {
+  display: flex;
+  gap: 12px;
+}
+
+.skeleton-badge {
+  height: 20px;
+  width: 60px;
+  border-radius: var(--vb-radius-full);
+}
+
+.skeleton-date {
+  height: 16px;
+  width: 80px;
+  border-radius: var(--vb-radius-sm);
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 85%;
+  border-radius: var(--vb-radius-sm);
+}
+
+.skeleton-desc {
+  height: 14px;
+  border-radius: var(--vb-radius-sm);
+}
+.skeleton-desc-1 { width: 100%; }
+.skeleton-desc-2 { width: 90%; }
+.skeleton-desc-3 { width: 75%; }
+
+.skeleton-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.skeleton-tag {
+  height: 18px;
+  width: 50px;
+  border-radius: var(--vb-radius-full);
+}
+
+.skeleton-footer {
+  height: 16px;
+  width: 100%;
+  border-radius: var(--vb-radius-sm);
+  margin-top: 8px;
+}
+
+.skeleton-actions {
+  padding: 8px var(--vb-space-2) var(--vb-space-2);
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--vb-glass-border);
+  margin-top: auto;
+}
+
+.skeleton-btn {
+  height: 36px;
+  border-radius: var(--vb-radius-md);
+}
+.skeleton-btn-read { width: 90px; }
+.skeleton-btn-fav { width: 36px; border-radius: 8px; }
+.skeleton-btn-action { width: 36px; margin-left: auto; }

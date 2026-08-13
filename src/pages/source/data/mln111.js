@@ -1,8 +1,8 @@
 export const subject = {
   id: "mln111",
   code: "MLN111",
-  name: "Ethics in IT_Đạo đức trong CNTT",
-  icon: "chart_bar",
+  name: "Triết học Mác - Lênin",
+  icon: "graduation_cap",
   color: "neon-purple",
   badge: "CORE"
 };

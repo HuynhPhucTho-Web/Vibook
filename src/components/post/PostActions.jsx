@@ -58,6 +58,7 @@ const PostActions = ({
   isSaved,
   isSavingPost,
   onToggleSave,
+  commentCount,
 }) => {
   const hoverTimerRef = useRef(null);
   const longPressTimerRef = useRef(null);
@@ -208,9 +209,6 @@ const PostActions = ({
           >
             {renderLikeIcon()}
           </span>
-          <span className="post-action-btn__label">
-            {currentReaction ? getReactionLabel(currentReaction) : t("like")}
-          </span>
         </button>
 
         {/* Desktop hover picker */}
@@ -254,7 +252,9 @@ const PostActions = ({
           <span className="post-action-btn__icon">
             <FaComment className="post-action__icon-svg" />
           </span>
-          <span className="post-action-btn__label">{t("comment")}</span>
+          {commentCount > 0 && (
+            <span className="post-action-btn__count">{commentCount}</span>
+          )}
         </button>
       </div>
 
@@ -275,9 +275,9 @@ const PostActions = ({
               <FaRegBookmark className="post-action__icon-svg" />
             )}
           </span>
-          <span className="post-action-btn__label">
-            {isSaved ? t("saved") : t("save")}
-          </span>
+          {(post.saveCount || 0) > 0 && (
+            <span className="post-action-btn__count">{post.saveCount}</span>
+          )}
         </button>
       </div>
 
@@ -293,7 +293,9 @@ const PostActions = ({
           <span className="post-action-btn__icon">
             <FaShare className="post-action__icon-svg" />
           </span>
-          <span className="post-action-btn__label">{t("share")}</span>
+          {(post.shareCount || 0) > 0 && (
+            <span className="post-action-btn__count">{post.shareCount}</span>
+          )}
         </button>
       </div>
 

@@ -115,14 +115,10 @@ const FindFriends = ({ currentUser, theme }) => {
   }, [currentUser]);
 
   const handleSendRequest = async (toUserId, toUserName) => {
-    const user = requireLogin({
-      navigate,
-      title: t("loginToastTitle"),
-      message: t("loginToAddFriend") || "Vui lòng đăng nhập để gửi lời mời kết bạn",
-      from: "/friends",
-      loginLabel: t("login"),
-    });
-    if (!user) return;
+    if (!currentUser) {
+      navigate("/login", { state: { from: "/friends" } });
+      return;
+    }
 
     try {
       const targetUser = users.find((u) => u.uid === toUserId);
@@ -190,19 +186,23 @@ const FindFriends = ({ currentUser, theme }) => {
             const hasSentRequest = sentRequests.has(user.uid);
             const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unknown User";
 
+            // Mask PII for guests to protect privacy
+            const displayPhoto = currentUser ? user.photo : null;
+            const displayFullName = currentUser ? fullName : "Người dùng ViBook";
+
             return (
               <div key={user.uid} className="friend-card">
                 <div className="friend-card__body">
                   <div className="friend-card__header">
                     <div className="friend-card__avatar">
-                      {user.photo ? (
-                        <img src={user.photo} alt={fullName} />
+                      {displayPhoto ? (
+                        <img src={displayPhoto} alt={`Avatar của ${displayFullName}`} />
                       ) : (
                         <FaUser />
                       )}
                     </div>
                     <div className="friend-card__meta">
-                      <div className="friend-card__name">{fullName}</div>
+                      <div className="friend-card__name">{displayFullName}</div>
                       <div className="friend-card__subtitle">
                         {isFriend ? "Already friends" : hasSentRequest ? "Request sent" : "Discover"}
                       </div>

@@ -28,6 +28,7 @@ import { LanguageContext } from "../context/LanguageContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { requireLogin } from "../utils/requireLogin";
 import "../style/Setting.css";
+import SEO from "../components/SEO";
 
 /** Guest may use these (local prefs). Account-bound sections stay private. */
 const PUBLIC_SECTION_IDS = new Set(["appearance", "accessibility"]);
@@ -102,15 +103,12 @@ const Setting = () => {
     const unsub = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setAuthReady(true);
-      // Guest must not stay on a private section after logout
       if (!user) {
-        setActiveSection((section) =>
-          PRIVATE_SECTION_IDS.has(section) ? "appearance" : section,
-        );
+        navigate("/login", { state: { from: "/settings" } });
       }
     });
     return () => unsub();
-  }, []);
+  }, [navigate]);
 
   const isGuest = authReady && !currentUser;
 
@@ -323,6 +321,12 @@ const Setting = () => {
 
   return (
     <div className={`page-shell setting-page setting-page--${theme}`} style={pageStyle}>
+      <SEO
+        title="Cài đặt tài khoản"
+        description="Quản lý thông tin tài khoản, cấu hình quyền riêng tư, cài đặt bảo mật và tùy biến giao diện trên mạng xã hội ViBook."
+        slug="/settings"
+        noindex={true}
+      />
       <header className="setting-hero">
         <div className="setting-hero__icon">
           <FaUserCog />

@@ -16,6 +16,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { ThemeContext } from "../../context/ThemeContext";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
 /** Upload ảnh lên Cloudinary */
 async function uploadToCloudinary(file, { cloudName, uploadPreset, folder = "profile" }) {
@@ -500,10 +501,12 @@ export default function ProfileHeader({
   const bgStat = isDark ? "bg-gray-800" : "bg-gray-100";
   const bgAbout = isDark ? "bg-gray-900/60" : "bg-gray-50/80";
 
-  const coverSrc =
+  const coverSrc = getOptimizedCloudinaryUrl(
     user?.cover ||
-    "https://images.unsplash.com/photo-1503264116251-35a269479413?q=80&w=1600&auto=format&fit=crop";
-  const avatarSrc = user?.photo || "/default-avatar.png";
+    "https://images.unsplash.com/photo-1503264116251-35a269479413?q=80&w=1600&auto=format&fit=crop",
+    1200
+  );
+  const avatarSrc = getOptimizedCloudinaryUrl(user?.photo || "/default-avatar.png", 320);
 
   const friendBtnDesktop = (() => {
     if (isFriend) {
@@ -543,7 +546,7 @@ export default function ProfileHeader({
           )}
           <img
             src={coverSrc}
-            alt="cover"
+            alt={`Ảnh bìa của ${user?.firstName || ""} ${user?.lastName || ""}`.trim() || user?.displayName || user?.email || "Ảnh bìa"}
             className="w-full h-52 md:h-64 object-cover select-none"
             style={{
               objectPosition: `center ${isRepositioningCover ? tempCoverPos : (user?.coverPositionY ?? 50)}%`,
@@ -604,7 +607,7 @@ export default function ProfileHeader({
               {user?.photo ? (
                 <img
                   src={avatarSrc}
-                  alt="avatar"
+                  alt={`Ảnh đại diện của ${user?.firstName || ""} ${user?.lastName || ""}`.trim() || user?.displayName || user?.email || "Ảnh đại diện"}
                   className={`w-32 h-32 md:w-40 md:h-40 rounded-full ring-4 ${
                     isDark ? "ring-gray-800" : "ring-white"
                   } object-cover shadow-xl`}
@@ -763,7 +766,7 @@ export default function ProfileHeader({
           )}
           <img
             src={coverSrc}
-            alt="cover"
+            alt={`Ảnh bìa của ${user?.firstName || ""} ${user?.lastName || ""}`.trim() || user?.displayName || user?.email || "Ảnh bìa"}
             className="w-full h-36 object-cover select-none"
             style={{
               objectPosition: `center ${isRepositioningCover ? tempCoverPos : (user?.coverPositionY ?? 50)}%`,
@@ -823,7 +826,7 @@ export default function ProfileHeader({
                 {user?.photo ? (
                   <img
                     src={avatarSrc}
-                    alt="avatar"
+                    alt={`Ảnh đại diện của ${user?.firstName || ""} ${user?.lastName || ""}`.trim() || user?.displayName || user?.email || "Ảnh đại diện"}
                     className={`w-20 h-20 rounded-full object-cover ring-4 ${isDark ? "ring-gray-900" : "ring-white"} shadow`}
                   />
                 ) : (

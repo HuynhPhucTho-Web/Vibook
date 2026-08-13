@@ -8,9 +8,15 @@ import {
   FaSearchPlus,
   FaSearchMinus
 } from "react-icons/fa";
+import { auth } from "../../components/firebase";
 
 export default function SourceDocDetail({ subject, isDark, language }) {
   const [docSearch, setDocSearch] = useState("");
+  const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
+
+  useEffect(() => {
+    return auth.onAuthStateChanged((usr) => setCurrentUser(usr));
+  }, []);
 
   // Get all documents across all modules of this subject
   const allDocs = subject.modules.flatMap((m) =>
@@ -106,28 +112,20 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                 {/* Selectable item actions */}
                 {isSelected && (
                   <div className="flex items-center gap-2 mt-4 pt-3 border-t border-glass-border">
-                    <a
-                      href={doc.pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-1.5 rounded bg-primary text-on-primary text-label-sm font-label-sm hover:brightness-110 transition-all flex items-center justify-center gap-1.5 font-bold text-center"
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (!currentUser) {
+                          window.location.href = "/login?from=" + encodeURIComponent(window.location.pathname);
+                        } else {
+                          window.open(doc.pdfUrl, "_blank");
+                        }
+                      }}
+                      className="flex-1 py-1.5 rounded bg-primary text-on-primary text-label-sm font-label-sm hover:brightness-110 transition-all flex items-center justify-center gap-1.5 font-bold text-center border-none cursor-pointer"
                     >
                       <FaEye size={13} />
-                      {language === "vi" ? "Xem tab mới" : "Open Tab"}
-                    </a>
-                    <a
-                      href={doc.pdfUrl}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`p-1.5 rounded border transition-all flex items-center justify-center ${
-                        isDark
-                          ? "bg-[#12131a] border-glass-border text-on-surface hover:text-primary hover:border-primary/50"
-                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
-                      }`}
-                    >
-                      <FaDownload size={13} />
-                    </a>
+                      {language === "vi" ? "Xem tài liệu" : "Open Document"}
+                    </button>
                   </div>
                 )}
               </div>
@@ -159,55 +157,59 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {/* Download Button */}
-                <a
-                  href={selectedDoc.pdfUrl}
-                  download
-                  title={language === "vi" ? "Tải xuống PDF" : "Download PDF"}
-                  className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 ${
-                    isDark
-                      ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
-                      : "hover:bg-black/5 border-slate-200 text-slate-600"
-                  }`}
-                >
-                  <FaDownload size={14} />
-                  <span className="text-[11px] font-bold hidden sm:inline">
-                    {language === "vi" ? "Tải xuống" : "Download"}
-                  </span>
-                </a>
+                {currentUser && (
+                  <>
+                    {/* Download Button */}
+                    <a
+                      href={selectedDoc.pdfUrl}
+                      download
+                      title={language === "vi" ? "Tải xuống PDF" : "Download PDF"}
+                      className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                        isDark
+                          ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
+                          : "hover:bg-black/5 border-slate-200 text-slate-600"
+                      }`}
+                    >
+                      <FaDownload size={14} />
+                      <span className="text-[11px] font-bold hidden sm:inline">
+                        {language === "vi" ? "Tải xuống" : "Download"}
+                      </span>
+                    </a>
 
-                {/* Open in New Tab Button */}
-                <a
-                  href={selectedDoc.pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={language === "vi" ? "Mở trong tab mới" : "Open in new tab"}
-                  className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 ${
-                    isDark
-                      ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
-                      : "hover:bg-black/5 border-slate-200 text-slate-600"
-                  }`}
-                >
-                  <FaEye size={14} />
-                  <span className="text-[11px] font-bold hidden sm:inline">
-                    {language === "vi" ? "Mở tab mới" : "Open Tab"}
-                  </span>
-                </a>
+                    {/* Open in New Tab Button */}
+                    <a
+                      href={selectedDoc.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={language === "vi" ? "Mở trong tab mới" : "Open in new tab"}
+                      className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                        isDark
+                          ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
+                          : "hover:bg-black/5 border-slate-200 text-slate-600"
+                      }`}
+                    >
+                      <FaEye size={14} />
+                      <span className="text-[11px] font-bold hidden sm:inline">
+                        {language === "vi" ? "Mở tab mới" : "Open Tab"}
+                      </span>
+                    </a>
 
-                <div className={`w-px h-6 mx-1 ${isDark ? "bg-glass-border" : "bg-slate-200"}`}></div>
+                    <div className={`w-px h-6 mx-1 ${isDark ? "bg-glass-border" : "bg-slate-200"}`}></div>
 
-                {/* Print Button */}
-                <a
-                  href={selectedDoc.pdfUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  title={language === "vi" ? "In tài liệu" : "Print"}
-                  className={`p-1.5 rounded transition-colors flex items-center justify-center ${
-                    isDark ? "hover:bg-white/10 text-on-surface-variant" : "hover:bg-black/5 text-slate-600"
-                  }`}
-                >
-                  <FaPrint size={14} />
-                </a>
+                    {/* Print Button */}
+                    <a
+                      href={selectedDoc.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={language === "vi" ? "In tài liệu" : "Print"}
+                      className={`p-1.5 rounded transition-colors flex items-center justify-center ${
+                        isDark ? "hover:bg-white/10 text-on-surface-variant" : "hover:bg-black/5 text-slate-600"
+                      }`}
+                    >
+                      <FaPrint size={14} />
+                    </a>
+                  </>
+                )}
               </div>
             </div>
 
@@ -253,6 +255,26 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                       </div>
                     ))}
                   </div>
+                </div>
+              ) : !currentUser ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-md border border-dashed border-gray-300 dark:border-gray-700 rounded-xl relative z-10 m-4">
+                  <div className="w-16 h-16 bg-red-500/10 dark:bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mb-4">
+                    <FaFileAlt size={28} />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2 text-gray-800 dark:text-gray-100">
+                    {language === "vi" ? "Tài liệu này yêu cầu đăng nhập" : "Authentication Required"}
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6 leading-relaxed">
+                    {language === "vi" 
+                      ? "Vui lòng đăng nhập tài khoản ViBook để xem trước, in và tải xuống tài liệu này để bảo vệ bản quyền." 
+                      : "Please sign in to ViBook to preview, print and download this document to protect copyright."}
+                  </p>
+                  <a
+                    href={`/login?from=${encodeURIComponent(window.location.pathname)}`}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition no-underline shadow-md shadow-blue-500/20"
+                  >
+                    {language === "vi" ? "Đăng nhập ngay" : "Login Now"}
+                  </a>
                 </div>
               ) : (
                 /* Render live PDF preview using an iframe */

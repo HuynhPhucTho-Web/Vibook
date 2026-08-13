@@ -6,6 +6,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../firebase';
 import { ThemeContext } from '../../context/ThemeContext';
 import '../../style/shop/ManageProducts.css';
+import { getOptimizedCloudinaryUrl } from '../../utils/cloudinary';
 
 const ManageProducts = () => {
   const { theme } = useContext(ThemeContext);
@@ -230,7 +231,7 @@ const ManageProducts = () => {
                 <tr key={product.id}>
                   <td>
                     <div className="product-cell-info">
-                      <img src={product.imageUrl || '/placeholder.jpg'} alt="" />
+                      <img src={getOptimizedCloudinaryUrl(product.imageUrl || '/placeholder.jpg', 120)} alt={product.name || "Sản phẩm"} />
                       <div className="txt-info">
                         <div className="p-name">{product.name}</div>
                         <div className="p-desc">{product.description?.substring(0, 40)}...</div>
@@ -367,7 +368,7 @@ const ManageProducts = () => {
                     <label htmlFor="p-image" className="upload-zone">
                       {previewImage || formData.imageUrl ? (
                         <div className="preview-container">
-                          <img src={previewImage || formData.imageUrl} alt="Preview" />
+                          <img src={getOptimizedCloudinaryUrl(previewImage || formData.imageUrl, 240)} alt="Xem trước sản phẩm" />
                           <div className="change-img-overlay"><FaUpload /> Thay đổi ảnh</div>
                         </div>
                       ) : (
