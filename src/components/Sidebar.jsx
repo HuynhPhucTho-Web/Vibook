@@ -444,7 +444,7 @@ export default function Sidebar() {
           </ul>
 
           {/* BR §4: Logout hidden for guest */}
-          {isAuthenticated && (
+          {/* {isAuthenticated && (
             <button
               className={
                 "sidebar__logout" + (isCollapsed && !isMobile ? " is-icon" : "")
@@ -457,7 +457,7 @@ export default function Sidebar() {
                 <span className="sidebar__label">{t("logout")}</span>
               )}
             </button>
-          )}
+          )} */}
         </nav>
       </aside>
 

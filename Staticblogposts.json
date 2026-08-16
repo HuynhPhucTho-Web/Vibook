@@ -219,6 +219,28 @@
             "updatedAt": "2026-08-12T13:00:00.000Z",
             "author": "Huỳnh Phúc Thọ",
             "isStatic": true
+        },
+        {
+            "id": "static-11",
+            "title": "Cách Bẻ Khóa Mật Khẩu Windows Bằng Anhdv Boot Từ A Đến Z",
+            "slug": "cach-be-khoa-mat-khau-windows-bang-anhdv-boot",
+            "description": "Hướng dẫn chi tiết cách tạo USB Anhdv Boot, truy cập Boot Menu và xóa mật khẩu đăng nhập Windows cực kỳ nhanh chóng, hiệu quả 100% cho mọi dòng máy tính.",
+            "category": "Thủ thuật máy tính",
+            "tags": [
+                "anhdv-boot",
+                "pha-pass-windows",
+                "thu-thuat-windows",
+                "tao-usb-boot",
+                "reset-password"
+            ],
+            "content": "<p>Quên mật khẩu đăng nhập Windows là sự cố phổ biến gây ra không ít phiền toái cho người dùng. Đừng quá lo lắng, bài viết này sẽ hướng dẫn bạn từng bước cách phá/bẻ khóa mật khẩu Windows bằng USB Anhdv Boot cực kỳ đơn giản và an toàn.</p><p><img src=\"/images/blog/blog11/1.webp\" alt=\"Tổng quan bẻ khóa mật khẩu Windows bằng Anhdv Boot\" style=\"width:100%; border-radius:8px; margin: 16px 0;\" /></p><h2>Bước 1: Chuẩn bị USB Boot Anhdv Boot</h2><ol><li><b>Chuẩn bị công cụ:</b><ul><li>01 USB dung lượng tối thiểu 8GB (Lưu ý: Mọi dữ liệu trên USB sẽ bị xóa sạch).</li><li>File <b>ISO Anhdv Boot</b> và phần mềm <b>Rufus</b> (tải về trên một máy tính khác đang hoạt động).</li></ul></li><li><b>Tạo USB Boot bằng Rufus:</b><ul><li>Cắm USB vào máy tính -&gt; Mở phần mềm Rufus.</li><li>Tại mục <b>Device</b>: Chọn đúng USB của bạn.</li><li>Tại mục <b>Boot selection</b>: Nhấn <b>Select</b> và chọn file ISO Anhdv Boot.</li><li>Tại mục <b>Partition scheme</b>: Chọn <b>GPT</b> (hoặc <b>MBR</b> tùy chuẩn máy của bạn, thông thường chọn GPT/UEFI cho các máy đời mới).</li><li>Nhấn <b>Start</b> và chờ quá trình hoàn tất.</li></ul></li></ol><p><img src=\"/images/blog/blog11/2.webp\" alt=\"Hướng dẫn tạo USB Boot bằng Rufus\" style=\"width:100%; border-radius:8px; margin: 16px 0;\" /></p><h2>Bước 2: Boot vào USB Anhdv Boot</h2><ol><li>Cắm USB vừa tạo vào máy tính đang quên mật khẩu.</li><li>Bật nguồn máy tính và <b>bấm liên tục Phím Boot Menu</b> tương ứng với hãng máy của bạn.</li></ol><table><tr><th>Hãng máy tính</th><th>Phím Boot Menu</th></tr><tr><td>Dell, Acer, Lenovo, Fujitsu, Toshiba</td><td><b>F12</b> (Lenovo một số máy dùng <code>Fn + F12</code>)</td></tr><tr><td>ASUS</td><td><b>Esc</b></td></tr><tr><td>HP</td><td><b>Esc</b> rồi chọn <b>F9</b></td></tr><tr><td>MSI, ASRock, Sony VAIO</td><td><b>F11</b></td></tr><tr><td>Samsung, Intel NUC, LG</td><td><b>F10</b></td></tr></table><p>3. Trong menu hiện ra, chọn dòng có tên USB của bạn (ưu tiên chọn dòng có chữ <b>UEFI</b>).</p><p><img src=\"/images/blog/blog11/3.webp\" alt=\"Bảng phím tắt Boot Menu các hãng máy tính\" style=\"width:100%; border-radius:8px; margin: 16px 0;\" /></p><h2>Bước 3: Phá mật khẩu Windows trong môi trường WinPE</h2><p>Sau khi khởi động vào giao diện WinPE của Anhdv Boot, bạn có thể thực hiện theo 1 trong 2 công cụ phổ biến sau:</p><h3>Cách 1: Sử dụng phần mềm Lazesoft Recover My Password (Khuyên dùng)</h3><ul><li><b>Bước 1:</b> Mở công cụ <b>Lazesoft Recover My Password</b> trên màn hình Desktop hoặc trong Menu ứng dụng.</li><li><b>Bước 2:</b> Chọn <b>Reset Windows Password</b> -&gt; Nhấn <b>Next</b>.</li><li><b>Bước 3:</b> Chọn đúng hệ điều hành Windows đang cài trên máy -&gt; Nhấn <b>Next</b>.</li><li><b>Bước 4:</b> Chọn tên tài khoản (User) cần phá mật khẩu -&gt; Nhấn <b>Next</b>.</li><li><b>Bước 5:</b> Nhấn <b>RESET / UNLOCK</b> -&gt; Hệ thống báo thành công, nhấn <b>Finish</b>.</li></ul><h3>Cách 2: Sử dụng công cụ NTPWEdit (Siêu nhanh)</h3><ul><li><b>Bước 1:</b> Mở phần mềm <b>NTPWEdit</b>.</li><li><b>Bước 2:</b> Nhấn <b>Open</b> để nạp file SAM lưu trữ mật khẩu Windows.</li><li><b>Bước 3:</b> Chọn tài khoản cần xóa mật khẩu trong danh sách.</li><li><b>Bước 4:</b> Nhấn <b>Change Password</b> -&gt; Để trống cả 2 ô mật khẩu mới -&gt; Nhấn <b>OK</b>.</li><li><b>Bước 5:</b> Nhấn <b>Save changes</b> để hoàn tất.</li></ul><p><img src=\"/images/blog/blog11/4.webp\" alt=\"Giao diện phần mềm xóa mật khẩu Windows trong WinPE\" style=\"width:100%; border-radius:8px; margin: 16px 0;\" /></p><h2>Bước 4: Khởi động lại máy tính</h2><ul><li>Rút USB Boot ra khỏi máy tính.</li><li>Khởi động lại máy. Lúc này, hệ thống sẽ đi thẳng vào màn hình Desktop Windows mà không yêu cầu nhập mật khẩu nữa.</li></ul><p><b>Lưu ý quan trọng:</b> các công cụ trên áp dụng hiệu quả nhất cho <b>Tài khoản cục bộ (Local Account)</b>. Nếu máy tính dùng <b>Tài khoản Microsoft (Online)</b>, công cụ Lazesoft sẽ giúp bạn chuyển tài khoản đó về Local Account trước khi reset.</p>",
+            "coverImage": "/images/blog/static-11.webp",
+            "published": true,
+            "views": 312,
+            "createdAt": "2026-08-16T14:00:00.000Z",
+            "updatedAt": "2026-08-16T14:00:00.000Z",
+            "author": "Huỳnh Phúc Thọ",
+            "isStatic": true
         }
     ]
 }

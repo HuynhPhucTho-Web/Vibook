@@ -70,10 +70,12 @@ const PRESET_CATEGORIES = [
 ];
 
 const STATIC_POSTS = (staticBlogData.posts || []).map((p) => {
-  const wordCount = (p.content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).length;
+  const contentStr = Array.isArray(p.content) ? p.content.join("") : (p.content || "");
+  const wordCount = contentStr.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().split(/\s+/).length;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
   return {
     ...p,
+    content: contentStr,
     createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
     isStatic: true,
     favoriteCount: p.favoriteCount || 0,
@@ -345,7 +347,7 @@ const BlogPages = () => {
           // Fetch favorite counts from FavoriteBlogs in the background
           const fetchFavoriteCountsBg = async (postsList) => {
             try {
-              const blogIds = postsList.map((p) => (p.isStatic ? p.slug : p.id)).filter(Boolean);
+              const blogIds = postsList.map((p) => p.id).filter(Boolean);
               const countsMap = {};
               if (blogIds.length > 0) {
                 const chunks = [];
@@ -368,7 +370,7 @@ const BlogPages = () => {
 
                 setPosts((current) =>
                   current.map((p) => {
-                    const key = p.isStatic ? p.slug : p.id;
+                    const key = p.id;
                     if (countsMap[key] !== undefined) {
                       return { ...p, favoriteCount: countsMap[key] };
                     }
@@ -481,7 +483,7 @@ const BlogPages = () => {
         // Fetch favorite counts from FavoriteBlogs in the background
         const fetchFavoriteCountsBg = async (postsList) => {
           try {
-            const blogIds = postsList.map((p) => (p.isStatic ? p.slug : p.id)).filter(Boolean);
+            const blogIds = postsList.map((p) => p.id).filter(Boolean);
             const countsMap = {};
             if (blogIds.length > 0) {
               const chunks = [];
@@ -504,7 +506,7 @@ const BlogPages = () => {
 
               setPosts((current) =>
                 current.map((p) => {
-                  const key = p.isStatic ? p.slug : p.id;
+                  const key = p.id;
                   if (countsMap[key] !== undefined) {
                     return { ...p, favoriteCount: countsMap[key] };
                   }
@@ -527,7 +529,7 @@ const BlogPages = () => {
         // Fetch favorite counts in the background
         const fetchFallbackFavoriteCountsBg = async (postsList) => {
           try {
-            const blogIds = postsList.map((p) => p.slug).filter(Boolean);
+            const blogIds = postsList.map((p) => p.id).filter(Boolean);
             const countsMap = {};
             if (blogIds.length > 0) {
               const chunks = [];
@@ -550,8 +552,8 @@ const BlogPages = () => {
 
               setPosts((current) =>
                 current.map((p) => {
-                  if (countsMap[p.slug] !== undefined) {
-                    return { ...p, favoriteCount: countsMap[p.slug] };
+                  if (countsMap[p.id] !== undefined) {
+                    return { ...p, favoriteCount: countsMap[p.id] };
                   }
                   return p;
                 })
@@ -581,7 +583,7 @@ const BlogPages = () => {
     // Filter by favorites only
     if (showFavoritesOnly) {
       result = result.filter((p) => {
-        const id = p.isStatic ? p.slug : p.id;
+        const id = p.id;
         return favoriteBlogIds.has(id);
       });
     }
@@ -892,7 +894,7 @@ const BlogPages = () => {
       toast.warn("Vui lòng đăng nhập để thích bài viết!");
       return;
     }
-    const blogId = blog.isStatic ? blog.slug : blog.id;
+    const blogId = blog.id;
     const favDocRef = doc(db, "FavoriteBlogs", `${auth.currentUser.uid}_${blogId}`);
 
     try {
@@ -906,14 +908,14 @@ const BlogPages = () => {
         }
         setPosts((prev) =>
           prev.map((p) => {
-            const id = p.isStatic ? p.slug : p.id;
+            const id = p.id;
             if (id === blogId) {
               return { ...p, favoriteCount: Math.max(0, (p.favoriteCount || 0) - 1) };
             }
             return p;
           })
         );
-        if (currentPost && (currentPost.isStatic ? currentPost.slug : currentPost.id) === blogId) {
+        if (currentPost && currentPost.id === blogId) {
           setCurrentPost((prev) => ({
             ...prev,
             favoriteCount: Math.max(0, (prev.favoriteCount || 0) - 1),
@@ -933,14 +935,14 @@ const BlogPages = () => {
         }
         setPosts((prev) =>
           prev.map((p) => {
-            const id = p.isStatic ? p.slug : p.id;
+            const id = p.id;
             if (id === blogId) {
               return { ...p, favoriteCount: (p.favoriteCount || 0) + 1 };
             }
             return p;
           })
         );
-        if (currentPost && (currentPost.isStatic ? currentPost.slug : currentPost.id) === blogId) {
+        if (currentPost && currentPost.id === blogId) {
           setCurrentPost((prev) => ({
             ...prev,
             favoriteCount: (prev.favoriteCount || 0) + 1,
@@ -1013,7 +1015,7 @@ const BlogPages = () => {
           if (staticPost) {
             let favCount = 0;
             try {
-              const favsQ = query(collection(db, "FavoriteBlogs"), where("blogId", "==", staticPost.slug));
+              const favsQ = query(collection(db, "FavoriteBlogs"), where("blogId", "==", staticPost.id));
               const favsSnap = await getDocs(favsQ);
               favCount = favsSnap.size;
             } catch (err) {
@@ -1029,7 +1031,7 @@ const BlogPages = () => {
           if (staticPost) {
             let favCount = 0;
             try {
-              const favsQ = query(collection(db, "FavoriteBlogs"), where("blogId", "==", staticPost.slug));
+              const favsQ = query(collection(db, "FavoriteBlogs"), where("blogId", "==", staticPost.id));
               const favsSnap = await getDocs(favsQ);
               favCount = favsSnap.size;
             } catch (err) {
@@ -1160,22 +1162,6 @@ const BlogPages = () => {
     };
   }, []);
 
-  const handleScroll = () => {
-    const progressBar = document.querySelector(".reading-progress");
-    if (progressBar) {
-      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      progressBar.style.width = `${scrolled}%`;
-    }
-  };
-
-  useEffect(() => {
-    if (isDetailView) {
-      window.addEventListener("scroll", handleScroll);
-      return () => window.removeEventListener("scroll", handleScroll);
-    }
-  }, [isDetailView]);
 
   if (isDetailView && !currentPost) {
     return (
@@ -1283,7 +1269,7 @@ const BlogPages = () => {
                     key={post.id || post.slug}
                     post={post}
                     index={index}
-                    isFavorite={favoriteBlogIds.has(post.isStatic ? post.slug : post.id)}
+                    isFavorite={favoriteBlogIds.has(post.id)}
                     onToggleFavorite={handleToggleFavorite}
                     onEdit={openEditModal}
                     onDelete={handleDeletePost}
@@ -1316,7 +1302,7 @@ const BlogPages = () => {
         <div>
            <BlogDetail
             post={{ ...currentPost, content: processedContent }}
-            isFavorite={favoriteBlogIds.has(currentPost.isStatic ? currentPost.slug : currentPost.id)}
+            isFavorite={favoriteBlogIds.has(currentPost.id)}
             onToggleFavorite={handleToggleFavorite}
             t={t}
             getReadTime={getReadTime}

@@ -523,7 +523,7 @@ export default function AboutPage() {
                   border: `1px solid ${isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}`
                 }}>
                   <h4 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '0.5rem', color: '#8e54e9' }}>📧 Email Hỗ Trợ</h4>
-                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>support@vibook.net</p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>thohpce181027@fpt.edu.vn</p>
                   <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>Từ 8:00 - 17:30 (Thứ 2 - Thứ 6)</p>
                 </div>
                 <div style={{
@@ -533,8 +533,8 @@ export default function AboutPage() {
                   border: `1px solid ${isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}`
                 }}>
                   <h4 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '0.5rem', color: '#8e54e9' }}>📍 Đơn Vị Vận Hành</h4>
-                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>ViBook Platform Development Team</p>
-                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh, Việt Nam</p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>ViBook - HuynhPhucThoWeb</p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>Ấp 6 Ngàn, Tân Hòa, TP Cần Thơ</p>
                 </div>
               </div>
             </section>

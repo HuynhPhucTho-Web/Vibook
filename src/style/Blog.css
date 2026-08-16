@@ -564,10 +564,12 @@ html:not(.dark) .blog-controls .filters select {
 }
 
 .article-content .ql-editor img {
+  width: 100%;
   max-width: 100%;
   height: auto;
+  display: block;
+  margin: var(--vb-space-4) auto;
   border-radius: var(--vb-radius-lg);
-  margin: var(--vb-space-2) 0;
 }
 
 .article-content .ql-editor blockquote {

@@ -41,6 +41,7 @@ export default function HomeBlogSection({ theme }) {
         if (!cancelled) {
           const staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
             ...post,
+            content: Array.isArray(post.content) ? post.content.join("") : (post.content || ""),
             createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
             isStatic: true,
             favoriteCount: post.favoriteCount || 0,
@@ -58,7 +59,7 @@ export default function HomeBlogSection({ theme }) {
 
           // Fetch actual favorite counts from FavoriteBlogs
           try {
-            const blogIds = mergedBlogs.map((b) => (b.isStatic ? b.slug : b.id)).filter(Boolean);
+            const blogIds = mergedBlogs.map((b) => b.id).filter(Boolean);
             const countsMap = {};
             if (blogIds.length > 0) {
               const favsSnapshot = await getDocs(
@@ -72,7 +73,7 @@ export default function HomeBlogSection({ theme }) {
               });
             }
             mergedBlogs.forEach((p) => {
-              const key = p.isStatic ? p.slug : p.id;
+              const key = p.id;
               p.favoriteCount = countsMap[key] || 0;
             });
           } catch (favErr) {
@@ -96,6 +97,7 @@ export default function HomeBlogSection({ theme }) {
         if (!cancelled) {
           let staticBlogs = (staticBlogData.posts || []).slice(0, blogLimit).map((post) => ({
             ...post,
+            content: Array.isArray(post.content) ? post.content.join("") : (post.content || ""),
             createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
             isStatic: true,
             favoriteCount: post.favoriteCount || 0,
@@ -104,7 +106,7 @@ export default function HomeBlogSection({ theme }) {
 
           // Fetch actual favorite counts for fallback
           try {
-            const blogIds = staticBlogs.map((b) => b.slug).filter(Boolean);
+            const blogIds = staticBlogs.map((b) => b.id).filter(Boolean);
             const countsMap = {};
             if (blogIds.length > 0) {
               const favsSnapshot = await getDocs(
@@ -119,7 +121,7 @@ export default function HomeBlogSection({ theme }) {
             }
             staticBlogs = staticBlogs.map(p => ({
               ...p,
-              favoriteCount: countsMap[p.slug] || 0
+              favoriteCount: countsMap[p.id] || 0
             }));
           } catch (favErr) {
             console.error("Error loading static fallback favorite counts", favErr);

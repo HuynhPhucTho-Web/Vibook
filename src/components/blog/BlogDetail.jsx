@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import ReactQuill from "react-quill-new";
 import { FaHeart, FaRegHeart, FaArrowLeft, FaEye, FaUser } from "react-icons/fa";
@@ -9,8 +9,8 @@ import { doc, getDoc } from "firebase/firestore";
 const BlogDetail = ({ post, isFavorite, onToggleFavorite, t, getReadTime, tocItems, onBack }) => {
   const favoriteCount = post.favoriteCount || 0;
   const [authorProfile, setAuthorProfile] = useState(null);
-  const [readingProgress, setReadingProgress] = useState(0);
   const [avatarError, setAvatarError] = useState(false);
+  const progressBarRef = useRef(null);
 
   // Reset avatar error state on post change
   useEffect(() => {
@@ -40,9 +40,9 @@ const BlogDetail = ({ post, isFavorite, onToggleFavorite, t, getReadTime, tocIte
   useEffect(() => {
     const handleScroll = () => {
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
+      if (totalHeight > 0 && progressBarRef.current) {
         const progress = (window.scrollY / totalHeight) * 100;
-        setReadingProgress(progress);
+        progressBarRef.current.style.width = `${progress}%`;
       }
     };
     window.addEventListener("scroll", handleScroll);
@@ -79,12 +79,13 @@ const BlogDetail = ({ post, isFavorite, onToggleFavorite, t, getReadTime, tocIte
     <div className="blog-detail-page">
       {/* Fixed top reading progress bar */}
       <div 
+        ref={progressBarRef}
         className="reading-progress-bar-fixed" 
         style={{
           position: "fixed",
           top: 0,
           left: 0,
-          width: `${readingProgress}%`,
+          width: "0%",
           height: "4px",
           background: "var(--vb-gradient, linear-gradient(135deg, #8e54e9, #4776e6))",
           zIndex: 9999,

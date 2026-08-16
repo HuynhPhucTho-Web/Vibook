@@ -36,9 +36,18 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
   }, [currentIndex, subject.id]);
 
   // Core quiz progress states
-  const [userAnswers, setUserAnswers] = useState({}); // { [qId]: [selectedKeys] } for practice
-  const [checkedQuestions, setCheckedQuestions] = useState({}); // { [qId]: boolean } check button reveal
-  const [bookmarkedIds, setBookmarkedIds] = useState([]);
+  const [userAnswers, setUserAnswers] = useState(() => {
+    const saved = localStorage.getItem(`vibook_user_answers_${subject.id}`);
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [checkedQuestions, setCheckedQuestions] = useState(() => {
+    const saved = localStorage.getItem(`vibook_checked_questions_${subject.id}`);
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [bookmarkedIds, setBookmarkedIds] = useState(() => {
+    const saved = localStorage.getItem(`vibook_bookmarked_ids_${subject.id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [modeIndexes, setModeIndexes] = useState({}); // { [mode]: index }
 
   // Mock Exam states
@@ -49,6 +58,18 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
 
   // Flashcard states
   const [flashcardFlipped, setFlashcardFlipped] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(`vibook_user_answers_${subject.id}`, JSON.stringify(userAnswers));
+  }, [userAnswers, subject.id]);
+
+  useEffect(() => {
+    localStorage.setItem(`vibook_checked_questions_${subject.id}`, JSON.stringify(checkedQuestions));
+  }, [checkedQuestions, subject.id]);
+
+  useEffect(() => {
+    localStorage.setItem(`vibook_bookmarked_ids_${subject.id}`, JSON.stringify(bookmarkedIds));
+  }, [bookmarkedIds, subject.id]);
 
   // Fetch Questions for active subject
   const allQuestions = subject.modules.flatMap((m) => {
@@ -379,8 +400,8 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                 }
               } else if (isRevealed) {
                 btnClass = isCorrectAnswer
-                  ? "bg-ok text-white border border-ok/30 shadow-[0_0_8px_rgba(22,163,74,0.3)] hover:scale-105 font-bold"
-                  : "bg-error text-white border border-error/30 shadow-[0_0_8px_rgba(220,38,38,0.3)] hover:scale-105 font-bold";
+                  ? "bg-green-600 text-white border border-green-500/30 shadow-[0_0_8px_rgba(22,163,74,0.3)] hover:scale-105 font-bold"
+                  : "bg-red-600 text-white border border-red-500/30 shadow-[0_0_8px_rgba(220,38,38,0.3)] hover:scale-105 font-bold";
               } else if (answersCount > 0) {
                 btnClass = "bg-primary-container text-on-primary-container border border-primary/30 shadow-[0_0_8px_rgba(142,84,233,0.15)] hover:scale-105 font-bold";
               }
@@ -389,7 +410,6 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                 <button
                   key={q.id}
                   onClick={() => {
-                    stopTts();
                     setCurrentIndex(idx);
                     setFlashcardFlipped(false);
                   }}
@@ -508,10 +528,10 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
 
         {quizMode === "exam" && examSubmitted && (
           <div className={`p-4 border-b flex justify-between items-center gap-4 text-body-md ${
-            isDark ? "bg-ok/5 border-white/5" : "bg-green-50 border-slate-200"
+            isDark ? "bg-green-500/5 border-white/5" : "bg-green-50 border-slate-200"
           }`}>
             <div>
-              <strong className="text-ok font-bold">
+              <strong className="text-green-600 dark:text-green-400 font-bold">
                 {language === "vi" ? "Đã nộp bài thi thử!" : "Exam Submitted!"}
               </strong>
               <span className={`ml-2 ${isDark ? "text-on-surface-variant" : "text-slate-600"}`}>
@@ -590,7 +610,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                           </div>
                         )}
                         {flashcardFlipped && currentQuestion.question_vi && (
-                          <p className="text-[15px] font-medium text-ok text-center mt-3 animate-pulse">
+                          <p className="text-[15px] font-medium text-green-600 dark:text-green-400 text-center mt-3 animate-pulse">
                             {currentQuestion.question_vi}
                           </p>
                         )}
@@ -605,7 +625,9 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                               className={`flex items-center gap-3 p-3 rounded-lg border text-sm transition-all duration-300 ${
                                 flashcardFlipped
                                   ? isCorrectOpt
-                                    ? "bg-ok/10 border-ok text-ok font-bold"
+                                    ? isDark
+                                      ? "bg-green-500/10 border-green-500 text-green-400 font-bold"
+                                      : "bg-green-50 border-green-600 text-green-700 font-bold"
                                     : isDark
                                       ? "bg-[#1e1f27] border-white/5 text-outline opacity-40"
                                       : "bg-slate-50 border-slate-100 text-slate-400 opacity-40"
@@ -618,7 +640,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                               <div>
                                 <div>{opt.text}</div>
                                 {flashcardFlipped && opt.text_vi && (
-                                  <div className="text-xs text-ok mt-0.5">{opt.text_vi}</div>
+                                  <div className="text-xs text-green-600 dark:text-green-400 mt-0.5">{opt.text_vi}</div>
                                 )}
                               </div>
                             </div>
@@ -655,7 +677,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                       </div>
                     )}
                     {reveal && currentQuestion.question_vi && (
-                      <p className="text-body-md text-ok font-semibold mt-3">
+                      <p className="text-body-md text-green-600 dark:text-green-400 font-semibold mt-3">
                         {currentQuestion.question_vi}
                       </p>
                     )}
@@ -681,12 +703,14 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
 
                         if (reveal) {
                           if (isCorrectOpt) {
-                            labelClass = "border-ok bg-ok/10 shadow-sm text-ok font-semibold";
-                            dotClass = "border-ok bg-ok text-white animate-bounce";
+                            labelClass = isDark
+                              ? "border-green-500 bg-green-500/10 shadow-sm text-green-400 font-semibold"
+                              : "border-green-600 bg-green-50 shadow-sm text-green-700 font-semibold";
+                            dotClass = "border-green-500 bg-green-500 text-white animate-bounce";
                             dotFill = <FaCheck size={10} />;
                           } else if (isSelected) {
-                            labelClass = "border-error bg-error/10 shadow-sm text-error";
-                            dotClass = "border-error bg-error text-white";
+                            labelClass = "border-red-500 bg-red-500/10 shadow-sm text-red-400";
+                            dotClass = "border-red-500 bg-red-500 text-white";
                             dotFill = <FaTimes size={10} />;
                           }
                         }
@@ -710,7 +734,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                             <div className="relative z-10 flex flex-col">
                               <span className={`font-label-sm text-label-sm mb-1 ${
                                 reveal && isCorrectOpt
-                                  ? "text-ok"
+                                  ? "text-green-600 dark:text-green-400"
                                   : isSelected
                                     ? "text-electric-blue"
                                     : isDark
@@ -723,7 +747,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                                 {opt.text}
                               </span>
                               {reveal && opt.text_vi && (
-                                <span className="text-xs text-ok mt-1 font-medium">
+                                <span className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
                                   {opt.text_vi}
                                 </span>
                               )}
@@ -737,8 +761,8 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                     {reveal && (
                       <div className={`mt-6 p-4 rounded-xl text-sm font-bold border ${
                         isQuestionCorrect(currentQuestion)
-                          ? "bg-ok/10 border-ok/30 text-ok"
-                          : "bg-error/10 border-error/30 text-error"
+                          ? (isDark ? "bg-green-500/10 border-green-500/30 text-green-400" : "bg-green-50 border-green-200 text-green-700")
+                          : (isDark ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-red-50 border-red-200 text-red-700")
                       }`}>
                         {isQuestionCorrect(currentQuestion)
                           ? (language === "vi" ? "Chính xác!" : "Correct!")
@@ -760,7 +784,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                           {currentQuestion.note}
                         </p>
                         {currentQuestion.note_vi && (
-                          <p className="text-sm leading-relaxed text-ok mt-2 font-medium">
+                          <p className="text-sm leading-relaxed text-green-600 dark:text-green-400 mt-2 font-medium">
                             {currentQuestion.note_vi}
                           </p>
                         )}

@@ -23,9 +23,7 @@ export default function SourceDetail({ subject, onBack }) {
     localStorage.removeItem("vibook_selected_subject_id");
     localStorage.removeItem("vibook_active_tab");
     localStorage.removeItem(`vibook_selected_doc_id_${subject.id}`);
-    localStorage.removeItem(`vibook_quiz_mode_${subject.id}`);
-    localStorage.removeItem(`vibook_quiz_index_${subject.id}`);
-    localStorage.removeItem(`vibook_quiz_module_id_${subject.id}`);
+    // Keep quiz index, mode, and module to remember progress!
     onBack();
   };
 

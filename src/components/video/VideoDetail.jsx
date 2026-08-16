@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { auth } from '../../components/firebase';
+import { VideoPlayerContext } from '../../context/VideoPlayerContext';
+import { FaMinus } from 'react-icons/fa';
 
 const VideoDetail = ({ selectedVideo, videoStats, comments }) => {
   const currentUser = auth.currentUser;
+  const navigate = useNavigate();
+  const { setIsMinimized } = useContext(VideoPlayerContext);
 
   return (
     <div className="space-y-4">
@@ -34,6 +39,16 @@ const VideoDetail = ({ selectedVideo, videoStats, comments }) => {
             <button className="ml-4 bg-white text-black px-4 py-1.5 rounded-full text-sm font-bold hover:bg-gray-200">Đăng ký</button>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setIsMinimized(false);
+                navigate("/feed");
+              }}
+              className="bg-white/10 hover:bg-white/20 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-white border-none cursor-pointer"
+              title="Thu nhỏ và về trang chủ"
+            >
+              <FaMinus size={10} /> Thu nhỏ
+            </button>
             <div className="bg-white/10 flex items-center rounded-full px-3 py-1.5 text-sm font-medium">
               👍 {parseInt(videoStats?.likeCount).toLocaleString() || 'Like'} | 👎
             </div>

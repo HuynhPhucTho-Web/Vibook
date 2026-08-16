@@ -255,7 +255,11 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
-        && favoriteId == request.auth.uid + '_' + request.resource.data.blogId;
+        && favoriteId == request.auth.uid + '_' + request.resource.data.blogId
+        && (
+          exists(/databases/$(database)/documents/BlogPosts/$(request.resource.data.blogId))
+          || request.resource.data.blogId.matches('^static-.*')
+        );
       allow update: if false;
       allow delete: if isSignedIn()
         && resource.data.userId == request.auth.uid;

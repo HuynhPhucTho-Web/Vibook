@@ -8,4 +8,4 @@ Disallow: /my-orders
 Disallow: /seller-dashboard
 Disallow: /manage-products
 
-Sitemap: https://vibook.net/sitemap.xml
+Sitemap: https://phucthodev.online/sitemap.xml

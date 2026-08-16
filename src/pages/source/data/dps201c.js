@@ -32,6 +32,10 @@ export const modules = [
     id: "dps-mod5",
     subjectId: "dps201c",
     name: "Module 5: Dynamic Public Speaking Specialization Overview"
+  },
+  {id: "dps-mod6",
+  subjectId: "dps201c",
+  name: "Practice Module"
   }
 ];
 
@@ -506,8 +510,8 @@ export const questions = [
       { "key": "C", "text": "Avoid jargon, or define it immediately in simple terms if required.", "text_vi": "Tránh dùng Jargon, hoặc định nghĩa lập tức bằng từ ngữ đơn giản nếu bắt buộc phải dùng." },
       { "key": "D", "text": "Assume the audience already understands specialized industry terminology.", "text_vi": "Mặc định rằng khán giả đã hiểu các thuật ngữ chuyên ngành." }
     ]
-  }, 
-  
+  },
+
   {
     "id": 26,
     "moduleId": "dps-mod3",
@@ -1104,6 +1108,344 @@ export const questions = [
       { "key": "B", "text": "Authentically informing or persuading an audience using structured reasoning, engaging visuals, and dynamic delivery.", "text_vi": "Truyền tải thông tin hoặc thuyết phục khán giả một cách chân thực bằng lập luận chặt chẽ, hình ảnh sinh động và phong cách cuốn hút." },
       { "key": "C", "text": "Memorizing an hour-long manuscript without looking at any notes.", "text_vi": "Học thuộc lòng bài nói dài 1 tiếng mà không cần nhìn bất kỳ ghi chú nào." },
       { "key": "D", "text": "Eliminating all non-verbal gestures completely while speaking.", "text_vi": "Loại bỏ hoàn toàn các cử chỉ phi ngôn ngữ trong khi nói." }
+    ]
+  },
+  {
+    "id": 61,
+    "moduleId": "dps-mod6",
+    "answer": ["D"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Let’s say you’re trying to raise awareness (and maybe some money) for your youth chess program. You help students develop a love for chess after school. You were able to land a speaking position at a local business mixer, and there will be some drinks, socializing, and networking. You want to persuade people to help you out. The elaboration likelihood model here provides some direction. What type of scenario is this and how will people probably process your message?",
+    "question_vi": "Giả sử bạn đang cố gắng nâng cao nhận thức (và quyên góp một ít tiền) cho chương trình cờ vua thanh thiếu niên. Bạn có một buổi phát biểu tại buổi giao lưu doanh nghiệp địa phương với đồ uống và kết nối mạng lưới. Mô hình khả năng suy ngẫm (ELM) đưa ra định hướng gì về kịch bản này và cách mọi người sẽ tiếp nhận thông điệp của bạn?",
+    "note": "A casual networking mixer with alcohol and distractions creates a low elaboration environment where listeners process messages peripherally rather than centrally.",
+    "note_vi": "Một buổi giao lưu kết nối thân mật có đồ uống và sự xao nhãng tạo ra môi trường có mức độ suy ngẫm thấp (low elaboration), nơi người nghe chủ yếu tiếp nhận thông tin theo tuyến ngoại vi (peripherally).",
+    "options": [
+      { "key": "A", "text": "High elaboration. People will process your message centrally.", "text_vi": "Mức độ suy ngẫm cao. Mọi người sẽ xử lý thông điệp theo tuyến trung tâm." },
+      { "key": "B", "text": "High elaboration. People will process your message peripherally.", "text_vi": "Mức độ suy ngẫm cao. Mọi người sẽ xử lý thông điệp theo tuyến ngoại vi." },
+      { "key": "C", "text": "Low elaboration. People will process your message centrally.", "text_vi": "Mức độ suy ngẫm thấp. Mọi người sẽ xử lý thông điệp theo tuyến trung tâm." },
+      { "key": "D", "text": "Low elaboration. People will process your message peripherally.", "text_vi": "Mức độ suy ngẫm thấp. Mọi người sẽ xử lý thông điệp theo tuyến ngoại vi." }
+    ]
+  },
+  {
+    "id": 62,
+    "moduleId": "dps-mod6",
+    "answer": ["B"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "“What should we do?” This is a question of:",
+    "question_vi": "“Chúng ta nên làm gì?” Đây là câu hỏi thuộc loại:",
+    "note": "Questions of policy focus on what specific actions or procedures should be taken to solve an issue.",
+    "note_vi": "Câu hỏi về chính sách (Policy) tập trung vào các hành động hoặc biện pháp cụ thể nên được thực hiện.",
+    "options": [
+      { "key": "A", "text": "Fact", "text_vi": "Sự thật (Fact)" },
+      { "key": "B", "text": "Policy", "text_vi": "Chính sách (Policy)" },
+      { "key": "C", "text": "Value", "text_vi": "Giá trị (Value)" }
+    ]
+  },
+  {
+    "id": 63,
+    "moduleId": "dps-mod6",
+    "answer": ["D"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Which statement is true of the “burden of proof”?",
+    "question_vi": "Phát biểu nào sau đây đúng về “nghĩa vụ chứng minh” (burden of proof)?",
+    "note": "The burden of proof rests on the advocate who is proposing a change to the status quo.",
+    "note_vi": "Nghĩa vụ chứng minh thuộc về người đang lập luận ủng hộ sự thay đổi so với hiện trạng.",
+    "options": [
+      { "key": "A", "text": "It’s always the most effective stasis point to argue.", "text_vi": "Nó luôn là điểm mấu chốt tranh luận hiệu quả nhất." },
+      { "key": "B", "text": "It’s the stock issue that comes immediately after “blame.”", "text_vi": "Đó là vấn đề căn bản xuất hiện ngay sau phần 'nguyên nhân' (blame)." },
+      { "key": "C", "text": "It’s yours if you are arguing against change.", "text_vi": "Nó thuộc về bạn nếu bạn đang lập luận chống lại sự thay đổi." },
+      { "key": "D", "text": "It’s yours if you are arguing for change.", "text_vi": "Nó thuộc về bạn nếu bạn đang lập luận ủng hộ sự thay đổi." }
+    ]
+  },
+  {
+    "id": 64,
+    "moduleId": "dps-mod6",
+    "answer": ["B"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Identify the stock issues.",
+    "question_vi": "Hãy xác định các vấn đề căn bản (stock issues) trong lập luận chính sách.",
+    "note": "The classic stock issues in policy debate are Ill (problem), Blame (cause), Cure (solution), and Cost/Consequences.",
+    "note_vi": "Các vấn đề căn bản tiêu chuẩn bao gồm: Vấn đề/Tác hại (Ill), Nguyên nhân (Blame), Giải pháp (Cure) và Hệ quả/Hậu quả (Consequences).",
+    "options": [
+      { "key": "A", "text": "Status quo, pro, con", "text_vi": "Hiện trạng, đồng ý, phản đối" },
+      { "key": "B", "text": "Ill, blame, cure, consequences", "text_vi": "Tác hại (Ill), nguyên nhân (blame), giải pháp (cure), hệ quả (consequences)" },
+      { "key": "C", "text": "Logos, pathos, ethos", "text_vi": "Logos, pathos, ethos" },
+      { "key": "D", "text": "Introduction, problem, solution, call to action", "text_vi": "Mở bài, vấn đề, giải pháp, kêu gọi hành động" }
+    ]
+  },
+  {
+    "id": 65,
+    "moduleId": "dps-mod6",
+    "answer": ["A"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Typically we want to show both the _______________ aspects of our ill.",
+    "question_vi": "Thông thường, chúng ta muốn thể hiện cả hai khía cạnh _______________ của tác hại/vấn đề (ill).",
+    "note": "A strong policy argument demonstrates both quantitative (numbers/extent) and qualitative (human impact/severity) aspects of the ill.",
+    "note_vi": "Một lập luận thuyết phục cần làm rõ cả mặt định lượng (số liệu, quy mô) và định tính (tác động, mức độ nghiêm trọng).",
+    "options": [
+      { "key": "A", "text": "quantitative and qualitative", "text_vi": "định lượng và định tính" },
+      { "key": "B", "text": "distant and present", "text_vi": "xa và gần" },
+      { "key": "C", "text": "short term and long term", "text_vi": "ngắn hạn và dài hạn" }
+    ]
+  },
+  {
+    "id": 66,
+    "moduleId": "dps-mod6",
+    "answer": ["A"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "As discussed, calls to action should:",
+    "question_vi": "Theo bài giảng, lời kêu gọi hành động (call to action) nên:",
+    "note": "A call to action directly reinforces and advances the proposed solution (cure).",
+    "note_vi": "Lời kêu gọi hành động cần trực tiếp thúc đẩy việc hiện thực hóa giải pháp (cure).",
+    "options": [
+      { "key": "A", "text": "advance the cure.", "text_vi": "thúc đẩy/triển khai giải pháp (cure)." },
+      { "key": "B", "text": "always include a letter to a legislative body or policy maker.", "text_vi": "luôn bao gồm việc gửi thư tới cơ quan lập pháp hoặc nhà hoạch định chính sách." },
+      { "key": "C", "text": "be introduced before addressing the blame.", "text_vi": "được đưa ra trước khi đề cập đến nguyên nhân (blame)." },
+      { "key": "D", "text": "solve for the ill regardless of blame.", "text_vi": "giải quyết vấn đề bất kể nguyên nhân là gì." }
+    ]
+  },
+  {
+    "id": 67,
+    "moduleId": "dps-mod6",
+    "answer": ["C"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Select the most pressing problem (as discussed in the lectures) with the outline below.\nI. Ills\nA. At-home daycares are popular\nB. At-home daycares are poorly supervised\nII. Blames\nA. Many municipalities have lax legislation regarding at-home daycares\nB. Many municipalities enforce existing policies ineffectively\nIII. Cures\nA. We need to make sure that children are not in illegal at-home daycares\nB. At-home daycares should be less popular",
+    "question_vi": "Xác định vấn đề nghiêm trọng nhất của dàn ý sau:\nI. Tác hại (Ills)\nA. Trông trẻ tại nhà rất phổ biến\nB. Trông trẻ tại nhà bị giám sát kém\nII. Nguyên nhân (Blames)\nA. Nhiều địa phương có luật pháp lỏng lẻo về trông trẻ tại nhà\nB. Nhiều địa phương thực thi các chính sách hiện hành không hiệu quả\nIII. Giải pháp (Cures)\nA. Chúng ta cần đảm bảo trẻ em không ở các nhà trẻ trái phép\nB. Trông trẻ tại nhà nên ít phổ biến hơn",
+    "note": "The proposed cures fail to address the systemic legislative and enforcement causes (blames) outlined in Section II.",
+    "note_vi": "Các giải pháp (cures) được đưa ra không trực tiếp giải quyết các nguyên nhân cốt lõi về pháp lý và thực thi (blames).",
+    "options": [
+      { "key": "A", "text": "The ills are not significant", "text_vi": "Các tác hại không đáng kể" },
+      { "key": "B", "text": "The speech is three points", "text_vi": "Bài nói có ba luận điểm" },
+      { "key": "C", "text": "The cures don’t solve for the blames", "text_vi": "Các giải pháp không giải quyết được các nguyên nhân cốt lõi" }
+    ]
+  },
+  {
+    "id": 68,
+    "moduleId": "dps-mod6",
+    "answer": ["B"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Identify the best and most congruent cures to complete the outline below.\nI. Ill\nII. Blame\nIII. Cure\nA. [Option A]\nB. [Option B]\nC. If you don't want to expire, check the expiration date",
+    "question_vi": "Xác định các giải pháp (cures) phù hợp và nhất quán nhất để hoàn thiện dàn ý dưới đây:\nI. Tác hại\nII. Nguyên nhân\nIII. Giải pháp\nA. [Tùy chọn A]\nB. [Tùy chọn B]\nC. Nếu bạn không muốn bị quá hạn, hãy kiểm tra hạn sử dụng",
+    "note": "The combination of regulatory policy and educational campaign best tackles product safety and awareness congruently.",
+    "note_vi": "Sự kết hợp giữa quy định pháp lý chặt chẽ và các chiến dịch giáo dục nâng cao nhận thức mang lại giải pháp toàn diện và hợp lý nhất.",
+    "options": [
+      { "key": "A", "text": "A: We must pass stricter regulation that reduces exploding milk cartons\nB: We need to support hospital funding to deal with milk related injuries", "text_vi": "A: Phải thông qua quy định chặt chẽ hơn để giảm các hộp sữa phát nổ\nB: Cần hỗ trợ kinh phí cho bệnh viện để xử lý các chấn thương liên quan đến sữa" },
+      { "key": "B", "text": "A: We must pass stricter regulation that reduces exploding milk cartons\nB: We need to support educational organizations like Moove On and NoBoomCow to get the word out", "text_vi": "A: Phải thông qua quy định chặt chẽ hơn để giảm các hộp sữa phát nổ\nB: Cần hỗ trợ các tổ chức giáo dục như Moove On và NoBoomCow để phổ biến thông tin" },
+      { "key": "C", "text": "A: We need to protect Canadian citizens\nB: We need to support hospital funding to deal with milk related injuries", "text_vi": "A: Cần bảo vệ công dân Canada\nB: Cần hỗ trợ kinh phí bệnh viện để xử lý các chấn thương do sữa" },
+      { "key": "D", "text": "A: We need to eliminate the problem at its source and get rid of dairy cows\nB: We need to support educational organizations like Moove On and NoBoomCow to get the word out", "text_vi": "A: Phải loại bỏ tận gốc vấn đề bằng cách tiêu hủy bò sữa\nB: Cần hỗ trợ các tổ chức giáo dục như Moove On và NoBoomCow để phổ biến thông tin" }
+    ]
+  },
+  {
+    "id": 69,
+    "moduleId": "dps-mod6",
+    "answer": ["A"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Illon works at a tech company. Right now, the company is split, with many wanting to take the company public and allow for it to be publicly traded and others wanting to keep it a private company. Illon has a proposal for a new marketing campaign. Problem is, it’s been swept up in this larger debate. Those opposed to the public-option think opening the company to public trade would cause the organization to lose its character. The campaign is actually neutral on this question. Illon needs to get a vote on his new campaign in order to move forward. How might he respond to this situation?",
+    "question_vi": "Illon làm việc tại một công ty công nghệ đang bị chia rẽ giữa việc IPO hay giữ kín công ty. Illon muốn đề xuất một chiến dịch tiếp thị mới nhưng đề xuất này lại bị cuốn vào cuộc tranh cãi lớn hơn. Chiến dịch thực chất trung lập. Illon nên làm gì để đề xuất được thông qua?",
+    "note": "Containing the argument means delineating boundaries to show the proposal is orthogonal to the broader organizational controversy.",
+    "note_vi": "Khoanh vùng lập luận (contain argument) giúp tách bạch đề xuất tiếp thị khỏi tranh cãi lớn hơn, chứng minh dự án có giá trị độc lập.",
+    "options": [
+      { "key": "A", "text": "Contain his argument. Try to show that the marketing campaign has nothing to do with the larger debate.", "text_vi": "Khoanh vùng lập luận. Cố gắng chứng minh chiến dịch tiếp thị không liên quan gì đến cuộc tranh luận lớn hơn." },
+      { "key": "B", "text": "Attack those in favor of the private option. Try to show that marketing campaign isn’t linked to the private option by attacking that side.", "text_vi": "Tấn công phe ủng hộ công ty tư nhân để chứng minh chiến dịch không liên quan đến họ." },
+      { "key": "C", "text": "Attack those in favor of the public option. Try to show that marketing campaign isn’t linked to the public option by attacking that side.", "text_vi": "Tấn công phe ủng hộ IPO để chứng minh chiến dịch không liên quan đến họ." }
+    ]
+  },
+  {
+    "id": 70,
+    "moduleId": "dps-mod6",
+    "answer": ["A"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Sophia is about to argue for a policy in front of her community council. She wants the council to increase city penalties for putting recyclable materials in the garbage. Right now, she argues, too many people put their recycling in the garbage. She is arguing that raising the fine from €50 to €100 will significantly improve the recycling rate, but she worries that the council won’t take her argument seriously since she is a computer programmer. What should she include to counter this concern?",
+    "question_vi": "Sophia chuẩn bị thuyết phục hội đồng cộng đồng tăng mức phạt cho hành vi vứt rác tái chế vào rác thải thông thường (từ €50 lên €100). Cô lo ngại hội đồng không coi trọng lập luận của mình vì cô là một lập trình viên. Cô nên đưa thêm điều gì để khắc phục lo ngại này?",
+    "note": "Expert testimony provides external credibility (ethos) and evidence when the speaker lacks domain expertise.",
+    "note_vi": "Lời chứng thực/tài liệu công bố từ chuyên gia chính sách giúp củng cố uy tín và tính xác thực khi người nói không phải là chuyên gia trong ngành.",
+    "options": [
+      { "key": "A", "text": "Published testimony from a recycling policy expert showing the positive effects of higher fines on recycling rates.", "text_vi": "Tài liệu/chứng thực đã công bố từ chuyên gia chính sách tái chế cho thấy tác động tích cực của việc tăng tiền phạt." },
+      { "key": "B", "text": "An interview with her neighbors who agree that higher fines would help increase recycling rates.", "text_vi": "Phỏng vấn những người hàng xóm đồng ý rằng mức phạt cao hơn sẽ giúp tăng tỷ lệ tái chế." },
+      { "key": "C", "text": "A list of other cities and counties with fines above €50.", "text_vi": "Danh sách các thành phố và quận khác có mức phạt trên €50." },
+      { "key": "D", "text": "A story about a community that moved to better recycling through public information and fines.", "text_vi": "Câu chuyện về một cộng đồng cải thiện tái chế nhờ thông tin đại chúng và tiền phạt." }
+    ]
+  },
+  {
+    "id": 71,
+    "moduleId": "dps-mod6",
+    "answer": ["B"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "“Low accountability in schools produces bad students. It stands to reason. When I look at school test scores and see poor results. I know it means one thing: that school isn’t being held accountable enough.” This is best described an example of:",
+    "question_vi": "“Trách nhiệm giải trình kém ở trường học tạo ra học sinh kém. Điều đó là đương nhiên. Khi nhìn vào điểm thi kém, tôi chỉ biết một điều: trường học đó chưa có đủ trách nhiệm giải trình.” Đây là ví dụ về ngụy biện nào?",
+    "note": "Begging the question (circular reasoning) occurs when the premise assumes the truth of the conclusion.",
+    "note_vi": "Ngụy biện lặp lại chân lý/ngụy biện vòng vo (Begging the question) xảy ra khi tiền đề mặc nhiên thừa nhận kết luận là đúng mà không đưa ra bằng chứng độc lập.",
+    "options": [
+      { "key": "A", "text": "Slippery Slope", "text_vi": "Ngụy biện dốc trượt (Slippery Slope)" },
+      { "key": "B", "text": "Begging the question", "text_vi": "Ngụy biện vòng vo/Lặp tiền đề (Begging the question)" },
+      { "key": "C", "text": "Red herring", "text_vi": "Ngụy biện đánh lạc hướng (Red herring)" },
+      { "key": "D", "text": "Straw argument", "text_vi": "Ngụy biện người rơm (Straw argument)" }
+    ]
+  },
+  {
+    "id": 72,
+    "moduleId": "dps-mod6",
+    "answer": ["C"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "(1) Amuro: I saw some cartoons this morning and they were so violent. That type of violence should be regulated so that children don't mimic such violent behavior. The government must censor children's television because limiting children's exposure to certain ideas and images is the government's role.\n(2) Kai: You are assuming that the government can do a lot by controlling what's on TV. Beyond the issue of censorship lies a problem of practicality.\n(3) Amuro: According to your argument, we should allow graphic violence to run during Saturday morning cartoons, showing horror films to 4 year olds. Young children shouldn't be subjected to such nightmarish images.\n(4) Kai: But if such restrictions on children's television become commonplace, then we will see similar restrictions popping up in adult programming.\n\nWhich one of the above passages best exemplifies a straw argument?",
+    "question_vi": "Đoạn hội thoại trên: Đoạn nào thể hiện rõ nhất ngụy biện người rơm (straw argument)?",
+    "note": "Passage 3 misrepresents Kai's practical critique as advocating for showing horror films to 4-year-olds.",
+    "note_vi": "Đoạn (3) bóp méo lập luận thực tiễn của Kai thành việc 'cho phép chiếu phim kinh dị cho trẻ 4 tuổi' để dễ dàng công kích.",
+    "options": [
+      { "key": "A", "text": "1", "text_vi": "1" },
+      { "key": "B", "text": "2", "text_vi": "2" },
+      { "key": "C", "text": "3", "text_vi": "3" },
+      { "key": "D", "text": "4", "text_vi": "4" }
+    ]
+  },
+  {
+    "id": 73,
+    "moduleId": "dps-mod6",
+    "answer": ["E"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "(4) Kai: But if such restrictions on children’s television become commonplace, then we will see similar restrictions popping up in adult programming, and then the government will start editing out content from the news.\n(5) Amuro: I’m not suggesting that, but I do think that censoring cartoons is in the public interest. Look at Canada. They put restrictions on violent Saturday morning cartoons in 1991 and by 1997 the crime rate had dropped 15%.\n(6) Kai: That’s stupid. How can you even think that? What’s wrong with you?\n\nWhich one of the following passages best exemplifies a post hoc fallacy?",
+    "question_vi": "Đoạn nào sau đây thể hiện rõ nhất ngụy biện nguyên nhân sai/hậu nghiệm (post hoc fallacy)?",
+    "note": "Passage 5 assumes that because crime rates dropped after cartoon restrictions were implemented, the restrictions caused the drop.",
+    "note_vi": "Đoạn (5) mắc ngụy biện 'sau sự kiện này nên là do sự kiện này' (post hoc ergo propter hoc) khi quy kết việc giảm tội phạm là do cấm hoạt hình bạo lực.",
+    "options": [
+      { "key": "A", "text": "1", "text_vi": "1" },
+      { "key": "B", "text": "2", "text_vi": "2" },
+      { "key": "C", "text": "3", "text_vi": "3" },
+      { "key": "D", "text": "4", "text_vi": "4" },
+      { "key": "E", "text": "5", "text_vi": "5" },
+      { "key": "F", "text": "6", "text_vi": "6" }
+    ]
+  },
+  {
+    "id": 74,
+    "moduleId": "dps-mod6",
+    "answer": ["A"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "In speech writing, a frame is a:",
+    "question_vi": "Trong kỹ thuật viết bài phát biểu, khung nhận thức (frame) là:",
+    "note": "A frame establishes the lens or cognitive structure through which an audience interprets meaning.",
+    "note_vi": "Khung nhận thức (frame) là cấu trúc giúp định hướng góc nhìn, cách diễn giải và tạo nghĩa cho khán giả.",
+    "options": [
+      { "key": "A", "text": "structure for interpretation and meaning making.", "text_vi": "cấu trúc để diễn giải và tạo lập ý nghĩa." },
+      { "key": "B", "text": "a subtle fallacy that we don’t want the audience to catch.", "text_vi": "một ngụy biện tinh vi mà người nói không muốn khán giả nhận ra." },
+      { "key": "C", "text": "statement against the status quo.", "text_vi": "tuyên bố phản đối hiện trạng." },
+      { "key": "D", "text": "stock issue that deals with feasibility.", "text_vi": "vấn đề căn bản giải quyết tính khả thi." }
+    ]
+  },
+  {
+    "id": 75,
+    "moduleId": "dps-mod6",
+    "answer": ["C"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Which of the following is the best example of epistrophe?",
+    "question_vi": "Câu nào sau đây là ví dụ chuẩn nhất về điệp cuối (epistrophe)?",
+    "note": "Epistrophe is the repetition of a word or phrase at the end of successive clauses (here, repeating 'together').",
+    "note_vi": "Điệp cuối (epistrophe) là biện pháp lặp lại một từ hoặc cụm từ ở cuối các mệnh đề liên tiếp (ở đây là từ 'together').",
+    "options": [
+      { "key": "A", "text": "We shall meet again before long to march together to the redemption of our brothers who are still slaves of the stranger. We shall meet again before long to march to new triumphs. (Giuseppe Garibaldi)", "text_vi": "We shall meet again before long to march together to the redemption of our brothers who are still slaves of the stranger. We shall meet again before long to march to new triumphs. (Giuseppe Garibaldi)" },
+      { "key": "B", "text": "When a great national calamity stares us in the face, we are, I fear, too much given to depending on a short campaign of education to do on the hustings what should have been accomplished in the schoolroom. (Booker T. Washington)", "text_vi": "When a great national calamity stares us in the face, we are, I fear, too much given to depending on a short campaign of education to do on the hustings what should have been accomplished in the schoolroom. (Booker T. Washington)" },
+      { "key": "C", "text": "With this faith we will be able to work together, to pray together, to struggle together, to go to jail together, to stand up for freedom together, knowing that we will be free one day. (Martin Luther King)", "text_vi": "With this faith we will be able to work together, to pray together, to struggle together, to go to jail together, to stand up for freedom together, knowing that we will be free one day. (Martin Luther King)" },
+      { "key": "D", "text": "Without a healthy economy we can’t have a healthy society and without a healthy society the economy won’t stay healthy for long. (Margaret Thatcher)", "text_vi": "Without a healthy economy we can’t have a healthy society and without a healthy society the economy won’t stay healthy for long. (Margaret Thatcher)" }
+    ]
+  },
+  {
+    "id": 76,
+    "moduleId": "dps-mod6",
+    "answer": ["A"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Listen to the following clip (a reading from Napoleon’s 1814 “Farewell to the Old Guard”). Identify the dominant problem.",
+    "question_vi": "Lắng nghe đoạn ghi âm (bài đọc trích 'Lời tạm biệt Đội Cận Vệ Già' năm 1814 của Napoleon). Hãy xác định vấn đề chính trong cách diễn đạt.",
+    "note": "A monotonous, sing-song pattern indicates lack of dynamic vocal inflection and overly repetitive cadence.",
+    "note_vi": "Ngữ điệu quá đều đặn, đều đều như hát (sing-songy) khiến bài nói thiếu đi sự biểu cảm tự nhiên và nhấn nhá cần thiết.",
+    "options": [
+      { "key": "A", "text": "The intonation was too regular. He sounded sing-songy.", "text_vi": "Ngữ điệu quá đều đặn. Nghe giống như đang hát/đọc vần điệu." },
+      { "key": "B", "text": "There were too many disfluencies. He said um too many times.", "text_vi": "Có quá nhiều lỗi ngập ngừng. Người nói dùng 'um' quá nhiều." },
+      { "key": "C", "text": "The pace was too rapid. He spoke too fast.", "text_vi": "Tốc độ nói quá nhanh." }
+    ]
+  },
+  {
+    "id": 77,
+    "moduleId": "dps-mod6",
+    "answer": ["A"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Disfluencies like 'um' are a natural part of speech and can help listeners.",
+    "question_vi": "Các từ đệm ngập ngừng như 'um' là một phần tự nhiên của lời nói và có thể giúp ích cho người nghe.",
+    "note": "Moderate filled pauses give listeners cognitive time to process complex information and anticipate upcoming words.",
+    "note_vi": "Sự ngập ngừng tự nhiên giúp người nghe có khoảng dừng nhận thức để xử lý và tiếp thu thông tin.",
+    "options": [
+      { "key": "A", "text": "True", "text_vi": "Đúng (True)" },
+      { "key": "B", "text": "False", "text_vi": "Sai (False)" }
+    ]
+  },
+  {
+    "id": 78,
+    "moduleId": "dps-mod6",
+    "answer": ["B"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Typically, when we have an um it signals that we:",
+    "question_vi": "Thông thường, khi chúng ta phát ra từ 'um', nó báo hiệu rằng chúng ta:",
+    "note": "Filled pauses typically represent cognitive planning delays or speech production lags.",
+    "note_vi": "'Um' thường xuất hiện do não bộ cần thêm thời gian để cấu trúc và sản xuất từ ngữ tiếp theo (production lag).",
+    "options": [
+      { "key": "A", "text": "forgot what we were going to say (memory error).", "text_vi": "quên mất điều mình định nói (lỗi trí nhớ)." },
+      { "key": "B", "text": "need more time to figure out what we’re saying (production lag).", "text_vi": "cần thêm thời gian để định hình điều mình đang nói (độ trễ sản xuất lời nói)." },
+      { "key": "C", "text": "realized that we just said something false (truth error).", "text_vi": "nhận ra mình vừa nói điều gì đó sai (lỗi sai sự thật)." }
+    ]
+  },
+  {
+    "id": 79,
+    "moduleId": "dps-mod6",
+    "answer": ["A", "B", "C"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Which of the three techniques below did we discuss for reducing disfluencies?",
+    "question_vi": "Trong số các kỹ thuật dưới đây, 3 kỹ thuật nào đã được thảo luận để giảm thiểu sự ngập ngừng (disfluencies)?",
+    "note": "Key interventions for speech disfluency reduction include slowing speech rate, habit reversal therapy, and metronome pacing.",
+    "note_vi": "3 kỹ thuật chính được đề cập gồm: Giảm tốc độ nói, huấn luyện đảo ngược thói quen (habit reversal) và dùng máy đập nhịp (metronomes).",
+    "options": [
+      { "key": "A", "text": "Decreased speaking rate", "text_vi": "Giảm tốc độ nói" },
+      { "key": "B", "text": "Habit reversal training", "text_vi": "Huấn luyện đảo ngược thói quen" },
+      { "key": "C", "text": "Metronomes", "text_vi": "Dùng máy đập nhịp (Metronomes)" },
+      { "key": "D", "text": "Shock training", "text_vi": "Huấn luyện sốc điện" },
+      { "key": "E", "text": "Reducing speech formality", "text_vi": "Giảm tính trang trọng của bài nói" },
+      { "key": "F", "text": "Vocal warm-ups", "text_vi": "Khởi động giọng nói" }
+    ]
+  },
+  {
+    "id": 80,
+    "moduleId": "dps-mod6",
+    "answer": ["D"],
+    "sourcePage": 4,
+    "needsReview": false,
+    "question": "Let’s say you’re speaking to an audience of 35 people. How long would you want to maintain eye contact? Each eye contact event should last about...",
+    "question_vi": "Giả sử bạn đang nói chuyện trước 35 người. Bạn nên duy trì giao tiếp bằng mắt trong bao lâu cho mỗi lần? Mỗi lần giao tiếp bằng mắt nên kéo dài khoảng...",
+    "note": "Holding eye contact for approximately 3 seconds per person allows meaningful connection without becoming uncomfortable.",
+    "note_vi": "Khoảng 3 giây (hoặc tương đương 1 ý ngắn) là thời lượng lý tưởng để tạo kết nối chân thực mà không gây khó chịu cho người nghe.",
+    "options": [
+      { "key": "A", "text": "5 sentences.", "text_vi": "5 câu." },
+      { "key": "B", "text": "20 seconds.", "text_vi": "20 giây." },
+      { "key": "C", "text": "A sentence.", "text_vi": "Một câu đầy đủ." },
+      { "key": "D", "text": "3 seconds.", "text_vi": "3 giây." },
+      { "key": "E", "text": "A phrase-length.", "text_vi": "Độ dài một cụm từ." },
+      { "key": "F", "text": "A word.", "text_vi": "Một từ." }
     ]
   }
 
