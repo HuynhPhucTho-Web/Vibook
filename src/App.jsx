@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./style/App.css";
@@ -102,6 +102,27 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Set theme classes on document element immediately before rendering loading state
+  // to avoid white flash in dark mode.
+  useLayoutEffect(() => {
+    const theme = localStorage.getItem("theme") || "light";
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    const background = localStorage.getItem("app_background") || "default";
+    const bgColors = {
+      default: { light: "#f4f2fb", dark: "#0c0d14" },
+      sky: { light: "#eef6ff", dark: "#0b1525" },
+      lavender: { light: "#f5f1ff", dark: "#171225" },
+      mint: { light: "#effbf6", dark: "#0c1d18" },
+      warm: { light: "#fff7ed", dark: "#21160f" },
+    };
+    const selectedBackground = bgColors[background] || bgColors.default;
+    document.documentElement.style.setProperty("--app-background", selectedBackground[theme]);
+  }, []);
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       console.log("Auth state changed:", user);
@@ -112,11 +133,38 @@ function App() {
   }, []);
 
   if (loading) {
+    const getLoadingText = () => {
+      const lang = localStorage.getItem("language") || "vi";
+      if (lang === "vi") return "Đang tải ThoDev...";
+      if (lang === "ja") return "ThoDevを読み込み中...";
+      return "Loading ThoDev...";
+    };
+
     return (
       <div className="loading-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading ViBook...</p>
+        <div className="loading-brand-wrapper">
+          <div className="loading-logo-glow">
+            <svg viewBox="0 0 100 100" width="80" height="80" className="loading-logo-svg">
+              <defs>
+                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8e54e9" />
+                  <stop offset="100%" stopColor="#4776e6" />
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle cx="50" cy="50" r="44" fill="none" stroke="url(#logoGrad)" strokeWidth="3" strokeDasharray="180 100" className="loading-ring-outer" />
+              <circle cx="50" cy="50" r="34" fill="none" stroke="url(#logoGrad)" strokeWidth="2" strokeDasharray="80 80" className="loading-ring-inner" opacity="0.7" />
+              <path d="M35 40 L50 65 L65 40" fill="none" stroke="url(#logoGrad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" className="loading-logo-v" />
+            </svg>
+          </div>
+          <h1 className="loading-app-title">ThoDev</h1>
+          <p className="loading-app-status">{getLoadingText()}</p>
         </div>
       </div>
     );

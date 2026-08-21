@@ -26,7 +26,7 @@ export default function BehavioralPolicy({ isLight, onBack }) {
           Chính Sách Về Hành Vi (Behavioral Policy)
         </h1>
         <p className={`text-base max-w-2xl leading-relaxed ${subTextColor}`}>
-          Báo cáo về cách bố trí vị trí quảng cáo và kiểm soát tương tác trên ViBook nhằm ngăn chặn
+          Báo cáo về cách bố trí vị trí quảng cáo và kiểm soát tương tác trên ThoDev nhằm ngăn chặn
           lưu lượng truy cập không hợp lệ và click tặc theo tiêu chuẩn Google AdSense.
         </p>
       </header>
@@ -38,7 +38,7 @@ export default function BehavioralPolicy({ isLight, onBack }) {
             <Layout size={22} /> 1. Bố cục quảng cáo chuẩn mực (Deceptive Layouts Prevention)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            ViBook cam kết thiết kế giao diện minh bạch, tách biệt hoàn toàn giữa nội dung tương tác của người dùng và khu vực hiển thị quảng cáo:
+            ThoDev cam kết thiết kế giao diện minh bạch, tách biệt hoàn toàn giữa nội dung tương tác của người dùng và khu vực hiển thị quảng cáo:
           </p>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 list-disc text-sm">
             <li className={subTextColor}><strong>Nhãn quảng cáo rõ ràng:</strong> Mọi khung quảng cáo đều được gắn nhãn "Quảng cáo" hoặc "Advertisement" dễ nhận biết.</li>
@@ -53,7 +53,7 @@ export default function BehavioralPolicy({ isLight, onBack }) {
             <ShieldAlert size={22} /> 2. Ngăn chặn nhấp chuột không hợp lệ (Invalid Clicks Protection)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            ViBook chủ động triển khai các kỹ thuật giám sát lưu lượng truy cập để bảo vệ quyền lợi của các nhà quảng cáo:
+            ThoDev chủ động triển khai các kỹ thuật giám sát lưu lượng truy cập để bảo vệ quyền lợi của các nhà quảng cáo:
           </p>
           <ol className={`list-decimal pl-5 text-sm space-y-2 ${subTextColor}`}>
             <li><strong>Không khuyến khích nhấp chuột:</strong> Không sử dụng các từ ngữ kích động như "Hãy click quảng cáo để ủng hộ", "Click để xem thêm", hoặc treo thưởng ảo khi xem quảng cáo.</li>
@@ -67,7 +67,7 @@ export default function BehavioralPolicy({ isLight, onBack }) {
             <Sparkles size={22} /> 3. Điều hướng an toàn & Không xâm nhập (User Navigation Safety)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            Trải nghiệm điều hướng trên ViBook tuân thủ tuyệt đối chuẩn mực bảo mật người dùng:
+            Trải nghiệm điều hướng trên ThoDev tuân thủ tuyệt đối chuẩn mực bảo mật người dùng:
           </p>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 list-disc text-sm">
             <li className={subTextColor}>Không sử dụng cửa sổ bật lên (Pop-ups) hay cửa sổ bật xuống (Pop-unders) tự động chứa quảng cáo.</li>

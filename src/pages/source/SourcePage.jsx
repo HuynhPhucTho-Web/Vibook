@@ -5,6 +5,7 @@ import SourceDetail from "../../components/source/SourceDetail";
 import { LanguageContext } from "../../context/LanguageContext";
 import SEO from "../../components/SEO";
 import { ThemeContext } from "../../context/ThemeContext";
+import AdSense from "../../components/AdSense";
 import {
   FaSearch,
   FaFilter,
@@ -196,7 +197,7 @@ export default function SourcePage() {
       <div className="page-shell">
         <SEO
           title={activeSubject.name}
-          description={`Tải tài liệu môn học ${activeSubject.name} (${activeSubject.code}) - Giáo trình, đề cương, câu hỏi ôn tập tại ViBook.`}
+          description={`Tải tài liệu môn học ${activeSubject.name} (${activeSubject.code}) - Giáo trình, đề cương, câu hỏi ôn tập tại ThoDev.`}
           slug={`/source/${activeSubject.code.toLowerCase()}`}
           noindex={true}
         />
@@ -214,7 +215,7 @@ export default function SourcePage() {
     }`}>
       <SEO
         title="Kho Tài Liệu Học Tập"
-        description="Kho tài liệu ôn thi học thuật, đề cương, giáo trình và ngân hàng câu hỏi ôn tập trắc nghiệm trực tuyến chất lượng tại ViBook."
+        description="Kho tài liệu ôn thi học thuật, đề cương, giáo trình và ngân hàng câu hỏi ôn tập trắc nghiệm trực tuyến chất lượng tại ThoDev."
         slug="/source"
         noindex={true}
       />
@@ -278,62 +279,74 @@ export default function SourcePage() {
 
         {/* Grid List of Subject Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 z-10">
-          {filteredSubjects.map((subject) => {
+          {filteredSubjects.map((subject, index) => {
             const colors = getColorClasses(subject.color);
             const IconComponent = getSubjectIcon(subject.icon);
             return (
-              <button
-                key={subject.id}
-                onClick={() => navigate("/source/" + subject.code.toLowerCase())}
-                className={`group text-left relative flex flex-col h-full rounded-2xl border p-6 overflow-hidden transition-all duration-500 hover:-translate-y-1.5 min-h-[250px] ${
-                  isDark
-                    ? "bg-[#1e1f27]/60 border-white/10 hover:bg-[#1e1f27]/90"
-                    : "bg-white border-slate-200 shadow-sm hover:shadow-md"
-                } ${colors.glow}`}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${isDark ? "from-white/5" : "from-black/[0.02]"} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-                <div className={`absolute -right-12 -top-12 w-40 h-40 ${colors.radialGlow} rounded-full blur-[40px] ${colors.bgGlow} transition-colors`}></div>
-                
-                {/* Card Header Info */}
-                <div className="relative flex justify-between items-start mb-10 w-full">
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-sm transition-colors border ${
-                    isDark ? "bg-surface-bright/40" : "bg-slate-50"
-                  } ${colors.border}`}>
-                    <IconComponent className={`${colors.text}`} size={26} />
+              <React.Fragment key={subject.id}>
+                {/* In-feed Ad unit (displays after every 4 subjects) */}
+                {index > 0 && index % 4 === 0 && (
+                  <div className="col-span-full my-2" style={{
+                    padding: "15px",
+                    background: isDark ? "rgba(30, 31, 39, 0.6)" : "white",
+                    border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",
+                    borderRadius: "1rem"
+                  }}>
+                    <AdSense adSlot="4399658395" adLayoutKey="-fm-19-1a-f8+16e" />
                   </div>
-                  <span className={`font-label-sm text-label-sm px-3 py-1 rounded-full border ${
-                    isDark ? "text-outline-variant bg-surface-bright/50 border-glass-border" : "text-slate-500 bg-slate-50 border-slate-200"
-                  }`}>
-                    {subject.code}
-                  </span>
-                </div>
-
-                {/* Card Footer Info */}
-                <div className="relative mt-auto w-full">
-                  <h3 className={`text-xl font-bold tracking-tight mb-4 transition-colors line-clamp-2 ${
-                    isDark ? "text-on-surface" : "text-slate-900"
-                  } ${colors.accentText}`}>
-                    {subject.name}
-                  </h3>
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-2">
-                      <FaFileAlt className={`${isDark ? "text-outline" : "text-slate-400"}`} size={16} />
-                      <span className={`font-label-sm text-label-sm ${isDark ? "text-on-surface-variant" : "text-slate-500"}`}>
-                        {subject.docsCount} {language === "vi" ? "Tài liệu" : "Docs"}
-                      </span>
+                )}
+                <button
+                  onClick={() => navigate("/source/" + subject.code.toLowerCase())}
+                  className={`group text-left relative flex flex-col h-full rounded-2xl border p-6 overflow-hidden transition-all duration-500 hover:-translate-y-1.5 min-h-[250px] ${
+                    isDark
+                      ? "bg-[#1e1f27]/60 border-white/10 hover:bg-[#1e1f27]/90"
+                      : "bg-white border-slate-200 shadow-sm hover:shadow-md"
+                  } ${colors.glow}`}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${isDark ? "from-white/5" : "from-black/[0.02]"} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                  <div className={`absolute -right-12 -top-12 w-40 h-40 ${colors.radialGlow} rounded-full blur-[40px] ${colors.bgGlow} transition-colors`}></div>
+                  
+                  {/* Card Header Info */}
+                  <div className="relative flex justify-between items-start mb-10 w-full">
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-sm transition-colors border ${
+                      isDark ? "bg-surface-bright/40" : "bg-slate-50"
+                    } ${colors.border}`}>
+                      <IconComponent className={`${colors.text}`} size={26} />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FaQuestionCircle className={`${isDark ? "text-outline" : "text-slate-400"}`} size={16} />
-                      <span className={`font-label-sm text-label-sm ${isDark ? "text-on-surface-variant" : "text-slate-500"}`}>
-                        {subject.quizzesCount} Quizzes
-                      </span>
+                    <span className={`font-label-sm text-label-sm px-3 py-1 rounded-full border ${
+                      isDark ? "text-outline-variant bg-surface-bright/50 border-glass-border" : "text-slate-500 bg-slate-50 border-slate-200"
+                    }`}>
+                      {subject.code}
+                    </span>
+                  </div>
+
+                  {/* Card Footer Info */}
+                  <div className="relative mt-auto w-full">
+                    <h3 className={`text-xl font-bold tracking-tight mb-4 transition-colors line-clamp-2 ${
+                      isDark ? "text-on-surface" : "text-slate-900"
+                    } ${colors.accentText}`}>
+                      {subject.name}
+                    </h3>
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-2">
+                        <FaFileAlt className={`${isDark ? "text-outline" : "text-slate-400"}`} size={16} />
+                        <span className={`font-label-sm text-label-sm ${isDark ? "text-on-surface-variant" : "text-slate-500"}`}>
+                          {subject.docsCount} {language === "vi" ? "Tài liệu" : "Docs"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FaQuestionCircle className={`${isDark ? "text-outline" : "text-slate-400"}`} size={16} />
+                        <span className={`font-label-sm text-label-sm ${isDark ? "text-on-surface-variant" : "text-slate-500"}`}>
+                          {subject.quizzesCount} Quizzes
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Hover highlight bottom bar */}
-                <div className={`absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r ${colors.grad} scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`}></div>
-              </button>
+                  {/* Hover highlight bottom bar */}
+                  <div className={`absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r ${colors.grad} scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`}></div>
+                </button>
+              </React.Fragment>
             );
           })}
         </div>

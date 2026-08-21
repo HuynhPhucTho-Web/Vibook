@@ -307,7 +307,7 @@ function Profile() {
     <div className="page-shell">
         <SEO
           title={`Trang cá nhân của ${`${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim() || userDetails.displayName || "Người dùng"}`}
-          description={userDetails.bio || `Trang cá nhân của ${`${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim() || userDetails.displayName || "Người dùng"} trên mạng xã hội ViBook.`}
+          description={userDetails.bio || `Trang cá nhân của ${`${userDetails.firstName || ""} ${userDetails.lastName || ""}`.trim() || userDetails.displayName || "Người dùng"} trên mạng xã hội ThoDev.`}
           image={userDetails.photoURL || userDetails.photo || ""}
           slug={`/profile/${userDetails.id}`}
           type="profile"

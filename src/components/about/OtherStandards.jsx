@@ -26,7 +26,7 @@ export default function OtherStandards({ isLight, onBack }) {
           Các Yêu Cầu & Tiêu Chuẩn Khác (Other Standards)
         </h1>
         <p className={`text-base max-w-2xl leading-relaxed ${subTextColor}`}>
-          Báo cáo về thiết lập cấu trúc trang web, tính nguyên bản của nội dung, khả năng tương thích di động và tối ưu hóa hiệu năng kỹ thuật của ViBook.
+          Báo cáo về thiết lập cấu trúc trang web, tính nguyên bản của nội dung, khả năng tương thích di động và tối ưu hóa hiệu năng kỹ thuật của ThoDev.
         </p>
       </header>
 
@@ -37,7 +37,7 @@ export default function OtherStandards({ isLight, onBack }) {
             <Layers size={22} /> 1. Cơ cấu điều hướng rõ ràng (Clear Site Navigation)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            Google AdSense yêu cầu các trang web phải có hệ thống điều hướng trực quan. ViBook đáp ứng tiêu chí này bằng cách:
+            Google AdSense yêu cầu các trang web phải có hệ thống điều hướng trực quan. ThoDev đáp ứng tiêu chí này bằng cách:
           </p>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 list-disc text-sm">
             <li className={subTextColor}><strong>Thanh Sidebar cố định:</strong> Giúp người dùng chuyển nhanh giữa Bảng tin, Blog, Messenger, Marketplace, Sự kiện và Trò chơi chỉ với 1 click.</li>
@@ -51,7 +51,7 @@ export default function OtherStandards({ isLight, onBack }) {
             <CheckCircle size={22} /> 2. Giá trị & Tính nguyên bản của nội dung (Original Content Value)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            ViBook cam kết duy trì chất lượng bài viết cao trên toàn nền tảng, loại bỏ vấn đề "nội dung mỏng" (thin content) hoặc copy sao chép:
+            ThoDev cam kết duy trì chất lượng bài viết cao trên toàn nền tảng, loại bỏ vấn đề "nội dung mỏng" (thin content) hoặc copy sao chép:
           </p>
           <ol className={`list-decimal pl-5 text-sm space-y-2 ${subTextColor}`}>
             <li><strong>Khuyến khích nguyên bản:</strong> Mục Blog của chúng tôi tạo không gian cho các blogger và chuyên gia tự viết bài phân tích chuyên sâu chất lượng cao.</li>
@@ -65,7 +65,7 @@ export default function OtherStandards({ isLight, onBack }) {
             <Smartphone size={22} /> 3. Tối ưu tương thích di động (Mobile Friendliness)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            Là mạng xã hội đa nền tảng, giao diện của ViBook được thiết kế tương thích hoàn hảo trên mọi thiết bị:
+            Là mạng xã hội đa nền tảng, giao diện của ThoDev được thiết kế tương thích hoàn hảo trên mọi thiết bị:
           </p>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 list-disc text-sm">
             <li className={subTextColor}><strong>Responsive Design:</strong> Giao diện tự động co giãn từ màn hình PC siêu rộng cho tới điện thoại cầm tay kích thước nhỏ.</li>

@@ -16,7 +16,7 @@ function VideoCarousel() {
                     Your browser does not support the video tag.
                 </video>
                 <Carousel.Caption>
-                    <h5>ViBook</h5>
+                    <h5>ThoDev</h5>
                     <p>A little introduction</p>
                 </Carousel.Caption>
             </Carousel.Item>

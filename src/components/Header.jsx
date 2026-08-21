@@ -9,6 +9,7 @@ import React, {
 import { Link, useLocation } from "react-router-dom";
 import {
   collection,
+  collectionGroup,
   getDocs,
   limit,
   onSnapshot,
@@ -18,8 +19,6 @@ import {
   setDoc,
   deleteDoc,
   doc,
-  getDoc,
-  increment,
 } from "firebase/firestore";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
@@ -38,6 +37,7 @@ const Header = () => {
   const location = useLocation();
   const [authUser, setAuthUser] = useState(() => auth.currentUser);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const { keyword: searchValue, setKeyword: setSearchValue, searchConfig } = useSearch();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -171,6 +171,32 @@ const Header = () => {
         where("read", "==", false),
       ),
       (snapshot) => setUnreadCount(snapshot.docs.length),
+    );
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!authUser) {
+      setUnreadMessagesCount(0);
+      return undefined;
+    }
+    // Limit the query to messages sent in the last 7 days to prevent performance issues with large histories
+    const messagesQuery = query(
+      collectionGroup(db, "messages"),
+      where("receiverId", "==", authUser.uid),
+      where("createdAt", ">=", Date.now() - 7 * 24 * 60 * 60 * 1000)
+    );
+    return onSnapshot(
+      messagesQuery,
+      (snapshot) => {
+        const unreadCount = snapshot.docs.filter((docSnap) => {
+          const data = docSnap.data();
+          return !data.readBy || !data.readBy.includes(authUser.uid);
+        }).length;
+        setUnreadMessagesCount(unreadCount);
+      },
+      (error) => {
+        console.error("Error listening to unread messages:", error);
+      }
     );
   }, [authUser]);
 
@@ -341,9 +367,7 @@ const Header = () => {
       <div className="header-row relative">
         <div className="flex items-center flex-shrink-0 gap-3">
           <Link to="/feed" className="no-underline flex items-center">
-            <h1 className="mb-0 font-extrabold tracking-tight text-2xl sm:text-3xl bg-gradient-to-br from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              ViBook
-            </h1>
+            <img src="/images/logo.png" alt="ThoDev" className="h-12 sm:h-15 object-contain" />
           </Link>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold select-none ${theme === "light" ? "bg-green-50 text-green-700 border border-green-200" : "bg-green-950/40 text-green-400 border border-green-900/30"}`}>
             <span className="relative flex h-2 w-2">
@@ -395,6 +419,7 @@ const Header = () => {
               setLanguage={setLanguage}
               t={t}
               unreadCount={unreadCount}
+              unreadMessagesCount={unreadMessagesCount}
               isAuthenticated={Boolean(authUser)}
               userMenuOpen={userMenuOpen}
               setUserMenuOpen={setUserMenuOpen}

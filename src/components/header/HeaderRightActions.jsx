@@ -13,6 +13,7 @@ const HeaderRightActions = ({
   t,
 
   unreadCount,
+  unreadMessagesCount,
   isAuthenticated = Boolean(auth.currentUser),
 
   userMenuOpen,
@@ -45,7 +46,7 @@ const HeaderRightActions = ({
   return (
     <div className="flex items-center gap-3 flex-shrink-0">
       {/* Messenger icon - hidden on mobile */}
-      <Link to="/messenger" title="Messenger" className="hidden md:block">
+      <Link to="/messenger" title="Messenger" className="relative hidden md:block">
         <div
           className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:scale-105 ${
             isLight
@@ -56,6 +57,11 @@ const HeaderRightActions = ({
           <FaFacebookMessenger
             className={`text-base sm:text-lg ${isLight ? "text-black" : "text-white"}`}
           />
+          {unreadMessagesCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-red-500 text-white rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-bold shadow-sm">
+              {unreadMessagesCount}
+            </span>
+          )}
         </div>
       </Link>
 

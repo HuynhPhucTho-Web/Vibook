@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "./UserAvatar";
 import {
@@ -28,8 +28,7 @@ import "../../style/ChatHeader.css";
  * - onApplyTheme?: ({ backgroundColor, messageColor }) => void
  * - initialTheme?: { backgroundColor?: string, messageColor?: string }
  */
-const ChatHeader = ({ user, theme, onBack, onApplyTheme, initialTheme }) => {
-  const { t } = useContext(LanguageContext);
+const ChatHeader = ({ user, theme, onBack, onApplyTheme, initialTheme, chatConfig, onUpdateChatConfig, currentUser }) => {
   const navigate = useNavigate();
 
   const isLight = theme === "light";
@@ -38,6 +37,60 @@ const ChatHeader = ({ user, theme, onBack, onApplyTheme, initialTheme }) => {
 
   // panel đang mở trong modal: null | "theme" | "emoji" | "nickname" | ...
   const [activePanel, setActivePanel] = useState(null);
+
+  // Nicknames local editing states
+  const [friendNickname, setFriendNickname] = useState("");
+  const [myNickname, setMyNickname] = useState("");
+
+  useEffect(() => {
+    setFriendNickname(chatConfig?.nicknames?.[user.uid] || "");
+    setMyNickname(chatConfig?.nicknames?.[currentUser?.uid] || "");
+  }, [chatConfig, user.uid, currentUser?.uid]);
+
+  const EMOJI_OPTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡", "🔥", "⚡", "🎉", "💩", "👀", "✨"];
+
+  const selectQuickEmoji = (emoji) => {
+    onUpdateChatConfig?.({ quickEmoji: emoji });
+  };
+
+  const saveNicknames = () => {
+    onUpdateChatConfig?.({
+      nicknames: {
+        ...(chatConfig?.nicknames || {}),
+        [user.uid]: friendNickname.trim(),
+        [currentUser?.uid]: myNickname.trim()
+      }
+    });
+    setActivePanel(null);
+  };
+
+  const isBlocked = chatConfig?.blockedBy?.includes(currentUser?.uid);
+  const toggleBlock = () => {
+    const currentBlockedBy = chatConfig?.blockedBy || [];
+    if (isBlocked) {
+      onUpdateChatConfig?.({
+        blockedBy: currentBlockedBy.filter(uid => uid !== currentUser?.uid)
+      });
+    } else {
+      onUpdateChatConfig?.({
+        blockedBy: [...currentBlockedBy, currentUser?.uid]
+      });
+    }
+  };
+
+  const isMuted = chatConfig?.mutedBy?.includes(currentUser?.uid);
+  const toggleMute = () => {
+    const currentMutedBy = chatConfig?.mutedBy || [];
+    if (isMuted) {
+      onUpdateChatConfig?.({
+        mutedBy: currentMutedBy.filter(uid => uid !== currentUser?.uid)
+      });
+    } else {
+      onUpdateChatConfig?.({
+        mutedBy: [...currentMutedBy, currentUser?.uid]
+      });
+    }
+  };
 
   // theme state (local)
 const [customBackgroundColor, setCustomBackgroundColor] = useState(
@@ -110,7 +163,7 @@ const [customBackgroundColor, setCustomBackgroundColor] = useState(
             <UserAvatar user={user} size={44} showOnline />
             <div>
               <h5 className="chat-header-name">
-                {user.firstName} {user.lastName}
+                {chatConfig?.nicknames?.[user.uid] || `${user.firstName} ${user.lastName}`}
               </h5>
               <small
                 className={`chat-header-status ${user.isOnline ? "online" : ""
@@ -229,12 +282,12 @@ const [customBackgroundColor, setCustomBackgroundColor] = useState(
                   </div>
                 )}
 
-                {/* (placeholder) các panel khác: Emoji/Nickname... */}
+                {/* Quick Emoji selection panel */}
                 {activePanel === "emoji" && (
                   <div className="settings-panel">
                     <div className="settings-panel-head">
                       <div className="settings-panel-title">
-                        <FaSmile /> <span>Emoji</span>
+                        <FaSmile /> <span>Quick Emoji</span>
                       </div>
                       <div className="settings-panel-actions">
                         <button className="btn btn-sm btn-outline-secondary" onClick={() => setActivePanel(null)}>
@@ -242,26 +295,61 @@ const [customBackgroundColor, setCustomBackgroundColor] = useState(
                         </button>
                       </div>
                     </div>
-                    <div className="settings-panel-placeholder">
-                      (Chỗ này bạn sẽ render picker emoji / quick emoji…)
+                    <div className="settings-panel-body mt-3">
+                      <p className="text-sm text-muted mb-3">Choose a quick emoji for one-click reactions:</p>
+                      <div className="d-flex flex-wrap gap-2 justify-content-center">
+                        {EMOJI_OPTIONS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            onClick={() => selectQuickEmoji(emoji)}
+                            className={`btn btn-lg rounded-circle border ${chatConfig?.quickEmoji === emoji ? "btn-primary border-primary" : "btn-light"}`}
+                            style={{ width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.25rem" }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
 
+                {/* Nicknames setting panel */}
                 {activePanel === "nickname" && (
                   <div className="settings-panel">
                     <div className="settings-panel-head">
                       <div className="settings-panel-title">
-                        <FaTag /> <span>Nickname</span>
+                        <FaTag /> <span>Nicknames</span>
                       </div>
                       <div className="settings-panel-actions">
-                        <button className="btn btn-sm btn-outline-secondary" onClick={() => setActivePanel(null)}>
+                        <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => setActivePanel(null)}>
                           Back
+                        </button>
+                        <button className="btn btn-sm btn-primary" onClick={saveNicknames}>
+                          Save
                         </button>
                       </div>
                     </div>
-                    <div className="settings-panel-placeholder">
-                      (Chỗ này bạn sẽ render form đổi nickname…)
+                    <div className="settings-panel-body mt-3">
+                      <div className="mb-3">
+                        <label className="form-label text-sm font-semibold">{user.firstName}'s Nickname</label>
+                        <input
+                          type="text"
+                          value={friendNickname}
+                          onChange={(e) => setFriendNickname(e.target.value)}
+                          placeholder={`${user.firstName} ${user.lastName}`}
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label text-sm font-semibold">Your Nickname</label>
+                        <input
+                          type="text"
+                          value={myNickname}
+                          onChange={(e) => setMyNickname(e.target.value)}
+                          placeholder="You"
+                          className="form-control"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -289,7 +377,7 @@ const [customBackgroundColor, setCustomBackgroundColor] = useState(
                     onClick={() => setActivePanel("emoji")}
                   >
                     <FaSmile className="me-3" />
-                    Emoji
+                    Quick Emoji ({chatConfig?.quickEmoji || "👍"})
                   </button>
 
                   <button
@@ -297,22 +385,23 @@ const [customBackgroundColor, setCustomBackgroundColor] = useState(
                     onClick={() => setActivePanel("nickname")}
                   >
                     <FaTag className="me-3" />
-                    Nickname
+                    Edit Nicknames
                   </button>
 
-                  <button className="btn btn-light w-100 text-start mb-2 d-flex align-items-center">
-                    <FaUsers className="me-3" />
-                    Create Group
-                  </button>
-
-                  <button className="btn btn-light w-100 text-start mb-2 d-flex align-items-center">
+                  <button
+                    className={`btn w-100 text-start mb-2 d-flex align-items-center ${isMuted ? "btn-warning" : "btn-light"}`}
+                    onClick={toggleMute}
+                  >
                     <FaBellSlash className="me-3" />
-                    Mute Notifications
+                    {isMuted ? "Unmute Notifications" : "Mute Notifications"}
                   </button>
 
-                  <button className="btn btn-light w-100 text-start mb-2 d-flex align-items-center">
+                  <button
+                    className={`btn w-100 text-start mb-2 d-flex align-items-center ${isBlocked ? "btn-danger text-white" : "btn-light"}`}
+                    onClick={toggleBlock}
+                  >
                     <FaBan className="me-3" />
-                    Block
+                    {isBlocked ? "Unblock Conversation" : "Block Conversation"}
                   </button>
 
                   <button className="btn btn-light w-100 text-start mb-2 d-flex align-items-center">

@@ -184,7 +184,7 @@ function LoginPromptToast({
 export function requireLogin(options = {}) {
   const {
     navigate,
-    message = "Đăng nhập ViBook để đồng bộ dữ liệu",
+    message = "Đăng nhập ThoDev để đồng bộ dữ liệu",
     title = "Chưa đăng nhập",
     from,
     loginLabel = "Đăng nhập",

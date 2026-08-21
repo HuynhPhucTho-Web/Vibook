@@ -5,12 +5,14 @@ import {
   query,
   onSnapshot,
   addDoc,
+  setDoc,
   orderBy,
   serverTimestamp,
   limit,
   where,
   doc,
   getDoc,
+  getDocs,
   updateDoc,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
@@ -45,6 +47,13 @@ const Messenger = () => {
   const chatThemeCustomizedRef = useRef(false);
   const [showRecallModal, setShowRecallModal] = useState(false);
   const [recallMessageId, setRecallMessageId] = useState(null);
+
+  // Sync settings with Firestore Messages/{chatId} configuration doc
+  const [chatConfig, setChatConfig] = useState(null);
+  // Real-time metadata maps for sidebar display
+  const [lastMessages, setLastMessages] = useState({});
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [allChatConfigs, setAllChatConfigs] = useState({});
 
   const unsubscribeRefs = useRef({});
   const lastChatId = useRef(null);
@@ -156,11 +165,152 @@ const Messenger = () => {
 
   useEffect(() => {
     if (!currentUser || !selectedUser) {
+      setChatConfig(null);
+      return;
+    }
+
+    const chatId = createChatId(currentUser.uid, selectedUser.uid);
+    const configRef = doc(db, "Messages", chatId);
+
+    const unsubscribe = onSnapshot(configRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setChatConfig(data);
+        if (data.theme) {
+          setChatTheme(data.theme);
+          chatThemeCustomizedRef.current = true;
+        } else {
+          setChatTheme(getDefaultChatTheme(theme));
+          chatThemeCustomizedRef.current = false;
+        }
+      } else {
+        setChatConfig(null);
+        setChatTheme(getDefaultChatTheme(theme));
+        chatThemeCustomizedRef.current = false;
+      }
+    }, (error) => {
+      console.error("Error listening to chat config:", error);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser, selectedUser, theme, createChatId]);
+
+  // Listen to last messages, unread counts, and configurations for all sidebar users in real-time
+  useEffect(() => {
+    if (!currentUser || users.length === 0) {
+      setLastMessages({});
+      setUnreadCounts({});
+      setAllChatConfigs({});
+      return;
+    }
+
+    const unsubscribes = [];
+
+    users.forEach((friend) => {
+      const chatId = createChatId(currentUser.uid, friend.uid);
+      const messagesRef = collection(db, "Messages", chatId, "messages");
+      const configRef = doc(db, "Messages", chatId);
+
+      // 1. Last message listener
+      const lastMsgQuery = query(messagesRef, orderBy("createdAt", "desc"), limit(1));
+      const unsubLastMsg = onSnapshot(lastMsgQuery, (snapshot) => {
+        if (!snapshot.empty) {
+          const docSnap = snapshot.docs[0];
+          setLastMessages(prev => ({
+            ...prev,
+            [friend.uid]: {
+              id: docSnap.id,
+              ...docSnap.data()
+            }
+          }));
+        } else {
+          setLastMessages(prev => {
+            const next = { ...prev };
+            delete next[friend.uid];
+            return next;
+          });
+        }
+      }, (err) => {
+        console.error("Error fetching last message for", friend.uid, err);
+      });
+      unsubscribes.push(unsubLastMsg);
+
+      // 2. Unread messages listener (messages sent to currentUser which currentUser has not read)
+      const unreadQuery = query(
+        messagesRef,
+        where("receiverId", "==", currentUser.uid)
+      );
+      const unsubUnread = onSnapshot(unreadQuery, (snapshot) => {
+        const unreadCount = snapshot.docs.filter(docSnap => {
+          const data = docSnap.data();
+          return !data.readBy || !data.readBy.includes(currentUser.uid);
+        }).length;
+        
+        setUnreadCounts(prev => ({
+          ...prev,
+          [friend.uid]: unreadCount
+        }));
+      }, (err) => {
+        console.error("Error fetching unread count for", friend.uid, err);
+      });
+      unsubscribes.push(unsubUnread);
+
+      // 3. Configuration listener for nicknames, mute/block state sync
+      const unsubConfig = onSnapshot(configRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setAllChatConfigs(prev => ({
+            ...prev,
+            [friend.uid]: snapshot.data()
+          }));
+        } else {
+          setAllChatConfigs(prev => {
+            const next = { ...prev };
+            delete next[friend.uid];
+            return next;
+          });
+        }
+      }, (err) => {
+        console.error("Error fetching config for friend", friend.uid, err);
+      });
+      unsubscribes.push(unsubConfig);
+    });
+
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
+  }, [currentUser, users, createChatId]);
+
+  useEffect(() => {
+    if (!currentUser || !selectedUser) {
       setMessages([]);
       return;
     }
 
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
+
+    // Mark ALL older unread messages from selectedUser in this chat as read to clean header badge
+    const messagesRef = collection(db, "Messages", chatId, "messages");
+    const unreadQuery = query(
+      messagesRef,
+      where("senderId", "==", selectedUser.uid)
+    );
+    getDocs(unreadQuery).then((unreadSnapshot) => {
+      const docsToUpdate = unreadSnapshot.docs.filter(docSnap => {
+        const data = docSnap.data();
+        return !data.readBy || !data.readBy.includes(currentUser.uid);
+      });
+      if (docsToUpdate.length > 0) {
+        const updatePromises = docsToUpdate.map(docSnap =>
+          updateDoc(doc(db, "Messages", chatId, "messages", docSnap.id), {
+            readBy: [...(docSnap.data().readBy || []), currentUser.uid]
+          })
+        );
+        return Promise.all(updatePromises);
+      }
+    }).catch(err => {
+      console.error("Error marking all messages as read on select:", err);
+    });
+
     if (lastChatId.current === chatId && messages.length > 0) return;
 
     lastChatId.current = chatId;
@@ -196,8 +346,29 @@ const Messenger = () => {
               readBy: [...(msg.readBy || []), currentUser.uid]
             })
           );
-          await Promise.all(updatePromises);
+          Promise.all(updatePromises).catch(err => {
+            console.error("Error marking messages as read in Firestore:", err);
+          });
         }
+
+        // Mark corresponding notifications as read in background to clear header notifications badge
+        const notificationsQuery = query(
+          collection(db, "Notifications"),
+          where("userId", "==", currentUser.uid),
+          where("type", "==", "friend_message"),
+          where("actorId", "==", selectedUser.uid),
+          where("read", "==", false)
+        );
+        getDocs(notificationsQuery).then((notifSnapshot) => {
+          if (!notifSnapshot.empty) {
+            const notifPromises = notifSnapshot.docs.map(docSnap =>
+              updateDoc(doc(db, "Notifications", docSnap.id), { read: true })
+            );
+            return Promise.all(notifPromises);
+          }
+        }).catch(err => {
+          console.error("Error marking message notifications as read:", err);
+        });
 
         setMessages(messageList);
       },
@@ -266,14 +437,23 @@ const Messenger = () => {
   }, [selectedUser]);
 
   const filteredUsers = useMemo(() => {
-    if (!searchTerm) return users;
-    return users.filter(user =>
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [users, searchTerm]);
+    let result = users;
+    if (searchTerm) {
+      result = users.filter(user =>
+        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-  const handleReaction = useCallback(async (messageId) => {
+    // Sort by last message creation time descending, so newest active chats are at the top
+    return [...result].sort((a, b) => {
+      const timeA = lastMessages[a.uid]?.createdAt || 0;
+      const timeB = lastMessages[b.uid]?.createdAt || 0;
+      return timeB - timeA;
+    });
+  }, [users, searchTerm, lastMessages]);
+
+  const handleReaction = useCallback(async (messageId, reactionType) => {
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
     const messageRef = doc(db, "Messages", chatId, "messages", messageId);
 
@@ -285,10 +465,17 @@ const Messenger = () => {
         const existingReactionIndex = reactions.findIndex(r => r.userId === currentUser.uid);
 
         if (existingReactionIndex >= 0) {
-          // Toggle off if already reacted
-          reactions.splice(existingReactionIndex, 1);
+          const currentReaction = reactions[existingReactionIndex];
+          if (currentReaction.type === reactionType) {
+            // Toggle off if already reacted with the exact same emoji
+            reactions.splice(existingReactionIndex, 1);
+          } else {
+            // Update to the new emoji
+            reactions[existingReactionIndex].type = reactionType;
+          }
         } else {
-          reactions.push({ userId: currentUser.uid, type: 'heart' });
+          // Push new reaction object
+          reactions.push({ userId: currentUser.uid, type: reactionType });
         }
 
         await updateDoc(messageRef, { reactions });
@@ -303,10 +490,29 @@ const Messenger = () => {
     setReplyMessage(message);
   }, []);
 
-const handleApplyTheme = useCallback((newTheme) => {
+  const handleUpdateChatConfig = useCallback(async (updates) => {
+    if (!currentUser || !selectedUser) return;
+    const chatId = createChatId(currentUser.uid, selectedUser.uid);
+    const configRef = doc(db, "Messages", chatId);
+
+    try {
+      const docSnap = await getDoc(configRef);
+      if (!docSnap.exists()) {
+        await setDoc(configRef, { ...updates }, { merge: true });
+      } else {
+        await updateDoc(configRef, updates);
+      }
+    } catch (error) {
+      console.error("Error updating chat config:", error);
+      toast.error("Failed to save chat settings.");
+    }
+  }, [currentUser, selectedUser, createChatId]);
+
+  const handleApplyTheme = useCallback((newTheme) => {
     chatThemeCustomizedRef.current = true;
     setChatTheme(newTheme);
-  }, []);
+    handleUpdateChatConfig({ theme: newTheme });
+  }, [handleUpdateChatConfig]);
 
   // Re-sync chat theme to the app theme default when the theme changes,
   // unless the user has explicitly applied a custom chat theme.
@@ -419,12 +625,24 @@ const handleApplyTheme = useCallback((newTheme) => {
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 theme={theme}
+                lastMessages={lastMessages}
+                unreadCounts={unreadCounts}
+                allChatConfigs={allChatConfigs}
             />
         </div>
         <div className={`chat-container ${isChatActive ? 'chat-active' : ''}`}>
             {selectedUser ? (
                 <>
-                    <ChatHeader user={selectedUser} theme={theme} onBack={() => setSelectedUser(null)} onApplyTheme={handleApplyTheme} initialTheme={chatTheme} />
+                    <ChatHeader
+                        user={selectedUser}
+                        theme={theme}
+                        onBack={() => setSelectedUser(null)}
+                        onApplyTheme={handleApplyTheme}
+                        initialTheme={chatTheme}
+                        chatConfig={chatConfig}
+                        onUpdateChatConfig={handleUpdateChatConfig}
+                        currentUser={currentUser}
+                    />
                     <MessageList
                         messages={messages}
                         currentUser={currentUser}
@@ -434,6 +652,7 @@ const handleApplyTheme = useCallback((newTheme) => {
                         onReaction={handleReaction}
                         onReply={handleReply}
                         onRecallMessage={handleRecallMessage}
+                        chatConfig={chatConfig}
                     />
                     <MessageInput
                         messageText={messageText}
@@ -444,6 +663,8 @@ const handleApplyTheme = useCallback((newTheme) => {
                         theme={theme}
                         currentUser={currentUser}
                         selectedUser={selectedUser}
+                        chatConfig={chatConfig}
+                        onUpdateChatConfig={handleUpdateChatConfig}
                     />
                 </>
             ) : (

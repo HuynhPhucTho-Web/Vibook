@@ -28,11 +28,11 @@ export default function AboutPage() {
   const isLight = theme === 'light';
   const [activePolicy, setActivePolicy] = useState(null);
 
-  // Schema Markup Organization cho ViBook
+  // Schema Markup Organization cho ThoDev
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "ViBook",
+    "name": "ThoDev",
     "url": window.location.origin,
     "logo": `${window.location.origin}/logo.png`,
     "description": "Mạng xã hội tích hợp kết nối bạn bè, chia sẻ bài viết blog, trò chuyện trực tuyến và mua sắm thông minh.",
@@ -61,28 +61,28 @@ export default function AboutPage() {
     switch (activePolicy) {
       case 'content':
         return {
-          title: "Chính Sách Nội Dung | ViBook AdSense Compliance",
-          desc: "Xem chi tiết quy định và chính sách nội dung trên mạng xã hội ViBook để tuân thủ Google AdSense."
+          title: "Chính Sách Nội Dung | ThoDev AdSense Compliance",
+          desc: "Xem chi tiết quy định và chính sách nội dung trên mạng xã hội ThoDev để tuân thủ Google AdSense."
         };
       case 'behavior':
         return {
-          title: "Chính Sách Về Hành Vi | ViBook AdSense Compliance",
-          desc: "Tìm hiểu chính sách về hành vi, click tặc và vị trí quảng cáo an toàn trên ViBook."
+          title: "Chính Sách Về Hành Vi | ThoDev AdSense Compliance",
+          desc: "Tìm hiểu chính sách về hành vi, click tặc và vị trí quảng cáo an toàn trên ThoDev."
         };
       case 'privacy':
         return {
-          title: "Chính Sách Quyền Riêng Tư | ViBook AdSense Compliance",
-          desc: "Đọc về cơ chế thu thập dữ liệu người dùng và chính sách Cookie phân phối quảng cáo trên ViBook."
+          title: "Chính Sách Quyền Riêng Tư | ThoDev AdSense Compliance",
+          desc: "Đọc về cơ chế thu thập dữ liệu người dùng và chính sách Cookie phân phối quảng cáo trên ThoDev."
         };
       case 'standards':
         return {
-          title: "Các Yêu Cầu & Tiêu Chuẩn Khác | ViBook AdSense Compliance",
-          desc: "Các tiêu chuẩn kỹ thuật, thiết kế responsive và chất lượng nội dung trên ViBook."
+          title: "Các Yêu Cầu & Tiêu Chuẩn Khác | ThoDev AdSense Compliance",
+          desc: "Các tiêu chuẩn kỹ thuật, thiết kế responsive và chất lượng nội dung trên ThoDev."
         };
       default:
         return {
-          title: "Giới Thiệu Về ViBook | Mạng Xã Hội Đa Tính Năng",
-          desc: "Khám phá ViBook - Mạng xã hội kết nối thế hệ mới tích hợp bảng tin, nhắn tin messenger, viết blog, chợ mua sắm trực tuyến, sự kiện và trò chơi giải trí."
+          title: "Giới Thiệu Về ThoDev | Mạng Xã Hội Đa Tính Năng",
+          desc: "Khám phá ThoDev - Mạng xã hội kết nối thế hệ mới tích hợp bảng tin, nhắn tin messenger, viết blog, chợ mua sắm trực tuyến, sự kiện và trò chơi giải trí."
         };
     }
   };
@@ -113,7 +113,7 @@ export default function AboutPage() {
     {
       icon: Youtube,
       title: "Trung tâm Video (Video Hub)",
-      desc: "Khám phá thế giới qua các video clip sống động được chia sẻ từ cộng đồng thành viên ViBook."
+      desc: "Khám phá thế giới qua các video clip sống động được chia sẻ từ cộng đồng thành viên ThoDev."
     },
     {
       icon: UserCheck,
@@ -176,7 +176,7 @@ export default function AboutPage() {
                 display: 'inline-block',
                 marginBottom: '0.75rem'
               }}>
-                Chào mừng bạn đến với ViBook
+                Chào mừng bạn đến với ThoDev
               </span>
               <h1 style={{
                 fontSize: '2.8rem',
@@ -197,7 +197,7 @@ export default function AboutPage() {
                 margin: '0 auto',
                 fontWeight: '400'
               }}>
-                ViBook là một nền tảng mạng xã hội tích hợp đa tính năng thế hệ mới, được thiết kế để xóa nhòa ranh giới giữa giao tiếp xã hội, chia sẻ tri thức và giao thương trực tuyến.
+                ThoDev là một nền tảng mạng xã hội tích hợp đa tính năng thế hệ mới, được thiết kế để xóa nhòa ranh giới giữa giao tiếp xã hội, chia sẻ tri thức và giao thương trực tuyến.
               </p>
             </header>
 
@@ -205,7 +205,7 @@ export default function AboutPage() {
             <div style={{ marginBottom: '4rem', overflow: 'hidden', borderRadius: '20px' }}>
               <img 
                 src="/images/default-share-cover.jpg" 
-                alt="Nền tảng mạng xã hội đa tính năng ViBook" 
+                alt="Nền tảng mạng xã hội đa tính năng ThoDev" 
                 loading="lazy" 
                 width="1000" 
                 height="400" 
@@ -349,7 +349,7 @@ export default function AboutPage() {
                   Chính Sách & Tiêu Chuẩn AdSense
                 </h2>
                 <p style={{ opacity: 0.75, maxWidth: '600px', margin: '0 auto' }}>
-                  Thông tin công khai giải thích rõ cơ chế vận hành của ViBook đáp ứng tiêu chuẩn đối tác của Google AdSense.
+                  Thông tin công khai giải thích rõ cơ chế vận hành của ThoDev đáp ứng tiêu chuẩn đối tác của Google AdSense.
                 </p>
               </div>
 
@@ -508,7 +508,7 @@ export default function AboutPage() {
                 Thông Tin Liên Hệ & Vận Hành
               </h2>
               <p style={{ textAlign: 'center', opacity: 0.85, fontSize: '0.95rem', maxWidth: '650px', margin: '0 auto 2rem' }}>
-                ViBook cam kết vận hành nền tảng một cách minh bạch, an toàn và bảo mật. Mọi phản hồi hoặc yêu cầu hỗ trợ, vui lòng liên hệ với ban quản trị theo các kênh chính thức sau đây.
+                ThoDev cam kết vận hành nền tảng một cách minh bạch, an toàn và bảo mật. Mọi phản hồi hoặc yêu cầu hỗ trợ, vui lòng liên hệ với ban quản trị theo các kênh chính thức sau đây.
               </p>
               <div style={{
                 display: 'grid',
@@ -533,7 +533,7 @@ export default function AboutPage() {
                   border: `1px solid ${isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'}`
                 }}>
                   <h4 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '0.5rem', color: '#8e54e9' }}>📍 Đơn Vị Vận Hành</h4>
-                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>ViBook - HuynhPhucThoWeb</p>
+                  <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>ThoDev - HuynhPhucThoWeb</p>
                   <p style={{ fontSize: '0.88rem', opacity: 0.8, margin: 0 }}>Ấp 6 Ngàn, Tân Hòa, TP Cần Thơ</p>
                 </div>
               </div>
@@ -549,7 +549,7 @@ export default function AboutPage() {
               boxShadow: '0 15px 35px rgba(142, 84, 233, 0.25)'
             }}>
               <h2 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '1rem', color: '#fff' }}>
-                Bắt Đầu Khám Phá ViBook Ngay Hôm Nay!
+                Bắt Đầu Khám Phá ThoDev Ngay Hôm Nay!
               </h2>
               <p style={{ opacity: 0.9, maxWidth: '600px', margin: '0 auto 2rem', fontSize: '1.05rem' }}>
                 Đăng ký tài khoản miễn phí để chia sẻ những khoảnh khắc đẹp của cuộc sống và tận hưởng các tiện ích đỉnh cao.
@@ -608,8 +608,8 @@ export function PrivacyPolicyPage() {
   return (
     <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
       <Helmet>
-        <title>Chính Sách Quyền Riêng Tư | ViBook</title>
-        <meta name="description" content="Đọc về cơ chế thu thập dữ liệu người dùng và chính sách Cookie phân phối quảng cáo trên ViBook." />
+        <title>Chính Sách Quyền Riêng Tư | ThoDev</title>
+        <meta name="description" content="Đọc về cơ chế thu thập dữ liệu người dùng và chính sách Cookie phân phối quảng cáo trên ThoDev." />
       </Helmet>
       <PrivacyPolicy isLight={isLight} onBack={() => window.history.back()} />
     </div>
@@ -622,8 +622,8 @@ export function TermsOfServicePage() {
   return (
     <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
       <Helmet>
-        <title>Chính Sách Về Hành Vi & Điều Khoản | ViBook</title>
-        <meta name="description" content="Tìm hiểu chính sách về hành vi, click tặc và vị trí quảng cáo an toàn trên ViBook." />
+        <title>Chính Sách Về Hành Vi & Điều Khoản | ThoDev</title>
+        <meta name="description" content="Tìm hiểu chính sách về hành vi, click tặc và vị trí quảng cáo an toàn trên ThoDev." />
       </Helmet>
       <BehavioralPolicy isLight={isLight} onBack={() => window.history.back()} />
     </div>
@@ -636,8 +636,8 @@ export function ContentPolicyPage() {
   return (
     <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
       <Helmet>
-        <title>Chính Sách Nội Dung | ViBook</title>
-        <meta name="description" content="Xem chi tiết quy định và chính sách nội dung trên mạng xã hội ViBook để tuân thủ Google AdSense." />
+        <title>Chính Sách Nội Dung | ThoDev</title>
+        <meta name="description" content="Xem chi tiết quy định và chính sách nội dung trên mạng xã hội ThoDev để tuân thủ Google AdSense." />
       </Helmet>
       <ContentPolicy isLight={isLight} onBack={() => window.history.back()} />
     </div>
@@ -650,8 +650,8 @@ export function OtherStandardsPage() {
   return (
     <div className="page-shell" style={{ maxWidth: '1000px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
       <Helmet>
-        <title>Các Yêu Cầu & Tiêu Chuẩn Khác | ViBook</title>
-        <meta name="description" content="Các tiêu chuẩn kỹ thuật, thiết kế responsive và chất lượng nội dung trên ViBook." />
+        <title>Các Yêu Cầu & Tiêu Chuẩn Khác | ThoDev</title>
+        <meta name="description" content="Các tiêu chuẩn kỹ thuật, thiết kế responsive và chất lượng nội dung trên ThoDev." />
       </Helmet>
       <OtherStandards isLight={isLight} onBack={() => window.history.back()} />
     </div>

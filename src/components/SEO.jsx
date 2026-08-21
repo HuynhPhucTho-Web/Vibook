@@ -1,8 +1,8 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const DEFAULT_TITLE = "ViBook - Mạng xã hội chia sẻ & kết nối";
-const DEFAULT_DESCRIPTION = "Chào mừng bạn đến với ViBook, nền tảng mạng xã hội kết nối bạn bè, chia sẻ câu chuyện, bài viết blog thú vị và mua sắm trực tuyến tiện lợi.";
+const DEFAULT_TITLE = "ThoDev - Mạng xã hội chia sẻ & kết nối";
+const DEFAULT_DESCRIPTION = "Chào mừng bạn đến với ThoDev, nền tảng mạng xã hội kết nối bạn bè, chia sẻ câu chuyện, bài viết blog thú vị và mua sắm trực tuyến tiện lợi.";
 const DEFAULT_IMAGE = "/images/default-share-cover.jpg";
 const SITE_URL = window.location.origin;
 
@@ -15,7 +15,7 @@ export default function SEO({
   schema,
   noindex = false
 }) {
-  const metaTitle = title ? `${title} | ViBook` : DEFAULT_TITLE;
+  const metaTitle = title ? `${title} | ThoDev` : DEFAULT_TITLE;
   const metaDesc = description || DEFAULT_DESCRIPTION;
   const canonicalUrl = `${SITE_URL}${slug}`;
   const metaImage = image || `${SITE_URL}${DEFAULT_IMAGE}`;
@@ -34,7 +34,7 @@ export default function SEO({
       <meta property="og:description" content={metaDesc} />
       <meta property="og:image" content={metaImage} />
       <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:site_name" content="ViBook" />
+      <meta property="og:site_name" content="ThoDev" />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />

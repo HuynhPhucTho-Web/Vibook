@@ -153,7 +153,7 @@ function Login() {
     <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-hidden p-4 sm:p-6">
       <SEO
         title="Đăng nhập"
-        description="Đăng nhập tài khoản ViBook để kết nối bạn bè, chia sẻ tài liệu học tập và trải nghiệm các tiện ích học thuật trực tuyến."
+        description="Đăng nhập tài khoản ThoDev để kết nối bạn bè, chia sẻ tài liệu học tập và trải nghiệm các tiện ích học thuật trực tuyến."
         slug="/login"
         noindex={true}
       />
@@ -357,7 +357,7 @@ function Login() {
                   “Kết nối đam mê, chia sẻ khoảnh khắc.”
                 </h2>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Cộng đồng ViBook luôn sẵn sàng đồng hành cùng bạn.
+                  Cộng đồng ThoDev luôn sẵn sàng đồng hành cùng bạn.
                 </p>
               </div>
 
@@ -373,7 +373,7 @@ function Login() {
               V
             </div>
             <div className="text-left">
-              <p className="font-bold text-xs text-slate-800">ViBook</p>
+              <p className="font-bold text-xs text-slate-800">ThoDev</p>
               <p className="text-[10px] text-slate-500">UI Designed by Tho Web</p>
             </div>
           </div>

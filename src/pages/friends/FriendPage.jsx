@@ -70,7 +70,7 @@ const Friends = () => {
     <div className={`page-shell friends-page ${theme}`}>
       <SEO
         title="Tìm kiếm bạn bè"
-        description="Tìm kiếm bạn bè, gửi lời mời kết bạn và mở rộng vòng kết nối xã hội của bạn trên ViBook."
+        description="Tìm kiếm bạn bè, gửi lời mời kết bạn và mở rộng vòng kết nối xã hội của bạn trên ThoDev."
         slug="/friends"
         noindex={true}
       />

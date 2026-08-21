@@ -57,11 +57,7 @@ const Events = () => {
   const { t, language } = useContext(LanguageContext);
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [cursors, setCursors] = useState([null]);
-  const [hasMore, setHasMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -150,110 +146,93 @@ const Events = () => {
 
   const isSearchActive = !!search.trim();
 
-  // Reset pagination on search change
+  const [activeTab, setActiveTab] = useState("upcoming"); // "upcoming" or "past"
+
+  // Reset pagination on search change or tab change
   useEffect(() => {
     setCurrentPage(1);
-    setCursors([null]);
-  }, [search]);
+  }, [search, activeTab]);
 
-  // Load events
+  // Load events via real-time onSnapshot (up to 200 events)
   useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      try {
-        let q = query(collection(db, "Events"));
+    setIsLoading(true);
+    let q = query(collection(db, "Events"));
+    q = query(q, orderBy("startDateTime", "asc"), limit(200));
 
-        // Sort by startDateTime ascending (Upcoming events first)
-        q = query(q, orderBy("startDateTime", "asc"));
-
-        if (isSearchActive) {
-          // Fetch up to 100 events to filter client-side if searching
-          q = query(q, limit(100));
-        } else {
-          // Normal page-by-page cursor pagination
-          const startCursor = cursors[currentPage - 1];
-          if (startCursor) {
-            q = query(q, startAt(startCursor));
-          }
-          q = query(q, limit(7)); // Page size 6 + 1 for hasMore check
-        }
-
-        const snapshot = await getDocs(q);
-        const docs = snapshot.docs;
-
-        let eventList = [];
-        if (isSearchActive) {
-          eventList = docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            attendees: doc.data().attendees || [],
-            startDateTime: doc.data().startDateTime || null,
-            endDateTime: doc.data().endDateTime || null,
-            bannerImage: doc.data().bannerImage || null,
-          }));
-          setHasMore(false);
-          setNextCursor(null);
-        } else {
-          const hasNext = docs.length > 6;
-          setHasMore(hasNext);
-
-          const pageDocs = hasNext ? docs.slice(0, 6) : docs;
-          eventList = pageDocs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            attendees: doc.data().attendees || [],
-            startDateTime: doc.data().startDateTime || null,
-            endDateTime: doc.data().endDateTime || null,
-            bannerImage: doc.data().bannerImage || null,
-          }));
-
-          if (hasNext) {
-            setNextCursor(docs[6]);
-          } else {
-            setNextCursor(null);
-          }
-        }
-
-        setEvents(eventList);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        toast.error(t("unableToLoadEvents"), {
-          position: "top-center",
-          autoClose: 3000,
-        });
-        setIsLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, [search, currentPage, cursors, isSearchActive, t]);
-
-  // Filter active events (not ended)
-  useEffect(() => {
-    const now = new Date();
-    let filtered = events.filter((e) => {
-      if (!e.endDateTime) return true;
-      const endDate = new Date(e.endDateTime);
-      return now < endDate;
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const eventList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        attendees: doc.data().attendees || [],
+        startDateTime: doc.data().startDateTime || null,
+        endDateTime: doc.data().endDateTime || null,
+        bannerImage: doc.data().bannerImage || null,
+      }));
+      setEvents(eventList);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching events:", error);
+      toast.error(t("unableToLoadEvents"), {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      setIsLoading(false);
     });
 
-    if (search.trim()) {
-      filtered = filtered.filter((e) =>
-        e.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
+    return () => unsubscribe();
+  }, [t]);
 
-    setFilteredEvents(filtered);
-  }, [search, events]);
+  // Separate events into upcoming and past
+  const { upcoming, past } = useMemo(() => {
+    const now = new Date();
+    const upcomingList = [];
+    const pastList = [];
 
+    events.forEach((e) => {
+      // If no endDateTime, fall back to startDateTime. If neither, assume ongoing (upcoming).
+      const end = e.endDateTime ? new Date(e.endDateTime) : (e.startDateTime ? new Date(e.startDateTime) : null);
+      if (!end || now < end) {
+        upcomingList.push(e);
+      } else {
+        pastList.push(e);
+      }
+    });
+
+    // Sort upcoming: ascending (nearest first)
+    upcomingList.sort((a, b) => {
+      const dateA = a.startDateTime ? new Date(a.startDateTime) : new Date(0);
+      const dateB = b.startDateTime ? new Date(b.startDateTime) : new Date(0);
+      return dateA - dateB;
+    });
+
+    // Sort past: descending (most recent first)
+    pastList.sort((a, b) => {
+      const dateA = a.startDateTime ? new Date(a.startDateTime) : new Date(0);
+      const dateB = b.startDateTime ? new Date(b.startDateTime) : new Date(0);
+      return dateB - dateA;
+    });
+
+    return { upcoming: upcomingList, past: pastList };
+  }, [events]);
+
+  // Filter events based on active tab and search query
+  const filteredEvents = useMemo(() => {
+    const list = activeTab === "upcoming" ? upcoming : past;
+    if (!search.trim()) return list;
+    return list.filter((e) =>
+      e.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [activeTab, upcoming, past, search]);
+
+  // Client-side pagination
   const pagedEvents = useMemo(() => {
-    if (isSearchActive) {
-      const start = (currentPage - 1) * 6;
-      return filteredEvents.slice(start, start + 6);
-    }
-    return filteredEvents;
-  }, [filteredEvents, currentPage, isSearchActive]);
+    const start = (currentPage - 1) * 6;
+    return filteredEvents.slice(start, start + 6);
+  }, [filteredEvents, currentPage]);
+
+  const hasMore = useMemo(() => {
+    return currentPage * 6 < filteredEvents.length;
+  }, [currentPage, filteredEvents]);
 
   const totalEvents = filteredEvents.length;
 
@@ -599,10 +578,10 @@ const Events = () => {
                 }
               },
           "image": event.bannerImage || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200",
-          "description": event.description || "Sự kiện được tổ chức bởi thành viên ViBook",
+          "description": event.description || "Sự kiện được tổ chức bởi thành viên ThoDev",
           "organizer": {
             "@type": "Organization",
-            "name": "ViBook",
+            "name": "ThoDev",
             "url": "https://vibook.net"
           }
         }
@@ -623,14 +602,14 @@ const Events = () => {
     <div className="page-shell">
       <SEO
         title="Sự kiện & Hội thảo Công nghệ"
-        description="Khám phá các sự kiện và hội thảo công nghệ thông tin nổi bật trên ViBook. Tham gia và kết nối ngay với cộng đồng IT."
+        description="Khám phá các sự kiện và hội thảo công nghệ thông tin nổi bật trên ThoDev. Tham gia và kết nối ngay với cộng đồng IT."
         slug="/events"
         schema={eventSchema}
       />
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            {t("eventsTitle")} ({events.length})
+            {t("eventsTitle")} ({filteredEvents.length})
           </h1>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {/* <input
@@ -657,6 +636,34 @@ const Events = () => {
             </button>
 
           </div>
+        </div>
+
+        {/* Tab Bar */}
+        <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6 gap-6">
+          <button
+            onClick={() => {
+              setActiveTab("upcoming");
+            }}
+            className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+              activeTab === "upcoming"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            {language === "vi" ? "Sự kiện sắp diễn ra" : "Upcoming events"}
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("past");
+            }}
+            className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+              activeTab === "past"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            {language === "vi" ? "Sự kiện đã diễn ra" : "Past events"}
+          </button>
         </div>
 
         {/* Create Event Modal */}
@@ -1123,7 +1130,7 @@ const Events = () => {
               <div className="space-y-3">
                 {participantsData.map((user) => {
                   const displayPhoto = auth.currentUser ? user.photoURL : null;
-                  const displayDisplayName = auth.currentUser ? (user.displayName || user.email) : "Thành viên ViBook";
+                  const displayDisplayName = auth.currentUser ? (user.displayName || user.email) : "Thành viên ThoDev";
                   return (
                     <div key={user.uid} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       {displayPhoto ? (
@@ -1253,7 +1260,7 @@ const Events = () => {
                       selectedEvent.attendees.map((uid) => {
                         const user = participantsData.find(p => p.uid === uid) || { displayName: "Unknown User", photoURL: null };
                         const displayPhoto = auth.currentUser ? user.photoURL : null;
-                        const displayDisplayName = auth.currentUser ? user.displayName : "Thành viên ViBook";
+                        const displayDisplayName = auth.currentUser ? user.displayName : "Thành viên ThoDev";
                         return (
                           <div key={uid} className="flex items-center gap-2.5 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100/50 dark:border-gray-700/30">
                             {displayPhoto ? (
@@ -1504,12 +1511,12 @@ const Events = () => {
         </div>
 
         {/* Pagination */}
-        {(isSearchActive ? totalEvents > 6 : (currentPage > 1 || hasMore)) && (
+        {(currentPage > 1 || hasMore) && (
           <div className="flex justify-center items-center gap-4 mt-8 pb-8">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1 || isLoading}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-semibold"
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-semibold cursor-pointer"
             >
               {t("previous")}
             </button>
@@ -1517,22 +1524,9 @@ const Events = () => {
               Page {currentPage}
             </span>
             <button
-              onClick={() => {
-                if (isSearchActive) {
-                  setCurrentPage((p) => p + 1);
-                } else {
-                  if (hasMore && nextCursor) {
-                    setCursors((prev) => {
-                      const newCursors = [...prev];
-                      newCursors[currentPage] = nextCursor;
-                      return newCursors;
-                    });
-                    setCurrentPage((p) => p + 1);
-                  }
-                }
-              }}
-              disabled={isSearchActive ? (currentPage * 6 >= totalEvents) : (!hasMore || isLoading)}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-semibold"
+              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={!hasMore || isLoading}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-sm font-semibold cursor-pointer"
             >
               {t("next")}
             </button>

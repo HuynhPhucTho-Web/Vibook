@@ -103,7 +103,7 @@ function Register() {
     <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-hidden p-4 sm:p-6">
       <SEO
         title="Đăng ký tài khoản"
-        description="Đăng ký tài khoản ViBook miễn phí để chia sẻ kiến thức, lưu trữ tài liệu học tập và tham gia các sự kiện công nghệ sôi nổi."
+        description="Đăng ký tài khoản ThoDev miễn phí để chia sẻ kiến thức, lưu trữ tài liệu học tập và tham gia các sự kiện công nghệ sôi nổi."
         slug="/register"
         noindex={true}
       />
@@ -124,7 +124,7 @@ function Register() {
             {/* <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-rose-400 shadow-md shadow-pink-500/20" />
-                <span className="font-extrabold text-slate-800 text-lg tracking-tight">ViBook</span>
+                <span className="font-extrabold text-slate-800 text-lg tracking-tight">ThoDev</span>
               </div>
               <Link
                 to="/feed"
@@ -137,7 +137,7 @@ function Register() {
             <div className="mb-6">
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Đăng ký</h1>
               <p className="text-slate-500 text-sm mt-1">
-                Tạo tài khoản để tham gia cộng đồng ViBook ngay hôm nay.
+                Tạo tài khoản để tham gia cộng đồng ThoDev ngay hôm nay.
               </p>
             </div>
 
@@ -242,7 +242,7 @@ function Register() {
                   <Link to="/privacy-policy" target="_blank" className="text-pink-600 hover:underline font-semibold">
                     Chính sách quyền riêng tư
                   </Link>{" "}
-                  của ViBook.
+                  của ThoDev.
                 </label>
               </div>
 
@@ -373,7 +373,7 @@ function Register() {
               V
             </div>
             <div className="text-left">
-              <p className="font-bold text-xs text-slate-800">ViBook</p>
+              <p className="font-bold text-xs text-slate-800">ThoDev</p>
               <p className="text-[10px] text-slate-500">UI Designed by Tho Web</p>
             </div>
           </div>

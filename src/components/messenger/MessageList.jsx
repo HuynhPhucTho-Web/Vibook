@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import UserAvatar from "./UserAvatar";
 import { FaFile, FaHeart, FaReply, FaUndo } from "react-icons/fa";
+import { LanguageContext } from "../../context/LanguageContext";
 import "../../style/MessageList.css";
 
 // Danh sách icon reaction cơ bản
@@ -13,12 +14,20 @@ const REACTIONS = [
   { type: "angry", emoji: "😡", label: "Giận" },
 ];
 
-const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, onReaction, onReply, onRecallMessage }) => {
+const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, onReaction, onReply, onRecallMessage, chatConfig }) => {
+  const { t } = useContext(LanguageContext);
   const isLight = theme === "light";
   const messagesEndRef = useRef(null);
 
   const [hoveredMessage, setHoveredMessage] = useState(null);
   const [openPickerFor, setOpenPickerFor] = useState(null); // messageId đang mở picker
+
+  const getUserName = (uid) => {
+    if (uid === currentUser?.uid) {
+      return chatConfig?.nicknames?.[currentUser.uid] || t("you") || "Bạn";
+    }
+    return chatConfig?.nicknames?.[selectedUser?.uid] || `${selectedUser?.firstName} ${selectedUser?.lastName}`;
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,8 +56,9 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
   const getMediaCategory = (url) => {
     if (!url) return "unknown";
     if (/\.(jpg|jpeg|png|gif|webp)/i.test(url)) return "image";
-    if (/\.(mp4|webm|ogg)/i.test(url)) return "video";
-    if (/\.(pdf|doc|docx)/i.test(url)) return "document";
+    if (/\.(mp3|wav|m4a|aac|ogg)/i.test(url)) return "audio";
+    if (/\.(mp4|webm|avi|mov)/i.test(url)) return "video";
+    if (/\.(pdf|doc|docx|xls|xlsx|txt)/i.test(url)) return "document";
     return "unknown";
   };
 
@@ -90,11 +100,16 @@ style={message.isRecalled ?
               {message.mediaFiles && message.mediaFiles.length > 0 && (
                 <div className="message-media-files mb-2">
                   {message.mediaFiles.map((file, idx) => {
-                    const category = getMediaCategory(file.url);
+                    const category = file.category || getMediaCategory(file.url);
                     return (
                       <div key={idx} className="message-media-item">
                         {category === "image" && (
                           <img src={file.url} alt="Attached" className="message-image" />
+                        )}
+                        {category === "audio" && (
+                          <div className="message-audio-wrap mt-1 mb-1">
+                            <audio src={file.url} controls className="message-audio" style={{ maxWidth: "240px", borderRadius: "12px" }} />
+                          </div>
                         )}
                         {category === "video" && (
                           <video src={file.url} controls className="message-video" />
@@ -118,11 +133,12 @@ style={message.isRecalled ?
 
               {message.replyTo && (() => {
                 const repliedMessage = messages.find(m => m.id === message.replyTo);
+                const senderName = repliedMessage ? getUserName(repliedMessage.senderId) : "...";
                 return (
-                  <div className="reply-indicator mb-1">
-                    <small className="text-muted">
-                      Replying to: {repliedMessage ? repliedMessage.content : "a deleted message"}
-                    </small>
+                  <div className="reply-indicator mb-1" style={{ fontSize: "0.78rem", borderLeft: "2px solid rgba(255,255,255,0.3)", paddingLeft: "6px", marginBottom: "4px" }}>
+                    <span className="opacity-75">
+                      {t("replyingTo") || "Trả lời"} <strong>{senderName}</strong>: {repliedMessage ? (repliedMessage.isRecalled ? (t("messageRecalled") || "tin nhắn đã thu hồi") : repliedMessage.content) : (t("messageRecalled") || "tin nhắn đã thu hồi")}
+                    </span>
                   </div>
                 );
               })()}

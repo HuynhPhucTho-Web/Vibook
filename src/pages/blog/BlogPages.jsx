@@ -33,6 +33,7 @@ import BlogCard from "../../components/blog/BlogCard";
 import SEO from "../../components/SEO";
 import BlogDetail from "../../components/blog/BlogDetail";
 import BlogFormModal from "../../components/blog/BlogFormModal";
+import AdSense from "../../components/AdSense";
 import { FaHeart, FaPlus } from "react-icons/fa";
 import "../../style/Blog.css";
 
@@ -716,7 +717,7 @@ const BlogPages = () => {
       description: post.description,
       category: post.category,
       tags: post.tags || [],
-      content: post.content || "",
+      content: Array.isArray(post.content) ? post.content.join("") : (post.content || ""),
       coverImage: post.coverImage || "",
       published: post.published || false,
     });
@@ -1134,11 +1135,11 @@ const BlogPages = () => {
       "image": currentPost.coverImage || `${window.location.origin}/images/default-blog-cover.jpg`,
       "author": {
         "@type": "Person",
-        "name": currentPost.authorName || "Tác giả ViBook"
+        "name": currentPost.authorName || "Tác giả ThoDev"
       },
       "publisher": {
         "@type": "Organization",
-        "name": "ViBook",
+        "name": "ThoDev",
         "logo": {
           "@type": "ImageObject",
           "url": `${window.location.origin}/logo.png`
@@ -1153,11 +1154,11 @@ const BlogPages = () => {
     return {
       "@context": "https://schema.org",
       "@type": "Blog",
-      "name": "Blog ViBook",
-      "description": "Nơi chia sẻ các bài viết hữu ích về công nghệ, phong cách sống và tin tức từ cộng đồng ViBook.",
+      "name": "Blog ThoDev",
+      "description": "Nơi chia sẻ các bài viết hữu ích về công nghệ, phong cách sống và tin tức từ cộng đồng ThoDev.",
       "publisher": {
         "@type": "Organization",
-        "name": "ViBook"
+        "name": "ThoDev"
       }
     };
   }, []);
@@ -1168,7 +1169,7 @@ const BlogPages = () => {
       <div className="page-shell">
         <SEO
           title="Đang tải bài viết..."
-          description="Đang tải nội dung bài viết từ ViBook..."
+          description="Đang tải nội dung bài viết từ ThoDev..."
           slug={`/blog/${slug}`}
         />
         <div className="blog-detail-loading">{t("loading")}</div>
@@ -1190,7 +1191,7 @@ const BlogPages = () => {
       ) : (
         <SEO
           title="Blog & Tin tức"
-          description="Nơi chia sẻ các bài viết hữu ích về công nghệ, phong cách sống và tin tức từ cộng đồng ViBook."
+          description="Nơi chia sẻ các bài viết hữu ích về công nghệ, phong cách sống và tin tức từ cộng đồng ThoDev."
           slug="/blog"
           schema={blogListSchema}
         />
@@ -1265,18 +1266,33 @@ const BlogPages = () => {
             <>
               <div className="blog-grid">
                 {filteredAndPagedPosts.map((post, index) => (
-                  <BlogCard
-                    key={post.id || post.slug}
-                    post={post}
-                    index={index}
-                    isFavorite={favoriteBlogIds.has(post.id)}
-                    onToggleFavorite={handleToggleFavorite}
-                    onEdit={openEditModal}
-                    onDelete={handleDeletePost}
-                    t={t}
-                    getReadTime={getReadTime}
-                    auth={auth}
-                  />
+                  <React.Fragment key={post.id || post.slug}>
+                    {/* In-feed Ad unit (displays after every 3 posts) */}
+                    {index > 0 && index % 3 === 0 && (
+                      <div className="blog-ad-card" style={{
+                        gridColumn: "1 / -1",
+                        margin: "15px 0",
+                        padding: "15px",
+                        background: "var(--vb-glass-surface)",
+                        border: "1px solid var(--vb-glass-border)",
+                        borderRadius: "var(--vb-radius-md)",
+                        backdropFilter: "var(--vb-glass-blur)"
+                      }}>
+                        <AdSense adSlot="9056933175" adLayoutKey="-62+ca+8-3b+jw" />
+                      </div>
+                    )}
+                    <BlogCard
+                      post={post}
+                      index={index}
+                      isFavorite={favoriteBlogIds.has(post.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                      onEdit={openEditModal}
+                      onDelete={handleDeletePost}
+                      t={t}
+                      getReadTime={getReadTime}
+                      auth={auth}
+                    />
+                  </React.Fragment>
                 ))}
               </div>
 
@@ -1309,6 +1325,19 @@ const BlogPages = () => {
             tocItems={tocItems}
             onBack={() => navigate("/blog")}
           />
+
+          {/* Detail View Ad Unit */}
+          <div className="blog-detail-ad-container px-4 my-4" style={{
+            margin: "20px 0",
+            padding: "15px",
+            background: "var(--vb-glass-surface)",
+            border: "1px solid var(--vb-glass-border)",
+            borderRadius: "var(--vb-radius-md)",
+            backdropFilter: "var(--vb-glass-blur)"
+          }}>
+            {/* Note: You can replace '9056933175' with a different ad slot ID from AdSense for detail page if desired */}
+            <AdSense adSlot="9056933175" adFormat="auto" />
+          </div>
 
           <div className="px-4 pb-5">
             {relatedPosts.length > 0 && (

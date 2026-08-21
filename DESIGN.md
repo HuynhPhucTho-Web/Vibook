@@ -1,5 +1,5 @@
 ---
-name: Vibook Content-First
+name: ThoDev Content-First
 description: Minimalist, readable, and content-focused social book network.
 colors:
   primary: "#8e54e9"
@@ -65,13 +65,13 @@ components:
     padding: "16px"
 ---
 
-# Design System: Vibook
+# Design System: ThoDev
 
 ## Overview
 
 **Creative North Star: "The Reader's Sanctuary"**
 
-Vibook's design system centers on a Modern Clean & Content-First layout. With book cataloging, feed posts, user-written blogs, and literary event coordination being the heart of the product, the user interface acts as a quiet, functional frame. Page clutter is minimized and typography layout is maximized to ensure readability during long reading and writing sessions.
+ThoDev's design system centers on a Modern Clean & Content-First layout. With book cataloging, feed posts, user-written blogs, and literary event coordination being the heart of the product, the user interface acts as a quiet, functional frame. Page clutter is minimized and typography layout is maximized to ensure readability during long reading and writing sessions.
 
 The system supports a dual-theme experience: a soft-light mode (warm, book-paper tone) for daytime reading, and a deep, low-contrast dark mode for night reading. The card-based UI divides complex structures into discrete units, simplifying grid structures and ensuring a flexible, responsive layout on mobile screens.
 
@@ -138,7 +138,7 @@ The layout uses a fluid grid system driven by an 8px base spacing scale. Page st
 
 ## Elevation & Depth
 
-Vibook uses a flat-by-default visual strategy. Layout depth is established via tonal layering and thin borders instead of heavy box-shadow gradients.
+ThoDev uses a flat-by-default visual strategy. Layout depth is established via tonal layering and thin borders instead of heavy box-shadow gradients.
 
 - **Tonal Layering (Dark Mode):** Base backgrounds use `#12131a`, cards rise to `#1e1f27` for standard grouping, and input containers sit at `#0c0d14` for a recessed input feel.
 - **Tonal Layering (Light Mode):** Base backgrounds use `#faf7f2`, cards use `#ffffff`, and inputs use `#ffffff` with a thin border.

@@ -188,7 +188,7 @@ const FindFriends = ({ currentUser, theme }) => {
 
             // Mask PII for guests to protect privacy
             const displayPhoto = currentUser ? user.photo : null;
-            const displayFullName = currentUser ? fullName : "Người dùng ViBook";
+            const displayFullName = currentUser ? fullName : "Người dùng ThoDev";
 
             return (
               <div key={user.uid} className="friend-card">

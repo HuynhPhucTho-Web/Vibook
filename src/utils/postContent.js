@@ -73,7 +73,16 @@ export const normalizeSearchText = (value = "") => value
   .replace(/\s+/g, " ")
   .trim();
 
-export const getPostHtml = (post = {}) => post.contentHtml || (post.content ? `<p>${escapeHtml(post.content).replace(/\n/g, "<br>")}</p>` : "");
+export const getPostHtml = (post = {}) => {
+  if (post.contentHtml) return post.contentHtml;
+  if (!post.content) return "";
+  // If content is an array of HTML lines, join them into a single HTML string
+  if (Array.isArray(post.content)) {
+    return post.content.join("\n");
+  }
+  // For legacy string content, escape to avoid double-HTML
+  return `<p>${escapeHtml(post.content).replace(/\n/g, "<br>")}</p>`;
+};
 
 const escapeHtml = (value = "") => value
   .replaceAll("&", "&amp;")

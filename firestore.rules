@@ -284,8 +284,10 @@ service cloud.firestore {
 
       // Chỉ bạn bè mới thấy conversation
       allow read: if isFriend();
-      // Không cho ghi trực tiếp vào doc này, chỉ vào subcollection messages
-      allow write: if false;
+      
+      // Cho phép tạo/cập nhật cấu hình cuộc trò chuyện (theme, nicknames, quickEmoji, blockedBy, mutedBy)
+      allow create, update: if isFriend();
+      allow delete: if false;
 
       match /messages/{messageId} {
         // Chỉ bạn bè mới đọc được tin nhắn
@@ -295,12 +297,29 @@ service cloud.firestore {
         // - đã là bạn
         // - auth.uid là sender
         // - receiver nằm trong chatId
+        // - cuộc trò chuyện không bị chặn (blockedBy trống)
         allow create: if isFriend()
           && request.auth.uid == request.resource.data.senderId
-          && request.resource.data.receiverId in chatId.split('_');
+          && request.resource.data.receiverId in chatId.split('_')
+          && (
+            !exists(/databases/$(database)/documents/Messages/$(chatId))
+            || !('blockedBy' in get(/databases/$(database)/documents/Messages/$(chatId)).data)
+            || get(/databases/$(database)/documents/Messages/$(chatId)).data.blockedBy.size() == 0
+          );
 
-        // Edit / xoá: chỉ cho phép sender và phải là bạn
-        allow update, delete: if isFriend()
+        // Cập nhật tin nhắn:
+        // - Người gửi (sender) được phép thay đổi mọi thứ (chỉnh sửa, thu hồi, v.v.)
+        // - Người nhận (receiver) được phép cập nhật danh sách cảm xúc (reactions) hoặc đã xem (readBy)
+        allow update: if isFriend() && (
+          request.auth.uid == resource.data.senderId
+          || (
+            request.auth.uid == resource.data.receiverId
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'readBy'])
+          )
+        );
+
+        // Xoá tin nhắn: chỉ người gửi được phép
+        allow delete: if isFriend()
           && request.auth.uid == resource.data.senderId;
       }
     }

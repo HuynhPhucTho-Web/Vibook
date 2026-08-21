@@ -194,3 +194,181 @@
     min-height: 104px;
   }
 }
+
+/* ==========================================================================
+   PREMIUM LOADING SCREEN (Futuristic Tech / Glassmorphic)
+   ========================================================================== */
+
+/* Fullscreen Centered Container */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--app-background, var(--vb-bg-deep, #0c0d14));
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Ambient glow in dark mode behind the loader */
+.dark .loading-container::before {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(142, 84, 233, 0.15) 0%, transparent 70%);
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
+  animation: loading-ambient-pulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes loading-ambient-pulse {
+  0% { transform: scale(0.9) translate(-5%, -5%); opacity: 0.8; }
+  100% { transform: scale(1.1) translate(5%, 5%); opacity: 1; }
+}
+
+/* Main content wrapper */
+.loading-brand-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1.5rem;
+  padding: 2.5rem 2rem;
+  border-radius: var(--vb-radius-xl, 1.5rem);
+  background: var(--vb-glass-surface, rgba(255, 255, 255, 0.02));
+  backdrop-filter: var(--vb-glass-blur, blur(20px));
+  -webkit-backdrop-filter: var(--vb-glass-blur, blur(20px));
+  border: 1px solid var(--vb-glass-border, rgba(255, 255, 255, 0.05));
+  box-shadow: var(--vb-shadow-elevated, 0 12px 40px rgba(0, 0, 0, 0.2));
+  max-width: 320px;
+  width: 90%;
+  animation: loading-wrapper-appear 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.light .loading-brand-wrapper {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes loading-wrapper-appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Logo container & SVGs */
+.loading-logo-glow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(142, 84, 233, 0.03);
+  box-shadow: 0 0 30px rgba(142, 84, 233, 0.05);
+}
+
+.loading-logo-svg {
+  overflow: visible;
+}
+
+/* Spin animation for outer ring */
+.loading-ring-outer {
+  transform-origin: center;
+  animation: spin-clockwise 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Counter spin animation for inner ring */
+.loading-ring-inner {
+  transform-origin: center;
+  animation: spin-counter-clockwise 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Slowly pulsing V logo */
+.loading-logo-v {
+  animation: logo-v-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spin-clockwise {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-counter-clockwise {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes logo-v-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; filter: drop-shadow(0 0 4px rgba(142, 84, 233, 0.3)); }
+  50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 12px rgba(142, 84, 233, 0.7)); }
+}
+
+/* Main title "ViBook" with moving shimmer & gradient */
+.loading-app-title {
+  font-family: var(--vb-font-sans, "Hanken Grotesk", sans-serif);
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0;
+  background: linear-gradient(
+    120deg,
+    #4776e6 0%,
+    #8e54e9 25%,
+    #d5baff 50%,
+    #8e54e9 75%,
+    #4776e6 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-fill-color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 3s linear infinite;
+  filter: drop-shadow(0 2px 10px rgba(142, 84, 233, 0.15));
+}
+
+@keyframes text-shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Pulsing/Shimmering loading status text */
+.loading-app-status {
+  font-family: var(--vb-font-mono, "JetBrains Mono", monospace);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--vb-on-surface-variant, rgba(0, 0, 0, 0.6));
+  margin: 0;
+  opacity: 0.8;
+  position: relative;
+  display: inline-block;
+  animation: status-pulse 1.8s ease-in-out infinite;
+}
+
+.dark .loading-app-status {
+  color: var(--vb-on-surface-variant, rgba(255, 255, 255, 0.6));
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.98); }
+  50% { opacity: 0.95; transform: scale(1); color: var(--vb-primary, #8e54e9); }
+}

@@ -101,7 +101,7 @@ function VideoPlayer() {
         "item": {
           "@type": "VideoObject",
           "name": video.snippet.title,
-          "description": video.snippet.description || "Video chia sẻ học tập/giải trí tại ViBook",
+          "description": video.snippet.description || "Video chia sẻ học tập/giải trí tại ThoDev",
           "thumbnailUrl": [video.snippet.thumbnails?.medium?.url || video.snippet.thumbnails?.default?.url],
           "uploadDate": video.snippet.publishedAt || new Date().toISOString(),
           "embedUrl": `https://www.youtube.com/embed/${video.id.videoId}`
@@ -114,7 +114,7 @@ function VideoPlayer() {
     <div className="page-shell">
       <SEO
         title="Kho Video & Nhạc Lofi Relax"
-        description="Thư giãn cùng kho video nhạc Lofi học tập, làm việc cực chất và các video chia sẻ công nghệ hữu ích tại ViBook."
+        description="Thư giãn cùng kho video nhạc Lofi học tập, làm việc cực chất và các video chia sẻ công nghệ hữu ích tại ThoDev."
         slug="/videos"
         schema={videoSchema}
       />

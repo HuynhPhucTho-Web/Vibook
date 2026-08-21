@@ -67,11 +67,11 @@ function PostDetail() {
     return {
       "@context": "https://schema.org",
       "@type": "SocialMediaPosting",
-      "headline": post.content ? (post.content.length > 80 ? `${post.content.substring(0, 80)}...` : post.content) : "Bài viết ViBook",
+      "headline": post.content ? (post.content.length > 80 ? `${post.content.substring(0, 80)}...` : post.content) : "Bài viết ThoDev",
       "image": post.mediaUrl || post.imageUrl || post.photo || "",
       "author": {
         "@type": "Person",
-        "name": post.userName || "Người dùng ViBook"
+        "name": post.userName || "Người dùng ThoDev"
       },
       "datePublished": publishDate,
       "description": post.content || ""
@@ -151,7 +151,7 @@ function PostDetail() {
     <div className="page-shell">
       <SEO
         title={post.content ? (post.content.length > 50 ? `${post.content.substring(0, 50)}...` : post.content) : `Bài viết của ${post.userName || "Người dùng"}`}
-        description={post.content || "Xem bài viết chi tiết trên mạng xã hội ViBook."}
+        description={post.content || "Xem bài viết chi tiết trên mạng xã hội ThoDev."}
         image={post.mediaUrl || post.imageUrl || post.photo || ""}
         slug={`/post/${post.id}`}
         type="article"

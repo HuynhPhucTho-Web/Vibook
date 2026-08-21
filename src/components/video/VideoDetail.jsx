@@ -21,11 +21,11 @@ const VideoDetail = ({ selectedVideo, videoStats, comments }) => {
         {/* Đánh giá độc bản tránh Thin/Scraped Content */}
         <div className="bg-gray-100 dark:bg-gray-800/80 p-4 rounded-xl mt-4 border border-gray-200 dark:border-gray-700/60">
           <h4 className="font-bold text-sm text-blue-600 dark:text-blue-400 mb-1.5 flex items-center gap-1.5">
-            <span>📝</span> Đánh giá chuyên môn bởi ViBook AI:
+            <span>📝</span> Đánh giá chuyên môn bởi ThoDev AI:
           </h4>
           <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
             Nội dung video cung cấp góc nhìn sâu sắc và có tính ứng dụng thực tiễn cao cho cộng đồng học tập công nghệ. 
-            ViBook đánh giá cao chất lượng tài liệu học tập/nhạc số thư giãn này, hỗ trợ cải thiện năng suất và tạo không gian tập trung hiệu quả.
+            ThoDev đánh giá cao chất lượng tài liệu học tập/nhạc số thư giãn này, hỗ trợ cải thiện năng suất và tạo không gian tập trung hiệu quả.
           </p>
         </div>
 

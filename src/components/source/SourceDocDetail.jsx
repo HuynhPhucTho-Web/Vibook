@@ -266,8 +266,8 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                   </h4>
                   <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6 leading-relaxed">
                     {language === "vi" 
-                      ? "Vui lòng đăng nhập tài khoản ViBook để xem trước, in và tải xuống tài liệu này để bảo vệ bản quyền." 
-                      : "Please sign in to ViBook to preview, print and download this document to protect copyright."}
+                      ? "Vui lòng đăng nhập tài khoản ThoDev để xem trước, in và tải xuống tài liệu này để bảo vệ bản quyền." 
+                      : "Please sign in to ThoDev to preview, print and download this document to protect copyright."}
                   </p>
                   <a
                     href={`/login?from=${encodeURIComponent(window.location.pathname)}`}

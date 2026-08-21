@@ -56,7 +56,7 @@ const Store = () => {
     <div className={`min-h-screen ${isLight ? "bg-gray-50" : "bg-gray-900"}`}>
       <SEO
         title="Chợ mua sắm Market"
-        description="Khám phá hàng ngàn sản phẩm chất lượng, giá tốt và nhiều chương trình ưu đãi hấp dẫn tại Chợ trực tuyến ViBook Market."
+        description="Khám phá hàng ngàn sản phẩm chất lượng, giá tốt và nhiều chương trình ưu đãi hấp dẫn tại Chợ trực tuyến ThoDev Market."
         slug="/market"
       />
       {/* Search & Header Section */}

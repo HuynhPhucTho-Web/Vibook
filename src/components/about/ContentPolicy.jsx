@@ -26,7 +26,7 @@ export default function ContentPolicy({ isLight, onBack }) {
           Chính Sách Nội Dung (Content Policy)
         </h1>
         <p className={`text-base max-w-2xl leading-relaxed ${subTextColor}`}>
-          Báo cáo chi tiết về cơ chế quản lý, kiểm duyệt nội dung và các quy tắc cộng đồng trên ViBook
+          Báo cáo chi tiết về cơ chế quản lý, kiểm duyệt nội dung và các quy tắc cộng đồng trên ThoDev
           nhằm đảm bảo môi trường quảng cáo an toàn, tuân thủ nghiêm ngặt Chính sách nội dung của Google AdSense.
         </p>
       </header>
@@ -38,7 +38,7 @@ export default function ContentPolicy({ isLight, onBack }) {
             <EyeOff size={22} /> 1. Nội dung bị cấm hoàn toàn (Prohibited Content)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            ViBook thiết lập bộ lọc tự động và đội ngũ kiểm duyệt thường trực để loại bỏ hoàn toàn các loại nội dung sau khỏi nền tảng:
+            ThoDev thiết lập bộ lọc tự động và đội ngũ kiểm duyệt thường trực để loại bỏ hoàn toàn các loại nội dung sau khỏi nền tảng:
           </p>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 list-disc text-sm">
             <li className={subTextColor}>Nội dung người lớn, khiêu dâm, kích dục hoặc ngôn từ thô tục phản cảm.</li>
@@ -55,7 +55,7 @@ export default function ContentPolicy({ isLight, onBack }) {
             <ShieldCheck size={22} /> 2. Cơ chế kiểm duyệt & Báo cáo (Moderation & Reporting)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            Để duy trì nội dung sạch phục vụ đối tác quảng cáo AdSense, ViBook vận hành cơ chế kiểm duyệt 3 lớp:
+            Để duy trì nội dung sạch phục vụ đối tác quảng cáo AdSense, ThoDev vận hành cơ chế kiểm duyệt 3 lớp:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className={`p-4 rounded-xl border ${borderColor} bg-white/5`}>
@@ -100,7 +100,7 @@ export default function ContentPolicy({ isLight, onBack }) {
           <div>
             <h4 className="font-bold text-sm mb-1">Cam kết về An toàn Thương hiệu (Brand Safety Commitment)</h4>
             <p className="text-xs opacity-75 leading-relaxed">
-              ViBook cam kết bảo vệ thương hiệu của các nhà quảng cáo Google AdSense bằng cách không bao giờ hiển thị quảng cáo bên cạnh
+              ThoDev cam kết bảo vệ thương hiệu của các nhà quảng cáo Google AdSense bằng cách không bao giờ hiển thị quảng cáo bên cạnh
               hoặc trên các nội dung vi phạm chính sách nêu trên. Hệ thống Ad Placement được cấu hình tự động ẩn vùng quảng cáo nếu trang
               bị người dùng báo cáo vi phạm đang chờ duyệt.
             </p>

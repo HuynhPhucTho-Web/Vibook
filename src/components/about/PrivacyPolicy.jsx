@@ -26,7 +26,7 @@ export default function PrivacyPolicy({ isLight, onBack }) {
           Chính Sách Quyền Riêng Tư (Privacy Policy)
         </h1>
         <p className={`text-base max-w-2xl leading-relaxed ${subTextColor}`}>
-          Cam kết bảo mật thông tin cá nhân, minh bạch hóa việc thu thập dữ liệu và công khai sử dụng Cookie để phân phối quảng cáo trên ViBook.
+          Cam kết bảo mật thông tin cá nhân, minh bạch hóa việc thu thập dữ liệu và công khai sử dụng Cookie để phân phối quảng cáo trên ThoDev.
         </p>
       </header>
 
@@ -37,7 +37,7 @@ export default function PrivacyPolicy({ isLight, onBack }) {
             <Database size={22} /> 1. Thu thập dữ liệu người dùng (Data Collection)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            ViBook thu thập và lưu trữ thông tin của người dùng một cách tối thiểu và an toàn thông qua cơ sở dữ liệu Firebase:
+            ThoDev thu thập và lưu trữ thông tin của người dùng một cách tối thiểu và an toàn thông qua cơ sở dữ liệu Firebase:
           </p>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 list-disc text-sm">
             <li className={subTextColor}><strong>Thông tin đăng ký:</strong> Địa chỉ Email, Họ và Tên (phục vụ hiển thị và xác minh tài khoản).</li>
@@ -52,11 +52,11 @@ export default function PrivacyPolicy({ isLight, onBack }) {
             <Cookie size={22} /> 2. Chính sách về Cookie & Google AdSense (AdSense Cookie Policy)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            ViBook hiển thị quảng cáo từ các đối tác thứ ba như Google AdSense. Do đó, bạn cần hiểu rõ các điều khoản về Cookie quảng cáo:
+            ThoDev hiển thị quảng cáo từ các đối tác thứ ba như Google AdSense. Do đó, bạn cần hiểu rõ các điều khoản về Cookie quảng cáo:
           </p>
           <div className={`p-4 rounded-xl border ${borderColor} bg-white/5 space-y-3 text-sm`}>
             <p className="opacity-90">
-              - <strong>Google sử dụng cookie:</strong> Google và các đối tác quảng cáo sử dụng cookie (như cookie DoubleClick) để phân phối quảng cáo dựa trên lịch sử truy cập của bạn tại ViBook hoặc các trang web khác trên Internet.
+              - <strong>Google sử dụng cookie:</strong> Google và các đối tác quảng cáo sử dụng cookie (như cookie DoubleClick) để phân phối quảng cáo dựa trên lịch sử truy cập của bạn tại ThoDev hoặc các trang web khác trên Internet.
             </p>
             <p className="opacity-90">
               - <strong>Cá nhân hóa quảng cáo:</strong> Việc sử dụng cookie cho phép Google hiển thị quảng cáo được cá nhân hóa, phù hợp với sở thích của riêng bạn.
@@ -72,7 +72,7 @@ export default function PrivacyPolicy({ isLight, onBack }) {
             <Lock size={22} /> 3. Bảo mật thông tin (Data Security)
           </h2>
           <p className={`text-sm leading-relaxed ${subTextColor}`}>
-            ViBook triển khai các biện pháp bảo mật hiện đại nhằm ngăn chặn truy cập trái phép, rò rỉ dữ liệu hoặc thay đổi dữ liệu của bạn:
+            ThoDev triển khai các biện pháp bảo mật hiện đại nhằm ngăn chặn truy cập trái phép, rò rỉ dữ liệu hoặc thay đổi dữ liệu của bạn:
           </p>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 list-disc text-sm">
             <li className={subTextColor}>Toàn bộ lưu lượng truy cập trang web được mã hóa bằng giao thức bảo mật <strong>SSL/HTTPS</strong>.</li>

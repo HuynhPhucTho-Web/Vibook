@@ -393,7 +393,7 @@ export default function Sidebar() {
           </button>
 
           {(!isCollapsed || isMobile) && (
-            <h5 className="sidebar__brand" title="ViBook"></h5>
+            <h5 className="sidebar__brand" title="ThoDev">ThoDev</h5>
           )}
         </div>
 

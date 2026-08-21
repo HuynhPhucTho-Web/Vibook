@@ -2,16 +2,16 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
-export default function ViBookSitemap() {
-  // Cấu trúc danh mục và liên kết theo mô hình ứng dụng ViBook
+export default function ThoDevSitemap() {
+  // Cấu trúc danh mục và liên kết theo mô hình ứng dụng ThoDev
   const sitemapSections = [
     {
       title: 'Điều Hướng Chính',
       icon: '📌',
       links: [
-        { name: 'Trang Chủ ViBook', path: '/' },
+        { name: 'Trang Chủ ThoDev', path: '/' },
         { name: 'Tất Cả Bài Viết / Sách', path: '/posts' },
-        { name: 'Giới Thiệu ViBook', path: '/about' },
+        { name: 'Giới Thiệu ThoDev', path: '/about' },
         { name: 'Liên Hệ & Hỗ Trợ', path: '/contact' },
       ],
     },
@@ -63,18 +63,18 @@ export default function ViBookSitemap() {
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": "ViBook Sitemap",
-    "description": "Danh mục tổng hợp toàn bộ tài liệu, khóa học và bài viết công nghệ trên ViBook",
+    "name": "ThoDev Sitemap",
+    "description": "Danh mục tổng hợp toàn bộ tài liệu, khóa học và bài viết công nghệ trên ThoDev",
     "url": "https://vibook-6409f.firebaseapp.com/sitemap"
   };
 
   return (
     <>
       <Helmet>
-        <title>Sơ Đồ Trang Web (Sitemap) | ViBook</title>
+        <title>Sơ Đồ Trang Web (Sitemap) | ThoDev</title>
         <meta 
           name="description" 
-          content="Sơ đồ trang web ViBook. Tìm kiếm dễ dàng tất cả tài liệu lập trình C++, React, Node.js, TypeScript, Docker và Bảo mật web." 
+          content="Sơ đồ trang web ThoDev. Tìm kiếm dễ dàng tất cả tài liệu lập trình C++, React, Node.js, TypeScript, Docker và Bảo mật web." 
         />
         <link rel="canonical" href="https://vibook-6409f.firebaseapp.com/sitemap" />
         <script type="application/ld+json">
@@ -88,13 +88,13 @@ export default function ViBookSitemap() {
           {/* Header Trang */}
           <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <span style={{ backgroundColor: '#feefe8', color: '#f97316', padding: '0.4rem 1rem', borderRadius: '20px', fontWeight: '600', fontSize: '0.875rem' }}>
-              ViBook Navigation
+              ThoDev Navigation
             </span>
             <h1 style={{ fontSize: '2.5rem', color: '#0f172a', marginTop: '0.75rem', marginBottom: '0.5rem', fontWeight: '800' }}>
               Sơ Đồ Trang Web (Sitemap)
             </h1>
             <p style={{ color: '#64748b', fontSize: '1.1rem' }}>
-              Tra cứu nhanh toàn bộ kiến thức, tài liệu và lộ trình lập trình có trên ViBook.
+              Tra cứu nhanh toàn bộ kiến thức, tài liệu và lộ trình lập trình có trên ThoDev.
             </p>
           </header>
 

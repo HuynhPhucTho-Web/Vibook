@@ -323,7 +323,7 @@ const Setting = () => {
     <div className={`page-shell setting-page setting-page--${theme}`} style={pageStyle}>
       <SEO
         title="Cài đặt tài khoản"
-        description="Quản lý thông tin tài khoản, cấu hình quyền riêng tư, cài đặt bảo mật và tùy biến giao diện trên mạng xã hội ViBook."
+        description="Quản lý thông tin tài khoản, cấu hình quyền riêng tư, cài đặt bảo mật và tùy biến giao diện trên mạng xã hội ThoDev."
         slug="/settings"
         noindex={true}
       />

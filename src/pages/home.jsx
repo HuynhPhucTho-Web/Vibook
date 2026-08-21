@@ -33,6 +33,7 @@ import {
   mergeUniquePosts,
 } from "../utils/feedPosts";
 import SEO from "../components/SEO";
+import AdSense from "../components/AdSense";
 import "../style/Home.css";
 
 function FeedSkeleton({ count = 3 }) {
@@ -290,22 +291,36 @@ function Home() {
   }, [posts, searchParams]);
 
   const postList = useMemo(() => {
-    return visiblePosts.map((post) => (
-      <PostItem
-        key={post.id}
-        post={post}
-        auth={auth}
-        userDetails={userDetails}
-        onPostDeleted={handlePostDeleted}
-      />
+    return visiblePosts.map((post, index) => (
+      <React.Fragment key={post.id}>
+        {/* In-feed Ad unit (displays after every 3 posts) */}
+        {index > 0 && index % 3 === 0 && (
+          <div className="home-ad-container animate-fade-in" style={{
+            margin: "15px 0",
+            padding: "15px",
+            background: theme === "dark" ? "rgba(30, 31, 39, 0.6)" : "white",
+            border: theme === "dark" ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",
+            borderRadius: "var(--vb-radius-md)",
+            backdropFilter: "var(--vb-glass-blur)"
+          }}>
+            <AdSense adSlot="3748766178" adLayoutKey="-7j+dp+2e-4-27" />
+          </div>
+        )}
+        <PostItem
+          post={post}
+          auth={auth}
+          userDetails={userDetails}
+          onPostDeleted={handlePostDeleted}
+        />
+      </React.Fragment>
     ));
-  }, [visiblePosts, userDetails, handlePostDeleted]);
+  }, [visiblePosts, userDetails, handlePostDeleted, theme]);
 
   return (
     <div className="page-shell">
       <SEO
         title="Trang chủ"
-        description="Bảng tin ViBook - Mạng xã hội chia sẻ & kết nối bạn bè, cập nhật bài viết blog nổi bật và trò chuyện trực tuyến."
+        description="Bảng tin ThoDev - Mạng xã hội chia sẻ & kết nối bạn bè, cập nhật bài viết blog nổi bật và trò chuyện trực tuyến."
         slug="/feed"
       />
       <div className={`home-container home-container--${theme}`}>

@@ -607,7 +607,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     const url = `${window.location.origin}/post/${post.id}`;
     const text = postHtmlToText(getPostHtml(localPost));
     try {
-      if (mode === "native" && navigator.share) await navigator.share({ title: "Vibook", text, url });
+      if (mode === "native" && navigator.share) await navigator.share({ title: "ThoDev", text, url });
       else await navigator.clipboard.writeText(mode === "copyWithContent" ? `${text}\n${url}`.trim() : url);
       toast.success(mode === "native" ? t("shareOpened") : t("copied"));
     } catch (error) {

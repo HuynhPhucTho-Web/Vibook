@@ -24,11 +24,11 @@ adaptive
 
 ## Product Purpose
 
-Vibook is a social-driven book network that merges personal library organization (reading progress, shelves) with rich social features (feed posts, comments, likes) and long-form blogging. It aims to make reading a shared, communal experience by connecting readers, bloggers, and event coordinators in one unified application.
+ThoDev is a social-driven book network that merges personal library organization (reading progress, shelves) with rich social features (feed posts, comments, likes) and long-form blogging. It aims to make reading a shared, communal experience by connecting readers, bloggers, and event coordinators in one unified application.
 
 ## Positioning
 
-Unlike traditional, static book tracking tools (e.g., Goodreads) or generic blogging platforms (e.g., Medium), Vibook combines reading tracking, community social feeds, and dedicated long-form blogging natively under a single user identity and interface.
+Unlike traditional, static book tracking tools (e.g., Goodreads) or generic blogging platforms (e.g., Medium), ThoDev combines reading tracking, community social feeds, and dedicated long-form blogging natively under a single user identity and interface.
 
 ## Operating Context
 
@@ -43,7 +43,7 @@ Unlike traditional, static book tracking tools (e.g., Goodreads) or generic blog
 
 ## Brand Commitments
 
-- **Name:** Vibook
+- **Name:** ThoDev
 - **Design Philosophy:** Modern Clean & Content-First (Minimalist, content-focused).
 - **Visual Vocabulary:** Subtle borders, light-soft or soft-dark backgrounds, card-based layout grids, and high-readability typography to avoid eye strain during long sessions.
 

@@ -6,12 +6,16 @@ import "../../style/MessageInput.css";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { toast } from "react-toastify"; // Ensure toast is imported
 
-const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessage, onCancelReply, theme, currentUser, selectedUser }) => {
+const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessage, onCancelReply, theme, currentUser, selectedUser, chatConfig }) => {
     const { t } = useContext(LanguageContext);
     const isLight = theme === "light";
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef(null);
     const emojiButtonRef = useRef(null);
+
+    // Block status
+    const blockedBy = chatConfig?.blockedBy || [];
+    const isChatBlocked = blockedBy.length > 0;
 
     // File attachment states and refs
     const [attachedFiles, setAttachedFiles] = useState([]);
@@ -330,6 +334,11 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
         setShowEmojiPicker(false);
     };
 
+    const handleQuickEmojiSend = () => {
+        if (isChatBlocked) return;
+        onSendMessage(chatConfig?.quickEmoji || "👍", []);
+    };
+
     return (
         <div className={`message-input-container ${isLight ? 'light' : 'dark'}`}>
             {replyMessage && (
@@ -407,17 +416,17 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
                     onChange={handleFileInputChange}
                     multiple
                     className="d-none" // Hidden input
-                    disabled={isUploadingAttachments || isRecording}
+                    disabled={isUploadingAttachments || isRecording || isChatBlocked}
                 />
                 <div className={`message-input-wrapper ${isLight ? 'light' : 'dark'}`}>
                     <input
                         type="text"
                         value={messageText}
                         onChange={(e) => onMessageChange(e.target.value)}
-                        placeholder={t("typeAMessage")}
+                        placeholder={isChatBlocked ? "Cuộc trò chuyện này đã bị chặn" : t("typeAMessage")}
                         className={`message-input-field ${isLight ? 'light' : 'dark'}`}
                         autoComplete="off"
-                        disabled={isUploadingAttachments || isRecording}
+                        disabled={isUploadingAttachments || isRecording || isChatBlocked}
                     />
                     <div className={`message-input-actions ${isLight ? 'light' : 'dark'}`}>
                         {isRecording ? (
@@ -436,7 +445,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                                 ref={emojiButtonRef}
                                 title="Emoji"
-                                disabled={isUploadingAttachments || isRecording}
+                                disabled={isUploadingAttachments || isRecording || isChatBlocked}
                                 >
                                 <FaSmile size={18} />
                                 </button>
@@ -445,23 +454,35 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
                                         <Picker onEmojiClick={handleEmojiClick} theme={isLight ? "light" : "dark"} />
                                     </div>
                                 )}
-                                <button type="button" className="btn btn-sm p-1" title="Attach" onClick={() => fileInputRef.current?.click()} disabled={isUploadingAttachments || isRecording}>
+                                <button type="button" className="btn btn-sm p-1" title="Attach" onClick={() => fileInputRef.current?.click()} disabled={isUploadingAttachments || isRecording || isChatBlocked}>
                                     <FaPaperclip size={18} />
                                 </button>
-                                <button type="button" className="btn btn-sm p-1" title="Record Voice" onClick={handleRecordClick} disabled={isUploadingAttachments || isRecording}>
+                                <button type="button" className="btn btn-sm p-1" title="Record Voice" onClick={handleRecordClick} disabled={isUploadingAttachments || isRecording || isChatBlocked}>
                                     <FaMicrophone size={18} />
                                 </button>
                             </>
                         )}
                     </div>
                 </div>
-                <button
-                    type="submit"
-                    className="btn btn-primary rounded-circle p-3 shadow-sm message-send-btn"
-                    disabled={(!messageText.trim() && attachedFiles.length === 0 && !recordedBlob) || isUploadingAttachments || isRecording}
-                >
-                    <FaPaperPlane size={16} />
-                </button>
+                {(!messageText.trim() && attachedFiles.length === 0 && !recordedBlob) ? (
+                    <button
+                        type="button"
+                        onClick={handleQuickEmojiSend}
+                        className="btn btn-primary rounded-circle p-3 shadow-sm message-send-btn message-quick-emoji-btn"
+                        style={{ fontSize: "1.2rem", display: "flex", alignItems: "center", justifyContent: "center", minWidth: "48px", minHeight: "48px", padding: 0 }}
+                        disabled={isChatBlocked}
+                    >
+                        <span style={{ transform: "scale(1.2)", display: "block" }}>{chatConfig?.quickEmoji || "👍"}</span>
+                    </button>
+                ) : (
+                    <button
+                        type="submit"
+                        className="btn btn-primary rounded-circle p-3 shadow-sm message-send-btn"
+                        disabled={isUploadingAttachments || isRecording || isChatBlocked}
+                    >
+                        <FaPaperPlane size={16} />
+                    </button>
+                )}
             </form>
         </div>
     );

@@ -1,5 +1,5 @@
 /**
- * Route auth classification for ViBook.
+ * Route auth classification for ThoDev.
  *
  * Public: browse/read without login. Mutations (create, kết bạn, like…) check auth in handlers.
  * Private: RequireAuth redirects guests to /login.

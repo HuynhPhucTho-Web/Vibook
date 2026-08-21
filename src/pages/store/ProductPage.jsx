@@ -119,7 +119,7 @@ const ProductPage = () => {
     <div className={`min-h-screen pb-20 ${isLight ? "bg-gray-50" : "bg-gray-900"}`}>
       <SEO
         title={product.name}
-        description={product.description || `Mua sản phẩm ${product.name} chất lượng cao tại ViBook Market.`}
+        description={product.description || `Mua sản phẩm ${product.name} chất lượng cao tại ThoDev Market.`}
         image={product.imageUrl || product.image || ""}
         slug={`/product/${product.id}`}
         type="product"

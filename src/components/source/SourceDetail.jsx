@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { LanguageContext } from "../../context/LanguageContext";
 import { ThemeContext } from "../../context/ThemeContext";
 import { FaArrowLeft } from "react-icons/fa";
+import AdSense from "../AdSense";
 
 import SourceDocDetail from "./SourceDocDetail";
 import SourceQuizDetail from "./SourceQuizDetail";
@@ -119,6 +120,17 @@ export default function SourceDetail({ subject, onBack }) {
         ) : (
           <SourceQuizDetail subject={subject} isDark={isDark} language={language} />
         )}
+
+        {/* AdSense Unit for Subject Detail */}
+        <div className="my-4" style={{
+          padding: "15px",
+          background: isDark ? "rgba(30, 31, 39, 0.6)" : "white",
+          border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",
+          borderRadius: "1rem"
+        }}>
+          {/* Note: You can replace '4399658395' with a different ad slot ID if you want a separate ad unit here */}
+          <AdSense adSlot="4399658395" adFormat="auto" />
+        </div>
       </div>
 
       {/* Embedded CSS styles inherited by subcomponents */}

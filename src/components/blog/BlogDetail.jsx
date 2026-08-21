@@ -130,7 +130,7 @@ const BlogDetail = ({ post, isFavorite, onToggleFavorite, t, getReadTime, tocIte
               <div className="author-avatar-icon-placeholder d-flex align-items-center justify-content-center">
                 <FaUser size={10} />
               </div>
-              <span className="author-name-text">Tác giả ViBook</span>
+              <span className="author-name-text">Tác giả ThoDev</span>
             </div>
           ) : null}
 
