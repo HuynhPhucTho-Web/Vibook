@@ -13,12 +13,13 @@ import { toast } from "react-toastify";
 import { FaComments, FaUserMinus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSearch } from "../../context/SearchContext";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
-const FriendsList = ({ currentUser, theme }) => {
+const FriendsList = ({ currentUser }) => {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
-  const { keyword: searchTerm } = useSearch();
+  const { debouncedKeyword: searchTerm = "" } = useSearch();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -135,7 +136,12 @@ const FriendsList = ({ currentUser, theme }) => {
                 <div className="friend-card__header">
                   <div className="friend-card__avatar">
                     {friend.photo ? (
-                      <img src={friend.photo} alt={friend.displayName || "User"} />
+                      <img
+                        src={getOptimizedCloudinaryUrl(friend.photo, 120)}
+                        alt={friend.displayName || "User"}
+                        loading="lazy"
+                        decoding="async"
+                      />
                     ) : (
                       <span>{(friend.displayName || "U").charAt(0).toUpperCase()}</span>
                     )}

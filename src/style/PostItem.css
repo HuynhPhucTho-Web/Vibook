@@ -1,6 +1,8 @@
 /* src/style/PostItem.css */
 
 .post-item-container {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 550px;
   overflow: hidden;
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
   border-radius: var(--vb-radius-xl, 1.5rem);

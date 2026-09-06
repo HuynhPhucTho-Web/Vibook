@@ -609,7 +609,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                             <img src={currentQuestion.image} alt="Question Graphic" className="max-h-[150px] object-contain w-full" />
                           </div>
                         )}
-                        {flashcardFlipped && currentQuestion.question_vi && (
+                        {flashcardFlipped && currentQuestion.question_vi && currentQuestion.question_vi !== currentQuestion.question && (
                           <p className="text-[15px] font-medium text-green-600 dark:text-green-400 text-center mt-3 animate-pulse">
                             {currentQuestion.question_vi}
                           </p>
@@ -676,7 +676,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                         />
                       </div>
                     )}
-                    {reveal && currentQuestion.question_vi && (
+                    {reveal && currentQuestion.question_vi && currentQuestion.question_vi !== currentQuestion.question && (
                       <p className="text-body-md text-green-600 dark:text-green-400 font-semibold mt-3">
                         {currentQuestion.question_vi}
                       </p>
@@ -746,7 +746,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                               <span className="font-body-md text-body-md">
                                 {opt.text}
                               </span>
-                              {reveal && opt.text_vi && (
+                              {reveal && opt.text_vi && opt.text_vi !== opt.text && (
                                 <span className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
                                   {opt.text_vi}
                                 </span>
@@ -783,7 +783,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                         <p className={`text-sm leading-relaxed ${isDark ? "text-on-surface-variant" : "text-slate-600"}`}>
                           {currentQuestion.note}
                         </p>
-                        {currentQuestion.note_vi && (
+                        {currentQuestion.note_vi && currentQuestion.note_vi !== currentQuestion.note && (
                           <p className="text-sm leading-relaxed text-green-600 dark:text-green-400 mt-2 font-medium">
                             {currentQuestion.note_vi}
                           </p>

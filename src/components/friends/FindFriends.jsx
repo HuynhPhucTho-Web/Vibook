@@ -1,5 +1,5 @@
 // src/components/friends/FindFriends.jsx
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
@@ -9,23 +9,46 @@ import {
   where,
   orderBy,
   limit,
+  doc,
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
-import { FaUserPlus, FaSearch, FaUser } from "react-icons/fa";
+import { FaUserPlus, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { requireLogin } from "../../utils/requireLogin";
-import { LanguageContext } from "../../context/LanguageContext";
 import { useSearch } from "../../context/SearchContext";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
-const FindFriends = ({ currentUser, theme }) => {
+const FindFriends = ({ currentUser }) => {
   const navigate = useNavigate();
-  const { t } = useContext(LanguageContext);
   const [users, setUsers] = useState([]);
-  const { keyword: searchTerm } = useSearch();
+  const { debouncedKeyword: searchTerm = "" } = useSearch();
   const [loading, setLoading] = useState(true);
   const [sentRequests, setSentRequests] = useState(new Set());
   const [friends, setFriends] = useState(new Set());
   const [showAll, setShowAll] = useState(false);
+  const [currentUserProfile, setCurrentUserProfile] = useState(null);
+  const [sendingId, setSendingId] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setCurrentUserProfile(null);
+      return undefined;
+    }
+
+    const unsubscribe = onSnapshot(
+      doc(db, "Users", currentUser.uid),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setCurrentUserProfile(docSnap.data());
+        }
+      },
+      (error) => {
+        console.error("Error loading current user profile:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   useEffect(() => {
     const usersQuery = query(
@@ -115,18 +138,33 @@ const FindFriends = ({ currentUser, theme }) => {
   }, [currentUser]);
 
   const handleSendRequest = async (toUserId, toUserName) => {
-    if (!currentUser) {
-      navigate("/login", { state: { from: "/friends" } });
-      return;
-    }
+    const activeUser = requireLogin({
+      navigate,
+      message: "Đăng nhập để gửi lời mời kết bạn",
+      from: "/friends",
+    });
+    if (!activeUser) return;
+
+    if (sendingId) return;
+    setSendingId(toUserId);
 
     try {
       const targetUser = users.find((u) => u.uid === toUserId);
 
+      const senderFullName = currentUserProfile
+        ? `${currentUserProfile.firstName || ""} ${currentUserProfile.lastName || ""}`.trim()
+        : "";
+      const senderName =
+        senderFullName ||
+        activeUser.displayName ||
+        activeUser.email ||
+        "Unknown User";
+      const senderPhoto = currentUserProfile?.photo || activeUser.photoURL || null;
+
       await addDoc(collection(db, "FriendRequests"), {
-        fromUserId: user.uid,
-        fromUserName: `${user.displayName || user.email}`,
-        fromUserPhoto: user.photoURL || null,
+        fromUserId: activeUser.uid,
+        fromUserName: senderName,
+        fromUserPhoto: senderPhoto,
         toUserId,
         toUserName,
         toUserPhoto: targetUser?.photo || null,
@@ -134,10 +172,14 @@ const FindFriends = ({ currentUser, theme }) => {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+
+      setSentRequests((prev) => new Set([...prev, toUserId]));
       toast.success(`Friend request sent to ${toUserName}!`);
     } catch (error) {
       console.error("Error sending friend request:", error);
       toast.error("Failed to send friend request.");
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -196,7 +238,12 @@ const FindFriends = ({ currentUser, theme }) => {
                   <div className="friend-card__header">
                     <div className="friend-card__avatar">
                       {displayPhoto ? (
-                        <img src={displayPhoto} alt={`Avatar của ${displayFullName}`} />
+                        <img
+                          src={getOptimizedCloudinaryUrl(displayPhoto, 120)}
+                          alt={`Avatar của ${displayFullName}`}
+                          loading="lazy"
+                          decoding="async"
+                        />
                       ) : (
                         <FaUser />
                       )}
@@ -217,12 +264,13 @@ const FindFriends = ({ currentUser, theme }) => {
                       <button
                         type="button"
                         className="vb-btn vb-btn--primary vb-btn--sm"
+                        disabled={sendingId === user.uid}
                         onClick={() =>
                           handleSendRequest(user.uid, fullName)
                         }
                       >
                         <FaUserPlus />
-                        Add Friend
+                        {sendingId === user.uid ? "Sending..." : "Add Friend"}
                       </button>
                     )}
                   </div>

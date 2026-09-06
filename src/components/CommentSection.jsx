@@ -23,6 +23,7 @@ import Picker from "emoji-picker-react";
 import { LanguageContext } from "../context/LanguageContext";
 import { SlLike } from "react-icons/sl";
 import { requireLogin } from "../utils/requireLogin";
+import { getOptimizedCloudinaryUrl } from "../utils/cloudinary";
 
 const REACTIONS = {
   like: { emoji: "👍", label: "Thích" },
@@ -148,8 +149,10 @@ const ReplyInput = ({ commentId, postId, auth, userDetails, onCancel, onSuccess,
       <div className="flex gap-2 items-end">
         {userDetails?.photo || auth.currentUser?.photoURL ? (
           <img
-            src={userDetails?.photo || auth.currentUser?.photoURL}
+            src={getOptimizedCloudinaryUrl(userDetails?.photo || auth.currentUser?.photoURL, 80)}
             alt="Avatar"
+            loading="lazy"
+            decoding="async"
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
@@ -230,10 +233,35 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
   const [showReplies, setShowReplies] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [replies, setReplies] = useState(comment.replies || []);
+  const [repliesLoading, setRepliesLoading] = useState(false);
   const likeButtonRef = useRef(null);
   const isLight = theme === "light";
   
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!showReplies || isReply) return undefined;
+
+    setRepliesLoading(true);
+    const repliesQuery = query(
+      collection(db, "Posts", postId, "comments", comment.id, "replies"),
+      orderBy("createdAt", "asc")
+    );
+    const unsub = onSnapshot(
+      repliesQuery,
+      (snap) => {
+        setReplies(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setRepliesLoading(false);
+      },
+      (err) => {
+        console.error("Error loading replies:", err);
+        setRepliesLoading(false);
+      }
+    );
+
+    return () => unsub();
+  }, [showReplies, postId, comment.id, isReply]);
 
   const handleReaction = async (reactionType) => {
     const user = requireLogin({
@@ -345,8 +373,10 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
       <div className="flex gap-2">
         {comment.userPhoto ? (
           <img
-            src={comment.userPhoto}
+            src={getOptimizedCloudinaryUrl(comment.userPhoto, 80)}
             alt="Avatar"
+            loading="lazy"
+            decoding="async"
             className={`${depth > 0 ? "w-8 h-8" : "w-10 h-10"} rounded-full object-cover flex-shrink-0`}
           />
         ) : (
@@ -442,18 +472,24 @@ const CommentItem = ({ comment, postId, auth, userDetails, isReply = false, pare
                 <span>{showReplies ? t("hidden") : t("view")} {comment.replyCount} {t("respond")} </span>
               </button>
 
-              {showReplies && comment.replies?.map((reply) => (
-                <CommentItem
-                  key={reply.id}
-                  comment={reply}
-                  postId={postId}
-                  auth={auth}
-                  userDetails={userDetails}
-                  isReply={true}
-                  parentCommentId={isReply ? parentCommentId : comment.id}
-                  depth={depth + 1}
-                />
-              ))}
+              {showReplies && (
+                repliesLoading && replies.length === 0 ? (
+                  <div className="text-xs text-gray-500 py-1 ml-4 animate-pulse">Đang tải câu trả lời...</div>
+                ) : (
+                  replies.map((reply) => (
+                    <CommentItem
+                      key={reply.id}
+                      comment={reply}
+                      postId={postId}
+                      auth={auth}
+                      userDetails={userDetails}
+                      isReply={true}
+                      parentCommentId={isReply ? parentCommentId : comment.id}
+                      depth={depth + 1}
+                    />
+                  ))
+                )
+              )}
             </>
           )}
         </div>
@@ -491,39 +527,28 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
     if (!isCommentSectionOpen) return;
 
     setLoading(true);
-    let replyUnsubscribers = [];
     const unsubscribe = onSnapshot(
       query(collection(db, "Posts", postId, "comments"), orderBy("createdAt", "desc")),
       (snapshot) => {
-        replyUnsubscribers.forEach((stop) => stop());
-        replyUnsubscribers = [];
-        const commentsData = [];
         let totalCount = snapshot.docs.length;
+        const commentsData = snapshot.docs.map((commentDoc) => {
+          const data = commentDoc.data();
+          totalCount += data.replyCount || 0;
+          return { id: commentDoc.id, ...data };
+        });
 
-        for (const commentDoc of snapshot.docs) {
-          const commentData = { id: commentDoc.id, ...commentDoc.data(), replies: [] };
-          totalCount += commentData.replyCount || 0;
-
-          const unsubscribeReplies = onSnapshot(
-            query(collection(db, "Posts", postId, "comments", commentDoc.id, "replies"), orderBy("createdAt", "asc")),
-            (repliesSnap) => {
-              commentData.replies = repliesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-              setComments(prev => prev.map(c => c.id === commentDoc.id ? { ...c, replies: commentData.replies } : c));
-            }
-          );
-          replyUnsubscribers.push(unsubscribeReplies);
-
-          commentsData.push(commentData);
-        }
         setComments(commentsData);
         setTotalCommentCount(totalCount);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Error loading comments:", err);
         setLoading(false);
       }
     );
 
     return () => {
       unsubscribe();
-      replyUnsubscribers.forEach((stop) => stop());
     };
   }, [isCommentSectionOpen, postId]);
 
@@ -548,12 +573,11 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
         replyCount: 0
       });
       await updateDoc(doc(db, "Posts", postId), { commentCount: increment(1) });
-
       setCommentText("");
-      toast.success("Đã thêm bình luận!");
+      setShowEmoji(false);
     } catch (error) {
       console.error(error);
-      toast.error("Không thể thêm bình luận");
+      toast.error("Không thể gửi bình luận");
     }
   };
 
@@ -571,7 +595,7 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
   if (!isCommentSectionOpen) return null;
 
   return (
-    <div className={`border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`}>
+    <div className={`mt-3 border-t ${isLight ? "border-gray-200" : "border-zinc-800"}`}>
       {totalCommentCount > 0 && (
         <div className={`px-4 pt-3 pb-2 text-sm font-semibold ${isLight ? "text-gray-700" : "text-gray-300"}`}>
           {totalCommentCount} {t("comment")}
@@ -579,8 +603,12 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
       )}
 
       {loading ? (
-        <div className="py-8 text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-r-transparent" />
+        <div className="p-4 text-center">
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+        </div>
+      ) : comments.length === 0 ? (
+        <div className="p-4 text-center text-gray-500 text-sm">
+          {t("noCommentsYet")}
         </div>
       ) : (
         <div className="p-4 max-h-[400px] overflow-y-auto">
@@ -600,8 +628,10 @@ const CommentSection = ({ postId, auth, userDetails, isCommentSectionOpen }) => 
         <div className="flex gap-2 items-end">
           {userDetails?.photo || auth.currentUser?.photoURL ? (
             <img
-              src={userDetails?.photo || auth.currentUser?.photoURL}
+              src={getOptimizedCloudinaryUrl(userDetails?.photo || auth.currentUser?.photoURL, 80)}
               alt="Avatar"
+              loading="lazy"
+              decoding="async"
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (

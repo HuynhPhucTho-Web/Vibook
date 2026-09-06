@@ -26,31 +26,45 @@ const PostMedia = ({ post, isLight }) => {
 
   const mediaFiles = getMediaFiles();
 
-  // Intersection Observer for mobile autoplay
+  // Intersection Observer for video autoplay & pause offscreen
   useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return undefined;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsInView(entry.isIntersecting);
+        const intersecting = Boolean(entry?.isIntersecting);
+        setIsInView(intersecting);
+        if (!intersecting && el && !el.paused) {
+          el.pause();
+        }
       },
-      { threshold: 0.5 }
+      { threshold: 0.3 }
     );
 
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-    }
+    observer.observe(el);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
-  // Auto-play video on mobile when in view
+  // Auto-play video on mobile when in view; pause when out of view
   useEffect(() => {
-    if (isInView && !hasPlayed && window.innerWidth <= 768) {
-      if (videoRef.current) {
-        videoRef.current.muted = true;
-        videoRef.current.play().then(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    if (isInView) {
+      if (!hasPlayed && window.innerWidth <= 768) {
+        el.muted = true;
+        el.play().then(() => {
           setHasPlayed(true);
           setViewCount(prev => prev + 1);
         }).catch(() => {});
+      }
+    } else {
+      if (!el.paused) {
+        el.pause();
       }
     }
   }, [isInView, hasPlayed]);
@@ -84,6 +98,9 @@ const PostMedia = ({ post, isLight }) => {
                 <video
                   ref={videoRef}
                   controls
+                  preload="none"
+                  muted
+                  playsInline
                   className={`w-full ${mediaFiles.length === 1
                     ? "max-h-[600px] object-contain"
                     : "rounded-xl aspect-video object-cover"

@@ -15,12 +15,12 @@ import { toast } from "react-toastify";
 import { FaCheck, FaTimes, FaUser, FaSearch } from "react-icons/fa";
 import { useSearch } from "../../context/SearchContext";
 
-const FriendRequests = ({ currentUser, theme }) => {
+const FriendRequests = ({ currentUser }) => {
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
-  const { keyword: searchTerm } = useSearch();
+  const { debouncedKeyword: searchTerm = "" } = useSearch();
 
   useEffect(() => {
     if (!currentUser) return;

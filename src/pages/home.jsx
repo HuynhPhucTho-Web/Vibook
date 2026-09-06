@@ -295,7 +295,7 @@ function Home() {
       <React.Fragment key={post.id}>
         {/* In-feed Ad unit (displays after every 3 posts) */}
         {index > 0 && index % 3 === 0 && (
-          <div className="home-ad-container animate-fade-in" style={{
+          <div className="home-ad-container animate-fade-in" data-ad-card style={{
             margin: "15px 0",
             padding: "15px",
             background: theme === "dark" ? "rgba(30, 31, 39, 0.6)" : "white",

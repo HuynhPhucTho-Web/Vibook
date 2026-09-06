@@ -638,31 +638,38 @@ const BlogPages = () => {
   const canLoadMore = isSearchActive ? (currentPage * 6 < totalPosts) : hasMore;
 
   useEffect(() => {
-    if (isDetailView) return;
+    if (isDetailView) return undefined;
+
+    let ticking = false;
 
     const handleScroll = () => {
-      if (loading) return;
-      if (!canLoadMore) return;
+      if (ticking) return;
+      ticking = true;
 
-      const threshold = 150;
-      const position = window.innerHeight + window.scrollY;
-      const height = document.documentElement.scrollHeight;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (loading || !canLoadMore) return;
 
-      if (height - position < threshold) {
-        if (isSearchActive) {
-          setCurrentPage((p) => p + 1);
-        } else if (nextCursor) {
-          setCursors((prev) => {
-            const newCursors = [...prev];
-            newCursors[currentPage] = nextCursor;
-            return newCursors;
-          });
-          setCurrentPage((p) => p + 1);
+        const threshold = 150;
+        const position = window.innerHeight + window.scrollY;
+        const height = document.documentElement.scrollHeight;
+
+        if (height - position < threshold) {
+          if (isSearchActive) {
+            setCurrentPage((p) => p + 1);
+          } else if (nextCursor) {
+            setCursors((prev) => {
+              const newCursors = [...prev];
+              newCursors[currentPage] = nextCursor;
+              return newCursors;
+            });
+            setCurrentPage((p) => p + 1);
+          }
         }
-      }
+      });
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [loading, canLoadMore, nextCursor, currentPage, isSearchActive, isDetailView]);
 
@@ -1269,7 +1276,7 @@ const BlogPages = () => {
                   <React.Fragment key={post.id || post.slug}>
                     {/* In-feed Ad unit (displays after every 3 posts) */}
                     {index > 0 && index % 3 === 0 && (
-                      <div className="blog-ad-card" style={{
+                      <div className="blog-ad-card" data-ad-card style={{
                         gridColumn: "1 / -1",
                         margin: "15px 0",
                         padding: "15px",
@@ -1327,7 +1334,7 @@ const BlogPages = () => {
           />
 
           {/* Detail View Ad Unit */}
-          <div className="blog-detail-ad-container px-4 my-4" style={{
+          <div className="blog-detail-ad-container px-4 my-4" data-ad-card style={{
             margin: "20px 0",
             padding: "15px",
             background: "var(--vb-glass-surface)",

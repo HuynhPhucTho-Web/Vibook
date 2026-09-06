@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
-import { db } from "../../components/firebase";
 import { FaEllipsisH, FaEdit, FaLock, FaTrash, FaUser, FaGlobeAmericas, FaUserFriends, FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { LanguageContext } from "../../context/LanguageContext";
+import { getUserProfile } from "../../utils/userCache";
+import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
 const PostHeader = ({
   post,
@@ -50,34 +50,21 @@ const PostHeader = ({
       return;
     }
     let mounted = true;
-    const userDocRef = doc(db, "Users", post.userId);
-    const unsub = onSnapshot(
-      userDocRef,
-      (snap) => {
-        if (mounted) {
-          if (snap.exists()) {
-            const userData = snap.data();
-            const displayName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || userData.displayName || post.userName || "Anonymous";
-            const photo = userData.photo || userData.photoURL || post.userPhoto || null;
-            setAuthorName(displayName);
-            setAuthorPhoto(photo);
-          } else {
-            setAuthorName(post.userName || "Anonymous");
-            setAuthorPhoto(post.userPhoto || null);
-          }
-        }
-      },
-      (err) => {
-        console.log("Error fetching post author info:", err);
-        if (mounted) {
-          setAuthorName(post.userName || "Anonymous");
-          setAuthorPhoto(post.userPhoto || null);
-        }
+
+    // Use initial post user details if present
+    if (post.userName) setAuthorName(post.userName);
+    if (post.userPhoto) setAuthorPhoto(post.userPhoto);
+
+    // Fetch from memory cache / single request deduplicated
+    getUserProfile(post.userId).then((profile) => {
+      if (mounted && profile) {
+        setAuthorName(profile.displayName || post.userName || "Anonymous");
+        setAuthorPhoto(profile.photo || post.userPhoto || null);
       }
-    );
+    });
+
     return () => {
       mounted = false;
-      unsub();
     };
   }, [post.userId, post.userName, post.userPhoto]);
 
@@ -89,8 +76,10 @@ const PostHeader = ({
         <Link to={`/profile/${post.userId}`} className="no-underline hover:no-underline">
           {!hasNoAvatar ? (
             <img
-              src={authorPhoto}
+              src={getOptimizedCloudinaryUrl(authorPhoto, 100)}
               alt={authorName}
+              loading="lazy"
+              decoding="async"
               className="rounded-circle"
               style={{
                 width: "40px",

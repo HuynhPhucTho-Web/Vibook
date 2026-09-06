@@ -6,7 +6,6 @@ import {
   deleteDoc,
   query,
   getDocs,
-  onSnapshot,
   collection,
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
@@ -103,30 +102,16 @@ export default function GroupPostItem({
     };
   }, []);
 
-  /** realtime post & comments */
+  /** sync post & comments count */
   useEffect(() => {
-    if (!post?.id || !groupId) return;
-
-    const unsubPost = onSnapshot(
-      doc(db, "Groups", groupId, "Posts", post.id),
-      (snap) => {
-        if (snap.exists()) setLocalPost({ id: snap.id, groupId, ...snap.data() });
-        else onPostDeleted?.(post.id);
-      }
-    );
-
-    const unsubCmt = onSnapshot(
-      query(collection(db, "Groups", groupId, "Posts", post.id, "comments")),
-      (snap) => {
-        setCommentCount(snap.size);
-      }
-    );
-
-    return () => {
-      unsubPost();
-      unsubCmt();
-    };
-  }, [post?.id, groupId, onPostDeleted]);
+    if (!post?.id) return;
+    setLocalPost({ id: post.id, groupId, ...post });
+    if (typeof post.commentCount === "number") {
+      setCommentCount(post.commentCount);
+    } else if (Array.isArray(post.comments)) {
+      setCommentCount(post.comments.length);
+    }
+  }, [post, groupId]);
 
   useEffect(() => {
     if (isEditing) {

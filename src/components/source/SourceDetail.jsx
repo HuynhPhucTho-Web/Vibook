@@ -122,7 +122,7 @@ export default function SourceDetail({ subject, onBack }) {
         )}
 
         {/* AdSense Unit for Subject Detail */}
-        <div className="my-4" style={{
+        <div className="my-4 source-ad-card" data-ad-card style={{
           padding: "15px",
           background: isDark ? "rgba(30, 31, 39, 0.6)" : "white",
           border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",

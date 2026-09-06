@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { sourceData } from "./sourceData";
 import SourceDetail from "../../components/source/SourceDetail";
@@ -38,7 +38,7 @@ import {
 } from "react-icons/fa";
 
 export default function SourcePage() {
-  const { t, language } = useContext(LanguageContext);
+  const { language } = useContext(LanguageContext);
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
 
@@ -286,7 +286,7 @@ export default function SourcePage() {
               <React.Fragment key={subject.id}>
                 {/* In-feed Ad unit (displays after every 4 subjects) */}
                 {index > 0 && index % 4 === 0 && (
-                  <div className="col-span-full my-2" style={{
+                  <div className="col-span-full my-2 source-ad-card" data-ad-card style={{
                     padding: "15px",
                     background: isDark ? "rgba(30, 31, 39, 0.6)" : "white",
                     border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",
