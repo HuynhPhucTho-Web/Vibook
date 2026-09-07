@@ -29,7 +29,7 @@ export default function SourceDetail({ subject, onBack }) {
   };
 
   return (
-    <div className={`min-h-screen w-full px-4 py-8 md:px-8 transition-colors duration-300 ${
+    <div className={`min-h-screen w-full px-4 py-8 md:px-8 transition-colors duration-300 relative ${
       isDark ? "bg-[#12131a] text-[#e3e1ec]" : "bg-[#faf7f2] text-[#162033]"
     }`}>
       {/* Decorative Blur Backgrounds (only in dark mode) */}
@@ -41,7 +41,7 @@ export default function SourceDetail({ subject, onBack }) {
       )}
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto flex flex-col gap-8 relative z-10">
+      <div className="max-w-7xl mx-auto flex flex-col gap-8 relative z-10 w-full">
         
         {/* Top Breadcrumb & Title Area */}
         <div className="flex flex-col gap-6">

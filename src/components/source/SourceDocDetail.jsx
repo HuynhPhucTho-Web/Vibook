@@ -10,6 +10,45 @@ import {
 } from "react-icons/fa";
 import { auth } from "../../components/firebase";
 
+// Helper to extract Google Drive file ID if applicable
+export const getGoogleDriveFileId = (url) => {
+  if (!url || typeof url !== "string") return null;
+  const match = url.match(
+    /(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=download&)?id=)|docs\.google\.com\/[a-z]+\/d\/)([a-zA-Z0-9_-]+)/i
+  );
+  return match ? match[1] : null;
+};
+
+// Get the best URL for previewing inside an <iframe>
+export const getDocumentPreviewUrl = (url) => {
+  if (!url) return "";
+  const driveId = getGoogleDriveFileId(url);
+  if (driveId) {
+    return `https://drive.google.com/file/d/${driveId}/preview`;
+  }
+  return url.includes("#") ? url : `${url}#toolbar=0`;
+};
+
+// Get the URL for downloading
+export const getDocumentDownloadUrl = (url) => {
+  if (!url) return "";
+  const driveId = getGoogleDriveFileId(url);
+  if (driveId) {
+    return `https://drive.google.com/uc?export=download&id=${driveId}`;
+  }
+  return url;
+};
+
+// Get the URL for viewing in a new tab / external view
+export const getDocumentViewUrl = (url) => {
+  if (!url) return "";
+  const driveId = getGoogleDriveFileId(url);
+  if (driveId) {
+    return `https://drive.google.com/file/d/${driveId}/view?usp=sharing`;
+  }
+  return url;
+};
+
 export default function SourceDocDetail({ subject, isDark, language }) {
   const [docSearch, setDocSearch] = useState("");
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
@@ -45,9 +84,9 @@ export default function SourceDocDetail({ subject, isDark, language }) {
   }, [selectedDoc, subject.id]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-280px)] min-h-[600px]">
+    <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-280px)] lg:min-h-[600px] w-full">
       {/* Left side list of documents */}
-      <div className="w-full lg:w-[350px] flex-shrink-0 flex flex-col gap-4">
+      <div className="w-full lg:w-[350px] flex-shrink-0 flex flex-col gap-4 max-h-[380px] lg:max-h-none">
         <div className="relative flex items-center mb-1">
           <FaSearch className={`absolute left-3 ${isDark ? "text-outline" : "text-slate-400"}`} size={16} />
           <input
@@ -118,7 +157,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                         if (!currentUser) {
                           window.location.href = "/login?from=" + encodeURIComponent(window.location.pathname);
                         } else {
-                          window.open(doc.pdfUrl, "_blank");
+                          window.open(getDocumentViewUrl(doc.pdfUrl), "_blank");
                         }
                       }}
                       className="flex-1 py-1.5 rounded bg-primary text-on-primary text-label-sm font-label-sm hover:brightness-110 transition-all flex items-center justify-center gap-1.5 font-bold text-center border-none cursor-pointer"
@@ -141,7 +180,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
       </div>
 
       {/* Right side PDF viewer panel */}
-      <div className={`flex-1 rounded-2xl border shadow-lg flex flex-col overflow-hidden relative ${
+      <div className={`flex-1 min-h-[550px] lg:min-h-0 rounded-2xl border shadow-lg flex flex-col overflow-hidden relative ${
         isDark ? "bg-[#1e1f27]/50 border-white/10" : "bg-white border-slate-200"
       }`}>
         {selectedDoc ? (
@@ -153,7 +192,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
               <div className="flex items-center gap-3">
                 <FaFileAlt className="text-primary" size={16} />
                 <span className="font-body-md text-body-md truncate font-medium">
-                  {selectedDoc.name}.pdf
+                  {selectedDoc.name?.endsWith(".pdf") ? selectedDoc.name : `${selectedDoc.name}.pdf`}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -161,8 +200,10 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                   <>
                     {/* Download Button */}
                     <a
-                      href={selectedDoc.pdfUrl}
+                      href={getDocumentDownloadUrl(selectedDoc.pdfUrl)}
                       download
+                      target={getGoogleDriveFileId(selectedDoc.pdfUrl) ? "_blank" : undefined}
+                      rel="noopener noreferrer"
                       title={language === "vi" ? "Tải xuống PDF" : "Download PDF"}
                       className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 ${
                         isDark
@@ -178,7 +219,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
 
                     {/* Open in New Tab Button */}
                     <a
-                      href={selectedDoc.pdfUrl}
+                      href={getDocumentViewUrl(selectedDoc.pdfUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       title={language === "vi" ? "Mở trong tab mới" : "Open in new tab"}
@@ -198,7 +239,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
 
                     {/* Print Button */}
                     <a
-                      href={selectedDoc.pdfUrl}
+                      href={getDocumentPreviewUrl(selectedDoc.pdfUrl)}
                       target="_blank"
                       rel="noreferrer"
                       title={language === "vi" ? "In tài liệu" : "Print"}
@@ -279,9 +320,10 @@ export default function SourceDocDetail({ subject, isDark, language }) {
               ) : (
                 /* Render live PDF preview using an iframe */
                 <iframe
-                  src={`${selectedDoc.pdfUrl}#toolbar=0`}
+                  src={getDocumentPreviewUrl(selectedDoc.pdfUrl)}
                   className="w-full h-full rounded shadow-2xl border border-glass-border relative z-10 bg-white"
                   title={selectedDoc.name}
+                  allow="autoplay"
                 ></iframe>
               )}
             </div>

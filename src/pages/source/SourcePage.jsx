@@ -194,7 +194,7 @@ export default function SourcePage() {
 
   if (activeSubject) {
     return (
-      <div className="page-shell">
+      <>
         <SEO
           title={activeSubject.name}
           description={`Tải tài liệu môn học ${activeSubject.name} (${activeSubject.code}) - Giáo trình, đề cương, câu hỏi ôn tập tại ThoDev.`}
@@ -205,7 +205,7 @@ export default function SourcePage() {
           subject={activeSubject}
           onBack={() => navigate("/source")}
         />
-      </div>
+      </>
     );
   }
 
