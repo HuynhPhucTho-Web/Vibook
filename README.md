@@ -77,6 +77,8 @@ npx cap run ios
 npm install react-player
 firebase deploy --only firestore:rules
 
+fix error index
+Remove-Item -Force .git\index; git reset
 ## Design System & UI Standards
 
 Tham khảo đầy đủ: [`DESIGN.md`](./DESIGN.md)

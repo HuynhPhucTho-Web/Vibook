@@ -440,7 +440,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
           notifyPostReaction({
             postId,
             postOwnerId,
-            reaction,
+            reaction: userGaveReaction || reaction,
             actorUser: user,
             actorDetails: userDetails,
           }).catch((err) => console.error("Error notifying post reaction:", err));

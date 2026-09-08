@@ -176,6 +176,21 @@ const REACTION_LABELS = {
   Angry: "phẫn nộ",
 };
 
+const REACTION_EMOJIS = {
+  Like: "👍",
+  Love: "❤️",
+  Haha: "😂",
+  Wow: "😮",
+  Sad: "😢",
+  Angry: "😠",
+  like: "👍",
+  love: "❤️",
+  haha: "😂",
+  wow: "😮",
+  sad: "😢",
+  angry: "😠",
+};
+
 /**
  * Tạo thông báo khi có người thả cảm xúc vào bài viết
  */
@@ -185,17 +200,19 @@ export const notifyPostReaction = async ({ postId, postOwnerId, reaction, actorU
 
   const actorName = getActorDisplayName(actorUser, actorDetails);
   const actorPhoto = getActorPhotoURL(actorUser, actorDetails);
-  const reactionWord = REACTION_LABELS[reaction] || "bày tỏ cảm xúc về";
+  const reactionKey = reaction || "Like";
+  const reactionWord = REACTION_LABELS[reactionKey] || "thích";
+  const emoji = REACTION_EMOJIS[reactionKey] || "👍";
 
   await createNotificationIfNotExists({
     userId: postOwnerId,
     type: "post_reaction",
-    reaction: reaction || "like",
+    reaction: reactionKey,
     actorId,
     actorName,
     actorPhoto,
     postId,
-    content: `${actorName} đã ${reactionWord === "bày tỏ cảm xúc về" ? reactionWord : `thả cảm xúc "${reactionWord}" về`} bài viết của bạn.`,
+    content: `${actorName} đã bày tỏ cảm xúc ${emoji} (${reactionWord}) về bài viết của bạn.`,
     createdAt: Date.now(),
   });
 };

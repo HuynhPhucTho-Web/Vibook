@@ -1,7 +1,7 @@
 import React from "react";
 import NotificationItem from "./NotificationItem";
 
-const NotificationList = ({ notifications, onMarkAsRead, formatTimeAgo }) => {
+const NotificationList = ({ notifications, onMarkAsRead, onDelete, formatTimeAgo }) => {
   if (notifications.length === 0) {
     return (
       <div className="text-center py-5">
@@ -18,6 +18,7 @@ const NotificationList = ({ notifications, onMarkAsRead, formatTimeAgo }) => {
           key={notification.id}
           notification={notification}
           onMarkAsRead={onMarkAsRead}
+          onDelete={onDelete}
           formatTimeAgo={formatTimeAgo}
         />
       ))}
