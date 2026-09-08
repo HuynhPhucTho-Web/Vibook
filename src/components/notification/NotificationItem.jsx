@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaHeart, FaCommentDots, FaUserPlus, FaEnvelope, FaNewspaper } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const UserAvatar = React.memo(({ src, alt, size = 40 }) => {
@@ -47,9 +47,6 @@ const NotificationItem = ({ notification, onMarkAsRead, formatTimeAgo }) => {
       case "friend_request":
         navigate("/friends");
         break;
-      case "friend_post":
-        if (notification.postId) navigate(`/post/${notification.postId}`);
-        break;
       case "friend_message":
         navigate("/messenger");
         break;
@@ -57,8 +54,75 @@ const NotificationItem = ({ notification, onMarkAsRead, formatTimeAgo }) => {
         if (notification.blogSlug) navigate(`/blog/${notification.blogSlug}`);
         else navigate("/blog");
         break;
+      case "friend_post":
+      case "post_reaction":
+      case "post_like":
+      case "post_comment":
+      case "comment_reply":
+      case "comment_reaction":
       default:
+        if (notification.postId) navigate(`/post/${notification.postId}`);
         break;
+    }
+  };
+
+  const renderBadge = () => {
+    switch (notification.type) {
+      case "post_reaction":
+      case "post_like":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Cảm xúc"
+          >
+            <FaHeart />
+          </span>
+        );
+      case "post_comment":
+      case "comment_reply":
+      case "comment_reaction":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Bình luận"
+          >
+            <FaCommentDots />
+          </span>
+        );
+      case "friend_request":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Kết bạn"
+          >
+            <FaUserPlus />
+          </span>
+        );
+      case "friend_message":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-info text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Tin nhắn"
+          >
+            <FaEnvelope />
+          </span>
+        );
+      case "new_blog":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Blog"
+          >
+            <FaNewspaper />
+          </span>
+        );
+      default:
+        return null;
     }
   };
 
@@ -76,15 +140,19 @@ const NotificationItem = ({ notification, onMarkAsRead, formatTimeAgo }) => {
         cursor: "pointer"
       }}
     >
-      <UserAvatar
-        src={notification.actorPhoto}
-        alt={notification.actorName}
-        size={40}
-      />
-      <div className="flex-grow-1 ms-3">
+      <div className="position-relative flex-shrink-0">
+        <UserAvatar
+          src={notification.actorPhoto}
+          alt={notification.actorName}
+          size={42}
+        />
+        {renderBadge()}
+      </div>
+      <div className="flex-grow-1 ms-3 min-w-0">
         <p className="mb-0 text-inherit" style={{
           fontSize: "0.9rem",
-          fontWeight: notification.read ? "normal" : "600"
+          fontWeight: notification.read ? "normal" : "600",
+          wordBreak: "break-word"
         }}>
           {notification.content}
         </p>

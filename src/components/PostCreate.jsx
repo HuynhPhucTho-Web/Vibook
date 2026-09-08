@@ -14,6 +14,8 @@ import { normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/
 import { requireLogin } from "../utils/requireLogin";
 import "../style/PostCreate.css";
 
+const MAX_MEDIA_FILES = 20;
+
 const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
@@ -139,8 +141,8 @@ const PostCreator = ({ onPostCreated }) => {
   const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) setIsComposerExpanded(true);
-    if (mediaFiles.length + files.length > 5) {
-      toast.error(t("maxFilesError"), { position: "top-center" });
+    if (mediaFiles.length + files.length > MAX_MEDIA_FILES) {
+      toast.error(t("maxFilesError") || `Tối đa ${MAX_MEDIA_FILES} tệp`, { position: "top-center" });
       return;
     }
     const push = [];
@@ -453,8 +455,8 @@ const PostCreator = ({ onPostCreated }) => {
 };
 
   const capturePhoto = () => {
-    if (mediaFiles.length >= 5) {
-      toast.error(t("maxFilesError"), { position: "top-center" });
+    if (mediaFiles.length >= MAX_MEDIA_FILES) {
+      toast.error(t("maxFilesError") || `Tối đa ${MAX_MEDIA_FILES} tệp`, { position: "top-center" });
       return;
     }
     const v = videoRef.current;
@@ -728,7 +730,7 @@ const PostCreator = ({ onPostCreated }) => {
               className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all ${isLight
                 ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
                 : "bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400"
-                } ${isUploading || mediaFiles.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${isUploading || mediaFiles.length >= MAX_MEDIA_FILES ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <FaImage className="text-lg" />
               <span className="text-sm font-medium hidden sm:inline">{t("photoVideo")}</span>
@@ -738,7 +740,7 @@ const PostCreator = ({ onPostCreated }) => {
                 multiple
                 className="sr-only"
                 onChange={handleMediaUpload}
-                disabled={isUploading || mediaFiles.length >= 5}
+                disabled={isUploading || mediaFiles.length >= MAX_MEDIA_FILES}
               />
             </label>
 
@@ -746,11 +748,11 @@ const PostCreator = ({ onPostCreated }) => {
             <button
               type="button"
               onClick={() => openCamera()}
-              disabled={isUploading || mediaFiles.length >= 5}
+              disabled={isUploading || mediaFiles.length >= MAX_MEDIA_FILES}
               className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${isLight
                 ? "bg-violet-50 hover:bg-violet-100 text-violet-700"
                 : "bg-violet-900/30 hover:bg-violet-900/50 text-violet-400"
-                } ${isUploading || mediaFiles.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${isUploading || mediaFiles.length >= MAX_MEDIA_FILES ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <FaCamera className="text-lg" />
               <span className="text-sm font-medium hidden sm:inline">{t("camera")}</span>
@@ -761,7 +763,7 @@ const PostCreator = ({ onPostCreated }) => {
               className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer transition-all ${isLight
                 ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
                 : "bg-blue-900/30 hover:bg-blue-900/50 text-blue-400"
-                } ${isUploading || mediaFiles.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${isUploading || mediaFiles.length >= MAX_MEDIA_FILES ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <FaFile className="text-lg" />
               <span className="text-sm font-medium hidden sm:inline">{t("document")}</span>
@@ -771,7 +773,7 @@ const PostCreator = ({ onPostCreated }) => {
                 multiple
                 className="sr-only"
                 onChange={handleMediaUpload}
-                disabled={isUploading || mediaFiles.length >= 5}
+                disabled={isUploading || mediaFiles.length >= MAX_MEDIA_FILES}
               />
             </label>
 
@@ -820,9 +822,9 @@ const PostCreator = ({ onPostCreated }) => {
           <div className={`rounded-2xl p-4 ${isLight ? "bg-gray-50" : "bg-zinc-800/50"}`}>
             <div className="flex items-center justify-between mb-3">
               <span className={`text-sm font-medium ${isLight ? "text-gray-700" : "text-gray-300"}`}>
-                {t("attachedMedia")} ({mediaFiles.length}/5)
+                {t("attachedMedia")} ({mediaFiles.length}/{MAX_MEDIA_FILES})
               </span>
-              {mediaFiles.length >= 5 && (
+              {mediaFiles.length >= MAX_MEDIA_FILES && (
                 <span className="text-xs text-amber-600 font-medium">⚠️ {t("limitReached")}</span>
               )}
             </div>

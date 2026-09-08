@@ -12,7 +12,7 @@ import {
   limit,
   writeBatch,
 } from "firebase/firestore";
-import { db } from "../../components/firebase";
+import { db, auth } from "../../components/firebase";
 
 export const formatTimeAgo = (timestamp) => {
   if (!timestamp) return "";
@@ -23,10 +23,10 @@ export const formatTimeAgo = (timestamp) => {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return "Just finished";
-  if (minutes < 60) return `${minutes}minutes ago`;
-  if (hours < 24) return `${hours}hour ago`;
-  if (days < 7) return `${days}the day before`;
+  if (minutes < 1) return "Vừa xong";
+  if (minutes < 60) return `${minutes} phút trước`;
+  if (hours < 24) return `${hours} giờ trước`;
+  if (days < 7) return `${days} ngày trước`;
   return new Date(timestamp).toLocaleDateString("vi-VN", {
     day: '2-digit',
     month: '2-digit'
@@ -71,60 +71,183 @@ export const cleanupOldNotifications = async (userId) => {
 const processedNotifications = new Set();
 
 export const createNotificationIfNotExists = async (notificationData) => {
-  const notificationKey = `${notificationData.type}_${notificationData.actorId}_${notificationData.requestId || notificationData.messageId || notificationData.postId || notificationData.blogId || 'global'}_${Math.floor(notificationData.createdAt / 60000)}`; // Group theo phút
+  if (!notificationData || !notificationData.userId) return;
+
+  // Không gửi thông báo cho chính mình
+  if (notificationData.actorId && notificationData.userId === notificationData.actorId) {
+    return;
+  }
+
+  const uniqueId = notificationData.requestId || notificationData.messageId || notificationData.postId || notificationData.blogId || 'global';
+  const notificationKey = `${notificationData.type}_${notificationData.actorId}_${uniqueId}_${Math.floor((notificationData.createdAt || Date.now()) / 60000)}`;
 
   if (processedNotifications.has(notificationKey)) {
-    return; // Đã xử lý rồi, bỏ qua
+    return; // Đã xử lý trong phút này, bỏ qua để tránh spam
   }
 
   processedNotifications.add(notificationKey);
 
   try {
-    // Check in DB to prevent duplicates
-    let q = null;
-    if (notificationData.type === "friend_request" && notificationData.requestId) {
-      q = query(
-        collection(db, "Notifications"),
-        where("userId", "==", notificationData.userId),
-        where("type", "==", "friend_request"),
-        where("requestId", "==", notificationData.requestId)
-      );
-    } else if (notificationData.type === "friend_message" && notificationData.messageId) {
-      q = query(
-        collection(db, "Notifications"),
-        where("userId", "==", notificationData.userId),
-        where("type", "==", "friend_message"),
-        where("messageId", "==", notificationData.messageId)
-      );
-    } else if (notificationData.type === "friend_post" && notificationData.postId) {
-      q = query(
-        collection(db, "Notifications"),
-        where("userId", "==", notificationData.userId),
-        where("type", "==", "friend_post"),
-        where("postId", "==", notificationData.postId)
-      );
-    } else if (notificationData.type === "new_blog" && notificationData.blogId) {
-      q = query(
-        collection(db, "Notifications"),
-        where("userId", "==", notificationData.userId),
-        where("type", "==", "new_blog"),
-        where("blogId", "==", notificationData.blogId)
-      );
-    }
+    // CHỈ kiểm tra trùng lặp trong DB nếu người đang đăng nhập là chủ sở hữu của thông báo đó.
+    // (Firestore security rules chỉ cho phép chủ sở hữu đọc collection Notifications của mình,
+    // nếu người dùng A truy vấn Notifications của người dùng B sẽ bị Permission Denied).
+    const currentUid = auth.currentUser?.uid;
+    if (currentUid && notificationData.userId === currentUid) {
+      let q = null;
+      if (notificationData.type === "friend_request" && notificationData.requestId) {
+        q = query(
+          collection(db, "Notifications"),
+          where("userId", "==", notificationData.userId),
+          where("type", "==", "friend_request"),
+          where("requestId", "==", notificationData.requestId)
+        );
+      } else if (notificationData.type === "friend_message" && notificationData.messageId) {
+        q = query(
+          collection(db, "Notifications"),
+          where("userId", "==", notificationData.userId),
+          where("type", "==", "friend_message"),
+          where("messageId", "==", notificationData.messageId)
+        );
+      } else if (notificationData.type === "friend_post" && notificationData.postId) {
+        q = query(
+          collection(db, "Notifications"),
+          where("userId", "==", notificationData.userId),
+          where("type", "==", "friend_post"),
+          where("postId", "==", notificationData.postId)
+        );
+      } else if (notificationData.type === "new_blog" && notificationData.blogId) {
+        q = query(
+          collection(db, "Notifications"),
+          where("userId", "==", notificationData.userId),
+          where("type", "==", "new_blog"),
+          where("blogId", "==", notificationData.blogId)
+        );
+      }
 
-    if (q) {
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        return; // Đã tồn tại trong DB, không tạo lại
+      if (q) {
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          return; // Đã tồn tại trong DB, không tạo lại
+        }
       }
     }
 
-    await addDoc(collection(db, "Notifications"), notificationData);
+    await addDoc(collection(db, "Notifications"), {
+      ...notificationData,
+      read: false,
+      createdAt: notificationData.createdAt || Date.now(),
+    });
   } catch (error) {
     console.error("Error creating notification:", error);
     // Remove from processed set nếu lỗi để có thể thử lại
     processedNotifications.delete(notificationKey);
   }
+};
+
+const getActorDisplayName = (actorUser, actorDetails) => {
+  if (actorDetails) {
+    const fullName = `${actorDetails.firstName || ""} ${actorDetails.lastName || ""}`.trim();
+    if (fullName) return fullName;
+    if (actorDetails.displayName) return actorDetails.displayName;
+    if (actorDetails.name) return actorDetails.name;
+  }
+  if (actorUser?.displayName) return actorUser.displayName;
+  if (actorUser?.email) return actorUser.email.split("@")[0];
+  return "Người dùng Vibook";
+};
+
+const getActorPhotoURL = (actorUser, actorDetails) => {
+  return actorDetails?.photo || actorDetails?.photoURL || actorUser?.photoURL || null;
+};
+
+// Map nhãn cảm xúc tiếng Việt
+const REACTION_LABELS = {
+  like: "thích",
+  love: "yêu thích",
+  haha: "haha",
+  wow: "wow",
+  sad: "buồn",
+  angry: "phẫn nộ",
+  Like: "thích",
+  Love: "yêu thích",
+  Haha: "haha",
+  Wow: "wow",
+  Sad: "buồn",
+  Angry: "phẫn nộ",
+};
+
+/**
+ * Tạo thông báo khi có người thả cảm xúc vào bài viết
+ */
+export const notifyPostReaction = async ({ postId, postOwnerId, reaction, actorUser, actorDetails }) => {
+  const actorId = actorUser?.uid || auth.currentUser?.uid;
+  if (!postOwnerId || !actorId || postOwnerId === actorId) return;
+
+  const actorName = getActorDisplayName(actorUser, actorDetails);
+  const actorPhoto = getActorPhotoURL(actorUser, actorDetails);
+  const reactionWord = REACTION_LABELS[reaction] || "bày tỏ cảm xúc về";
+
+  await createNotificationIfNotExists({
+    userId: postOwnerId,
+    type: "post_reaction",
+    reaction: reaction || "like",
+    actorId,
+    actorName,
+    actorPhoto,
+    postId,
+    content: `${actorName} đã ${reactionWord === "bày tỏ cảm xúc về" ? reactionWord : `thả cảm xúc "${reactionWord}" về`} bài viết của bạn.`,
+    createdAt: Date.now(),
+  });
+};
+
+/**
+ * Tạo thông báo khi có người bình luận vào bài viết
+ */
+export const notifyPostComment = async ({ postId, postOwnerId, commentText, actorUser, actorDetails }) => {
+  const actorId = actorUser?.uid || auth.currentUser?.uid;
+  if (!postOwnerId || !actorId || postOwnerId === actorId) return;
+
+  const actorName = getActorDisplayName(actorUser, actorDetails);
+  const actorPhoto = getActorPhotoURL(actorUser, actorDetails);
+  const snippet = commentText ? (commentText.length > 55 ? `${commentText.slice(0, 55)}...` : commentText) : "";
+
+  await createNotificationIfNotExists({
+    userId: postOwnerId,
+    type: "post_comment",
+    actorId,
+    actorName,
+    actorPhoto,
+    postId,
+    content: snippet
+      ? `${actorName} đã bình luận về bài viết của bạn: "${snippet}"`
+      : `${actorName} đã bình luận về bài viết của bạn.`,
+    createdAt: Date.now(),
+  });
+};
+
+/**
+ * Tạo thông báo khi có người trả lời bình luận của bạn
+ */
+export const notifyCommentReply = async ({ postId, targetUserId, commentText, actorUser, actorDetails }) => {
+  const actorId = actorUser?.uid || auth.currentUser?.uid;
+  if (!targetUserId || !actorId || targetUserId === actorId) return;
+
+  const actorName = getActorDisplayName(actorUser, actorDetails);
+  const actorPhoto = getActorPhotoURL(actorUser, actorDetails);
+  const snippet = commentText ? (commentText.length > 55 ? `${commentText.slice(0, 55)}...` : commentText) : "";
+
+  await createNotificationIfNotExists({
+    userId: targetUserId,
+    type: "comment_reply",
+    actorId,
+    actorName,
+    actorPhoto,
+    postId,
+    content: snippet
+      ? `${actorName} đã trả lời bình luận của bạn: "${snippet}"`
+      : `${actorName} đã trả lời bình luận của bạn.`,
+    createdAt: Date.now(),
+  });
 };
 
 export const setupNotificationListeners = (user, createNotificationIfNotExists) => {

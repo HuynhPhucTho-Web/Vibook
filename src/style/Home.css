@@ -16,6 +16,7 @@
   .home-container {
     max-width: 100%;
     padding: 0;
+    gap: var(--vb-space-2, 12px);
   }
 }
 
@@ -171,7 +172,7 @@ html:not(.dark) .feed-skeleton__card {
 
 /* Scrollable wrapper for long post body text */
 .post-content-scrollable-wrapper {
-  max-height: 500px;
+  max-height: 350px;
   overflow-y: auto;
   padding-right: 6px;
 }

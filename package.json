@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/generate-sitemap.js && vite build",
+    "parse:mln131": "node scripts/parse-mln131.js",
+    "parse:hcm202": "node scripts/parse-hcm202.js",
+    "parse:vnr202": "node scripts/parse-vnr202.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

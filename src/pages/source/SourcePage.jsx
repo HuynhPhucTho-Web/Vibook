@@ -43,13 +43,20 @@ export default function SourcePage() {
   const isDark = theme === "dark";
 
   const [searchQuery, setSearchQuery] = useState("");
-  const { subjectCode } = useParams();
+  const { subjectCode, tab } = useParams();
   const navigate = useNavigate();
 
   // Find subject by code
   const activeSubject = subjectCode
     ? sourceData.find((s) => s.code.toLowerCase() === subjectCode.toLowerCase())
     : null;
+
+  // Auto redirect /source/:subjectCode to /source/:subjectCode/document if tab is missing or invalid
+  React.useEffect(() => {
+    if (activeSubject && (!tab || (tab !== "quiz" && tab !== "document"))) {
+      navigate(`/source/${activeSubject.code.toLowerCase()}/document`, { replace: true });
+    }
+  }, [activeSubject, tab, navigate]);
 
   // Filter subjects based on query and hide subjects with 0 docs (Thin Content protection)
   const filteredSubjects = sourceData.filter((subject) => {
@@ -193,12 +200,13 @@ export default function SourcePage() {
   };
 
   if (activeSubject) {
+    const isQuiz = tab === "quiz";
     return (
       <>
         <SEO
-          title={activeSubject.name}
+          title={`${activeSubject.name} - ${isQuiz ? (language === "vi" ? "Ngân hàng Quiz" : "Quiz Bank") : (language === "vi" ? "Tài liệu học tập" : "Study Documents")}`}
           description={`Tải tài liệu môn học ${activeSubject.name} (${activeSubject.code}) - Giáo trình, đề cương, câu hỏi ôn tập tại ThoDev.`}
-          slug={`/source/${activeSubject.code.toLowerCase()}`}
+          slug={`/source/${activeSubject.code.toLowerCase()}/${isQuiz ? "quiz" : "document"}`}
           noindex={true}
         />
         <SourceDetail
@@ -296,7 +304,7 @@ export default function SourcePage() {
                   </div>
                 )}
                 <button
-                  onClick={() => navigate("/source/" + subject.code.toLowerCase())}
+                  onClick={() => navigate("/source/" + subject.code.toLowerCase() + "/document")}
                   className={`group text-left relative flex flex-col h-full rounded-2xl border p-6 overflow-hidden transition-all duration-500 hover:-translate-y-1.5 min-h-[250px] ${
                     isDark
                       ? "bg-[#1e1f27]/60 border-white/10 hover:bg-[#1e1f27]/90"

@@ -28,6 +28,7 @@ import {
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import GroupCommentSection from "./GroupCommentSection";
+import PostMedia from "../post/PostMedia";
 
 /** helpers */
 const isVideo = (url = "") =>
@@ -524,64 +525,7 @@ export default function GroupPostItem({
       )}
 
       {/* Media */}
-      {media.length > 0 && (
-        <div className={media.length === 1 ? "" : "px-4 pb-3"}>
-          <div className={media.length === 1 ? "" : "grid grid-cols-2 gap-2"}>
-            {media.map((m, idx) => {
-              const { url, category } = m;
-
-              if (category === "image") {
-                return (
-                  <img
-                    key={idx}
-                    src={getOptimizedCloudinaryUrl(url, media.length === 1 ? 800 : 400)}
-                    alt={localPost.title || "Hình ảnh bài đăng"}
-                    className={`w-full cursor-pointer hover:opacity-95 transition-opacity ${media.length === 1
-                      ? "object-contain max-h-[600px]"
-                      : "rounded-xl object-cover aspect-square"
-                      }`}
-                    onClick={() => window.open(url, "_blank")}
-                    style={media.length === 1 ? { display: "block" } : {}}
-                  />
-                );
-              }
-
-              if (category === "video") {
-                return (
-                  <video
-                    key={idx}
-                    controls
-                    className={`w-full ${media.length === 1
-                      ? "max-h-[600px] object-contain"
-                      : "rounded-xl aspect-video object-cover"
-                      }`}
-                  >
-                    <source src={url} type="video/mp4" />
-                  </video>
-                );
-              }
-
-              return (
-                <a
-                  key={idx}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${isLight
-                    ? "bg-gray-50 border-gray-200 hover:bg-gray-100"
-                    : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
-                    }`}
-                >
-                  <FaFile className="text-blue-500" size={20} />
-                  <span className={`text-sm truncate ${isLight ? "text-gray-700" : "text-gray-300"}`}>
-                    Tệp đính kèm
-                  </span>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <PostMedia post={localPost} isLight={isLight} />
 
       {/* Stats */}
       {(totalReactions > 0 || commentCount > 0) && (

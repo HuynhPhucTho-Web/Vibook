@@ -63,9 +63,20 @@ const Notifications = () => {
                 id: doc.id,
                 ...doc.data(),
               }));
-              // Filter chỉ lấy friend_request, friend_post, friend_message, new_blog
+              // Lấy tất cả thông báo hợp lệ của người dùng
+              const allowedTypes = [
+                "friend_request",
+                "friend_post",
+                "friend_message",
+                "new_blog",
+                "post_reaction",
+                "post_like",
+                "post_comment",
+                "comment_reply",
+                "comment_reaction",
+              ];
               const filteredNotifications = allNotifications.filter(notif =>
-                ["friend_request", "friend_post", "friend_message", "new_blog"].includes(notif.type)
+                allowedTypes.includes(notif.type) || Boolean(notif.content)
               );
               setNotifications(filteredNotifications);
               setIsLoading(false);

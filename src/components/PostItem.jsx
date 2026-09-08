@@ -16,6 +16,7 @@ import PostMedia from "./post/PostMedia";
 import PostStats from "./post/PostStats";
 import PostActions from "./post/PostActions";
 import PostComments from "./post/PostComments";
+import { notifyPostReaction } from "./notification/NotificationUtils";
 import { getPostHtml, normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
 import { requireLogin } from "../utils/requireLogin";
 import { getOptimizedCloudinaryUrl } from "../utils/cloudinary";
@@ -431,6 +432,19 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
             ? { ...prev, likes: committed.likes, reactedBy: committed.reactedBy }
             : prev,
         );
+
+        // Gửi thông báo đến chủ bài viết nếu có thả cảm xúc (không phải gỡ bỏ) và không phải bài của chính mình
+        const userGaveReaction = committed.reactedBy && committed.reactedBy[userId];
+        const postOwnerId = localPost.userId || post.userId;
+        if (userGaveReaction && postOwnerId && postOwnerId !== userId) {
+          notifyPostReaction({
+            postId,
+            postOwnerId,
+            reaction,
+            actorUser: user,
+            actorDetails: userDetails,
+          }).catch((err) => console.error("Error notifying post reaction:", err));
+        }
       } catch (error) {
         console.error("React error", error);
         // Rollback optimistic state
@@ -723,7 +737,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
       <PostStats post={localPost} commentCount={commentCount} isLight={isLight} onCommentClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)} />
       <div className={`mx-4 border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`} />
       <PostActions post={localPost} auth={auth} isLight={isLight} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} showReactions={showReactions} setShowReactions={setShowReactions} isReacting={isReacting} onReaction={handleReaction} onShare={handleShare} onRepostToTimeline={handleRepostToTimeline} isSaved={isSaved} isSavingPost={isSavingPost} onToggleSave={handleToggleSave} commentCount={commentCount} />
-      <PostComments postId={post.id} auth={auth} userDetails={userDetails} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} />
+      <PostComments postId={post.id} postOwnerId={localPost.userId || post.userId} auth={auth} userDetails={userDetails} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} />
 
       {showRepostModal && createPortal(
         <div className="post-share-modal-backdrop" onMouseDown={closeRepostModal}>
@@ -845,6 +859,8 @@ export default memo(PostItem, (prev, next) => {
     a?.likes === b?.likes &&
     a?.reactedBy === b?.reactedBy &&
     a?.mediaFiles === b?.mediaFiles &&
+    a?.mediaUrls === b?.mediaUrls &&
+    a?.mediaUrl === b?.mediaUrl &&
     a?.status === b?.status &&
     a?.commentCount === b?.commentCount &&
     a?.saveCount === b?.saveCount &&

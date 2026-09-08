@@ -29,6 +29,7 @@ import SearchResults from "./header/SearchResults";
 import HeaderRightActions from "./header/HeaderRightActions";
 import { normalizeSearchText } from "../utils/postContent";
 import { useSearch } from "../context/SearchContext";
+import { toast } from "react-toastify";
 import "../style/Header.css";
 
 const Header = () => {
@@ -159,18 +160,36 @@ const Header = () => {
     });
   }, []);
 
+  const isInitialNotifLoad = useRef(true);
   useEffect(() => {
     if (!authUser) {
       setUnreadCount(0);
       return undefined;
     }
+    isInitialNotifLoad.current = true;
     return onSnapshot(
       query(
         collection(db, "Notifications"),
         where("userId", "==", authUser.uid),
         where("read", "==", false),
       ),
-      (snapshot) => setUnreadCount(snapshot.docs.length),
+      (snapshot) => {
+        setUnreadCount(snapshot.docs.length);
+        if (isInitialNotifLoad.current) {
+          isInitialNotifLoad.current = false;
+          return;
+        }
+        // Đẩy thông báo tức thì khi có hoạt động mới (thích, bình luận...)
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            const data = change.doc.data();
+            toast.info(data.content || "Bạn có thông báo mới!", {
+              position: "bottom-right",
+              autoClose: 4000,
+            });
+          }
+        });
+      },
     );
   }, [authUser]);
 

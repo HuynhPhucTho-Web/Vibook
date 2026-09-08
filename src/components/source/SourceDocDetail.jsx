@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 import { auth } from "../../components/firebase";
 
-// Helper to extract Google Drive file ID if applicable
+// Helper to extract Google Drive / Presentation file ID if applicable
 export const getGoogleDriveFileId = (url) => {
   if (!url || typeof url !== "string") return null;
   const match = url.match(
@@ -19,18 +19,35 @@ export const getGoogleDriveFileId = (url) => {
   return match ? match[1] : null;
 };
 
-// Get the best URL for previewing inside an <iframe>
+// Check if URL is Google Presentation / Slides
+export const isGooglePresentation = (url) => {
+  if (!url || typeof url !== "string") return false;
+  return url.includes("docs.google.com/presentation");
+};
+
+// Check if a document is a presentation (PPT/PPTX/Slide)
+export const isPresentationDoc = (doc) => {
+  if (!doc) return false;
+  if (doc.type === "ppt" || doc.type === "pptx") return true;
+  const name = (doc.name || "").toLowerCase();
+  if (name.includes("ppt") || name.includes("slide") || name.includes("powerpoint")) return true;
+  const url = doc.pdfUrl || doc.pptUrl || doc.url || "";
+  return isGooglePresentation(url) || url.toLowerCase().includes(".ppt") || url.toLowerCase().includes(".pptx");
+};
+
+// Get the best URL for previewing inside an <iframe> (hiện y như PDF cũ để tránh lỗi Google Docs)
 export const getDocumentPreviewUrl = (url) => {
   if (!url) return "";
   const driveId = getGoogleDriveFileId(url);
   if (driveId) {
+    // Luôn sử dụng Google Drive preview vì hiển thị tốt như PDF cũ, tránh lỗi "Google Docs encountered an error"
     return `https://drive.google.com/file/d/${driveId}/preview`;
   }
   return url.includes("#") ? url : `${url}#toolbar=0`;
 };
 
 // Get the URL for downloading
-export const getDocumentDownloadUrl = (url) => {
+export const getDocumentDownloadUrl = (url, format = "auto") => {
   if (!url) return "";
   const driveId = getGoogleDriveFileId(url);
   if (driveId) {
@@ -106,6 +123,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
         <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
           {filteredDocs.map((doc) => {
             const isSelected = selectedDoc?.id === doc.id;
+            const isPpt = isPresentationDoc(doc);
             return (
               <div
                 key={doc.id}
@@ -113,8 +131,12 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                 className={`group p-4 rounded-xl cursor-pointer transition-all border ${
                   isSelected
                     ? isDark
-                      ? "bg-gradient-to-br from-primary/15 to-electric-blue/15 border-primary/45 shadow-[0_0_15px_rgba(142,84,233,0.15)]"
-                      : "bg-slate-50 border-primary/50 shadow-sm"
+                      ? isPpt
+                        ? "bg-gradient-to-br from-amber-500/15 to-orange-500/15 border-amber-500/45 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+                        : "bg-gradient-to-br from-primary/15 to-electric-blue/15 border-primary/45 shadow-[0_0_15px_rgba(142,84,233,0.15)]"
+                      : isPpt
+                        ? "bg-amber-50/70 border-amber-500/50 shadow-sm"
+                        : "bg-slate-50 border-primary/50 shadow-sm"
                     : isDark
                       ? "bg-glass-surface border-glass-border hover:bg-white/5"
                       : "bg-white border-slate-200 hover:bg-slate-50 shadow-sm"
@@ -124,18 +146,39 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                   <div
                     className={`mt-1 w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${
                       isSelected
-                        ? "bg-primary/20"
+                        ? isPpt
+                          ? "bg-amber-500/20"
+                          : "bg-primary/20"
                         : isDark
                           ? "bg-[#1e1f27] border border-glass-border"
                           : "bg-slate-100 border border-slate-200"
                     }`}
                   >
-                    <FaFileAlt className={`text-[16px] ${isSelected ? "text-primary" : isDark ? "text-[#cdc3d6]" : "text-slate-500"}`} />
+                    <FaFileAlt className={`text-[16px] ${
+                      isSelected
+                        ? isPpt
+                          ? "text-amber-500"
+                          : "text-primary"
+                        : isDark ? "text-[#cdc3d6]" : "text-slate-500"
+                    }`} />
                   </div>
                   <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                        isPpt
+                          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                          : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30"
+                      }`}>
+                        {isPpt ? "PPT" : "PDF"}
+                      </span>
+                    </div>
                     <h3
                       className={`font-body-md text-body-md truncate font-medium ${
-                        isSelected ? "text-primary" : isDark ? "text-on-surface" : "text-slate-800"
+                        isSelected
+                          ? isPpt
+                            ? "text-amber-600 dark:text-amber-400 font-bold"
+                            : "text-primary font-bold"
+                          : isDark ? "text-on-surface" : "text-slate-800"
                       }`}
                     >
                       {doc.name}
@@ -157,13 +200,17 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                         if (!currentUser) {
                           window.location.href = "/login?from=" + encodeURIComponent(window.location.pathname);
                         } else {
-                          window.open(getDocumentViewUrl(doc.pdfUrl), "_blank");
+                          window.open(getDocumentViewUrl(doc.pptUrl || doc.pdfUrl), "_blank");
                         }
                       }}
-                      className="flex-1 py-1.5 rounded bg-primary text-on-primary text-label-sm font-label-sm hover:brightness-110 transition-all flex items-center justify-center gap-1.5 font-bold text-center border-none cursor-pointer"
+                      className={`flex-1 py-1.5 rounded text-white text-label-sm font-label-sm hover:brightness-110 transition-all flex items-center justify-center gap-1.5 font-bold text-center border-none cursor-pointer ${
+                        isPpt ? "bg-amber-600 hover:bg-amber-700" : "bg-primary"
+                      }`}
                     >
                       <FaEye size={13} />
-                      {language === "vi" ? "Xem tài liệu" : "Open Document"}
+                      {language === "vi"
+                        ? isPpt ? "Xem tài liệu PPT" : "Xem tài liệu"
+                        : isPpt ? "View PPT" : "Open Document"}
                     </button>
                   </div>
                 )}
@@ -185,27 +232,34 @@ export default function SourceDocDetail({ subject, isDark, language }) {
       }`}>
         {selectedDoc ? (
           <>
-            {/* PDF header details */}
-            <div className={`h-14 border-b flex items-center justify-between px-4 ${
+            {/* Document header details */}
+            <div className={`min-h-14 py-2 border-b flex flex-wrap items-center justify-between px-4 gap-2 ${
               isDark ? "bg-[#1e1f27]/85 border-white/10" : "bg-slate-50 border-slate-200"
             }`}>
-              <div className="flex items-center gap-3">
-                <FaFileAlt className="text-primary" size={16} />
+              <div className="flex items-center gap-2.5 min-w-0 max-w-full">
+                <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase shrink-0 ${
+                  isPresentationDoc(selectedDoc)
+                    ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                    : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30"
+                }`}>
+                  {isPresentationDoc(selectedDoc) ? "PPT" : "PDF"}
+                </span>
                 <span className="font-body-md text-body-md truncate font-medium">
-                  {selectedDoc.name?.endsWith(".pdf") ? selectedDoc.name : `${selectedDoc.name}.pdf`}
+                  {selectedDoc.name}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+
+              <div className="flex items-center gap-2 flex-wrap">
                 {currentUser && (
                   <>
                     {/* Download Button */}
                     <a
-                      href={getDocumentDownloadUrl(selectedDoc.pdfUrl)}
+                      href={getDocumentDownloadUrl(selectedDoc.pdfUrl || selectedDoc.pptUrl)}
                       download
-                      target={getGoogleDriveFileId(selectedDoc.pdfUrl) ? "_blank" : undefined}
+                      target="_blank"
                       rel="noopener noreferrer"
-                      title={language === "vi" ? "Tải xuống PDF" : "Download PDF"}
-                      className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                      title={language === "vi" ? (isPresentationDoc(selectedDoc) ? "Tải xuống PowerPoint (.ppt)" : "Tải xuống PDF") : "Download"}
+                      className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 no-underline ${
                         isDark
                           ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
                           : "hover:bg-black/5 border-slate-200 text-slate-600"
@@ -213,17 +267,17 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                     >
                       <FaDownload size={14} />
                       <span className="text-[11px] font-bold hidden sm:inline">
-                        {language === "vi" ? "Tải xuống" : "Download"}
+                        {isPresentationDoc(selectedDoc) ? "Tải PPT" : (language === "vi" ? "Tải xuống" : "Download")}
                       </span>
                     </a>
 
                     {/* Open in New Tab Button */}
                     <a
-                      href={getDocumentViewUrl(selectedDoc.pdfUrl)}
+                      href={getDocumentViewUrl(selectedDoc.pdfUrl || selectedDoc.pptUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       title={language === "vi" ? "Mở trong tab mới" : "Open in new tab"}
-                      className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 ${
+                      className={`p-1.5 rounded border transition-colors flex items-center justify-center gap-1.5 no-underline ${
                         isDark
                           ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
                           : "hover:bg-black/5 border-slate-200 text-slate-600"
@@ -239,7 +293,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
 
                     {/* Print Button */}
                     <a
-                      href={getDocumentPreviewUrl(selectedDoc.pdfUrl)}
+                      href={getDocumentPreviewUrl(selectedDoc.pdfUrl || selectedDoc.pptUrl)}
                       target="_blank"
                       rel="noreferrer"
                       title={language === "vi" ? "In tài liệu" : "Print"}
@@ -318,12 +372,14 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                   </a>
                 </div>
               ) : (
-                /* Render live PDF preview using an iframe */
+                /* Render live PDF or Slide embed preview using an iframe */
                 <iframe
-                  src={getDocumentPreviewUrl(selectedDoc.pdfUrl)}
+                  key={selectedDoc.id}
+                  src={getDocumentPreviewUrl(selectedDoc.pdfUrl || selectedDoc.pptUrl || selectedDoc.url)}
                   className="w-full h-full rounded shadow-2xl border border-glass-border relative z-10 bg-white"
                   title={selectedDoc.name}
-                  allow="autoplay"
+                  allow="autoplay; fullscreen"
+                  allowFullScreen
                 ></iframe>
               )}
             </div>

@@ -229,6 +229,7 @@ function App() {
                       <Route path="/settings" element={<Setting />} />
                       <Route path="/source" element={<SourcePage />} />
                       <Route path="/source/:subjectCode" element={<SourcePage />} />
+                      <Route path="/source/:subjectCode/:tab" element={<SourcePage />} />
 
                       <Route path="groups/:groupId" element={<GroupPage />}>
                         <Route index element={<GroupHome />} />

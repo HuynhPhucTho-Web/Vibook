@@ -6,10 +6,12 @@ import * as mln111 from "./data/mln111";
 import * as mln131 from "./data/mln131";
 import * as prm393c from "./data/prm393c";
 import * as pmg201c from "./data/pmg201c";
+import * as hcm202 from "./data/hcm202";
+import * as vnr202 from "./data/vnr202";
 
 
 // 2. Concatenate arrays flatly
-const subjects = [dps201c.subject, ite302c.subject, mln122.subject, mln111.subject, mln131.subject, prm393c.subject, pmg201c.subject];
+const subjects = [dps201c.subject, ite302c.subject, mln122.subject, mln111.subject, mln131.subject, prm393c.subject, pmg201c.subject, hcm202.subject, vnr202.subject];
 
 const modules = [
   ...dps201c.modules,
@@ -18,7 +20,9 @@ const modules = [
   ...mln111.modules,
   ...mln131.modules,
   ...prm393c.modules,
-  ...pmg201c.modules
+  ...pmg201c.modules,
+  ...hcm202.modules,
+  ...vnr202.modules
 ];
 
 const documents = [
@@ -28,7 +32,9 @@ const documents = [
   ...mln111.documents, 
   ...mln131.documents,
   ...prm393c.documents,
-  ...pmg201c.documents
+  ...pmg201c.documents,
+  ...hcm202.documents,
+  ...vnr202.documents
 ];
 
 const questions = [
@@ -38,7 +44,9 @@ const questions = [
   ...mln111.questions,
   ...mln131.questions,
   ...prm393c.questions,
-  ...pmg201c.questions
+  ...pmg201c.questions,
+  ...hcm202.questions,
+  ...vnr202.questions
 ];
 
 // 3. Dynamic assembly mapper

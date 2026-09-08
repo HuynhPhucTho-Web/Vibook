@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useEffect, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { LanguageContext } from "../../context/LanguageContext";
 import { ThemeContext } from "../../context/ThemeContext";
 import { FaArrowLeft } from "react-icons/fa";
@@ -12,13 +13,19 @@ export default function SourceDetail({ subject, onBack }) {
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
 
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("vibook_active_tab") || "docs";
-  });
+  const { tab } = useParams();
+  const navigate = useNavigate();
+
+  // Determine active tab from URL: "quiz" or "document" (default)
+  const activeTab = tab === "quiz" ? "quiz" : "document";
 
   useEffect(() => {
     localStorage.setItem("vibook_active_tab", activeTab);
   }, [activeTab]);
+
+  const handleTabChange = (newTab) => {
+    navigate(`/source/${subject.code.toLowerCase()}/${newTab}`);
+  };
 
   const handleBack = () => {
     localStorage.removeItem("vibook_selected_subject_id");
@@ -78,16 +85,16 @@ export default function SourceDetail({ subject, onBack }) {
             isDark ? "bg-[#1e1f27]" : "bg-slate-200/60"
           }`}>
             <button
-              onClick={() => setActiveTab("docs")}
+              onClick={() => handleTabChange("document")}
               className={`relative px-6 py-2 rounded-lg text-body-md font-body-md transition-all duration-300 group overflow-hidden ${
-                activeTab === "docs"
+                activeTab === "document"
                   ? "text-white"
                   : isDark
                     ? "text-[#cdc3d6] hover:text-white hover:bg-white/5"
                     : "text-slate-600 hover:text-slate-900 hover:bg-black/5"
               }`}
             >
-              {activeTab === "docs" && (
+              {activeTab === "document" && (
                 <div className="absolute inset-0 bg-gradient-to-r from-neon-purple to-electric-blue transition-opacity"></div>
               )}
               <span className="relative z-10 font-medium tracking-wide">
@@ -95,7 +102,7 @@ export default function SourceDetail({ subject, onBack }) {
               </span>
             </button>
             <button
-              onClick={() => setActiveTab("quiz")}
+              onClick={() => handleTabChange("quiz")}
               className={`relative px-6 py-2 rounded-lg text-body-md font-body-md transition-all duration-300 group overflow-hidden ${
                 activeTab === "quiz"
                   ? "text-white"
@@ -115,7 +122,7 @@ export default function SourceDetail({ subject, onBack }) {
         </div>
 
         {/* --- Content Area --- */}
-        {activeTab === "docs" ? (
+        {activeTab === "document" ? (
           <SourceDocDetail subject={subject} isDark={isDark} language={language} />
         ) : (
           <SourceQuizDetail subject={subject} isDark={isDark} language={language} />

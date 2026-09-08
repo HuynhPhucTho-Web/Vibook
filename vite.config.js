@@ -8,18 +8,42 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('firebase')) {
+          const normalizedId = id.replace(/\\/g, '/');
+
+          // Tách riêng dữ liệu ngân hàng đề & tài liệu học tập theo từng môn học
+          if (normalizedId.includes('src/pages/source/data/')) {
+            const match = normalizedId.match(/src\/pages\/source\/data\/([a-zA-Z0-9_-]+)/);
+            if (match) {
+              return `source-${match[1]}`;
+            }
+            return 'source-data';
+          }
+          if (normalizedId.includes('src/pages/source/sourceData')) {
+            return 'source-data';
+          }
+
+          if (normalizedId.includes('node_modules')) {
+            if (normalizedId.includes('firebase')) {
               return 'firebase';
             }
-            if (id.includes('quill') || id.includes('react-quill')) {
+            if (normalizedId.includes('quill') || normalizedId.includes('react-quill')) {
               return 'quill';
             }
-            if (id.includes('emoji-picker-react')) {
+            if (normalizedId.includes('emoji-picker-react')) {
               return 'emoji-picker';
             }
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor';
+            if (normalizedId.includes('lucide-react') || normalizedId.includes('react-icons')) {
+              return 'icons';
+            }
+            if (normalizedId.includes('framer-motion')) {
+              return 'framer-motion';
+            }
+            if (
+              normalizedId.includes('react') ||
+              normalizedId.includes('react-dom') ||
+              normalizedId.includes('react-router')
+            ) {
+              return 'vendor-react';
             }
             return 'vendor';
           }
