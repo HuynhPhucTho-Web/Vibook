@@ -111,7 +111,21 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
                     return (
                       <div key={idx} className="message-media-item">
                         {category === "image" && (
-                          <img src={file.url} alt="Attached" className="message-image" />
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="message-image-link"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Xem ảnh đầy đủ"
+                          >
+                            <img
+                              src={file.url}
+                              alt="Attached"
+                              className="message-image"
+                              loading="lazy"
+                            />
+                          </a>
                         )}
                         {category === "audio" && (
                           <div className="message-audio-wrap mt-1 mb-1">
@@ -162,20 +176,54 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
 
               {/* Actions */}
               {(hoveredMessage === message.id || openPickerFor === message.id) && !message.isRecalled && (
-                <div className="message-actions">
-                  <button
-                    type="button"
-                    className={`btn btn-sm btn-outline-secondary ${openPickerFor === message.id ? "active" : ""}`}
-                    data-reaction-btn={message.id}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setOpenPickerFor((prev) => (prev === message.id ? null : message.id));
-                    }}
-                    title="Thả cảm xúc"
-                  >
-                    <FaHeart size={14} />
-                  </button>
+                <div className={`message-actions ${isOwnMessage ? "sent" : "received"} ${openPickerFor === message.id ? "is-active" : ""}`}>
+                  <div className="reaction-trigger-wrap">
+                    <button
+                      type="button"
+                      className={`btn btn-sm btn-outline-secondary reaction-trigger-btn ${openPickerFor === message.id ? "active" : ""}`}
+                      data-reaction-btn={message.id}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setOpenPickerFor((prev) => (prev === message.id ? null : message.id));
+                      }}
+                      title="Thả cảm xúc"
+                    >
+                      <FaHeart size={13} />
+                    </button>
+
+                    {/* Reaction picker (floating toolbar directly below heart icon) */}
+                    {openPickerFor === message.id && (
+                      <div
+                        ref={pickerRef}
+                        className={`reaction-picker popup-below ${isLight ? "light" : "dark"} ${isOwnMessage ? "sent" : "received"}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {REACTIONS.map((r) => {
+                          const isMyReaction = Array.isArray(message.reactions) && message.reactions.some(
+                            (rx) => rx.userId === currentUser?.uid && rx.type === r.type
+                          );
+                          return (
+                            <button
+                              key={r.type}
+                              type="button"
+                              className={isMyReaction ? "active" : ""}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleReactionClick(message.id, r.type);
+                                setOpenPickerFor(null);
+                              }}
+                              title={r.label}
+                              aria-label={r.label}
+                            >
+                              {r.emoji}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
 
                   <button
                     type="button"
@@ -187,7 +235,7 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
                     }}
                     title="Trả lời"
                   >
-                    <FaReply size={14} />
+                    <FaReply size={13} />
                   </button>
 
                   {isOwnMessage && (
@@ -201,41 +249,9 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
                       }}
                       title="Thu hồi tin nhắn"
                     >
-                      <FaUndo size={14} />
+                      <FaUndo size={13} />
                     </button>
                   )}
-                </div>
-              )}
-
-              {/* Reaction picker (floating toolbar) */}
-              {openPickerFor === message.id && (
-                <div
-                  ref={pickerRef}
-                  className={`reaction-picker ${isLight ? "light" : "dark"} ${isOwnMessage ? "sent" : "received"}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {REACTIONS.map((r) => {
-                    const isMyReaction = Array.isArray(message.reactions) && message.reactions.some(
-                      (rx) => rx.userId === currentUser?.uid && rx.type === r.type
-                    );
-                    return (
-                      <button
-                        key={r.type}
-                        type="button"
-                        className={isMyReaction ? "active" : ""}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleReactionClick(message.id, r.type);
-                          setOpenPickerFor(null);
-                        }}
-                        title={r.label}
-                        aria-label={r.label}
-                      >
-                        {r.emoji}
-                      </button>
-                    );
-                  })}
                 </div>
               )}
 
