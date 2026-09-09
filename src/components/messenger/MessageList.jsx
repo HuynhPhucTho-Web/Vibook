@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, useContext } from "react";
 import UserAvatar from "./UserAvatar";
-import { FaFile, FaHeart, FaReply, FaUndo } from "react-icons/fa";
+import { FaFile, FaHeart, FaReply, FaUndo, FaChevronDown } from "react-icons/fa";
 import { LanguageContext } from "../../context/LanguageContext";
 import "../../style/MessageList.css";
 
@@ -14,16 +14,33 @@ const REACTIONS = [
   { type: "angry", emoji: "😡", label: "Giận" },
 ];
 
-const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, onReaction, onReply, onRecallMessage, chatConfig }) => {
+const MessageList = ({
+  messages,
+  currentUser,
+  selectedUser,
+  theme,
+  chatTheme,
+  onReaction,
+  onReply,
+  onRecallMessage,
+  chatConfig,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false,
+}) => {
   const { t } = useContext(LanguageContext);
   const isLight = theme === "light";
   const containerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const isNearBottomRef = useRef(true);
-  const prevUserRef = useRef(selectedUser?.uid);
+  const prevUserRef = useRef(null);
+  const prevScrollHeightRef = useRef(null);
+  const isInitialLoadForUserRef = useRef(true);
 
   const [hoveredMessage, setHoveredMessage] = useState(null);
   const [openPickerFor, setOpenPickerFor] = useState(null); // messageId đang mở picker
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [newMessagesBelow, setNewMessagesBelow] = useState(0);
   const pickerRef = useRef(null);
 
   const getUserName = (uid) => {
@@ -37,32 +54,82 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
     const el = containerRef.current;
     if (!el) return;
     const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    isNearBottomRef.current = distanceToBottom < 120;
+    const nearBottom = distanceToBottom < 80;
+    isNearBottomRef.current = nearBottom;
+    setShowScrollBottom(distanceToBottom > 160);
+
+    if (nearBottom) {
+      setNewMessagesBelow(0);
+    }
+
+    // Khi người dùng lướt lên gần đỉnh (< 60px) thì tải thêm tin nhắn cũ
+    if (el.scrollTop < 60 && hasMore && !isLoadingMore && onLoadMore) {
+      prevScrollHeightRef.current = el.scrollHeight;
+      onLoadMore();
+    }
   };
 
-  // Cuộn ngay xuống cuối khi chuyển bạn bè trò chuyện
+  // Reset trạng thái khi đổi bạn bè trò chuyện
   useEffect(() => {
     if (prevUserRef.current !== selectedUser?.uid) {
       prevUserRef.current = selectedUser?.uid;
       isNearBottomRef.current = true;
-      if (containerRef.current) {
-        containerRef.current.scrollTop = containerRef.current.scrollHeight;
-      }
+      setShowScrollBottom(false);
+      setNewMessagesBelow(0);
+      isInitialLoadForUserRef.current = true;
     }
   }, [selectedUser?.uid]);
 
-  // Tự động cuộn xuống khi có tin nhắn mới nếu đang ở đáy hoặc tin nhắn do chính mình gửi
-  useEffect(() => {
-    if (messages.length === 0) return;
-    const lastMsg = messages[messages.length - 1];
-    const isOwnLastMessage = lastMsg?.senderId === currentUser?.uid;
+  // Xử lý cuộn tin nhắn mượt mà, không giật trang ngoài
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el || messages.length === 0) return;
 
-    if (isNearBottomRef.current || isOwnLastMessage) {
-      requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // 1. Nếu vừa tải thêm tin nhắn cũ ở phía trên: giữ nguyên vị trí đọc
+    if (prevScrollHeightRef.current !== null) {
+      const heightDiff = el.scrollHeight - prevScrollHeightRef.current;
+      if (heightDiff > 0) {
+        el.scrollTop += heightDiff;
+      }
+      prevScrollHeightRef.current = null;
+      return;
+    }
+
+    // 2. Lần đầu mở chat với bạn bè: cuộn ngay lập tức xuống tin nhắn mới nhất
+    if (isInitialLoadForUserRef.current) {
+      el.scrollTop = el.scrollHeight;
+      isInitialLoadForUserRef.current = false;
+      return;
+    }
+
+    // 3. Tin nhắn mới tới hoặc do chính mình vừa gửi
+    const lastMsg = messages[messages.length - 1];
+    const isOwnMessage = lastMsg?.senderId === currentUser?.uid;
+    const isJustSentByMe =
+      isOwnMessage &&
+      (lastMsg?.isOptimistic || Date.now() - (lastMsg?.createdAt || 0) < 3000);
+
+    if (isNearBottomRef.current || isJustSentByMe) {
+      // Đang ở sát đáy hoặc vừa gửi tin -> cuộn xuống dưới trên chính container
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: isJustSentByMe ? "smooth" : "instant",
       });
+      setNewMessagesBelow(0);
+    } else {
+      // Đang lướt lên xem tin cũ: không ép cuộn xuống, chỉ tăng số tin mới
+      setNewMessagesBelow((prev) => prev + 1);
     }
   }, [messages, currentUser?.uid]);
+
+  const scrollToBottom = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    setShowScrollBottom(false);
+    setNewMessagesBelow(0);
+    isNearBottomRef.current = true;
+  };
 
   // đóng picker khi click ra ngoài
   useEffect(() => {
@@ -105,13 +172,32 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
   };
 
   return (
-    <div
-      ref={containerRef}
-      onScroll={handleScroll}
-      className={`message-list-container ${isLight ? "light" : "dark"}`}
-      style={{ backgroundColor: chatTheme.backgroundColor }}
-    >
-      {messages.map((message, index) => {
+    <div className="message-list-wrapper">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className={`message-list-container ${isLight ? "light" : "dark"}`}
+        style={{ backgroundColor: chatTheme.backgroundColor }}
+      >
+        {/* Loading older messages indicator */}
+        {isLoadingMore && (
+          <div className="d-flex justify-content-center align-items-center py-2">
+            <div className="spinner-border spinner-border-sm text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Beginning of chat history badge */}
+        {!hasMore && messages.length > 0 && (
+          <div className="chat-history-start">
+            <span className="chat-history-start-badge">
+              {t("beginningOfChat") || "Bắt đầu đoạn chat"}
+            </span>
+          </div>
+        )}
+
+        {messages.map((message, index) => {
         const isOwnMessage = message.senderId === currentUser?.uid;
         const showAvatar = index === 0 || messages[index - 1]?.senderId !== message.senderId;
 
@@ -326,7 +412,26 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
         );
       })}
 
-      <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Floating Scroll to Bottom button */}
+      {showScrollBottom && (
+        <button
+          type="button"
+          className="scroll-bottom-btn"
+          onClick={scrollToBottom}
+          title={t("scrollToBottom") || "Cuộn xuống tin nhắn mới nhất"}
+          aria-label={t("scrollToBottom") || "Cuộn xuống tin nhắn mới nhất"}
+        >
+          <FaChevronDown size={14} />
+          {newMessagesBelow > 0 && (
+            <span className="scroll-bottom-badge">
+              {newMessagesBelow > 99 ? "99+" : newMessagesBelow}
+            </span>
+          )}
+        </button>
+      )}
     </div>
   );
 };

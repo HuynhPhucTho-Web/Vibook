@@ -1,13 +1,26 @@
-/* src/style/MessageList.css */
+.message-list-wrapper {
+  position: relative;
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .message-list-container {
   flex: 1 1 0%;
   min-height: 0;
+  height: 100%;
+  width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 1rem 1.1rem 1.5rem;
   background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(8,10,18,0.04));
   scrollbar-width: thin;
   scrollbar-color: rgba(142, 84, 233, 0.35) transparent;
+  overscroll-behavior: contain;
 }
 
 .message-list-container::-webkit-scrollbar {
@@ -489,3 +502,103 @@
     padding: 0.15rem 0.2rem;
   }
 }
+
+/* History start & load older indicator */
+.chat-history-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 1.25rem 0 1rem;
+  opacity: 0.8;
+}
+
+.chat-history-start-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #c9c0dc;
+  letter-spacing: 0.02em;
+}
+
+.messenger-container.light .chat-history-start-badge {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #64748b;
+}
+
+/* Floating Scroll to Bottom button */
+.scroll-bottom-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(20, 22, 34, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 30;
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+  animation: fadeInScrollBtn 0.2s ease-out;
+}
+
+.scroll-bottom-btn:hover {
+  transform: translateY(-2px) scale(1.06);
+  background: rgba(32, 36, 56, 0.95);
+  border-color: rgba(142, 84, 233, 0.7);
+  color: #ffffff;
+}
+
+.scroll-bottom-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #8e54e9;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(142, 84, 233, 0.6);
+}
+
+.messenger-container.light .scroll-bottom-btn {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #162033;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.messenger-container.light .scroll-bottom-btn:hover {
+  background: #ffffff;
+  border-color: rgba(142, 84, 233, 0.5);
+  color: #162033;
+}
+
+@keyframes fadeInScrollBtn {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+

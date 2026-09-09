@@ -56,9 +56,11 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0.5rem;
+  padding: 0.5rem 0.5rem 1.5rem 0.5rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(142, 84, 233, 0.35) transparent;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
 }
 
 .user-list-items::-webkit-scrollbar {

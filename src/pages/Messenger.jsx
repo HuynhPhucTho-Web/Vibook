@@ -48,6 +48,11 @@ const Messenger = () => {
   const [showRecallModal, setShowRecallModal] = useState(false);
   const [recallMessageId, setRecallMessageId] = useState(null);
 
+  // Pagination for scrolling up to view older messages
+  const [messagesLimit, setMessagesLimit] = useState(50);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // Sync settings with Firestore Messages/{chatId} configuration doc
   const [chatConfig, setChatConfig] = useState(null);
   // Real-time metadata maps for sidebar display
@@ -57,6 +62,15 @@ const Messenger = () => {
 
   const unsubscribeRefs = useRef({});
   const lastChatId = useRef(null);
+
+  // Lock body scroll on desktop while inside Messenger to ensure fixed desktop layout feel
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const createChatId = useCallback((uid1, uid2) => {
     return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
@@ -311,30 +325,32 @@ const Messenger = () => {
       console.error("Error marking all messages as read on select:", err);
     });
 
-    if (lastChatId.current === chatId && messages.length > 0) return;
-
-    lastChatId.current = chatId;
-
     if (unsubscribeRefs.current.messages) {
       unsubscribeRefs.current.messages();
     }
 
     const messagesQuery = query(
       collection(db, "Messages", chatId, "messages"),
-      orderBy("createdAt", "asc"),
-      limit(50)
+      orderBy("createdAt", "desc"),
+      limit(messagesLimit)
     );
 
     unsubscribeRefs.current.messages = onSnapshot(
       messagesQuery,
       async (snapshot) => {
-        const messageList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        // Reverse so oldest message is at the top, newest message at bottom
+        const firestoreList = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .reverse();
+
+        setHasMoreMessages(snapshot.docs.length >= messagesLimit);
+        setIsLoadingMore(false);
 
         // Mark messages as read if current user is receiver
-        const unreadMessages = messageList.filter(msg =>
+        const unreadMessages = firestoreList.filter(msg =>
           msg.senderId !== currentUser.uid &&
           (!msg.readBy || !msg.readBy.includes(currentUser.uid))
         );
@@ -370,10 +386,16 @@ const Messenger = () => {
           console.error("Error marking message notifications as read:", err);
         });
 
-        setMessages(messageList);
+        // Merge with any temporary optimistic messages awaiting Firestore response
+        setMessages(prev => {
+          const firestoreIds = new Set(firestoreList.map(m => m.id));
+          const pendingOptimistic = prev.filter(m => m.isOptimistic && !firestoreIds.has(m.id));
+          return [...firestoreList, ...pendingOptimistic];
+        });
       },
       (error) => {
         console.error(`Error fetching messages:`, error);
+        setIsLoadingMore(false);
       }
     );
 
@@ -382,7 +404,7 @@ const Messenger = () => {
         unsubscribeRefs.current.messages();
       }
     };
-  }, [currentUser, selectedUser, createChatId, messages.length]);
+  }, [currentUser, selectedUser, createChatId, messagesLimit]);
 
   const handleSendMessage = useCallback(async (content, mediaFiles = []) => {
     if (!content.trim() && mediaFiles.length === 0) return;
@@ -433,8 +455,17 @@ const Messenger = () => {
     if (selectedUser?.uid === user.uid) return;
     setSelectedUser(user);
     setMessages([]);
+    setMessagesLimit(50);
+    setHasMoreMessages(true);
+    setIsLoadingMore(false);
     lastChatId.current = null;
   }, [selectedUser]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!hasMoreMessages || isLoadingMore) return;
+    setIsLoadingMore(true);
+    setMessagesLimit((prev) => prev + 30);
+  }, [hasMoreMessages, isLoadingMore]);
 
   const filteredUsers = useMemo(() => {
     let result = users;
@@ -681,6 +712,9 @@ const Messenger = () => {
                 onReply={handleReply}
                 onRecallMessage={handleRecallMessage}
                 chatConfig={chatConfig}
+                onLoadMore={handleLoadMore}
+                hasMore={hasMoreMessages}
+                isLoadingMore={isLoadingMore}
               />
               <MessageInput
                 messageText={messageText}
