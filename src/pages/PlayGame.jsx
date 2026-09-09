@@ -7,7 +7,7 @@ import {
 import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from '../context/LanguageContext';
-import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash, FaCheck } from "react-icons/fa";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
 import { useSearch } from "../context/SearchContext";
@@ -37,8 +37,7 @@ const Games = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [selectedGame, setSelectedGame] = useState(null);
+  const [editingGameId, setEditingGameId] = useState(null);
 
   const [gameTitle, setGameTitle] = useState("");
   const [gameDesc, setGameDesc] = useState("");
@@ -67,7 +66,6 @@ const Games = () => {
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) {
         setShowCreateModal(false);
-        setShowUpdateModal(false);
       }
       if (showOptions && !e.target.closest?.(`[data-game-id="${showOptions}"]`)) {
         setShowOptions(null);
@@ -149,22 +147,21 @@ const Games = () => {
 
   // Update
   const handleUpdateGame = useCallback(
-    async (e) => {
+    async (e, game) => {
       e.preventDefault();
-      if (!currentUser || !selectedGame)
+      if (!currentUser || !game)
         return toast.error("Invalid action");
-      if (selectedGame.id.startsWith("default-") || currentUser.uid !== selectedGame.ownerId)
+      if (game.id.startsWith("default-") || currentUser.uid !== game.ownerId)
         return toast.error("Only owner can update; default games are locked");
 
       try {
-        await updateDoc(doc(db, "Games", selectedGame.id), {
-          title: updatedTitle.trim() || selectedGame.title,
-          description: updatedDesc.trim() || selectedGame.description,
-          link: updatedLink.trim() || selectedGame.link,
-          imgUrl: updatedImg.trim() || selectedGame.imgUrl,
+        await updateDoc(doc(db, "Games", game.id), {
+          title: updatedTitle.trim() || game.title,
+          description: updatedDesc.trim() || game.description,
+          link: updatedLink.trim() || game.link,
+          imgUrl: updatedImg.trim() || game.imgUrl,
         });
-        setShowUpdateModal(false);
-        setSelectedGame(null);
+        setEditingGameId(null);
         setUpdatedTitle(""); setUpdatedDesc(""); setUpdatedLink(""); setUpdatedImg("");
         toast.success("Game updated!");
       } catch (e) {
@@ -172,7 +169,7 @@ const Games = () => {
         toast.error("Update failed");
       }
     },
-    [currentUser, selectedGame, updatedTitle, updatedDesc, updatedLink, updatedImg]
+    [currentUser, updatedTitle, updatedDesc, updatedLink, updatedImg]
   );
 
   // Delete
@@ -279,122 +276,199 @@ const Games = () => {
           </div>
         )}
 
-        {/* Update Modal */}
-        {showUpdateModal && selectedGame && (
-          <div className={cls.backdrop}>
-            <div ref={modalRef} className={`${cls.surface} ${cls.border} rounded-xl p-6 w-full max-w-md`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Edit Game: {selectedGame.title}</h3>
-                <button className={`${cls.muted} hover:opacity-80`} onClick={() => setShowUpdateModal(false)}>
-                  <FaTimes size={20} />
-                </button>
-              </div>
-              <form onSubmit={handleUpdateGame} className="space-y-3">
-                <input
-                  type="text" value={updatedTitle} onChange={(e) => setUpdatedTitle(e.target.value)}
-                  placeholder="Game Title" className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
-                />
-                <textarea
-                  value={updatedDesc} onChange={(e) => setUpdatedDesc(e.target.value)}
-                  placeholder="Game Description" rows={2}
-                  className={`w-full p-2 ${cls.input} ${cls.ringFocus}`}
-                />
-                <input
-                  type="url" value={updatedLink} onChange={(e) => setUpdatedLink(e.target.value)}
-                  placeholder="Game Link (URL)" className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
-                />
-                <input
-                  type="url" value={updatedImg} onChange={(e) => setUpdatedImg(e.target.value)}
-                  placeholder="Game Image URL" className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
-                />
-                <div className="flex justify-end gap-2 pt-1">
-                  <button type="button" className={`${cls.muted}`} onClick={() => setShowUpdateModal(false)}>
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-60"
-                    disabled={
-                      !currentUser ||
-                      !selectedGame ||
-                      selectedGame.id.startsWith("default-") ||
-                      currentUser?.uid !== selectedGame.ownerId
-                    }
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
           {filteredGames.length > 0 ? (
-            filteredGames.map((game) => (
-              <div
-                key={game.id}
-                className={`${cls.surface} ${cls.border} ${cls.shadow} rounded-xl overflow-hidden relative`}
-              >
-                {/* owner menu */}
-                {currentUser && currentUser.uid === game.ownerId && !game.id.startsWith("default-") && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <button
-                      className={`p-2 rounded-full ${cls.surface} ${cls.border} text-neutral-400 hover:text-neutral-200 hover:shadow`}
-                      onClick={() => setShowOptions(showOptions === game.id ? null : game.id)}
-                      data-game-id={game.id}
-                    >
-                      <FaEllipsisV size={14} />
-                    </button>
-                    {showOptions === game.id && (
-                      <div className={`absolute right-0 mt-2 w-36 rounded-md shadow-lg z-20 ${cls.menu}`}>
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-neutral-100/60 dark:hover:bg-neutral-700/60 flex items-center rounded-t-md"
-                          onClick={() => {
-                            setSelectedGame(game);
-                            setUpdatedTitle(game.title || "");
-                            setUpdatedDesc(game.description || "");
-                            setUpdatedLink(game.link || "");
-                            setUpdatedImg(game.imgUrl || "");
-                            setShowUpdateModal(true);
-                            setShowOptions(null);
-                          }}
-                        >
-                          <FaEdit className="mr-2" /> {t("edit")}
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-neutral-100/60 dark:hover:bg-neutral-700/60 flex items-center rounded-b-md"
-                          onClick={() => {
-                            handleDeleteGame(game.id, game.ownerId);
-                            setShowOptions(null);
-                          }}
-                        >
-                          <FaTrash className="mr-2" /> {t("delete")}
-                        </button>
+            filteredGames.map((game) => {
+              const isEditing = editingGameId === game.id;
+              const isOwner = currentUser && currentUser.uid === game.ownerId && !game.id.startsWith("default-");
+
+              return (
+                <div
+                  key={game.id}
+                  className="group relative flex flex-col vb-glass border border-purple-500/20 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  {/* Small 3-dots owner menu */}
+                  {isOwner && !isEditing && (
+                    <div className="absolute top-1.5 right-1.5 z-10" data-game-id={game.id}>
+                      <button
+                        type="button"
+                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-black/50 hover:bg-black/80 text-white/85 hover:text-white flex items-center justify-center backdrop-blur-sm transition shadow-sm border border-white/10"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowOptions(showOptions === game.id ? null : game.id);
+                        }}
+                        title="Tùy chọn"
+                        aria-label="Tùy chọn"
+                      >
+                        <FaEllipsisV size={9} />
+                      </button>
+
+                      {showOptions === game.id && (
+                        <div className="absolute right-0 mt-1 w-28 rounded-lg shadow-xl z-20 py-1 bg-neutral-900/95 border border-white/15 backdrop-blur-md text-xs">
+                          <button
+                            type="button"
+                            className="w-full text-left px-2.5 py-1.5 hover:bg-white/10 flex items-center gap-2 text-neutral-200 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setEditingGameId(game.id);
+                              setUpdatedTitle(game.title || "");
+                              setUpdatedDesc(game.description || "");
+                              setUpdatedLink(game.link || "");
+                              setUpdatedImg(game.imgUrl || "");
+                              setShowOptions(null);
+                            }}
+                          >
+                            <FaEdit size={11} className="text-purple-400" />
+                            <span>{t("edit") || "Sửa"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="w-full text-left px-2.5 py-1.5 hover:bg-red-500/20 flex items-center gap-2 text-red-400 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteGame(game.id, game.ownerId);
+                              setShowOptions(null);
+                            }}
+                          >
+                            <FaTrash size={11} />
+                            <span>{t("delete") || "Xóa"}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Thumbnail */}
+                  <div className="relative w-full aspect-[16/10] bg-neutral-900/40 overflow-hidden shrink-0">
+                    <img
+                      src={isEditing ? (updatedImg || game.imgUrl) : game.imgUrl}
+                      alt={game.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-40 pointer-events-none" />
+                    {isEditing && (
+                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-purple-600/90 backdrop-blur-sm text-[10px] font-medium text-white shadow-sm flex items-center gap-1">
+                        <FaEdit size={9} /> {t("edit") || "Sửa"}
                       </div>
                     )}
                   </div>
-                )}
 
-                <div className="relative">
-                  <img src={game.imgUrl} alt={game.title} className="h-40 w-full object-cover" />
-                </div>
+                  {/* Body: Inline Edit Form OR Compact Card Content */}
+                  {isEditing ? (
+                    <form
+                      onSubmit={(e) => handleUpdateGame(e, game)}
+                      className="p-2 sm:p-2.5 flex flex-col gap-1.5 flex-1 bg-black/10 dark:bg-black/25 text-left"
+                    >
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 dark:text-neutral-400 mb-0.5 font-medium">Tên trò chơi</label>
+                        <input
+                          type="text"
+                          value={updatedTitle}
+                          onChange={(e) => setUpdatedTitle(e.target.value)}
+                          placeholder="Tên game"
+                          className="w-full px-2 py-1 text-xs rounded border border-purple-500/30 bg-white/80 dark:bg-neutral-900/80 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:border-pink-500 transition"
+                          required
+                        />
+                      </div>
 
-                <div className="p-4 text-center">
-                  <h3 className="text-lg font-semibold mb-1">{game.title}</h3>
-                  <p className={`text-sm mb-3 ${cls.muted}`}>{game.description}</p>
-                  <a
-                    href={game.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-decoration-none inline-block px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-purple-600 hover:to-pink-600 transition"
-                  >
-                    {t("playNow")}
-                  </a>
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 dark:text-neutral-400 mb-0.5 font-medium">Mô tả</label>
+                        <input
+                          type="text"
+                          value={updatedDesc}
+                          onChange={(e) => setUpdatedDesc(e.target.value)}
+                          placeholder="Mô tả game"
+                          className="w-full px-2 py-1 text-xs rounded border border-purple-500/30 bg-white/80 dark:bg-neutral-900/80 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:border-pink-500 transition"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 dark:text-neutral-400 mb-0.5 font-medium">Link game</label>
+                        <input
+                          type="url"
+                          value={updatedLink}
+                          onChange={(e) => setUpdatedLink(e.target.value)}
+                          placeholder="https://..."
+                          className="w-full px-2 py-1 text-xs rounded border border-purple-500/30 bg-white/80 dark:bg-neutral-900/80 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:border-pink-500 transition"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 dark:text-neutral-400 mb-0.5 font-medium">Link ảnh</label>
+                        <input
+                          type="url"
+                          value={updatedImg}
+                          onChange={(e) => setUpdatedImg(e.target.value)}
+                          placeholder="https://..."
+                          className="w-full px-2 py-1 text-xs rounded border border-purple-500/30 bg-white/80 dark:bg-neutral-900/80 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:border-pink-500 transition"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex gap-1.5 pt-1.5 mt-0.5 border-t border-purple-500/20">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingGameId(null);
+                            setUpdatedTitle("");
+                            setUpdatedDesc("");
+                            setUpdatedLink("");
+                            setUpdatedImg("");
+                          }}
+                          className="flex-1 py-1 px-2 text-[11px] rounded bg-neutral-200/80 hover:bg-neutral-300/80 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition"
+                        >
+                          {t("cancel") || "Hủy"}
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 py-1 px-2 text-[11px] font-medium rounded bg-gradient-to-r from-pink-500 to-purple-500 hover:from-purple-600 hover:to-pink-600 text-white transition flex items-center justify-center gap-1 shadow-sm"
+                        >
+                          <FaCheck size={9} />
+                          <span>Lưu</span>
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="p-2 sm:p-2.5 flex flex-col flex-1 justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3
+                          className="text-xs sm:text-sm font-semibold truncate text-neutral-900 dark:text-neutral-100"
+                          title={game.title}
+                        >
+                          {game.title}
+                        </h3>
+                        {game.description && (
+                          <p
+                            className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5"
+                            title={game.description}
+                          >
+                            {game.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <a
+                        href={game.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-1 sm:py-1.5 px-2 text-[11px] sm:text-xs font-medium rounded-md bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-purple-600 hover:to-pink-600 transition flex items-center justify-center gap-1.5 shadow-sm text-decoration-none"
+                      >
+                        <FaGamepad size={12} />
+                        <span>{t("playNow")}</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className={`col-span-full text-center py-8 ${cls.muted}`}>{t("Nogamesfound")} </div>
           )}

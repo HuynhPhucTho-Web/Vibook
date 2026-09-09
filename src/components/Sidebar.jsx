@@ -45,7 +45,7 @@ const MENU = [
   { path: "/events", icon: FaCalendarAlt, labelKey: "events", requiresAuth: false },
   { path: "/videos", icon: FaYoutube, labelKey: "video", requiresAuth: false },
   // { path: "/story", icon: FaVideo, labelKey: "story", requiresAuth: false },
-  // { path: "/playgame", icon: FaGamepad, labelKey: "playGame", requiresAuth: false },
+  { path: "/playgame", icon: FaGamepad, labelKey: "playGame", requiresAuth: false },
   
   // { path: "/market", icon: FaShoppingBag, labelKey: "store", requiresAuth: false },
   {

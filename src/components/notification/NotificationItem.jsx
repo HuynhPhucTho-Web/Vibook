@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCheckCircle, FaHeart, FaThumbsUp, FaCommentDots, FaUserPlus, FaEnvelope, FaNewspaper, FaTrash } from "react-icons/fa";
+import { FaCheckCircle, FaHeart, FaCommentDots, FaUserPlus, FaEnvelope, FaNewspaper, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const UserAvatar = React.memo(({ src, alt, size = 40 }) => {
@@ -66,96 +66,26 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
     }
   };
 
-  const getReactionBadge = () => {
-    // Lấy tên reaction từ field hoặc dò từ nội dung
-    let r = (notification.reaction || "").toLowerCase();
-    if (!r && notification.content) {
-      const c = notification.content.toLowerCase();
-      if (c.includes("yêu thích") || c.includes("❤️") || c.includes("love")) r = "love";
-      else if (c.includes("haha") || c.includes("😂")) r = "haha";
-      else if (c.includes("wow") || c.includes("😮")) r = "wow";
-      else if (c.includes("buồn") || c.includes("😢") || c.includes("sad")) r = "sad";
-      else if (c.includes("phẫn nộ") || c.includes("😠") || c.includes("angry")) r = "angry";
-      else if (c.includes("thích") || c.includes("👍") || c.includes("like")) r = "like";
-    }
-
-    switch (r) {
-      case "love":
-        return (
-          <span
-            className="position-absolute bottom-0 end-0 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-            style={{ width: 20, height: 20, fontSize: 10, backgroundColor: "#f02849", color: "#fff", transform: "translate(20%, 20%)" }}
-            title="Yêu thích"
-          >
-            <FaHeart />
-          </span>
-        );
-      case "haha":
-        return (
-          <span
-            className="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center"
-            style={{ width: 20, height: 20, fontSize: 13, transform: "translate(20%, 20%)", lineHeight: 1 }}
-            title="Haha"
-          >
-            😂
-          </span>
-        );
-      case "wow":
-        return (
-          <span
-            className="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center"
-            style={{ width: 20, height: 20, fontSize: 13, transform: "translate(20%, 20%)", lineHeight: 1 }}
-            title="Wow"
-          >
-            😮
-          </span>
-        );
-      case "sad":
-        return (
-          <span
-            className="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center"
-            style={{ width: 20, height: 20, fontSize: 13, transform: "translate(20%, 20%)", lineHeight: 1 }}
-            title="Buồn"
-          >
-            😢
-          </span>
-        );
-      case "angry":
-        return (
-          <span
-            className="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center"
-            style={{ width: 20, height: 20, fontSize: 13, transform: "translate(20%, 20%)", lineHeight: 1 }}
-            title="Phẫn nộ"
-          >
-            😠
-          </span>
-        );
-      case "like":
-      default:
-        return (
-          <span
-            className="position-absolute bottom-0 end-0 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-            style={{ width: 20, height: 20, fontSize: 10, backgroundColor: "#1877f2", color: "#fff", transform: "translate(20%, 20%)" }}
-            title="Thích"
-          >
-            <FaThumbsUp />
-          </span>
-        );
-    }
-  };
-
   const renderBadge = () => {
     switch (notification.type) {
       case "post_reaction":
       case "post_like":
-      case "comment_reaction":
-        return getReactionBadge();
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Cảm xúc"
+          >
+            <FaHeart />
+          </span>
+        );
       case "post_comment":
       case "comment_reply":
+      case "comment_reaction":
         return (
           <span
             className="position-absolute bottom-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-            style={{ width: 20, height: 20, fontSize: 10, transform: "translate(20%, 20%)" }}
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
             title="Bình luận"
           >
             <FaCommentDots />
@@ -165,7 +95,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
         return (
           <span
             className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-            style={{ width: 20, height: 20, fontSize: 10, transform: "translate(20%, 20%)" }}
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
             title="Kết bạn"
           >
             <FaUserPlus />
@@ -175,7 +105,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
         return (
           <span
             className="position-absolute bottom-0 end-0 bg-info text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-            style={{ width: 20, height: 20, fontSize: 10, transform: "translate(20%, 20%)" }}
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
             title="Tin nhắn"
           >
             <FaEnvelope />
@@ -185,7 +115,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
         return (
           <span
             className="position-absolute bottom-0 end-0 bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-            style={{ width: 20, height: 20, fontSize: 10, transform: "translate(20%, 20%)" }}
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
             title="Blog"
           >
             <FaNewspaper />
