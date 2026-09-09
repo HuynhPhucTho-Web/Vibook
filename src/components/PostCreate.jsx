@@ -12,6 +12,8 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
 import { requireLogin } from "../utils/requireLogin";
+import { getUserProfileSync } from "../utils/userCache";
+import { setCachedCommentCount } from "../utils/postCommentCache";
 import "../style/PostCreate.css";
 
 const MAX_MEDIA_FILES = 20;
@@ -20,6 +22,10 @@ const PostCreator = ({ onPostCreated }) => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
   const navigate = useNavigate();
+
+  const currentUserUid = auth.currentUser?.uid;
+  const cachedCurrentUser = getUserProfileSync(currentUserUid);
+  const currentAvatar = cachedCurrentUser?.photo || auth.currentUser?.photoURL || null;
 
   // ----- state -----
   const [postContent, setPostContent] = useState("");
@@ -291,10 +297,14 @@ const PostCreator = ({ onPostCreated }) => {
         setUploadProgress(((i + 1) / mediaFiles.length) * 100);
       }
 
+      const currentUid = auth.currentUser.uid;
+      const userPhoto = currentAvatar || auth.currentUser.photoURL || "/default-avatar.png";
+      const userName = cachedCurrentUser?.displayName || auth.currentUser.displayName || "Anonymous";
+
       const postData = {
-        userId: auth.currentUser.uid,
-        userName: auth.currentUser.displayName || "Anonymous",
-        userPhoto: auth.currentUser.photoURL || "/default-avatar.png",
+        userId: currentUid,
+        userName,
+        userPhoto,
         type: "post",
         title: postTitle.trim(),
         content: contentText,
@@ -306,10 +316,12 @@ const PostCreator = ({ onPostCreated }) => {
         likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
         reactedBy: {},
         comments: [],
+        commentCount: 0,
         status: localStorage.getItem("vibook_default_privacy") || "public",
       };
 
       const ref = await addDoc(collection(db, "Posts"), postData);
+      setCachedCommentCount(ref.id, 0);
       setPostContent("");
       setPostTitle("");
       setMediaFiles([]);
@@ -536,9 +548,9 @@ const PostCreator = ({ onPostCreated }) => {
       <div className={`post-creator-container post-creator-collapsed ${isLight ? "light" : "dark"}`}>
         <div className="post-collapsed-row">
           <div className="relative flex-shrink-0 group">
-            {auth.currentUser?.photoURL ? (
+            {currentAvatar ? (
               <img
-                src={auth.currentUser.photoURL}
+                src={currentAvatar}
                 alt="avatar"
                 className="h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-400/50"
               />
@@ -617,9 +629,9 @@ const PostCreator = ({ onPostCreated }) => {
         <div className={`post-creator-compose-row ${showCamera ? "has-camera" : ""}`}>
           {/* Avatar */}
           <div className="relative flex-shrink-0 group">
-            {auth.currentUser?.photoURL ? (
+            {currentAvatar ? (
               <img
-                src={auth.currentUser.photoURL}
+                src={currentAvatar}
                 alt="avatar"
                 className="h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-400/50 transition-all group-hover:ring-indigo-500"
               />

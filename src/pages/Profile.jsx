@@ -10,6 +10,8 @@ import PostItem from "../components/PostItem";
 import ProfileHeader from "../components/profile/UpdateProfile";
 import ProfileStories from "../components/profile/ProfileStories";
 import { requireLogin } from "../utils/requireLogin";
+import { mapPostDocs } from "../utils/feedPosts";
+import { setUserProfileCache } from "../utils/userCache";
 import SEO from "../components/SEO";
 import { useMemo } from "react";
 
@@ -71,14 +73,27 @@ function Profile() {
     if (!targetUid) { setLoading(false); return; }
 
     const unsubUser = onSnapshot(doc(db, "Users", targetUid), (snap) => {
-      if (snap.exists()) setUserDetails({ id: targetUid, ...snap.data() });
-      else toast.error(t("userNotFound"));
+      if (snap.exists()) {
+        const udata = snap.data();
+        setUserDetails({ id: targetUid, ...udata });
+        const fullName = `${udata.firstName || ""} ${udata.lastName || ""}`.trim();
+        const displayName = fullName || udata.displayName || udata.email || "Anonymous";
+        const photo = udata.photo || udata.photoURL || null;
+        setUserProfileCache(targetUid, {
+          displayName,
+          photo,
+          firstName: udata.firstName || "",
+          lastName: udata.lastName || "",
+        });
+      } else {
+        toast.error(t("userNotFound"));
+      }
       setLoading(false);
     });
 
     const q = query(collection(db, "Posts"), where("userId", "==", targetUid));
     const unsubPosts = onSnapshot(q, (qs) => {
-      const arr = qs.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const arr = mapPostDocs(qs.docs);
       arr.sort((a, b) => {
         const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : a.createdAt || 0;
         const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : b.createdAt || 0;

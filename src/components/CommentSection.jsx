@@ -26,6 +26,7 @@ import { SlLike } from "react-icons/sl";
 import { requireLogin } from "../utils/requireLogin";
 import { getOptimizedCloudinaryUrl } from "../utils/cloudinary";
 import { notifyPostComment, notifyCommentReply } from "./notification/NotificationUtils";
+import { setCachedCommentCount, getCachedCommentCount } from "../utils/postCommentCache";
 
 const REACTIONS = {
   like: { emoji: "👍", label: "Thích" },
@@ -223,15 +224,19 @@ const CommentItem = ({
         }
         try {
           await updateDoc(doc(db, "Posts", postId), { commentCount: increment(-1) });
+          const cur = getCachedCommentCount(postId);
+          if (typeof cur === "number") setCachedCommentCount(postId, Math.max(0, cur - 1), true);
         } catch (e) {
           console.warn(e);
         }
       } else {
         const repliesSnapshot = await getDocs(collection(db, "Posts", postId, "comments", comment.id, "replies"));
         await Promise.all(repliesSnapshot.docs.map((replyDocument) => deleteDoc(replyDocument.ref)));
-        const deletedCount = 1 + (comment.replyCount || 0);
+        const deletedCount = 1 + Math.max(comment.replyCount || 0, repliesSnapshot.docs.length);
         try {
           await updateDoc(doc(db, "Posts", postId), { commentCount: increment(-deletedCount) });
+          const cur = getCachedCommentCount(postId);
+          if (typeof cur === "number") setCachedCommentCount(postId, Math.max(0, cur - deletedCount), true);
         } catch (e) {
           console.warn(e);
         }
@@ -448,17 +453,41 @@ const CommentSection = ({ postId, postOwnerId, auth, userDetails, isCommentSecti
     setLoading(true);
     const unsubscribe = onSnapshot(
       query(collection(db, "Posts", postId, "comments"), orderBy("createdAt", "desc")),
-      (snapshot) => {
+      async (snapshot) => {
         let totalCount = snapshot.docs.length;
-        const commentsData = snapshot.docs.map((commentDoc) => {
-          const data = commentDoc.data();
-          totalCount += data.replyCount || 0;
-          return { id: commentDoc.id, ...data };
-        });
+        const commentsData = await Promise.all(
+          snapshot.docs.map(async (commentDoc) => {
+            const data = commentDoc.data();
+            let replyCount = typeof data.replyCount === "number" ? data.replyCount : 0;
+            if (replyCount === 0) {
+              try {
+                const rSnap = await getDocs(
+                  collection(db, "Posts", postId, "comments", commentDoc.id, "replies")
+                );
+                if (!rSnap.empty) {
+                  replyCount = rSnap.docs.length;
+                  if (auth.currentUser) {
+                    updateDoc(doc(db, "Posts", postId, "comments", commentDoc.id), {
+                      replyCount,
+                    }).catch(() => {});
+                  }
+                }
+              } catch {}
+            }
+            totalCount += replyCount;
+            return { id: commentDoc.id, ...data, replyCount };
+          })
+        );
 
         setComments(commentsData);
         setTotalCommentCount(totalCount);
+        setCachedCommentCount(postId, totalCount, true);
         setLoading(false);
+
+        // Self-healing: persist the verified total count to Posts/{postId} so all views see the correct number
+        if (auth.currentUser) {
+          updateDoc(doc(db, "Posts", postId), { commentCount: totalCount }).catch(() => {});
+        }
       },
       (err) => {
         console.error("Error loading comments:", err);
@@ -525,6 +554,8 @@ const CommentSection = ({ postId, postOwnerId, auth, userDetails, isCommentSecti
           await updateDoc(doc(db, "Posts", postId), {
             commentCount: increment(1),
           });
+          const cur = getCachedCommentCount(postId) ?? totalCommentCount;
+          setCachedCommentCount(postId, (cur || 0) + 1, true);
         } catch (err) {
           console.warn("Could not update post commentCount:", err);
         }
@@ -560,6 +591,8 @@ const CommentSection = ({ postId, postOwnerId, auth, userDetails, isCommentSecti
           await updateDoc(doc(db, "Posts", postId), {
             commentCount: increment(1),
           });
+          const cur = getCachedCommentCount(postId) ?? totalCommentCount;
+          setCachedCommentCount(postId, (cur || 0) + 1, true);
         } catch (err) {
           console.warn("Could not update post commentCount:", err);
         }

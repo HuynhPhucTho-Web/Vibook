@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { FaTimes, FaUser } from "react-icons/fa";
 import { db } from "../components/firebase";
 import { requireLogin } from "../utils/requireLogin";
+import { getCachedCommentCount, setCachedCommentCount } from "../utils/postCommentCache";
 
 const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
   const [replyText, setReplyText] = useState("");
@@ -43,6 +44,15 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
       await updateDoc(commentRef, {
         replyCount: increment(1)
       });
+
+      // Update total commentCount on post and cache
+      try {
+        await updateDoc(doc(db, "Posts", postId), { commentCount: increment(1) });
+        const cur = getCachedCommentCount(postId);
+        if (typeof cur === "number") setCachedCommentCount(postId, cur + 1, true);
+      } catch (err) {
+        console.warn("Could not update post commentCount:", err);
+      }
 
       setReplyText("");
       setReplyTo(null);

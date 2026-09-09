@@ -1159,3 +1159,50 @@
     opacity: 0.6;
   }
 }
+
+/* —— Post Card Skeleton & Synchronous Full Reveal —— */
+.post-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(142, 84, 233, 0.08),
+    rgba(71, 118, 230, 0.16),
+    rgba(142, 84, 233, 0.08)
+  );
+  background-size: 200% 100%;
+  animation: postCardShimmer 1.3s ease-in-out infinite;
+}
+
+.post-item-container.light .post-skeleton-shimmer,
+.feed-skeleton__card.light .post-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.65),
+    rgba(203, 213, 225, 0.95),
+    rgba(226, 232, 240, 0.65)
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes postCardShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes postItemReveal {
+  from {
+    opacity: 0.25;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-item-ready-enter {
+  animation: postItemReveal 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

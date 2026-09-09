@@ -6,6 +6,8 @@ import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import PostItem from "../components/PostItem";
 import ProfileHeader from "../components/profile/UpdateProfile";
+import { mapPostDocs } from "../utils/feedPosts";
+import { setUserProfileCache } from "../utils/userCache";
 
 function UserDetailPage() {
   const { theme } = useContext(ThemeContext);
@@ -27,7 +29,17 @@ function UserDetailPage() {
     const userRef = doc(db, "Users", uid);
     const unsubUser = onSnapshot(userRef, (snap) => {
       if (snap.exists()) {
-        setUserDetails({ id: snap.id, ...snap.data() });
+        const udata = snap.data();
+        setUserDetails({ id: snap.id, ...udata });
+        const fullName = `${udata.firstName || ""} ${udata.lastName || ""}`.trim();
+        const displayName = fullName || udata.displayName || udata.email || "Anonymous";
+        const photo = udata.photo || udata.photoURL || null;
+        setUserProfileCache(snap.id, {
+          displayName,
+          photo,
+          firstName: udata.firstName || "",
+          lastName: udata.lastName || "",
+        });
       } else {
         toast.error("User not found");
         setUserDetails(null);
@@ -41,7 +53,7 @@ function UserDetailPage() {
       orderBy("createdAt", "desc"),
     );
     const unsubPosts = onSnapshot(postsQuery, (qs) => {
-      setPosts(qs.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setPosts(mapPostDocs(qs.docs));
       setLoading(false);
     });
 

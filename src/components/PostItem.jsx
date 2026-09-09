@@ -16,11 +16,14 @@ import PostMedia from "./post/PostMedia";
 import PostStats from "./post/PostStats";
 import PostActions from "./post/PostActions";
 import PostComments from "./post/PostComments";
+import PostCardSkeleton from "./post/PostCardSkeleton";
 import { notifyPostReaction } from "./notification/NotificationUtils";
 import { getPostHtml, normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
 import { requireLogin } from "../utils/requireLogin";
 import { getOptimizedCloudinaryUrl } from "../utils/cloudinary";
 import { isPostSavedSync, updateSavedPostCache } from "../utils/savedPostsCache";
+import { getCachedCommentCount, setCachedCommentCount, fetchPostCommentCount, subscribeCommentCount, isCommentCountVerified } from "../utils/postCommentCache";
+import { getUserProfileSync } from "../utils/userCache";
 import "../style/PostItem.css";
 
 // In-memory cache for shared original posts to avoid duplicate getDoc calls
@@ -208,9 +211,21 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   const currentUid = auth?.currentUser?.uid;
   const [localPost, setLocalPost] = useState(post);
   const [commentCount, setCommentCount] = useState(() => {
-    if (typeof post.commentCount === "number") return post.commentCount;
-    if (Array.isArray(post.comments)) return post.comments.length;
+    const cached = getCachedCommentCount(post.id);
+    if (typeof cached === "number") return cached;
+    if (typeof post.commentCount === "number") {
+      setCachedCommentCount(post.id, post.commentCount, false);
+      return post.commentCount;
+    }
+    if (Array.isArray(post.comments) && post.comments.length > 0) {
+      setCachedCommentCount(post.id, post.comments.length, false);
+      return post.comments.length;
+    }
     return 0;
+  });
+  const [isDataReady, setIsDataReady] = useState(() => {
+    if (post.commentCount === 0) return true;
+    return isCommentCountVerified(post.id);
   });
   /** Prevent parent snapshot from wiping optimistic reaction UI mid-flight */
   const reactionPendingRef = useRef(false);
@@ -260,12 +275,32 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         reactedBy: prev.reactedBy,
       };
     });
-    if (typeof post.commentCount === "number") {
+    const cached = getCachedCommentCount(post.id);
+    if (typeof cached === "number") {
+      setCommentCount(cached);
+      if (post.commentCount === 0 || isCommentCountVerified(post.id)) {
+        setIsDataReady(true);
+      }
+    } else if (typeof post.commentCount === "number") {
       setCommentCount(post.commentCount);
-    } else if (Array.isArray(post.comments)) {
+      setCachedCommentCount(post.id, post.commentCount, false);
+      if (post.commentCount === 0) {
+        setIsDataReady(true);
+      }
+    } else if (Array.isArray(post.comments) && post.comments.length > 0) {
       setCommentCount(post.comments.length);
+      setCachedCommentCount(post.id, post.comments.length, false);
     }
   }, [post]);
+
+  // Subscribe to real-time comment count cache changes across components
+  useEffect(() => {
+    if (!post.id) return undefined;
+    return subscribeCommentCount(post.id, (count) => {
+      setCommentCount(count);
+      setIsDataReady(true);
+    });
+  }, [post.id]);
 
   useEffect(() => {
     if (!isDetailView || !post.id) return undefined;
@@ -284,40 +319,65 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     });
   }, [isDetailView, onPostDeleted, post.id]);
 
-  // Comment count: prefer denormalized field; full count only on detail (not N queries on feed)
+  // Comment count: prefer denormalized field; full count on detail with cache update
   useEffect(() => {
     if (!isDetailView || !post.id) return undefined;
-    return onSnapshot(query(collection(db, "Posts", post.id, "comments")), (snapshot) => {
-      setCommentCount(
-        snapshot.docs.reduce(
-          (total, item) => total + 1 + (item.data().replyCount || 0),
-          0,
-        ),
+    return onSnapshot(query(collection(db, "Posts", post.id, "comments")), async (snapshot) => {
+      if (snapshot.empty) {
+        setCommentCount(0);
+        setCachedCommentCount(post.id, 0);
+        setIsDataReady(true);
+        return;
+      }
+      let total = snapshot.docs.length;
+      await Promise.all(
+        snapshot.docs.map(async (d) => {
+          const rCount = d.data()?.replyCount;
+          if (typeof rCount === "number" && rCount > 0) {
+            total += rCount;
+          } else {
+            try {
+              const rSnap = await getDocs(
+                collection(db, "Posts", post.id, "comments", d.id, "replies")
+              );
+              if (!rSnap.empty) total += rSnap.docs.length;
+            } catch {}
+          }
+        })
       );
+      setCommentCount(total);
+      setCachedCommentCount(post.id, total, true);
+      setIsDataReady(true);
+      if (auth.currentUser) {
+        updateDoc(doc(db, "Posts", post.id), { commentCount: total }).catch(() => {});
+      }
     });
   }, [isDetailView, post.id]);
 
+  // Feed count: fetch with deduplication and reveal post card synchronously
   useEffect(() => {
     if (isDetailView || !post.id) return undefined;
-    if (typeof post.commentCount === "number") return undefined;
+    if (post.commentCount === 0 || isCommentCountVerified(post.id)) {
+      setIsDataReady(true);
+      return undefined;
+    }
 
     let active = true;
-    const fetchCount = async () => {
-      try {
-        const snap = await getDocs(collection(db, "Posts", post.id, "comments"));
-        if (!active) return;
-        const count = snap.docs.reduce(
-          (total, item) => total + 1 + (item.data().replyCount || 0),
-          0,
-        );
+    // Safety fallback: reveal card after 1.8s so it never hangs if network is slow
+    const fallbackTimer = setTimeout(() => {
+      if (active) setIsDataReady(true);
+    }, 1800);
+
+    fetchPostCommentCount(post.id).then((count) => {
+      if (active) {
         setCommentCount(count);
-      } catch (err) {
-        console.error("Error fetching comment count for feed", err);
+        setIsDataReady(true);
       }
-    };
-    fetchCount();
+    });
+
     return () => {
       active = false;
+      clearTimeout(fallbackTimer);
     };
   }, [post.id, post.commentCount, isDetailView]);
 
@@ -565,10 +625,11 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     const description = shareDescription.trim();
     setIsReposting(true);
     try {
-      await addDoc(collection(db, "Posts"), {
+      const authorProfile = getUserProfileSync(currentUser.uid);
+      const newPostRef = await addDoc(collection(db, "Posts"), {
         userId: currentUser.uid,
-        userName: currentUser.displayName || "Anonymous",
-        userPhoto: currentUser.photoURL || null,
+        userName: authorProfile?.displayName || currentUser.displayName || "Anonymous",
+        userPhoto: authorProfile?.photo || currentUser.photoURL || null,
         type: "share",
         content: description,
         contentHtml: "",
@@ -578,6 +639,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         likes: { Like: 0, Love: 0, Haha: 0, Wow: 0, Sad: 0, Angry: 0 },
         reactedBy: {},
         comments: [],
+        commentCount: 0,
         sharedPostId: originalId,
         sharedFrom: {
           postId: originalId,
@@ -588,6 +650,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         taggedFriendIds: taggedFriends.map((friend) => friend.uid),
         taggedFriends: taggedFriends.map(({ uid, name, photo }) => ({ uid, name, photo })),
       });
+      setCachedCommentCount(newPostRef.id, 0);
 
       setLocalPost((prevPost) => ({
         ...prevPost,
@@ -646,7 +709,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     }
   };
 
-  const handleShare = async (mode) => {
+  const handleShare = useCallback(async (mode) => {
     const url = `${window.location.origin}/post/${post.id}`;
     const text = postHtmlToText(getPostHtml(localPost));
     try {
@@ -656,7 +719,11 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     } catch (error) {
       if (error?.name !== "AbortError") toast.error(t("shareActionFailed"));
     }
-  };
+  }, [post.id, localPost, t]);
+
+  const handleCommentClick = useCallback(() => {
+    setSelectedPostId((prev) => (prev === post.id ? null : post.id));
+  }, [post.id]);
 
   const handleDeletePost = async () => {
     if (!window.confirm(t("confirmDeletePost"))) return;
@@ -726,8 +793,19 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     friend.name.toLocaleLowerCase().includes(friendSearch.trim().toLocaleLowerCase())
   );
 
+  if (!isDataReady) {
+    return (
+      <PostCardSkeleton
+        post={localPost}
+        isLight={isLight}
+        isDetailView={isDetailView}
+        customBgColor={customBgColor}
+      />
+    );
+  }
+
   return (
-    <div id={`post-${post.id}`} className={`post-item-container ${isLight ? "light" : "dark"} ${!isDetailView ? "mb-3 sm:mb-4" : ""}`} style={{ ...(customBgColor ? { backgroundColor: customBgColor } : {}), overflow: "visible", position: "relative" }}>
+    <div id={`post-${post.id}`} className={`post-item-container ${isLight ? "light" : "dark"} ${!isDetailView ? "mb-3 sm:mb-4" : ""} post-item-ready-enter`} style={{ ...(customBgColor ? { backgroundColor: customBgColor } : {}), overflow: "visible", position: "relative" }}>
       <PostHeader
         post={localPost}
         auth={auth}
@@ -763,7 +841,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         </div>
       )}
 
-      <PostStats post={localPost} commentCount={commentCount} isLight={isLight} onCommentClick={() => setSelectedPostId(selectedPostId === post.id ? null : post.id)} />
+      <PostStats post={localPost} commentCount={commentCount} isLight={isLight} onCommentClick={handleCommentClick} />
       <div className={`mx-4 border-t ${isLight ? "border-gray-100" : "border-zinc-800"}`} />
       <PostActions post={localPost} auth={auth} isLight={isLight} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} showReactions={showReactions} setShowReactions={setShowReactions} isReacting={isReacting} onReaction={handleReaction} onShare={handleShare} onRepostToTimeline={handleRepostToTimeline} isSaved={isSaved} isSavingPost={isSavingPost} onToggleSave={handleToggleSave} commentCount={commentCount} />
       <PostComments postId={post.id} postOwnerId={localPost.userId || post.userId} auth={auth} userDetails={userDetails} selectedPostId={selectedPostId} setSelectedPostId={setSelectedPostId} />

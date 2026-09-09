@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { FaEllipsisH, FaEdit, FaLock, FaTrash, FaUser, FaGlobeAmericas, FaUserFriends, FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { LanguageContext } from "../../context/LanguageContext";
-import { getUserProfile } from "../../utils/userCache";
+import { getUserProfile, getUserProfileSync } from "../../utils/userCache";
 import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 
 const PostHeader = ({
@@ -35,8 +35,21 @@ const PostHeader = ({
     if (days < 7) return t("dayAgo").replace("{count}", days);
     return new Date(value).toLocaleDateString({ en: "en-US", vi: "vi-VN", ja: "ja-JP" }[language] || "en-US");
   };
-  const [authorName, setAuthorName] = useState(post.userName || "Anonymous");
-  const [authorPhoto, setAuthorPhoto] = useState(post.userPhoto || null);
+
+  const [authorName, setAuthorName] = useState(() => {
+    const cached = getUserProfileSync(post.userId);
+    if (cached?.displayName) return cached.displayName;
+    if (post.userName && post.userName !== "Anonymous") return post.userName;
+    return "Anonymous";
+  });
+
+  const [authorPhoto, setAuthorPhoto] = useState(() => {
+    const cached = getUserProfileSync(post.userId);
+    if (cached?.photo) return cached.photo;
+    if (post.userPhoto && post.userPhoto !== "/default-avatar.png") return post.userPhoto;
+    return null;
+  });
+
   const [imgFailed, setImgFailed] = useState(false);
 
   useEffect(() => {
@@ -44,22 +57,21 @@ const PostHeader = ({
   }, [authorPhoto]);
 
   useEffect(() => {
-    if (!post.userId) {
-      setAuthorName(post.userName || "Anonymous");
-      setAuthorPhoto(post.userPhoto || null);
+    if (!post.userId) return;
+
+    // Fast check: if sync cache already has valid profile, update directly
+    const cached = getUserProfileSync(post.userId);
+    if (cached) {
+      if (cached.displayName) setAuthorName(cached.displayName);
+      if (cached.photo) setAuthorPhoto(cached.photo);
       return;
     }
+
     let mounted = true;
-
-    // Use initial post user details if present
-    if (post.userName) setAuthorName(post.userName);
-    if (post.userPhoto) setAuthorPhoto(post.userPhoto);
-
-    // Fetch from memory cache / single request deduplicated
     getUserProfile(post.userId).then((profile) => {
       if (mounted && profile) {
-        setAuthorName(profile.displayName || post.userName || "Anonymous");
-        setAuthorPhoto(profile.photo || post.userPhoto || null);
+        if (profile.displayName) setAuthorName(profile.displayName);
+        if (profile.photo) setAuthorPhoto(profile.photo);
       }
     });
 

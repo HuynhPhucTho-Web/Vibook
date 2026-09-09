@@ -32,7 +32,7 @@ export const documents = [
   {
     id: "vnr202-doc2",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 2 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/17fgnk5tDE0lP7FsKQKWE_ebOFR5-k1Uf/view?usp=drive_link",
@@ -40,7 +40,7 @@ export const documents = [
   {
     id: "vnr202-doc3",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 3 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1KOa6MsMlKUzjYOzgCpHxJntYCdCwAL64/view?usp=drive_link",
@@ -48,7 +48,7 @@ export const documents = [
   {
     id: "vnr202-doc4",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 4 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/12HzjNyhKVDrYbNsUdwOTh5VgXobAZZHU/view?usp=drive_link",
@@ -56,7 +56,7 @@ export const documents = [
   {
     id: "vnr202-doc5",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 5 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1lI0fCUUPuTz0qI0CwsGOVOqv0vVZlkHU/view?usp=drive_link",
@@ -64,7 +64,7 @@ export const documents = [
   {
     id: "vnr202-doc6",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 6 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1IyO3E3didfV0Y2pBRnFNpFjcMfXqdEzt/view?usp=drive_link",
@@ -72,7 +72,7 @@ export const documents = [
   {
     id: "vnr202-doc7",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 7 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1Rhw2wOx4HSyrGNjtIXddwKb5bsCW6fkU/view?usp=drive_link",
@@ -80,7 +80,7 @@ export const documents = [
   {
     id: "vnr202-doc8",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 8 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/12AUc-pX-d9Bdy3x9IvHjM50xqJnxBiH-/view?usp=drive_link",
@@ -88,7 +88,7 @@ export const documents = [
   {
     id: "vnr202-doc9",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 9 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1r445MLZKQshqBN4tBxPgu2TQ-yVUjASA/view?usp=drive_link",
@@ -96,7 +96,7 @@ export const documents = [
   {
     id: "vnr202-doc10",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 10 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/16AGHg84DDlJAcv61Kugi20P-OI2u5iSD/view?usp=drive_link",
@@ -104,7 +104,7 @@ export const documents = [
   {
     id: "vnr202-doc11",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 11 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/11rpbPpEPSjEVhAgP7YTVfw30uXKW3a2P/view?usp=drive_link",
@@ -112,7 +112,7 @@ export const documents = [
   {
     id: "vnr202-doc12",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 12 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/13YhX-K0fQEPDiJfXlc_qoWsNGnh9idgA/view?usp=drive_link",
@@ -120,7 +120,7 @@ export const documents = [
   {
     id: "vnr202-doc13",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 13 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1GD0gV3JNhXyIQFG193HfXJRwxr26hluB/view?usp=drive_link",
@@ -128,7 +128,7 @@ export const documents = [
   {
     id: "vnr202-doc14",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 14 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1vGnEb0glhnnxf9I8z0YHd_QoLy9jqidC/view?usp=drive_link",
@@ -136,7 +136,7 @@ export const documents = [
   {
     id: "vnr202-doc15",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 15 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/12Xrum6lwVaW1QvuxsyiH3UcMP1qKORhG/view?usp=drive_link",
@@ -144,7 +144,7 @@ export const documents = [
   {
     id: "vnr202-doc16",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 16 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1EBfJikPAlR_u0iAgOuN_23mjgZCXFJNy/view?usp=drive_link",
@@ -152,7 +152,7 @@ export const documents = [
   {
     id: "vnr202-doc17",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 17 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1aHNlVuuuvOe4laFDGwN0-YQqLdXg5gJB/view?usp=drive_link",
@@ -160,7 +160,7 @@ export const documents = [
   {
     id: "vnr202-doc18",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 18 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1Sq36Us39VKdXYVdqaenYqmXc8FGBpAIi/view?usp=drive_link",
@@ -168,7 +168,7 @@ export const documents = [
   {
     id: "vnr202-doc19",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 19 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1z5LSJRVw3YtAClv6JWSwQtzj5XEkAoaH/view?usp=drive_link",
@@ -176,7 +176,7 @@ export const documents = [
   {
     id: "vnr202-doc20",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 20 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/11HBn1oDhYKI_GyuzN7XqaGdEmd3ojT2T/view?usp=drive_link",
@@ -184,7 +184,7 @@ export const documents = [
   {
     id: "vnr202-doc21",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 21 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1c-muRxEINo3oSNfURUetoaCi9c5alV26/view?usp=drive_link",
@@ -192,7 +192,7 @@ export const documents = [
   {
     id: "vnr202-doc22",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 22 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/119J4zNANguwoWC3hagEuJpcsnB-xGa6e/view?usp=drive_link",
@@ -200,7 +200,7 @@ export const documents = [
   {
     id: "vnr202-doc23",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 23 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1NZfhiI3hYNo3LyokIId30A83T_lQUNE1/view?usp=drive_link",
@@ -208,7 +208,7 @@ export const documents = [
   {
     id: "vnr202-doc24",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 24 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1LVpajSZ5Ssgje8MDExTc-neUTOfciuSZ/view?usp=drive_link",
@@ -216,7 +216,7 @@ export const documents = [
   {
     id: "vnr202-doc25",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 25 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1BvJCRCXw9SZE69MLu7Hf3QFbXhid_BQi/view?usp=drive_link",
@@ -224,7 +224,7 @@ export const documents = [
   {
     id: "vnr202-doc26",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 26 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1NsVJvbyzAcr10H7xFf1I-kN5vUfw5rJO/view?usp=drive_link",
@@ -232,7 +232,7 @@ export const documents = [
   {
     id: "vnr202-doc27",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 27 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1LwOGcqf30r3kYb6hEfDB3MfnRu8wHuYJ/view?usp=drive_link",
@@ -240,7 +240,7 @@ export const documents = [
   {
     id: "vnr202-doc28",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 28 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1s_kJ1dDZAKsq9yFqTMimPBRm3FQm78-h/view?usp=drive_link",
@@ -248,7 +248,7 @@ export const documents = [
   {
     id: "vnr202-doc29",
     moduleId: "vnr202",
-    name: "Slot 1 - Giáo trình Lịch sử Đảng",
+    name: "Slot 29 - Giáo trình Lịch sử Đảng",
     size: "3.2 MB",
     updatedAt: "2 days ago",
     pdfUrl: "https://drive.google.com/file/d/1DiOpirq1X9gX4NcCSHnEQg_dmQbZ5zao/view?usp=drive_link",

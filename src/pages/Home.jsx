@@ -27,6 +27,7 @@ import PostCreator from "../components/PostCreate";
 import VirtualPostItem from "../components/post/VirtualPostItem";
 import HomeBlogSection from "../components/HomeBlogSection";
 import { getUserSavedPostIds } from "../utils/savedPostsCache";
+import { setUserProfileCache } from "../utils/userCache";
 import {
   FEED_PAGE_SIZE,
   mapPostDocs,
@@ -137,7 +138,19 @@ function Home() {
       try {
         const snap = await getDoc(doc(db, "Users", user.uid));
         if (!cancelled) {
-          setUserDetails(snap.exists() ? snap.data() : null);
+          const userData = snap.exists() ? snap.data() : null;
+          setUserDetails(userData);
+          if (userData) {
+            const fullName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
+            const displayName = fullName || userData.displayName || userData.email || "Anonymous";
+            const photo = userData.photo || userData.photoURL || null;
+            setUserProfileCache(user.uid, {
+              displayName,
+              photo,
+              firstName: userData.firstName || "",
+              lastName: userData.lastName || "",
+            });
+          }
         }
       } catch {
         if (!cancelled) setUserDetails(null);
