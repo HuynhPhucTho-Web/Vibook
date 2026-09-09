@@ -24,8 +24,9 @@ import { toast } from "react-toastify";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ThemeContext } from "../context/ThemeContext";
 import PostCreator from "../components/PostCreate";
-import PostItem from "../components/PostItem";
+import VirtualPostItem from "../components/post/VirtualPostItem";
 import HomeBlogSection from "../components/HomeBlogSection";
+import { getUserSavedPostIds } from "../utils/savedPostsCache";
 import {
   FEED_PAGE_SIZE,
   mapPostDocs,
@@ -148,7 +149,12 @@ function Home() {
     };
   }, []);
 
-
+  // Preload saved post IDs once to eliminate N+1 queries for feed cards
+  useEffect(() => {
+    if (currentUser?.uid) {
+      getUserSavedPostIds(currentUser.uid);
+    }
+  }, [currentUser?.uid]);
 
   // Feed load: fast getDocs first → then live onSnapshot for first page only
   useEffect(() => {
@@ -306,11 +312,12 @@ function Home() {
             <AdSense adSlot="3748766178" adLayoutKey="-7j+dp+2e-4-27" />
           </div>
         )}
-        <PostItem
+        <VirtualPostItem
           post={post}
           auth={auth}
           userDetails={userDetails}
           onPostDeleted={handlePostDeleted}
+          index={index}
         />
       </React.Fragment>
     ));

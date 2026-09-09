@@ -20,7 +20,11 @@ import { notifyPostReaction } from "./notification/NotificationUtils";
 import { getPostHtml, normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
 import { requireLogin } from "../utils/requireLogin";
 import { getOptimizedCloudinaryUrl } from "../utils/cloudinary";
+import { isPostSavedSync, updateSavedPostCache } from "../utils/savedPostsCache";
 import "../style/PostItem.css";
+
+// In-memory cache for shared original posts to avoid duplicate getDoc calls
+const sharedPostsCache = new Map();
 
 export function BlogPromoStrip({ blogs = [], isLight = false, title = "Bài viết blog mới", onLoadMore, loading = false }) {
   const navigate = useNavigate();
@@ -201,10 +205,13 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   const [showReactions, setShowReactions] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReacting, setIsReacting] = useState(false);
+  const currentUid = auth?.currentUser?.uid;
   const [localPost, setLocalPost] = useState(post);
-  const [commentCount, setCommentCount] = useState(
-    post.commentCount ?? post.comments?.length ?? 0,
-  );
+  const [commentCount, setCommentCount] = useState(() => {
+    if (typeof post.commentCount === "number") return post.commentCount;
+    if (Array.isArray(post.comments)) return post.comments.length;
+    return 0;
+  });
   /** Prevent parent snapshot from wiping optimistic reaction UI mid-flight */
   const reactionPendingRef = useRef(false);
   const reactionInFlightRef = useRef(false);
@@ -212,7 +219,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   const [editTitle, setEditTitle] = useState(post.title || "");
   const [editContent, setEditContent] = useState(getPostHtml(post));
   const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(() => {
+    const syncVal = isPostSavedSync(currentUid, post.id);
+    return syncVal === true;
+  });
   const [isSavingPost, setIsSavingPost] = useState(false);
   const [sharedPost, setSharedPost] = useState(null);
   const [sharedPostLoading, setSharedPostLoading] = useState(false);
@@ -311,17 +321,26 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     };
   }, [post.id, post.commentCount, isDetailView]);
 
-  // Saved flag: one-shot getDoc (not a permanent listener per feed card)
+  // Saved flag: use cache first to eliminate N+1 queries; fallback to getDoc
   useEffect(() => {
     const userId = auth?.currentUser?.uid;
     if (!userId || !post.id) {
       setIsSaved(false);
       return undefined;
     }
+    const cached = isPostSavedSync(userId, post.id);
+    if (cached !== null) {
+      setIsSaved(cached);
+      return undefined;
+    }
     let cancelled = false;
     getDoc(doc(db, "SavedPosts", `${userId}_${post.id}`))
       .then((snap) => {
-        if (!cancelled) setIsSaved(snap.exists());
+        if (!cancelled) {
+          const exists = snap.exists();
+          setIsSaved(exists);
+          updateSavedPostCache(userId, post.id, exists);
+        }
       })
       .catch(() => {
         if (!cancelled) setIsSaved(false);
@@ -331,11 +350,16 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     };
   }, [auth?.currentUser?.uid, post.id]);
 
-  // Shared original post: getDoc once (not live listener)
+  // Shared original post: check cache first, then getDoc once
   useEffect(() => {
     const originalId = localPost.sharedPostId || localPost.sharedFrom?.postId;
     if (localPost.type !== "share" || !originalId) {
       setSharedPost(null);
+      setSharedPostLoading(false);
+      return undefined;
+    }
+    if (sharedPostsCache.has(originalId)) {
+      setSharedPost(sharedPostsCache.get(originalId));
       setSharedPostLoading(false);
       return undefined;
     }
@@ -344,9 +368,13 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     getDoc(doc(db, "Posts", originalId))
       .then((snapshot) => {
         if (cancelled) return;
-        setSharedPost(
-          snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null,
-        );
+        if (snapshot.exists()) {
+          const postData = { id: snapshot.id, ...snapshot.data() };
+          sharedPostsCache.set(originalId, postData);
+          setSharedPost(postData);
+        } else {
+          setSharedPost(null);
+        }
       })
       .catch(() => {
         if (!cancelled) setSharedPost(null);
@@ -588,6 +616,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     const prev = isSaved;
     // Optimistic save toggle
     setIsSaved(!prev);
+    updateSavedPostCache(userId, post.id, !prev);
     setIsSavingPost(true);
     try {
       const savedRef = doc(db, "SavedPosts", `${userId}_${post.id}`);
@@ -845,7 +874,11 @@ export default memo(PostItem, (prev, next) => {
   if (prev.post?.id !== next.post?.id) return false;
   if (prev.isDetailView !== next.isDetailView) return false;
   if (prev.auth?.currentUser?.uid !== next.auth?.currentUser?.uid) return false;
-  if (prev.userDetails !== next.userDetails) return false;
+  if (
+    prev.userDetails?.uid !== next.userDetails?.uid ||
+    prev.userDetails?.photo !== next.userDetails?.photo ||
+    prev.userDetails?.displayName !== next.userDetails?.displayName
+  ) return false;
   if (prev.onPostDeleted !== next.onPostDeleted) return false;
   // Re-render when server post fields that matter for the card change
   const a = prev.post;

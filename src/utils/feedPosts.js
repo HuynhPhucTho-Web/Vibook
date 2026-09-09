@@ -34,5 +34,17 @@ export function mergeFirstPageIntoFeed(prevPosts, firstPagePosts) {
 }
 
 export function mapPostDocs(docs) {
-  return docs.map((d) => ({ id: d.id, ...d.data() }));
+  return docs.map((d) => {
+    const data = d.data() || {};
+    return {
+      id: d.id,
+      ...data,
+      commentCount: typeof data.commentCount === "number"
+        ? data.commentCount
+        : (Array.isArray(data.comments) ? data.comments.length : 0),
+      saveCount: typeof data.saveCount === "number" ? data.saveCount : 0,
+      shareCount: typeof data.shareCount === "number" ? data.shareCount : 0,
+      likes: data.likes || {},
+    };
+  });
 }
