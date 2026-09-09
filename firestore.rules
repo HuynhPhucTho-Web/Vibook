@@ -315,7 +315,7 @@ service cloud.firestore {
         allow update: if isFriend() && (
           request.auth.uid == resource.data.senderId
           || (
-            request.auth.uid == resource.data.receiverId
+            (request.auth.uid == resource.data.receiverId || (request.auth.uid in chatId.split('_')))
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'readBy'])
           )
         );

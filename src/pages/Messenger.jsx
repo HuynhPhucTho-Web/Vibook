@@ -454,14 +454,41 @@ const Messenger = () => {
   }, [users, searchTerm, lastMessages]);
 
   const handleReaction = useCallback(async (messageId, reactionType) => {
+    if (!currentUser || !selectedUser) return;
     const chatId = createChatId(currentUser.uid, selectedUser.uid);
     const messageRef = doc(db, "Messages", chatId, "messages", messageId);
+
+    // Optimistically update the UI immediately
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id !== messageId) return msg;
+        const currentReactions = Array.isArray(msg.reactions) ? [...msg.reactions] : [];
+        const existingIdx = currentReactions.findIndex((r) => r.userId === currentUser.uid);
+
+        if (existingIdx >= 0) {
+          if (currentReactions[existingIdx].type === reactionType) {
+            // Toggle off
+            currentReactions.splice(existingIdx, 1);
+          } else {
+            // Update emoji type
+            currentReactions[existingIdx] = {
+              ...currentReactions[existingIdx],
+              type: reactionType,
+            };
+          }
+        } else {
+          // Add reaction
+          currentReactions.push({ userId: currentUser.uid, type: reactionType });
+        }
+        return { ...msg, reactions: currentReactions };
+      })
+    );
 
     try {
       const messageSnap = await getDoc(messageRef);
       if (messageSnap.exists()) {
         const messageData = messageSnap.data();
-        const reactions = messageData.reactions || [];
+        const reactions = Array.isArray(messageData.reactions) ? [...messageData.reactions] : [];
         const existingReactionIndex = reactions.findIndex(r => r.userId === currentUser.uid);
 
         if (existingReactionIndex >= 0) {
@@ -482,7 +509,7 @@ const Messenger = () => {
       }
     } catch (error) {
       console.error("Error adding reaction:", error);
-      toast.error(t("couldNotAddReaction"), { position: "top-center" });
+      toast.error(t("couldNotAddReaction") || "Không thể thả cảm xúc", { position: "top-center" });
     }
   }, [currentUser, selectedUser, createChatId, t]);
 

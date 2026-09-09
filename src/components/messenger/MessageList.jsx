@@ -21,6 +21,7 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
 
   const [hoveredMessage, setHoveredMessage] = useState(null);
   const [openPickerFor, setOpenPickerFor] = useState(null); // messageId đang mở picker
+  const pickerRef = useRef(null);
 
   const getUserName = (uid) => {
     if (uid === currentUser?.uid) {
@@ -39,7 +40,9 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
 
     const onDown = (e) => {
       // nếu click bên trong picker thì không đóng
-      if (e.target.closest?.(".reaction-picker")) return;
+      if (pickerRef.current && pickerRef.current.contains(e.target)) return;
+      // nếu click vào nút toggle thả cảm xúc thì để button tự xử lý
+      if (e.target.closest?.(`[data-reaction-btn="${openPickerFor}"]`)) return;
       setOpenPickerFor(null);
     };
 
@@ -87,14 +90,18 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
 
             <div
               className={`message-bubble ${isOwnMessage ? "sent" : "received"} ${isLight ? "light" : "dark"} ${message.isRecalled ? "recalled" : ""}`}
-style={message.isRecalled ?
+              style={message.isRecalled ?
                 { backgroundColor: 'rgba(128, 128, 128, 0.3)', color: '#666' } :
                 (isOwnMessage ? { backgroundColor: chatTheme.messageColor, color: '#fff' } : undefined)
               }
               onMouseEnter={() => !message.isRecalled && setHoveredMessage(message.id)}
               onMouseLeave={() => {
                 setHoveredMessage(null);
-                setOpenPickerFor(null); // rời bubble thì đóng picker luôn cho gọn
+              }}
+              onClick={() => {
+                if (window.innerWidth <= 768 && !message.isRecalled) {
+                  setHoveredMessage((prev) => (prev === message.id ? null : message.id));
+                }
               }}
             >
               {message.mediaFiles && message.mediaFiles.length > 0 && (
@@ -154,11 +161,14 @@ style={message.isRecalled ?
               </div>
 
               {/* Actions */}
-              {hoveredMessage === message.id && (
+              {(hoveredMessage === message.id || openPickerFor === message.id) && !message.isRecalled && (
                 <div className="message-actions">
                   <button
-                    className="btn btn-sm btn-outline-secondary"
+                    type="button"
+                    className={`btn btn-sm btn-outline-secondary ${openPickerFor === message.id ? "active" : ""}`}
+                    data-reaction-btn={message.id}
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       setOpenPickerFor((prev) => (prev === message.id ? null : message.id));
                     }}
@@ -168,8 +178,10 @@ style={message.isRecalled ?
                   </button>
 
                   <button
+                    type="button"
                     className="btn btn-sm btn-outline-secondary"
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       onReply(message);
                     }}
@@ -180,8 +192,10 @@ style={message.isRecalled ?
 
                   {isOwnMessage && (
                     <button
+                      type="button"
                       className="btn btn-sm btn-outline-secondary"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         onRecallMessage(message.id);
                       }}
@@ -193,34 +207,61 @@ style={message.isRecalled ?
                 </div>
               )}
 
-              {/* Reaction picker (nhiều icon) */}
+              {/* Reaction picker (floating toolbar) */}
               {openPickerFor === message.id && (
-                <div className={`reaction-picker ${isLight ? "" : "dark"}`}>
-                  {REACTIONS.map((r) => (
-                    <button
-                      key={r.type}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleReactionClick(message.id, r.type);
-                        setOpenPickerFor(null);
-                      }}
-                      title={r.label}
-                      aria-label={r.label}
-                    >
-                      {r.emoji}
-                    </button>
-                  ))}
+                <div
+                  ref={pickerRef}
+                  className={`reaction-picker ${isLight ? "light" : "dark"} ${isOwnMessage ? "sent" : "received"}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {REACTIONS.map((r) => {
+                    const isMyReaction = Array.isArray(message.reactions) && message.reactions.some(
+                      (rx) => rx.userId === currentUser?.uid && rx.type === r.type
+                    );
+                    return (
+                      <button
+                        key={r.type}
+                        type="button"
+                        className={isMyReaction ? "active" : ""}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleReactionClick(message.id, r.type);
+                          setOpenPickerFor(null);
+                        }}
+                        title={r.label}
+                        aria-label={r.label}
+                      >
+                        {r.emoji}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Display reactions (hiển thị emoji theo type) */}
-              {message.reactions && message.reactions.length > 0 && (
-                <div className="message-reactions">
-                  {message.reactions.map((reaction, idx) => (
-                    <span key={idx} className="reaction-icon" title={reaction.type}>
-                      {getEmojiByType(reaction.type)}
+              {/* Display reactions */}
+              {Array.isArray(message.reactions) && message.reactions.length > 0 && (
+                <div
+                  className={`message-reactions-badge ${isOwnMessage ? "sent" : "received"} ${
+                    message.reactions.some((rx) => rx.userId === currentUser?.uid) ? "has-my-reaction" : ""
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setOpenPickerFor((prev) => (prev === message.id ? null : message.id));
+                  }}
+                  title={message.reactions
+                    .map((r) => `${r.userId === currentUser?.uid ? (t("you") || "Bạn") : getUserName(r.userId)}: ${r.type}`)
+                    .join("\n")}
+                >
+                  {Array.from(new Set(message.reactions.map((r) => r.type))).map((type) => (
+                    <span key={type} className="reaction-badge-emoji">
+                      {getEmojiByType(type)}
                     </span>
                   ))}
+                  {message.reactions.length > 1 && (
+                    <span className="reaction-badge-count">{message.reactions.length}</span>
+                  )}
                 </div>
               )}
             </div>
