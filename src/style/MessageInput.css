@@ -17,6 +17,7 @@
   box-sizing: border-box;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  flex-shrink: 0;
 }
 
 .message-input-container.dark {

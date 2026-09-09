@@ -1,5 +1,6 @@
 /* src/style/ChatHeader.css */
 .chat-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8,6 +9,7 @@
   background: linear-gradient(90deg, rgba(142, 84, 233, 0.15), rgba(71, 118, 230, 0.08));
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  z-index: 5;
 }
 
 .chat-header.dark {
@@ -31,6 +33,12 @@
   height: 36px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.12);
+}
+
+@media (min-width: 769px) {
+  .chat-back-btn {
+    display: none;
+  }
 }
 
 .chat-header-info {

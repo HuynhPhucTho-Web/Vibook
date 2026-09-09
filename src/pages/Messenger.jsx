@@ -643,61 +643,63 @@ const Messenger = () => {
   const isChatActive = !!selectedUser;
 
   return (
-    <div className={`page-shell messenger-container ${theme}`}>
+    <div className={`messenger-page ${theme}`}>
+      <div className={`messenger-container ${theme}`}>
         <div className={`sidebar-container ${isChatActive ? 'chat-active' : ''}`}>
-            <UserList 
-                users={filteredUsers}
-                selectedUser={selectedUser}
-                onUserSelect={handleUserSelect}
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                theme={theme}
-                lastMessages={lastMessages}
-                unreadCounts={unreadCounts}
-                allChatConfigs={allChatConfigs}
-            />
+          <UserList 
+            users={filteredUsers}
+            selectedUser={selectedUser}
+            onUserSelect={handleUserSelect}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            theme={theme}
+            lastMessages={lastMessages}
+            unreadCounts={unreadCounts}
+            allChatConfigs={allChatConfigs}
+          />
         </div>
         <div className={`chat-container ${isChatActive ? 'chat-active' : ''}`}>
-            {selectedUser ? (
-                <>
-                    <ChatHeader
-                        user={selectedUser}
-                        theme={theme}
-                        onBack={() => setSelectedUser(null)}
-                        onApplyTheme={handleApplyTheme}
-                        initialTheme={chatTheme}
-                        chatConfig={chatConfig}
-                        onUpdateChatConfig={handleUpdateChatConfig}
-                        currentUser={currentUser}
-                    />
-                    <MessageList
-                        messages={messages}
-                        currentUser={currentUser}
-                        selectedUser={selectedUser}
-                        theme={theme}
-                        chatTheme={chatTheme}
-                        onReaction={handleReaction}
-                        onReply={handleReply}
-                        onRecallMessage={handleRecallMessage}
-                        chatConfig={chatConfig}
-                    />
-                    <MessageInput
-                        messageText={messageText}
-                        onMessageChange={setMessageText}
-                        onSendMessage={handleSendMessage}
-                        replyMessage={replyMessage}
-                        onCancelReply={() => setReplyMessage(null)}
-                        theme={theme}
-                        currentUser={currentUser}
-                        selectedUser={selectedUser}
-                        chatConfig={chatConfig}
-                        onUpdateChatConfig={handleUpdateChatConfig}
-                    />
-                </>
-            ) : (
-                <WelcomeScreen theme={theme} />
-            )}
+          {selectedUser ? (
+            <>
+              <ChatHeader
+                user={selectedUser}
+                theme={theme}
+                onBack={() => setSelectedUser(null)}
+                onApplyTheme={handleApplyTheme}
+                initialTheme={chatTheme}
+                chatConfig={chatConfig}
+                onUpdateChatConfig={handleUpdateChatConfig}
+                currentUser={currentUser}
+              />
+              <MessageList
+                messages={messages}
+                currentUser={currentUser}
+                selectedUser={selectedUser}
+                theme={theme}
+                chatTheme={chatTheme}
+                onReaction={handleReaction}
+                onReply={handleReply}
+                onRecallMessage={handleRecallMessage}
+                chatConfig={chatConfig}
+              />
+              <MessageInput
+                messageText={messageText}
+                onMessageChange={setMessageText}
+                onSendMessage={handleSendMessage}
+                replyMessage={replyMessage}
+                onCancelReply={() => setReplyMessage(null)}
+                theme={theme}
+                currentUser={currentUser}
+                selectedUser={selectedUser}
+                chatConfig={chatConfig}
+                onUpdateChatConfig={handleUpdateChatConfig}
+              />
+            </>
+          ) : (
+            <WelcomeScreen theme={theme} />
+          )}
         </div>
+      </div>
 
         {/* Recall Confirmation Modal */}
         {showRecallModal && (

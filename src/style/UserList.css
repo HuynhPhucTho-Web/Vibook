@@ -1,5 +1,15 @@
 /* src/style/UserList.css */
+.user-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .user-list-header {
+  flex-shrink: 0;
   padding: 1rem 1rem 0.9rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
@@ -42,9 +52,35 @@
 }
 
 .user-list-items {
-  flex-grow: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(142, 84, 233, 0.35) transparent;
+}
+
+.user-list-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.user-list-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.user-list-items::-webkit-scrollbar-thumb {
+  background: rgba(142, 84, 233, 0.3);
+  border-radius: 999px;
+}
+
+.user-list-items::-webkit-scrollbar-thumb:hover {
+  background: rgba(142, 84, 233, 0.55);
+}
+
+.messenger-container.light .user-list-items::-webkit-scrollbar-thumb,
+.messenger-page.light .user-list-items::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.2);
 }
 
 .user-item {

@@ -53,7 +53,7 @@ const UserList = ({
     };
 
     return (
-        <div className={`sidebar-container ${isLight ? 'light' : 'dark'}`}>
+        <div className={`user-list-wrapper ${isLight ? 'light' : 'dark'}`}>
             <div className={`user-list-header ${isLight ? 'light' : 'dark'}`}>
                 <h5 className="mb-3 fw-bold">{t("messages")}</h5>
                 <div className="position-relative">

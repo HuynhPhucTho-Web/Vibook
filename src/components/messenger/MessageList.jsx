@@ -17,7 +17,10 @@ const REACTIONS = [
 const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, onReaction, onReply, onRecallMessage, chatConfig }) => {
   const { t } = useContext(LanguageContext);
   const isLight = theme === "light";
+  const containerRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const isNearBottomRef = useRef(true);
+  const prevUserRef = useRef(selectedUser?.uid);
 
   const [hoveredMessage, setHoveredMessage] = useState(null);
   const [openPickerFor, setOpenPickerFor] = useState(null); // messageId đang mở picker
@@ -30,9 +33,36 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
     return chatConfig?.nicknames?.[selectedUser?.uid] || `${selectedUser?.firstName} ${selectedUser?.lastName}`;
   };
 
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isNearBottomRef.current = distanceToBottom < 120;
+  };
+
+  // Cuộn ngay xuống cuối khi chuyển bạn bè trò chuyện
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (prevUserRef.current !== selectedUser?.uid) {
+      prevUserRef.current = selectedUser?.uid;
+      isNearBottomRef.current = true;
+      if (containerRef.current) {
+        containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      }
+    }
+  }, [selectedUser?.uid]);
+
+  // Tự động cuộn xuống khi có tin nhắn mới nếu đang ở đáy hoặc tin nhắn do chính mình gửi
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    const isOwnLastMessage = lastMsg?.senderId === currentUser?.uid;
+
+    if (isNearBottomRef.current || isOwnLastMessage) {
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  }, [messages, currentUser?.uid]);
 
   // đóng picker khi click ra ngoài
   useEffect(() => {
@@ -75,7 +105,12 @@ const MessageList = ({ messages, currentUser, selectedUser, theme, chatTheme, on
   };
 
   return (
-    <div className={`message-list-container ${isLight ? "light" : "dark"}`} style={{ backgroundColor: chatTheme.backgroundColor }}>
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className={`message-list-container ${isLight ? "light" : "dark"}`}
+      style={{ backgroundColor: chatTheme.backgroundColor }}
+    >
       {messages.map((message, index) => {
         const isOwnMessage = message.senderId === currentUser?.uid;
         const showAvatar = index === 0 || messages[index - 1]?.senderId !== message.senderId;
