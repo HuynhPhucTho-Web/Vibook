@@ -164,12 +164,14 @@ const getActorPhotoURL = (actorUser, actorDetails) => {
 const REACTION_LABELS = {
   like: "thích",
   love: "yêu thích",
+  care: "thương thương",
   haha: "haha",
   wow: "wow",
   sad: "buồn",
   angry: "phẫn nộ",
   Like: "thích",
   Love: "yêu thích",
+  Care: "thương thương",
   Haha: "haha",
   Wow: "wow",
   Sad: "buồn",
@@ -179,16 +181,18 @@ const REACTION_LABELS = {
 const REACTION_EMOJIS = {
   Like: "👍",
   Love: "❤️",
-  Haha: "😂",
+  Care: "🥰",
+  Haha: "😆",
   Wow: "😮",
   Sad: "😢",
-  Angry: "😠",
+  Angry: "😡",
   like: "👍",
   love: "❤️",
-  haha: "😂",
+  care: "🥰",
+  haha: "😆",
   wow: "😮",
   sad: "😢",
-  angry: "😠",
+  angry: "😡",
 };
 
 /**

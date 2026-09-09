@@ -3,7 +3,7 @@
 .post-item-container {
   content-visibility: auto;
   contain-intrinsic-size: auto 550px;
-  overflow: hidden;
+  overflow: visible;
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
   border-radius: var(--vb-radius-xl, 1.5rem);
   backdrop-filter: var(--vb-glass-blur, blur(20px));
@@ -633,50 +633,130 @@
   white-space: nowrap;
 }
 
-/* Desktop reaction strip */
+/* ===== Desktop Post Reaction Strip (Facebook style floating pill above button) ===== */
+.post-reaction-picker--desktop,
 .reaction-picker--desktop {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 40;
-  display: flex;
+  position: absolute !important;
+  bottom: calc(100% + 10px) !important;
+  top: auto !important;
+  left: 0 !important;
+  right: auto !important;
+  z-index: 1000 !important;
+  display: flex !important;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.35rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-  animation: postActionPop 0.14s ease-out;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 9999px !important;
   width: max-content;
-  max-width: min(92vw, 320px);
-}
-.reaction-picker--desktop.is-light {
-  background: #fff;
-  border-color: #e5e7eb;
-}
-.reaction-picker--desktop.is-dark {
-  background: #18181b;
-  border-color: #3f3f46;
+  max-width: calc(100vw - 32px);
+  animation: postReactionPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: auto;
+  user-select: none;
 }
 
-.reaction-picker__btn {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 0;
-  border-radius: 999px;
+/* Hover bridge: keeps picker open while cursor moves from button to floating pill */
+.post-reaction-picker--desktop::after,
+.reaction-picker--desktop::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 18px;
   background: transparent;
-  font-size: 1.45rem;
-  display: grid;
-  place-items: center;
+  pointer-events: auto;
+}
+
+.post-reaction-picker--desktop.is-light,
+.reaction-picker--desktop.is-light {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+.post-reaction-picker--desktop.is-dark,
+.reaction-picker--desktop.is-dark {
+  background: #242526 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+@keyframes postReactionPop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Reaction buttons */
+.post-reaction-picker__btn,
+.reaction-picker__btn {
+  position: relative;
+  width: 2.6rem;
+  height: 2.6rem;
+  min-width: 2.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.12s ease;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: center bottom;
+  outline: none;
 }
+
+.post-reaction-picker__btn:hover,
 .reaction-picker__btn:hover {
-  transform: scale(1.22) translateY(-2px);
+  transform: scale(1.35) translateY(-5px);
+  z-index: 5;
 }
+
+.post-reaction-picker__btn.is-selected,
 .reaction-picker__btn.is-selected {
-  transform: scale(1.12);
-  box-shadow: 0 0 0 2px rgba(71, 118, 230, 0.45);
+  transform: scale(1.15) translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(71, 118, 230, 0.55);
+}
+
+.post-reaction-picker__emoji {
+  font-size: 1.65rem;
+  line-height: 1;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+
+/* Tooltip on hovering reaction */
+.post-reaction-picker__tooltip {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.85);
+  background: rgba(0, 0, 0, 0.82);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+}
+
+.post-reaction-picker__btn:hover .post-reaction-picker__tooltip {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
 }
 
 /* Bottom sheets (mobile reactions + share) */
@@ -732,8 +812,8 @@
 
 .reaction-sheet__row {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.35rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
 }
 
 .reaction-sheet__btn {

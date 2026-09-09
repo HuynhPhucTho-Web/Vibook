@@ -7,10 +7,11 @@ const PostStats = ({ post, commentCount, isLight, onCommentClick }) => {
   const reactions = {
     Like: "👍",
     Love: "❤️",
-    Haha: "😂",
+    Care: "🥰",
+    Haha: "😆",
     Wow: "😮",
     Sad: "😢",
-    Angry: "😠",
+    Angry: "😡",
   };
   const { t } = useContext(LanguageContext);
 

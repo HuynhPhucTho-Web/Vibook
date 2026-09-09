@@ -8,10 +8,11 @@ import { getOptimizedCloudinaryUrl } from "../../utils/cloudinary";
 const REACTION_CONFIG = {
   Like: { emoji: "👍", label: "Thích" },
   Love: { emoji: "❤️", label: "Yêu thích" },
-  Haha: { emoji: "😂", label: "Haha" },
+  Care: { emoji: "🥰", label: "Thương thương" },
+  Haha: { emoji: "😆", label: "Haha" },
   Wow: { emoji: "😮", label: "Wow" },
   Sad: { emoji: "😢", label: "Buồn" },
-  Angry: { emoji: "😠", label: "Phẫn nộ" },
+  Angry: { emoji: "😡", label: "Phẫn nộ" },
 };
 
 const SafeUserAvatar = ({ photo, name, size = "w-10 h-10", iconSize = 16 }) => {

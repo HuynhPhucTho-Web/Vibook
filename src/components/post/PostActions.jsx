@@ -23,15 +23,17 @@ import { SlLike } from "react-icons/sl";
 const REACTION_ICONS = {
   Like: "👍",
   Love: "❤️",
-  Haha: "😂",
+  Care: "🥰",
+  Haha: "😆",
   Wow: "😮",
   Sad: "😢",
-  Angry: "😠",
+  Angry: "😡",
 };
 
 const REACTION_I18N = {
   Like: "like",
   Love: "love",
+  Care: "care",
   Haha: "haha",
   Wow: "wow",
   Sad: "sad",
@@ -116,7 +118,18 @@ const PostActions = ({
 
   const getReactionLabel = (key) => {
     const k = REACTION_I18N[key];
-    return k ? t(k) : key;
+    const trans = k ? t(k) : "";
+    if (trans && trans !== k) return trans;
+    switch (key) {
+      case "Like": return "Thích";
+      case "Love": return "Yêu thích";
+      case "Care": return "Thương thương";
+      case "Haha": return "Haha";
+      case "Wow": return "Wow";
+      case "Sad": return "Buồn";
+      case "Angry": return "Phẫn nộ";
+      default: return key;
+    }
   };
 
   const isLikeActive = currentReaction === "Like";
@@ -181,7 +194,7 @@ const PostActions = ({
           if (!isCoarsePointer()) openReactions();
         }}
         onMouseLeave={() => {
-          if (!isCoarsePointer()) closeReactionsDelayed(200);
+          if (!isCoarsePointer()) closeReactionsDelayed(250);
         }}
       >
         <button
@@ -211,12 +224,12 @@ const PostActions = ({
           </span>
         </button>
 
-        {/* Desktop hover picker */}
+        {/* Desktop hover picker (floating pill above button) */}
         {showReactions && !isCoarsePointer() && (
           <div
-            className={`reaction-picker reaction-picker--desktop ${themeClass}`}
+            className={`post-reaction-picker post-reaction-picker--desktop ${themeClass}`}
             onMouseEnter={openReactions}
-            onMouseLeave={() => closeReactionsDelayed(180)}
+            onMouseLeave={() => closeReactionsDelayed(250)}
             role="toolbar"
             aria-label="Reactions"
           >
@@ -224,14 +237,16 @@ const PostActions = ({
               <button
                 key={key}
                 type="button"
-                className={`reaction-picker__btn ${
+                className={`post-reaction-picker__btn ${
                   currentReaction === key ? "is-selected" : ""
                 }`}
                 onClick={(e) => handlePickReaction(e, key)}
-                title={getReactionLabel(key)}
                 aria-label={getReactionLabel(key)}
               >
-                {icon}
+                <span className="post-reaction-picker__tooltip">
+                  {getReactionLabel(key)}
+                </span>
+                <span className="post-reaction-picker__emoji">{icon}</span>
               </button>
             ))}
           </div>
