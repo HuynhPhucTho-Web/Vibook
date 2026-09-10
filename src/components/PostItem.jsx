@@ -17,7 +17,7 @@ import PostStats from "./post/PostStats";
 import PostActions from "./post/PostActions";
 import PostComments from "./post/PostComments";
 import PostCardSkeleton from "./post/PostCardSkeleton";
-import { notifyPostReaction } from "./notification/NotificationUtils";
+import { notifyPostReaction, notifyTaggedInPost } from "./notification/NotificationUtils";
 import { getPostHtml, normalizeSearchText, postHtmlToText, sanitizePostHtml } from "../utils/postContent";
 import { requireLogin } from "../utils/requireLogin";
 import { getOptimizedCloudinaryUrl } from "../utils/cloudinary";
@@ -230,6 +230,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   /** Prevent parent snapshot from wiping optimistic reaction UI mid-flight */
   const reactionPendingRef = useRef(false);
   const reactionInFlightRef = useRef(false);
+  const onPostDeletedRef = useRef(onPostDeleted);
+  useEffect(() => {
+    onPostDeletedRef.current = onPostDeleted;
+  }, [onPostDeleted]);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(post.title || "");
   const [editContent, setEditContent] = useState(getPostHtml(post));
@@ -303,10 +307,10 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   }, [post.id]);
 
   useEffect(() => {
-    if (!isDetailView || !post.id) return undefined;
-    return onSnapshot(doc(db, "Posts", post.id), (snapshot) => {
+    if (!isDetailView || !post?.id) return undefined;
+    const unsub = onSnapshot(doc(db, "Posts", post.id), (snapshot) => {
       if (!snapshot.exists()) {
-        onPostDeleted?.(post.id);
+        onPostDeletedRef.current?.(post.id);
         return;
       }
       const next = { id: snapshot.id, ...snapshot.data() };
@@ -316,13 +320,16 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         }
         return next;
       });
+    }, (err) => {
+      console.warn("PostItem single post snapshot error:", err);
     });
-  }, [isDetailView, onPostDeleted, post.id]);
+    return () => unsub();
+  }, [isDetailView, post?.id]);
 
   // Comment count: prefer denormalized field; full count on detail with cache update
   useEffect(() => {
-    if (!isDetailView || !post.id) return undefined;
-    return onSnapshot(query(collection(db, "Posts", post.id, "comments")), async (snapshot) => {
+    if (!isDetailView || !post?.id) return undefined;
+    const unsub = onSnapshot(query(collection(db, "Posts", post.id, "comments")), async (snapshot) => {
       if (snapshot.empty) {
         setCommentCount(0);
         setCachedCommentCount(post.id, 0);
@@ -348,11 +355,16 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
       setCommentCount(total);
       setCachedCommentCount(post.id, total, true);
       setIsDataReady(true);
-      if (auth.currentUser) {
-        updateDoc(doc(db, "Posts", post.id), { commentCount: total }).catch(() => {});
+      if (auth?.currentUser && post.commentCount !== total) {
+        setTimeout(() => {
+          updateDoc(doc(db, "Posts", post.id), { commentCount: total }).catch(() => {});
+        }, 0);
       }
+    }, (err) => {
+      console.warn("PostItem comments snapshot error:", err);
     });
-  }, [isDetailView, post.id]);
+    return () => unsub();
+  }, [isDetailView, post?.id, auth?.currentUser, post?.commentCount]);
 
   // Feed count: fetch with deduplication and reveal post card synchronously
   useEffect(() => {
@@ -412,7 +424,9 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
 
   // Shared original post: check cache first, then getDoc once
   useEffect(() => {
-    const originalId = localPost.sharedPostId || localPost.sharedFrom?.postId;
+    const rawOriginalId = localPost.sharedPostId || localPost.sharedFrom?.postId;
+    const originalId = typeof rawOriginalId === "string" ? rawOriginalId.trim() : null;
+
     if (localPost.type !== "share" || !originalId) {
       setSharedPost(null);
       setSharedPostLoading(false);
@@ -433,11 +447,16 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
           sharedPostsCache.set(originalId, postData);
           setSharedPost(postData);
         } else {
+          sharedPostsCache.set(originalId, null);
           setSharedPost(null);
         }
       })
-      .catch(() => {
-        if (!cancelled) setSharedPost(null);
+      .catch((err) => {
+        console.warn("Error fetching shared post:", err);
+        if (!cancelled) {
+          sharedPostsCache.set(originalId, null);
+          setSharedPost(null);
+        }
       })
       .finally(() => {
         if (!cancelled) setSharedPostLoading(false);
@@ -660,6 +679,21 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
         shareCount: increment(1),
       });
 
+      // Gửi thông báo gắn thẻ bài viết chia sẻ cho từng người được gắn thẻ
+      if (Array.isArray(taggedFriends) && taggedFriends.length > 0) {
+        taggedFriends.forEach((friend) => {
+          if (friend.uid && friend.uid !== currentUser.uid) {
+            notifyTaggedInPost({
+              postId: newPostRef.id,
+              taggedUserId: friend.uid,
+              actorUser: currentUser,
+              actorDetails: authorProfile,
+              isShare: true,
+            }).catch((err) => console.warn("Lỗi gửi thông báo gắn thẻ bài viết chia sẻ:", err));
+          }
+        });
+      }
+
       setShowRepostModal(false);
       setShareDescription("");
       setTaggedFriends([]);
@@ -828,16 +862,33 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
 
       {localPost.type === "share" && (
         <div className={`shared-post-card ${isLight ? "bg-gray-50" : "bg-zinc-950"}`}>
-          {sharedPostLoading ? <div className="p-5 text-center opacity-70">{t("loadingOriginalPost")}</div> : sharedPost ? (
+          {sharedPostLoading ? (
+            <div className="p-5 text-center opacity-70">{t("loadingOriginalPost")}</div>
+          ) : sharedPost ? (
             <>
-              <div className="px-4 pt-4 pb-2">
-                <div className="font-semibold">{sharedPost.userName || localPost.sharedFrom?.userName || t("vibookUser")}</div>
-                <div className="text-xs opacity-60">{t("sharedPost")}</div>
+              <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+                <div>
+                  {sharedPost.userId ? (
+                    <Link to={`/profile/${sharedPost.userId}`} className="font-semibold hover:underline">
+                      {sharedPost.userName || localPost.sharedFrom?.userName || t("vibookUser")}
+                    </Link>
+                  ) : (
+                    <div className="font-semibold">{sharedPost.userName || localPost.sharedFrom?.userName || t("vibookUser")}</div>
+                  )}
+                  <div className="text-xs opacity-60">{t("sharedPost")}</div>
+                </div>
+                {sharedPost.id && (
+                  <Link to={`/post/${sharedPost.id}`} className="text-xs text-blue-500 hover:underline">
+                    {t("viewOriginalPost") || "Xem bài gốc"}
+                  </Link>
+                )}
               </div>
               <PostContent post={sharedPost} isLight={isLight} />
               <PostMedia post={sharedPost} isLight={isLight} />
             </>
-          ) : <div className="p-5 text-center opacity-70">{t("originalPostUnavailable")}</div>}
+          ) : (
+            <div className="p-5 text-center opacity-70">{t("originalPostUnavailable")}</div>
+          )}
         </div>
       )}
 

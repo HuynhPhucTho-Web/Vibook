@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { FaCheckCircle, FaHeart, FaCommentDots, FaUserPlus, FaEnvelope, FaNewspaper, FaTrash } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaHeart,
+  FaCommentDots,
+  FaUserPlus,
+  FaEnvelope,
+  FaNewspaper,
+  FaTrash,
+  FaGraduationCap,
+  FaFileAlt,
+  FaTag,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const UserAvatar = React.memo(({ src, alt, size = 40 }) => {
@@ -54,12 +65,25 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
         if (notification.blogSlug) navigate(`/blog/${notification.blogSlug}`);
         else navigate("/blog");
         break;
+      case "subject_quiz":
+      case "quiz":
+      case "subject_doc":
+      case "document":
+        if (notification.subjectCode) {
+          const tab = notification.type === "quiz" || notification.type === "subject_quiz" ? "quiz" : "document";
+          navigate(`/source/${notification.subjectCode.toLowerCase()}/${tab}`);
+        } else {
+          navigate("/source");
+        }
+        break;
       case "friend_post":
       case "post_reaction":
       case "post_like":
       case "post_comment":
       case "comment_reply":
       case "comment_reaction":
+      case "post_tag":
+      case "share_tag":
       default:
         if (notification.postId) navigate(`/post/${notification.postId}`);
         break;
@@ -68,6 +92,28 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
 
   const renderBadge = () => {
     switch (notification.type) {
+      case "subject_quiz":
+      case "quiz":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Bài tập / Quiz"
+          >
+            <FaGraduationCap />
+          </span>
+        );
+      case "subject_doc":
+      case "document":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-info text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Tài liệu"
+          >
+            <FaFileAlt />
+          </span>
+        );
       case "post_reaction":
       case "post_like":
         return (
@@ -111,6 +157,17 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
             <FaEnvelope />
           </span>
         );
+      case "post_tag":
+      case "share_tag":
+        return (
+          <span
+            className="position-absolute bottom-0 end-0 bg-purple-600 text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{ width: 18, height: 18, fontSize: 9, transform: "translate(20%, 20%)" }}
+            title="Gắn thẻ"
+          >
+            <FaTag />
+          </span>
+        );
       case "new_blog":
         return (
           <span
@@ -129,61 +186,68 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
   return (
     <div
       onClick={handleItemClick}
-      className={`vb-glass d-flex align-items-center p-3 rounded-xl transition-all ${
+      className={`group relative flex items-center p-3.5 sm:p-4 rounded-2xl transition-all duration-300 cursor-pointer border ${
         notification.read
-          ? "opacity-80"
-          : "border-purple-500/40 bg-purple-500/5 shadow-sm"
+          ? "opacity-80 hover:opacity-100 bg-surface-bright/20 hover:bg-surface-bright/40 border-glass-border"
+          : "border-neon-purple/40 bg-neon-purple/10 hover:bg-neon-purple/15 shadow-[0_4px_20px_rgba(142,84,233,0.12)]"
       }`}
-      style={{
-        border: "1px solid var(--vb-glass-border, rgba(255, 255, 255, 0.12))",
-        borderRadius: "12px",
-        cursor: "pointer"
-      }}
     >
-      <div className="position-relative flex-shrink-0">
+      <div className="relative flex-shrink-0">
         <UserAvatar
           src={notification.actorPhoto}
           alt={notification.actorName}
-          size={42}
+          size={44}
         />
         {renderBadge()}
       </div>
+
       <div className="flex-grow-1 ms-3 min-w-0">
-        <p className="mb-0 text-inherit" style={{
-          fontSize: "0.9rem",
-          fontWeight: notification.read ? "normal" : "600",
-          wordBreak: "break-word"
-        }}>
+        <p
+          className={`mb-1 text-inherit leading-snug ${
+            notification.read ? "font-normal opacity-90" : "font-semibold text-on-surface"
+          }`}
+          style={{
+            fontSize: "0.92rem",
+            wordBreak: "break-word",
+          }}
+        >
           {notification.content}
         </p>
-        <small className="text-muted block mt-1 opacity-75">
-          {formatTimeAgo(notification.createdAt)}
-        </small>
+        <div className="flex items-center gap-2 text-xs opacity-70">
+          <span>{formatTimeAgo(notification.createdAt)}</span>
+          {!notification.read && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-neon-purple font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-neon-purple animate-ping" />
+              Mới
+            </span>
+          )}
+        </div>
       </div>
-      <div className="d-flex align-items-center gap-1 ms-2 flex-shrink-0">
+
+      <div className="flex items-center gap-1 ms-2 flex-shrink-0">
         {!notification.read && (
           <button
-            className="btn btn-link text-primary p-1"
+            type="button"
+            className="p-2 rounded-lg text-neon-purple hover:bg-neon-purple/20 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onMarkAsRead(notification.id);
             }}
             title="Đánh dấu đã đọc"
-            style={{ fontSize: '14px' }}
           >
-            <FaCheckCircle />
+            <FaCheckCircle className="text-sm" />
           </button>
         )}
         <button
-          className="btn btn-link text-danger p-1 opacity-50 hover:opacity-100 transition-opacity"
+          type="button"
+          className="p-2 rounded-lg text-rose-400 opacity-60 group-hover:opacity-100 hover:bg-rose-500/10 hover:text-rose-500 transition-all"
           onClick={(e) => {
             e.stopPropagation();
             onDelete?.(notification.id);
           }}
           title="Xóa thông báo"
-          style={{ fontSize: '13px' }}
         >
-          <FaTrash />
+          <FaTrash className="text-xs" />
         </button>
       </div>
     </div>

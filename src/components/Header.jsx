@@ -19,6 +19,8 @@ import {
   setDoc,
   deleteDoc,
   doc,
+  updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
@@ -29,7 +31,6 @@ import SearchResults from "./header/SearchResults";
 import HeaderRightActions from "./header/HeaderRightActions";
 import { normalizeSearchText } from "../utils/postContent";
 import { useSearch } from "../context/SearchContext";
-import { toast } from "react-toastify";
 import "../style/Header.css";
 
 const Header = () => {
@@ -39,6 +40,11 @@ const Header = () => {
   const [authUser, setAuthUser] = useState(() => auth.currentUser);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationPopoverOpen, setNotificationPopoverOpen] = useState(false);
+  const [latestNewNotificationId, setLatestNewNotificationId] = useState(null);
+  const [autoDismissTrigger, setAutoDismissTrigger] = useState(0);
+  const notificationRef = useRef(null);
   const { keyword: searchValue, setKeyword: setSearchValue, searchConfig } = useSearch();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -164,6 +170,7 @@ const Header = () => {
   useEffect(() => {
     if (!authUser) {
       setUnreadCount(0);
+      setNotifications([]);
       return undefined;
     }
     isInitialNotifLoad.current = true;
@@ -171,27 +178,68 @@ const Header = () => {
       query(
         collection(db, "Notifications"),
         where("userId", "==", authUser.uid),
-        where("read", "==", false),
       ),
       (snapshot) => {
-        setUnreadCount(snapshot.docs.length);
+        const allNotifs = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        allNotifs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setNotifications(allNotifs.slice(0, 25));
+        const unread = allNotifs.filter((n) => !n.read).length;
+        setUnreadCount(unread);
+
         if (isInitialNotifLoad.current) {
           isInitialNotifLoad.current = false;
           return;
         }
-        // Đẩy thông báo tức thì khi có hoạt động mới (thích, bình luận...)
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            const data = change.doc.data();
-            toast.info(data.content || "Bạn có thông báo mới!", {
-              position: "bottom-right",
-              autoClose: 4000,
-            });
+
+        // Tự động bật mở popup thông báo trên Header và kích hoạt đếm ngược 5 giây khi có thông báo mới (chỉ trên Desktop)
+        const addedChanges = snapshot.docChanges().filter((c) => c.type === "added");
+        if (addedChanges.length > 0) {
+          const newestDoc = addedChanges[0].doc;
+          const newestData = newestDoc.data();
+          setLatestNewNotificationId(newestDoc.id);
+
+          // Chỉ tự động mở popover trên màn hình Desktop (>= 768px)
+          if (typeof window !== "undefined" && window.innerWidth >= 768) {
+            setNotificationPopoverOpen(true);
+            setAutoDismissTrigger((prev) => prev + 1);
           }
-        });
+        }
       },
+      (error) => {
+        console.error("Error listening to notifications:", error);
+      }
     );
   }, [authUser]);
+
+  const handleMarkAsRead = useCallback(async (notifId) => {
+    try {
+      await updateDoc(doc(db, "Notifications", notifId), { read: true });
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
+      );
+    } catch (err) {
+      console.error("Error marking notification read:", err);
+    }
+  }, []);
+
+  const handleMarkAllAsRead = useCallback(async () => {
+    try {
+      const unreadItems = notifications.filter((n) => !n.read);
+      if (unreadItems.length === 0) return;
+      const batch = writeBatch(db);
+      unreadItems.forEach((n) => {
+        batch.update(doc(db, "Notifications", n.id), { read: true });
+      });
+      await batch.commit();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error("Error marking all read:", err);
+    }
+  }, [notifications]);
 
   useEffect(() => {
     if (!authUser) {
@@ -225,6 +273,12 @@ const Header = () => {
         setUserMenuOpen(false);
         setMobileSettingsOpen(false);
       }
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setNotificationPopoverOpen(false);
+      }
       if (searchRef.current && !searchRef.current.contains(event.target))
         setSearchFocused(false);
       if (
@@ -249,6 +303,7 @@ const Header = () => {
       if (event.key === "Escape") {
         setSearchFocused(false);
         setMobileSearchOpen(false);
+        setNotificationPopoverOpen(false);
       }
     };
     window.addEventListener("keydown", onKeyboard);
@@ -369,6 +424,7 @@ const Header = () => {
     setMobileSettingsOpen(false);
     setMobileSearchOpen(false);
     setSearchFocused(false);
+    setNotificationPopoverOpen(false);
   }, []);
 
   const closeSearch = () => {
@@ -424,6 +480,7 @@ const Header = () => {
                 setMobileSearchOpen((open) => !open);
                 setUserMenuOpen(false);
                 setMobileSettingsOpen(false);
+                setNotificationPopoverOpen(false);
               }}
               aria-label="Tìm kiếm"
             >
@@ -439,6 +496,15 @@ const Header = () => {
               t={t}
               unreadCount={unreadCount}
               unreadMessagesCount={unreadMessagesCount}
+              notifications={notifications}
+              notificationPopoverOpen={notificationPopoverOpen}
+              setNotificationPopoverOpen={setNotificationPopoverOpen}
+              notificationRef={notificationRef}
+              onMarkAsRead={handleMarkAsRead}
+              onMarkAllAsRead={handleMarkAllAsRead}
+              latestNewNotificationId={latestNewNotificationId}
+              autoDismissTrigger={autoDismissTrigger}
+              autoDismissDuration={5000}
               isAuthenticated={Boolean(authUser)}
               userMenuOpen={userMenuOpen}
               setUserMenuOpen={setUserMenuOpen}

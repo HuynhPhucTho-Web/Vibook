@@ -100,6 +100,8 @@ function Profile() {
         return tb - ta;
       });
       setPosts(arr);
+    }, (error) => {
+      console.warn("Profile posts snapshot error:", error);
     });
 
     return () => { unsubUser(); unsubPosts(); };
@@ -279,10 +281,10 @@ function Profile() {
   };
 
   useEffect(() => {
-    const target = routeUid || auth.currentUser?.uid || null;
+    const target = routeUid || currentUid || auth.currentUser?.uid || null;
     const cleanup = fetchUserData(target);
     return () => cleanup && cleanup();
-  }, [routeUid, fetchUserData]);
+  }, [routeUid, currentUid, fetchUserData]);
 
   const profileSchema = useMemo(() => {
     if (!userDetails) return null;
@@ -373,7 +375,7 @@ function Profile() {
           {activePostTab === "saved" && savedPostsLoading ? (
             <p className="text-center opacity-75">Đang tải bài viết đã lưu...</p>
           ) : visiblePosts.length ? visiblePosts.map(p => (
-            <PostItem key={p.id} post={p} auth={auth} userDetails={userDetails} isDetailView={true} />
+            <PostItem key={p.id} post={p} auth={auth} userDetails={userDetails} isDetailView={false} />
           )) : (
             <p className="text-center opacity-75">
               {activePostTab === "saved" ? "Chưa có bài viết đã lưu" : activePostTab === "shared" ? "Chưa có bài viết đã chia sẻ" : isOwner ? t("youHaventPostedYet") : t("noPostsYet")}

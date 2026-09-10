@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import { doc, onSnapshot, getDoc, collection, query, where } from "firebase/firestore";
@@ -6,7 +6,6 @@ import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import PostItem from "../components/PostItem";
 import SEO from "../components/SEO";
-import { useMemo } from "react";
 import "../style/Home.css";
 
 function PostDetail() {
@@ -17,6 +16,10 @@ function PostDetail() {
   const [loading, setLoading] = useState(true);
   const [isFriend, setIsFriend] = useState(false);
   const [checkingFriendship, setCheckingFriendship] = useState(true);
+
+  const handlePostDeleted = useCallback(() => {
+    window.history.back();
+  }, []);
 
   useEffect(() => {
     const currentUid = auth.currentUser?.uid;
@@ -162,7 +165,7 @@ function PostDetail() {
           post={post}
           auth={auth}
           userDetails={userDetails}
-          onPostDeleted={() => window.history.back()}
+          onPostDeleted={handlePostDeleted}
           isDetailView={true}
         />
       </div>

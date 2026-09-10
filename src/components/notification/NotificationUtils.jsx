@@ -79,7 +79,7 @@ export const createNotificationIfNotExists = async (notificationData) => {
   }
 
   const uniqueId = notificationData.requestId || notificationData.messageId || notificationData.postId || notificationData.blogId || 'global';
-  const notificationKey = `${notificationData.type}_${notificationData.actorId}_${uniqueId}_${Math.floor((notificationData.createdAt || Date.now()) / 60000)}`;
+  const notificationKey = `${notificationData.type}_${notificationData.userId}_${notificationData.actorId}_${uniqueId}_${Math.floor((notificationData.createdAt || Date.now()) / 60000)}`;
 
   if (processedNotifications.has(notificationKey)) {
     return; // Đã xử lý trong phút này, bỏ qua để tránh spam
@@ -113,6 +113,13 @@ export const createNotificationIfNotExists = async (notificationData) => {
           collection(db, "Notifications"),
           where("userId", "==", notificationData.userId),
           where("type", "==", "friend_post"),
+          where("postId", "==", notificationData.postId)
+        );
+      } else if ((notificationData.type === "post_tag" || notificationData.type === "share_tag") && notificationData.postId) {
+        q = query(
+          collection(db, "Notifications"),
+          where("userId", "==", notificationData.userId),
+          where("type", "==", notificationData.type),
           where("postId", "==", notificationData.postId)
         );
       } else if (notificationData.type === "new_blog" && notificationData.blogId) {
@@ -267,6 +274,38 @@ export const notifyCommentReply = async ({ postId, targetUserId, commentText, ac
     content: snippet
       ? `${actorName} đã trả lời bình luận của bạn: "${snippet}"`
       : `${actorName} đã trả lời bình luận của bạn.`,
+    createdAt: Date.now(),
+  });
+};
+
+/**
+ * Tạo thông báo khi có người gắn thẻ bạn trong bài viết hoặc bài viết chia sẻ
+ */
+export const notifyTaggedInPost = async ({
+  postId,
+  taggedUserId,
+  actorUser,
+  actorDetails,
+  isShare = false,
+}) => {
+  const actorId = actorUser?.uid || auth.currentUser?.uid;
+  if (!taggedUserId || !actorId || taggedUserId === actorId) return;
+
+  const actorName = getActorDisplayName(actorUser, actorDetails);
+  const actorPhoto = getActorPhotoURL(actorUser, actorDetails);
+
+  const content = isShare
+    ? `${actorName} đã gắn thẻ bạn trong một bài viết chia sẻ.`
+    : `${actorName} đã gắn thẻ bạn trong một bài viết.`;
+
+  await createNotificationIfNotExists({
+    userId: taggedUserId,
+    type: isShare ? "share_tag" : "post_tag",
+    actorId,
+    actorName,
+    actorPhoto,
+    postId,
+    content,
     createdAt: Date.now(),
   });
 };

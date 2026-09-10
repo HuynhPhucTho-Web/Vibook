@@ -90,7 +90,7 @@ function UserDetailPage() {
         <div className="mt-4 space-y-4">
           {posts.length > 0 ? (
             posts.map(p => (
-              <PostItem key={p.id} post={p} userDetails={userDetails} isDetailView={true} />
+              <PostItem key={p.id} post={p} userDetails={userDetails} isDetailView={false} />
             ))
           ) : (
             <p className="text-center opacity-75">This user hasn't posted yet.</p>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useEffect, useContext, useCallback, useMemo } from "react";
 import { auth, db } from "../components/firebase";
 import {
   collection,
@@ -235,6 +235,74 @@ const Notifications = () => {
     }
   }, [notifications]);
 
+  const [activeTab, setActiveTab] = useState("all");
+
+  const unreadCount = useMemo(
+    () => notifications.filter((notif) => !notif.read).length,
+    [notifications]
+  );
+  const readCount = useMemo(
+    () => notifications.filter((notif) => notif.read).length,
+    [notifications]
+  );
+
+  const studyCount = useMemo(() => {
+    return notifications.filter(
+      (n) =>
+        n.type === "quiz" ||
+        n.type === "course" ||
+        n.type === "subject_quiz" ||
+        n.type === "subject_doc" ||
+        n.type === "document" ||
+        Boolean(n.subjectCode)
+    ).length;
+  }, [notifications]);
+
+  const interactionCount = useMemo(() => {
+    return notifications.filter(
+      (n) =>
+        n.type === "post_like" ||
+        n.type === "post_reaction" ||
+        n.type === "post_comment" ||
+        n.type === "comment_reply" ||
+        n.type === "comment_reaction" ||
+        n.type === "friend_request" ||
+        n.type === "friend_message" ||
+        n.type === "post_tag" ||
+        n.type === "share_tag"
+    ).length;
+  }, [notifications]);
+
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((notif) => {
+      if (activeTab === "unread") return !notif.read;
+      if (activeTab === "study") {
+        return (
+          notif.type === "quiz" ||
+          notif.type === "course" ||
+          notif.type === "subject_quiz" ||
+          notif.type === "subject_doc" ||
+          notif.type === "document" ||
+          Boolean(notif.subjectCode)
+        );
+      }
+      if (activeTab === "interaction") {
+        return (
+          notif.type === "post_like" ||
+          notif.type === "post_reaction" ||
+          notif.type === "post_comment" ||
+          notif.type === "comment_reply" ||
+          notif.type === "comment_reaction" ||
+          notif.type === "friend_request" ||
+          notif.type === "friend_message" ||
+          notif.type === "post_tag" ||
+          notif.type === "share_tag"
+        );
+      }
+      return true;
+    });
+  }, [notifications, activeTab]);
+
   if (isLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
@@ -253,54 +321,125 @@ const Notifications = () => {
     );
   }
 
-  const unreadCount = notifications.filter((notif) => !notif.read).length;
-  const readCount = notifications.filter((notif) => notif.read).length;
-
   return (
-    <div className="page-shell">
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
-        <div>
-          <h1 className="h3 mb-0">Thông báo</h1>
-          {unreadCount > 0 ? (
-            <small className="text-muted">
-              {unreadCount} thông báo chưa đọc
-            </small>
-          ) : (
-            <small className="text-muted">
-              Tất cả thông báo đã được đọc
-            </small>
-          )}
+    <div className="page-shell max-w-4xl mx-auto px-3 sm:px-6 py-6">
+      {/* Top Header Banner */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-neon-purple shadow-[0_0_10px_rgba(142,84,233,0.8)]" />
+          <span className="text-[11px] font-mono uppercase tracking-widest text-primary font-bold">
+            VIBOOK HUB • NOTIFICATIONS
+          </span>
         </div>
-        <div className="d-flex flex-wrap gap-2">
-          {unreadCount > 0 && (
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 text-on-surface">
+              Thông báo
+            </h1>
+            <p className="text-sm text-on-surface-variant opacity-80 mb-0">
+              {unreadCount > 0
+                ? `Bạn có ${unreadCount} thông báo chưa đọc`
+                : "Bạn đã cập nhật tất cả thông báo mới nhất"}
+            </p>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-neon-purple to-electric-blue hover:opacity-90 text-white text-xs font-semibold shadow-[0_0_15px_rgba(142,84,233,0.3)] transition-all flex items-center gap-1.5"
+                onClick={handleMarkAllAsRead}
+              >
+                <FaCheckCircle className="text-xs" />
+                <span>Đánh dấu đã đọc</span>
+              </button>
+            )}
+
+            {readCount > 0 && (
+              <button
+                type="button"
+                className="px-3 py-1.5 rounded-xl border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-all flex items-center gap-1.5"
+                onClick={handleDeleteReadNotifications}
+                title="Xóa tất cả thông báo đã đọc"
+              >
+                <FaTrash className="text-xs" />
+                <span>Xóa đã đọc ({readCount})</span>
+              </button>
+            )}
+
             <button
-              className="btn btn-outline-primary btn-sm"
-              onClick={handleMarkAllAsRead}
+              type="button"
+              className="px-3 py-1.5 rounded-xl border border-glass-border text-on-surface-variant hover:bg-surface-bright/40 text-xs font-medium transition-all flex items-center gap-1.5"
+              onClick={handleDeleteOldNotifications}
+              title="Xóa thông báo cũ hơn 3 ngày"
             >
-              <FaCheckCircle className="me-1" /> Đánh dấu đã đọc
+              <FaTrash className="text-xs opacity-60" />
+              <span>Dọn dẹp (&gt;3 ngày)</span>
             </button>
-          )}
-          {readCount > 0 && (
-            <button
-              className="btn btn-outline-danger btn-sm"
-              onClick={handleDeleteReadNotifications}
-              title="Xóa tất cả thông báo đã đọc"
-            >
-              <FaTrash className="me-1" /> Xóa đã đọc ({readCount})
-            </button>
-          )}
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={handleDeleteOldNotifications}
-            title="Xóa thông báo cũ hơn 3 ngày"
-          >
-            <FaTrash className="me-1" /> Dọn dẹp (&gt;3 ngày)
-          </button>
+          </div>
         </div>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 border-b border-glass-border">
+        <button
+          type="button"
+          onClick={() => setActiveTab("all")}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === "all"
+              ? "bg-neon-purple text-white shadow-[0_0_12px_rgba(142,84,233,0.5)]"
+              : "bg-surface-bright/30 text-on-surface-variant hover:bg-surface-bright/60 hover:text-on-surface"
+          }`}
+        >
+          Tất cả ({notifications.length})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("unread")}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+            activeTab === "unread"
+              ? "bg-neon-purple text-white shadow-[0_0_12px_rgba(142,84,233,0.5)]"
+              : "bg-surface-bright/30 text-on-surface-variant hover:bg-surface-bright/60 hover:text-on-surface"
+          }`}
+        >
+          Chưa đọc ({unreadCount})
+        </button>
+
+        {studyCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("study")}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              activeTab === "study"
+                ? "bg-neon-purple text-white shadow-[0_0_12px_rgba(142,84,233,0.5)]"
+                : "bg-surface-bright/30 text-on-surface-variant hover:bg-surface-bright/60 hover:text-on-surface"
+            }`}
+          >
+            Học tập ({studyCount})
+          </button>
+        )}
+
+        {interactionCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("interaction")}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              activeTab === "interaction"
+                ? "bg-neon-purple text-white shadow-[0_0_12px_rgba(142,84,233,0.5)]"
+                : "bg-surface-bright/30 text-on-surface-variant hover:bg-surface-bright/60 hover:text-on-surface"
+            }`}
+          >
+            Tương tác ({interactionCount})
+          </button>
+        )}
+      </div>
+
+      {/* Notifications List */}
       <NotificationList
-        notifications={notifications}
+        notifications={filteredNotifications}
         onMarkAsRead={handleMarkAsRead}
         onDelete={handleDeleteNotification}
         formatTimeAgo={formatTimeAgo}
