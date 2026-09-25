@@ -315,21 +315,21 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
   };
 
   return (
-    <div className="flex flex-col-reverse xl:flex-row gap-6 h-auto min-h-[600px] relative">
-      {/* Sidebar: Timer & Navigation (left) */}
-      <aside className="w-full xl:w-80 flex-shrink-0 flex flex-col gap-6">
+    <div className="flex flex-col-reverse xl:flex-row gap-3 sm:gap-6 h-auto relative">
+      {/* Sidebar: Timer & Navigation */}
+      <aside className="w-full xl:w-80 flex-shrink-0 flex flex-col gap-3 sm:gap-6">
         {/* Timer Glass Card */}
-        <div className={`rounded-xl border p-6 shadow-md relative overflow-hidden group ${
+        <div className={`rounded-xl border p-3 sm:p-6 shadow-sm sm:shadow-md relative overflow-hidden group ${
           isDark ? "bg-[#1e1f27]/80 border-white/10" : "bg-white border-slate-200"
         }`}>
-          <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/20 rounded-full blur-[40px] group-hover:bg-primary/30 transition-colors duration-700"></div>
+          <div className="absolute -right-10 -top-10 w-24 sm:w-32 h-24 sm:h-32 bg-primary/20 rounded-full blur-[40px] group-hover:bg-primary/30 transition-colors duration-700"></div>
           <div className="relative z-10 flex flex-col items-center justify-center">
-            <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-4">
+            <div className="text-[11px] sm:text-xs text-on-surface-variant uppercase tracking-wider mb-2 sm:mb-4 font-semibold">
               {quizMode === "exam" ? (language === "vi" ? "Thời gian còn lại" : "Time Remaining") : (language === "vi" ? "Điểm ôn tập" : "Practice Score")}
             </div>
 
             {/* Countdown Circular Ring */}
-            <div className="relative w-40 h-40 flex items-center justify-center">
+            <div className="relative w-28 h-28 sm:w-40 sm:h-40 flex items-center justify-center">
               <svg className="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                 <circle
                   className={`${isDark ? "text-zinc-800" : "text-slate-200"}`}
@@ -358,7 +358,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                 ></circle>
               </svg>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold tabular-nums tracking-tighter">
+                <span className="text-xl sm:text-2xl font-bold tabular-nums tracking-tighter">
                   {quizMode === "exam"
                     ? formatTime(examTimer)
                     : `${moduleQuestions.filter(q => checkedQuestions[q.id] && isQuestionCorrect(q)).length}/${totalSubjectQuestions}`}
@@ -369,20 +369,20 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
         </div>
 
         {/* Question Navigation */}
-        <div className={`rounded-xl border p-6 shadow-md flex-1 flex flex-col min-h-[300px] ${
+        <div className={`rounded-xl border p-3 sm:p-6 shadow-sm sm:shadow-md flex-1 flex flex-col min-h-0 sm:min-h-[300px] ${
           isDark ? "bg-[#1e1f27]/80 border-white/10" : "bg-white border-slate-200"
         }`}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
+          <div className="flex items-center justify-between mb-3 sm:mb-6">
+            <div className="text-[11px] sm:text-xs text-on-surface-variant uppercase tracking-wider font-semibold">
               {language === "vi" ? "Mục lục câu hỏi" : "Question Nav"}
             </div>
-            <span className="font-label-sm text-label-sm text-secondary-fixed-dim bg-secondary-container/30 px-2 py-1 rounded-full border border-secondary-fixed/20">
+            <span className="text-[11px] sm:text-xs text-secondary-fixed-dim bg-secondary-container/30 px-2 py-0.5 sm:py-1 rounded-full border border-secondary-fixed/20 font-medium">
               {activeQuestionsList.length > 0 ? `${currentIndex + 1}/${activeQuestionsList.length}` : "0/0"}
             </span>
           </div>
 
           {/* Matrix layout */}
-          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 xl:grid-cols-5 gap-2 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="grid grid-cols-8 sm:grid-cols-8 md:grid-cols-10 xl:grid-cols-5 gap-1.5 sm:gap-2 max-h-[200px] sm:max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
             {activeQuestionsList.map((q, idx) => {
               const isSelected = idx === currentIndex;
               const answersCount = getSelectedAnswers(q.id).length;
@@ -413,7 +413,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                     setCurrentIndex(idx);
                     setFlashcardFlipped(false);
                   }}
-                  className={`aspect-square rounded-lg flex items-center justify-center font-label-sm text-label-sm transition-all duration-200 ${btnClass}`}
+                  className={`aspect-square rounded-md sm:rounded-lg flex items-center justify-center text-xs sm:text-sm transition-all duration-200 ${btnClass}`}
                 >
                   {idx + 1}
                 </button>
@@ -421,18 +421,18 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
             })}
           </div>
 
-          <div className="mt-8 flex flex-col gap-3">
+          <div className="mt-4 sm:mt-8 flex flex-col gap-2 sm:gap-3">
             {quizMode === "exam" && !examSubmitted && (
               <button
                 onClick={handleSubmitExam}
-                className="w-full py-4 rounded-xl font-label-sm text-label-sm tracking-wider uppercase text-on-error-container bg-error-container/20 border border-error/30 hover:bg-error-container hover:text-on-error transition-all duration-300 font-bold"
+                className="w-full py-2.5 sm:py-4 rounded-lg sm:rounded-xl text-xs sm:text-sm tracking-wider uppercase text-on-error-container bg-error-container/20 border border-error/30 hover:bg-error-container hover:text-on-error transition-all duration-300 font-bold"
               >
                 {language === "vi" ? "Nộp bài thi" : "Submit Quiz"}
               </button>
             )}
             <button
               onClick={handleResetProgress}
-              className={`w-full py-2.5 rounded-lg font-label-sm text-label-sm tracking-wider uppercase border transition-all duration-200 ${
+              className={`w-full py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm tracking-wider uppercase border transition-all duration-200 ${
                 isDark
                   ? "bg-surface border-glass-border text-outline hover:text-on-surface hover:bg-white/5"
                   : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
@@ -445,18 +445,18 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
       </aside>
 
       {/* Main Content: Active Question */}
-      <main className={`flex-1 flex flex-col relative rounded-2xl border overflow-hidden min-h-[500px] ${
+      <main className={`flex-1 flex flex-col relative rounded-xl sm:rounded-2xl border overflow-hidden ${
         isDark ? "bg-[#1e1f27]/60 border-white/10" : "bg-white border-slate-200 shadow-sm"
       }`}>
         {/* Top gradient border */}
-        <div className="h-2 w-full bg-gradient-to-r from-neon-purple via-electric-blue to-transparent"></div>
+        <div className="h-1 sm:h-2 w-full bg-gradient-to-r from-neon-purple via-electric-blue to-transparent"></div>
 
         {/* Mode and module controllers header */}
-        <div className={`p-4 border-b flex flex-col md:flex-row gap-4 justify-between items-center ${
+        <div className={`px-2.5 py-2 sm:p-4 border-b flex flex-col md:flex-row gap-2 sm:gap-4 justify-between items-center ${
           isDark ? "bg-[#1e1f27]/30 border-white/10" : "bg-slate-50 border-slate-200"
         }`}>
           {/* Horizontal scroll tabs for modes */}
-          <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto w-full md:w-auto pb-0.5 md:pb-0 scrollbar-none">
             {[
               { id: "practice", label: language === "vi" ? "Luyện tập" : "Practice" },
               { id: "wrong", label: language === "vi" ? "Câu sai" : "Wrong Questions" },
@@ -466,9 +466,9 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
               <button
                 key={m.id}
                 onClick={() => handleModeChange(m.id)}
-                className={`px-4 py-1.5 rounded-full font-label-sm text-label-sm whitespace-nowrap transition-all duration-200 ${
+                className={`px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-lg sm:rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                   quizMode === m.id
-                    ? "bg-primary text-on-primary font-bold shadow-md"
+                    ? "bg-primary text-on-primary font-bold shadow-sm"
                     : isDark
                       ? "bg-[#12131a] text-[#cdc3d6] hover:bg-[#34343c]"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -480,14 +480,14 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
           </div>
 
           {/* Sub-Filters / Module select */}
-          <div className="flex gap-2 w-full md:w-auto items-center justify-between overflow-hidden">
+          <div className="flex gap-1.5 sm:gap-2 w-full md:w-auto items-center justify-between overflow-hidden">
             <select
               value={selectedModuleId}
               onChange={(e) => {
                 setSelectedModuleId(e.target.value);
                 setCurrentIndex(0);
               }}
-              className={`flex-1 md:flex-initial ${quizMode !== "exam" ? "max-w-[60%]" : "max-w-full"} truncate text-[13px] rounded-lg px-3 py-1.5 focus:outline-none border ${
+              className={`flex-1 md:flex-initial ${quizMode !== "exam" ? "max-w-[58%] sm:max-w-[60%]" : "max-w-full"} truncate text-xs sm:text-[13px] rounded-lg px-2.5 py-1 sm:px-3 sm:py-1.5 focus:outline-none border ${
                 isDark
                   ? "bg-[#12131a] border-white/10 text-white focus:border-electric-blue"
                   : "bg-white border-slate-300 text-slate-800 focus:border-primary"
@@ -510,7 +510,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                   setQuizFilter(e.target.value);
                   setCurrentIndex(0);
                 }}
-                className={`flex-1 md:flex-initial max-w-[38%] truncate text-[13px] rounded-lg px-3 py-1.5 focus:outline-none border ${
+                className={`flex-1 md:flex-initial max-w-[40%] sm:max-w-[38%] truncate text-xs sm:text-[13px] rounded-lg px-2.5 py-1 sm:px-3 sm:py-1.5 focus:outline-none border ${
                   isDark
                     ? "bg-[#12131a] border-white/10 text-white focus:border-electric-blue"
                     : "bg-white border-slate-300 text-slate-800 focus:border-primary"
@@ -527,7 +527,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
         </div>
 
         {quizMode === "exam" && examSubmitted && (
-          <div className={`p-4 border-b flex justify-between items-center gap-4 text-body-md ${
+          <div className={`p-2.5 sm:p-4 border-b flex justify-between items-center gap-2 sm:gap-4 text-xs sm:text-sm ${
             isDark ? "bg-green-500/5 border-white/5" : "bg-green-50 border-slate-200"
           }`}>
             <div>
@@ -542,7 +542,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
             </div>
             <button
               onClick={initializeExam}
-              className="px-4 py-1.5 bg-gradient-to-r from-neon-purple to-electric-blue text-white rounded-lg text-[13px] font-bold transition-all hover:scale-105"
+              className="px-3 py-1 sm:px-4 sm:py-1.5 bg-gradient-to-r from-neon-purple to-electric-blue text-white rounded-lg text-xs sm:text-[13px] font-bold transition-all hover:scale-105"
             >
               {language === "vi" ? "Thi lại" : "Retake Exam"}
             </button>
@@ -550,16 +550,16 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
         )}
 
         {/* Main Question view container */}
-        <div className="flex-1 p-4 sm:p-6 md:p-10 flex flex-col justify-between">
+        <div className="flex-1 p-2.5 sm:p-5 md:p-8 flex flex-col justify-between">
           {currentQuestion ? (
             <>
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <span className="font-label-sm text-label-sm text-electric-blue bg-electric-blue/10 px-3 py-1 rounded-full border border-electric-blue/20">
+              <div className="mb-2 sm:mb-5">
+                <div className="flex items-center justify-between gap-2 mb-2 sm:mb-4">
+                  <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                    <span className="text-[11px] sm:text-xs text-electric-blue bg-electric-blue/10 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-electric-blue/20 max-w-[120px] sm:max-w-xs truncate font-medium">
                       {currentQuestion.moduleName}
                     </span>
-                    <span className={`font-label-sm text-label-sm ${isDark ? "text-on-surface-variant" : "text-slate-500"}`}>
+                    <span className={`text-xs sm:text-sm font-semibold whitespace-nowrap ${isDark ? "text-on-surface-variant" : "text-slate-500"}`}>
                       {language === "vi"
                         ? `Câu ${currentIndex + 1} / ${activeQuestionsList.length}`
                         : `Question ${currentIndex + 1} of ${activeQuestionsList.length}`}
@@ -567,36 +567,41 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                   </div>
                   <button
                     onClick={handleToggleBookmark}
-                    className={`flex items-center justify-center p-2 rounded-full border ${
+                    className={`flex items-center justify-center p-1.5 sm:p-2 rounded-full border flex-shrink-0 ${
                       isQuestionBookmarked(currentQuestion.id)
                         ? "text-tertiary border-tertiary shadow-sm"
                         : isDark
                           ? "text-[#cdc3d6] border-glass-border hover:text-on-surface bg-[#12131a]"
                           : "text-slate-400 border-slate-200 hover:text-slate-800 bg-slate-50"
                     } transition-all duration-300`}
+                    aria-label="Bookmark"
                   >
-                    {isQuestionBookmarked(currentQuestion.id) ? <FaStar size={16} /> : <FaRegStar size={16} />}
+                    {isQuestionBookmarked(currentQuestion.id) ? (
+                      <FaStar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    ) : (
+                      <FaRegStar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    )}
                   </button>
                 </div>
 
                 {/* Question content */}
                 {quizMode === "flashcard" ? (
                   /* Flashcard rendering */
-                  <div className="w-full flex justify-center py-4">
+                  <div className="w-full flex justify-center py-2 sm:py-4">
                     <div
                       onClick={handleRevealAnswer}
-                      className={`w-full max-w-2xl min-h-[220px] rounded-2xl border-2 cursor-pointer p-8 relative flex flex-col justify-between group/flash shadow-xl hover:border-primary/50 transition-all duration-300 ${
+                      className={`w-full max-w-2xl min-h-[160px] sm:min-h-[220px] rounded-xl sm:rounded-2xl border-2 cursor-pointer p-4 sm:p-8 relative flex flex-col justify-between group/flash shadow-md sm:shadow-xl hover:border-primary/50 transition-all duration-300 ${
                         isDark ? "bg-[#1e1f27]/80 border-glass-border" : "bg-white border-slate-200"
                       }`}
                     >
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-outline">
+                      <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-outline">
                         {flashcardFlipped
                           ? (language === "vi" ? "Mặt sau (Đáp án)" : "Back (Answer)")
                           : (language === "vi" ? "Mặt trước (Câu hỏi)" : "Front (Question)")}
                       </span>
 
-                      <div className="my-6 flex flex-col items-center">
-                        <h2 className="text-[18px] font-bold leading-relaxed text-center flex flex-wrap items-center justify-center gap-2">
+                      <div className="my-2 sm:my-6 flex flex-col items-center">
+                        <h2 className="text-xs sm:text-[18px] font-bold leading-relaxed text-center flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                           {currentQuestion.question}
                           {currentQuestion.answer.length > 1 && (
                             <span className="text-[10px] font-bold uppercase tracking-wider bg-neon-purple/20 text-neon-purple px-1.5 py-0.5 rounded border border-neon-purple/30 animate-pulse">
@@ -605,24 +610,24 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                           )}
                         </h2>
                         {currentQuestion.image && (
-                          <div className="mt-3 max-w-full md:max-w-md rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm">
-                            <img src={currentQuestion.image} alt="Question Graphic" className="max-h-[150px] object-contain w-full" />
+                          <div className="mt-2 sm:mt-3 max-w-full md:max-w-md rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm">
+                            <img src={currentQuestion.image} alt="Question Graphic" className="max-h-[120px] sm:max-h-[150px] object-contain w-full" />
                           </div>
                         )}
                         {flashcardFlipped && currentQuestion.question_vi && currentQuestion.question_vi !== currentQuestion.question && (
-                          <p className="text-[15px] font-medium text-green-600 dark:text-green-400 text-center mt-3 animate-pulse">
+                          <p className="text-xs sm:text-[15px] font-medium text-green-600 dark:text-green-400 text-center mt-2 sm:mt-3 animate-pulse">
                             {currentQuestion.question_vi}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex flex-col gap-2 mt-auto">
+                      <div className="flex flex-col gap-1.5 sm:gap-2 mt-auto">
                         {currentQuestion.options.map((opt) => {
                           const isCorrectOpt = currentQuestion.answer.includes(opt.key);
                           return (
                             <div
                               key={opt.key}
-                              className={`flex items-center gap-3 p-3 rounded-lg border text-sm transition-all duration-300 ${
+                              className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border text-xs sm:text-sm transition-all duration-300 ${
                                 flashcardFlipped
                                   ? isCorrectOpt
                                     ? isDark
@@ -636,11 +641,11 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                                     : "bg-slate-50 border-slate-200"
                               }`}
                             >
-                              <strong className="text-primary font-bold">{opt.key}</strong>
+                              <strong className="text-primary font-bold text-xs sm:text-sm">{opt.key}</strong>
                               <div>
                                 <div>{opt.text}</div>
                                 {flashcardFlipped && opt.text_vi && (
-                                  <div className="text-xs text-green-600 dark:text-green-400 mt-0.5">{opt.text_vi}</div>
+                                  <div className="text-[11px] sm:text-xs text-green-600 dark:text-green-400 mt-0.5">{opt.text_vi}</div>
                                 )}
                               </div>
                             </div>
@@ -648,7 +653,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                         })}
                       </div>
 
-                      <div className="text-center text-xs text-outline group-hover/flash:text-primary transition-colors mt-4">
+                      <div className="text-center text-[10px] sm:text-xs text-outline group-hover/flash:text-primary transition-colors mt-2 sm:mt-4">
                         {flashcardFlipped
                           ? (language === "vi" ? "Click để xem câu hỏi" : "Click to view question")
                           : (language === "vi" ? "Click để lật thẻ đáp án" : "Click to flip card for answer")}
@@ -658,47 +663,49 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                 ) : (
                   /* Standard Question rendering */
                   <>
-                    <h2 className="text-xl sm:text-2xl font-bold leading-snug flex flex-wrap items-center gap-2">
-                      {currentQuestion.question}
+                    <h2 className="text-[13px] sm:text-base md:text-xl font-bold leading-snug flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <span>{currentQuestion.question}</span>
                       {currentQuestion.answer.length > 1 && (
-                        <span className="text-xs font-bold uppercase tracking-wider bg-neon-purple/20 text-neon-purple px-2 py-0.5 rounded border border-neon-purple/30 animate-pulse">
-                          {language === "vi" ? "Chọn nhiều đáp án" : "Multiple Choice"}
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-neon-purple/20 text-neon-purple px-1.5 py-0.5 rounded border border-neon-purple/30 animate-pulse whitespace-nowrap">
+                          {language === "vi" ? "Chọn nhiều" : "Multi-choice"}
                         </span>
                       )}
                     </h2>
                     {currentQuestion.image && (
-                      <div className="mt-4 mb-2 max-w-full md:max-w-2xl rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm bg-white/5">
+                      <div className="mt-2 sm:mt-4 mb-1 sm:mb-2 max-w-full md:max-w-xl rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm bg-white/5">
                         <img 
                           src={currentQuestion.image} 
                           alt="Question Graphic" 
-                          className="max-h-[300px] object-contain w-full"
+                          className="max-h-[120px] sm:max-h-[220px] md:max-h-[300px] object-contain w-full"
                           loading="lazy" 
                         />
                       </div>
                     )}
                     {reveal && currentQuestion.question_vi && currentQuestion.question_vi !== currentQuestion.question && (
-                      <p className="text-body-md text-green-600 dark:text-green-400 font-semibold mt-3">
+                      <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-semibold mt-1.5 sm:mt-2">
                         {currentQuestion.question_vi}
                       </p>
                     )}
 
                     {/* Options Checklist */}
-                    <div className="flex flex-col gap-3 sm:gap-4 max-w-3xl mt-6 sm:mt-8">
+                    <div className="flex flex-col gap-1.5 sm:gap-3 max-w-3xl mt-2.5 sm:mt-6">
                       {currentQuestion.options.map((opt) => {
                         const selected = getSelectedAnswers(currentQuestion.id);
                         const isSelected = selected.includes(opt.key);
                         const isCorrectOpt = currentQuestion.answer.includes(opt.key);
 
                         let labelClass = isDark
-                          ? "border-glass-border bg-[#1e1f27]/40 hover:bg-[#34343c]/35 hover:border-white/20"
+                          ? "border-glass-border bg-[#1e1f27]/40 hover:bg-[#34343c]/35 hover:border-white/20 text-on-surface"
                           : "border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-slate-800";
-                        let dotClass = isDark ? "border-outline" : "border-slate-400";
-                        let dotFill = null;
+                        let dotClass = isDark ? "border-white/20 text-[#cdc3d6]/70 bg-white/5" : "border-slate-300 text-slate-500 bg-slate-100";
+                        let dotFill = <span className="text-[11px] sm:text-xs font-bold leading-none">{opt.key}</span>;
 
                         if (isSelected) {
-                          labelClass = "border-electric-blue bg-electric-blue/5 shadow-sm";
-                          dotClass = "border-electric-blue";
-                          dotFill = <div className="w-3 h-3 rounded-full bg-electric-blue shadow-[0_0_8px_rgba(71,118,230,0.8)]"></div>;
+                          labelClass = isDark
+                            ? "border-electric-blue bg-electric-blue/10 shadow-sm"
+                            : "border-electric-blue bg-blue-50/70 shadow-sm text-slate-900";
+                          dotClass = "border-electric-blue bg-electric-blue text-white shadow-[0_0_6px_rgba(71,118,230,0.4)]";
+                          dotFill = <span className="text-[11px] sm:text-xs font-bold leading-none">{opt.key}</span>;
                         }
 
                         if (reveal) {
@@ -707,11 +714,17 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                               ? "border-green-500 bg-green-500/10 shadow-sm text-green-400 font-semibold"
                               : "border-green-600 bg-green-50 shadow-sm text-green-700 font-semibold";
                             dotClass = "border-green-500 bg-green-500 text-white animate-bounce";
-                            dotFill = <FaCheck size={10} />;
+                            dotFill = <FaCheck size={9} />;
                           } else if (isSelected) {
-                            labelClass = "border-red-500 bg-red-500/10 shadow-sm text-red-400";
+                            labelClass = isDark
+                              ? "border-red-500 bg-red-500/10 shadow-sm text-red-400"
+                              : "border-red-500 bg-red-50 shadow-sm text-red-700";
                             dotClass = "border-red-500 bg-red-500 text-white";
-                            dotFill = <FaTimes size={10} />;
+                            dotFill = <FaTimes size={9} />;
+                          } else {
+                            labelClass = isDark
+                              ? "border-white/5 bg-[#12131a]/30 opacity-60"
+                              : "border-slate-100 bg-slate-50/50 opacity-60 text-slate-400";
                           }
                         }
 
@@ -719,35 +732,24 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                           <button
                             key={opt.key}
                             onClick={() => handleSelectOption(opt.key)}
-                            className={`group text-left relative flex items-start p-4 sm:p-6 rounded-xl border cursor-pointer transition-all overflow-hidden ${labelClass}`}
+                            className={`group text-left relative flex items-start px-2.5 py-2 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border cursor-pointer transition-all overflow-hidden ${labelClass}`}
                           >
                             {isSelected && !reveal && (
                               <div className="absolute inset-0 bg-gradient-to-r from-electric-blue/10 to-transparent opacity-100 pointer-events-none"></div>
                             )}
 
-                            <div className="relative z-10 flex items-center h-full mr-4 pt-1">
-                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${dotClass}`}>
+                            <div className="relative z-10 flex items-center h-full mr-2.5 sm:mr-3.5 pt-0.5 sm:pt-0.5">
+                              <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 ${dotClass}`}>
                                 {dotFill}
                               </div>
                             </div>
 
-                            <div className="relative z-10 flex flex-col">
-                              <span className={`font-label-sm text-label-sm mb-1 ${
-                                reveal && isCorrectOpt
-                                  ? "text-green-600 dark:text-green-400"
-                                  : isSelected
-                                    ? "text-electric-blue"
-                                    : isDark
-                                      ? "text-on-surface-variant group-hover:text-on-surface"
-                                      : "text-slate-500 group-hover:text-slate-800"
-                              }`}>
-                                Option {opt.key}
-                              </span>
-                              <span className="font-body-md text-body-md">
+                            <div className="relative z-10 flex flex-col flex-1 min-w-0">
+                              <span className="text-xs sm:text-sm font-medium leading-relaxed sm:leading-normal">
                                 {opt.text}
                               </span>
                               {reveal && opt.text_vi && opt.text_vi !== opt.text && (
-                                <span className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
+                                <span className="text-[11px] sm:text-xs text-green-600 dark:text-green-400 mt-0.5 font-medium">
                                   {opt.text_vi}
                                 </span>
                               )}
@@ -759,7 +761,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
 
                     {/* Feedback text */}
                     {reveal && (
-                      <div className={`mt-6 p-4 rounded-xl text-sm font-bold border ${
+                      <div className={`mt-2.5 sm:mt-4 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-bold border max-w-3xl ${
                         isQuestionCorrect(currentQuestion)
                           ? (isDark ? "bg-green-500/10 border-green-500/30 text-green-400" : "bg-green-50 border-green-200 text-green-700")
                           : (isDark ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-red-50 border-red-200 text-red-700")
@@ -774,17 +776,17 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
 
                     {/* Question Explanation Notes */}
                     {reveal && currentQuestion.note && (
-                      <div className={`mt-6 p-4 rounded-xl border flex flex-col gap-2 ${
+                      <div className={`mt-2.5 sm:mt-4 p-2.5 sm:p-4 rounded-lg border flex flex-col gap-1.5 max-w-3xl ${
                         isDark ? "bg-[#12131a] border-white/5" : "bg-slate-50 border-slate-200"
                       }`}>
-                        <span className="text-xs text-outline uppercase font-bold tracking-widest">
+                        <span className="text-[10px] sm:text-xs text-outline uppercase font-bold tracking-widest">
                           {language === "vi" ? "Giải thích bài học" : "Explanation Notes"}
                         </span>
-                        <p className={`text-sm leading-relaxed ${isDark ? "text-on-surface-variant" : "text-slate-600"}`}>
+                        <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? "text-on-surface-variant" : "text-slate-600"}`}>
                           {currentQuestion.note}
                         </p>
                         {currentQuestion.note_vi && currentQuestion.note_vi !== currentQuestion.note && (
-                          <p className="text-sm leading-relaxed text-green-600 dark:text-green-400 mt-2 font-medium">
+                          <p className="text-xs sm:text-sm leading-relaxed text-green-600 dark:text-green-400 mt-1 font-medium">
                             {currentQuestion.note_vi}
                           </p>
                         )}
@@ -795,19 +797,19 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
               </div>
 
               {/* Action Footer */}
-              <div className={`pt-6 border-t flex justify-between items-center -mx-4 -mb-4 p-4 sm:-mx-6 sm:-mb-6 sm:p-6 md:-mx-10 md:-mb-10 md:p-10 ${
+              <div className={`mt-2.5 sm:mt-5 pt-2.5 sm:pt-4 border-t flex justify-between items-center -mx-2.5 -mb-2.5 p-2 sm:-mx-5 sm:-mb-5 sm:p-4 md:-mx-8 md:-mb-8 md:p-6 ${
                 isDark ? "bg-[#1e1f27]/50 border-white/10" : "bg-slate-50 border-slate-200"
               }`}>
                 <button
                   onClick={handlePrev}
                   disabled={currentIndex <= 0}
-                  className={`flex items-center gap-2 px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg font-label-sm text-label-sm transition-all disabled:opacity-30 ${
+                  className={`flex items-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all disabled:opacity-30 ${
                     isDark
                       ? "text-[#cdc3d6] hover:text-white hover:bg-white/5"
                       : "text-slate-600 hover:text-slate-900 hover:bg-black/5"
                   }`}
                 >
-                  <FaArrowLeft size={12} />
+                  <FaArrowLeft className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   <span className="hidden sm:inline">{language === "vi" ? "Câu trước" : "Previous"}</span>
                   <span className="inline sm:hidden">{language === "vi" ? "Trước" : "Prev"}</span>
                 </button>
@@ -815,7 +817,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                 {quizMode !== "flashcard" && quizMode !== "exam" && !isQuestionChecked(currentQuestion.id) && (
                   <button
                     onClick={handleRevealAnswer}
-                    className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg border font-label-sm text-label-sm transition-all ${
+                    className={`px-2.5 py-1.5 sm:px-5 sm:py-2 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
                       isDark
                         ? "bg-transparent border-glass-border text-outline hover:text-on-surface hover:bg-white/5"
                         : "bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50"
@@ -837,19 +839,19 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                 <button
                   onClick={handleNext}
                   disabled={currentIndex >= activeQuestionsList.length - 1}
-                  className="flex items-center gap-2 px-4 sm:px-8 py-2.5 sm:py-3 rounded-lg font-label-sm text-label-sm bg-gradient-to-r from-neon-purple to-electric-blue text-white shadow-md hover:scale-[1.02] transition-all relative overflow-hidden group disabled:opacity-30 font-bold"
+                  className="flex items-center gap-1 sm:gap-2 px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold bg-gradient-to-r from-neon-purple to-electric-blue text-white shadow-sm hover:scale-[1.02] transition-all relative overflow-hidden group disabled:opacity-30"
                 >
                   <div className="absolute inset-0 bg-white/20 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-700 ease-in-out"></div>
                   <span className="hidden sm:inline">{language === "vi" ? "Câu tiếp theo" : "Next Question"}</span>
                   <span className="inline sm:hidden">{language === "vi" ? "Tiếp theo" : "Next"}</span>
-                  <FaArrowRight size={12} />
+                  <FaArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 </button>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16">
-              <FaQuestionCircle className="text-outline opacity-40 animate-pulse" size={64} />
-              <p className="text-on-surface-variant">
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 py-10 sm:py-16">
+              <FaQuestionCircle className="text-outline opacity-40 animate-pulse" size={48} />
+              <p className="text-xs sm:text-sm text-on-surface-variant">
                 {language === "vi" ? "Không tìm thấy câu hỏi phù hợp." : "No questions fit the current filters."}
               </p>
             </div>

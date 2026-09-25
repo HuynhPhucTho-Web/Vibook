@@ -470,6 +470,7 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
     const likes = {
       Like: 0,
       Love: 0,
+      Care: 0,
       Haha: 0,
       Wow: 0,
       Sad: 0,

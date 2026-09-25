@@ -2,12 +2,12 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../components/firebase';
 import { VideoPlayerContext } from '../../context/VideoPlayerContext';
-import { FaMinus } from 'react-icons/fa';
+import { FaMinus, FaTimes } from 'react-icons/fa';
 
 const VideoDetail = ({ selectedVideo, videoStats, comments }) => {
   const currentUser = auth.currentUser;
   const navigate = useNavigate();
-  const { setIsMinimized } = useContext(VideoPlayerContext);
+  const { setIsMinimized, setSelectedVideo } = useContext(VideoPlayerContext);
 
   return (
     <div className="space-y-4">
@@ -44,10 +44,17 @@ const VideoDetail = ({ selectedVideo, videoStats, comments }) => {
                 setIsMinimized(false);
                 navigate("/feed");
               }}
-              className="bg-white/10 hover:bg-white/20 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-white border-none cursor-pointer"
+              className="bg-white/10 hover:bg-white/20 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-white border-none cursor-pointer transition-colors"
               title="Thu nhỏ và về trang chủ"
             >
               <FaMinus size={10} /> Thu nhỏ
+            </button>
+            <button
+              onClick={() => setSelectedVideo(null)}
+              className="bg-red-500/15 hover:bg-red-500/25 text-red-400 hover:text-red-300 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border border-red-500/20 cursor-pointer transition-colors"
+              title="Đóng video và về danh sách"
+            >
+              <FaTimes size={11} /> Đóng
             </button>
             <div className="bg-white/10 flex items-center rounded-full px-3 py-1.5 text-sm font-medium">
               👍 {parseInt(videoStats?.likeCount).toLocaleString() || 'Like'} | 👎

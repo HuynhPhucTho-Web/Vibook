@@ -1,5 +1,5 @@
 // src/components/header/NotificationPopover.jsx
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,64 +28,12 @@ const NotificationPopover = ({
   onMarkAsRead,
   onMarkAllAsRead,
   latestNewNotificationId = null,
-  autoDismissTrigger = 0,
-  autoDismissDuration = 5000,
 }) => {
   const navigate = useNavigate();
   const isLight = theme === "light";
 
   // Filter state: 'all' | 'unread' | 'study'
   const [activeTab, setActiveTab] = useState("all");
-
-  // Timer & progress bar states
-  const [remainingTime, setRemainingTime] = useState(autoDismissDuration);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isTimerActive, setIsTimerActive] = useState(false);
-  const intervalRef = useRef(null);
-
-  // Restart auto-dismiss timer whenever popover opens or a new notification triggers it
-  useEffect(() => {
-    if (!isOpen) {
-      setIsTimerActive(false);
-      clearInterval(intervalRef.current);
-      return;
-    }
-
-    setRemainingTime(autoDismissDuration);
-    setIsPaused(false);
-    setIsTimerActive(true);
-  }, [isOpen, autoDismissTrigger, autoDismissDuration]);
-
-  // Interval loop for smooth countdown and progress bar width
-  useEffect(() => {
-    if (!isOpen || !isTimerActive || isPaused) {
-      clearInterval(intervalRef.current);
-      return;
-    }
-
-    const stepMs = 50;
-    intervalRef.current = setInterval(() => {
-      setRemainingTime((prev) => {
-        const next = prev - stepMs;
-        if (next <= 0) {
-          clearInterval(intervalRef.current);
-          onClose?.();
-          return 0;
-        }
-        return next;
-      });
-    }, stepMs);
-
-    return () => clearInterval(intervalRef.current);
-  }, [isOpen, isTimerActive, isPaused, onClose]);
-
-  const handleMouseEnter = () => {
-    setIsPaused(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsPaused(false);
-  };
 
   // Filter notifications based on tab
   const filteredNotifications = useMemo(() => {
@@ -178,8 +126,6 @@ const NotificationPopover = ({
     }
   };
 
-  const progressPercent = Math.max(0, Math.min(100, (remainingTime / autoDismissDuration) * 100));
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -199,19 +145,7 @@ const NotificationPopover = ({
               ? "bg-white text-gray-900 border border-gray-100 shadow-[0_16px_40px_-10px_rgba(0,0,0,0.16),0_0_1px_rgba(0,0,0,0.08)]"
               : "bg-[#151622] text-[#e3e1ec] border border-white/10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8),0_0_16px_rgba(142,84,233,0.15)]"
           }`}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
         >
-          {/* Top auto-dismiss progress bar */}
-          {isTimerActive && (
-            <div className="h-[2.5px] w-full bg-purple-100/40 dark:bg-surface-bright/30 relative overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-neon-purple via-purple-500 to-electric-blue transition-all duration-75 ease-linear shadow-[0_0_8px_rgba(142,84,233,0.8)]"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          )}
-
           {/* Header (Compact) */}
           <div
             className={`px-4 py-2.5 flex items-center justify-between border-b ${
@@ -219,7 +153,7 @@ const NotificationPopover = ({
             }`}
           >
             <div className="flex items-center gap-1.5">
-              <h4 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-white">
+              <h4 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-white mb-0">
                 Thông báo
               </h4>
               {unreadCount > 0 && (
@@ -229,20 +163,23 @@ const NotificationPopover = ({
               )}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               {unreadCount > 0 && (
                 <button
                   type="button"
-                  onClick={() => onMarkAllAsRead?.()}
-                  className={`text-[11px] px-2 py-0.5 rounded-md flex items-center gap-1 font-medium transition-all ${
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMarkAllAsRead?.();
+                  }}
+                  className={`text-[11px] px-2 py-0.5 rounded-lg flex items-center gap-1 font-medium transition-all ${
                     isLight
-                      ? "text-gray-500 hover:text-purple-600 hover:bg-purple-50"
-                      : "text-on-surface-variant hover:text-primary hover:bg-surface-bright/40"
+                      ? "text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                      : "text-purple-400 hover:text-purple-300 hover:bg-purple-950/40"
                   }`}
-                  title="Đánh dấu tất cả đã đọc"
+                  title="Đánh dấu tất cả là đã đọc"
                 >
-                  <CheckCheck className="w-3 h-3" />
-                  <span>Đã đọc</span>
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  <span>Đọc tất cả</span>
                 </button>
               )}
 
@@ -442,22 +379,33 @@ const NotificationPopover = ({
 
           {/* Footer (Compact) */}
           <div
-            className={`px-4 py-2 border-t flex items-center justify-between text-[11px] ${
+            className={`px-4 py-2.5 border-t flex items-center justify-between text-[11px] ${
               isLight ? "border-gray-100 bg-gray-50/40" : "border-white/5 bg-white/[0.02]"
             }`}
           >
-            <span className="font-medium flex items-center gap-1">
-              {isPaused ? (
-                <span className="text-amber-500 font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  Đã tạm dừng ẩn
-                </span>
-              ) : (
-                <span className="text-gray-400 dark:text-gray-500 font-mono">
-                  Tự ẩn trong {Math.ceil(remainingTime / 1000)}s
-                </span>
-              )}
-            </span>
+            {unreadCount > 0 ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMarkAllAsRead?.();
+                }}
+                className={`font-semibold flex items-center gap-1.5 transition-colors ${
+                  isLight
+                    ? "text-purple-600 hover:text-purple-700"
+                    : "text-neon-purple hover:text-purple-300"
+                }`}
+                title="Đánh dấu tất cả thông báo là đã đọc"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>Đánh dấu đọc tất cả</span>
+              </button>
+            ) : (
+              <span className="text-gray-400 dark:text-gray-500 flex items-center gap-1 font-medium">
+                <CheckCheck className="w-3.5 h-3.5 opacity-60" />
+                <span>Đã đọc tất cả</span>
+              </span>
+            )}
 
             <Link
               to="/notifications"

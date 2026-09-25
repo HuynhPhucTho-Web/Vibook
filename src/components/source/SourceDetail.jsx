@@ -36,7 +36,7 @@ export default function SourceDetail({ subject, onBack }) {
   };
 
   return (
-    <div className={`min-h-screen w-full px-4 py-8 md:px-8 transition-colors duration-300 relative ${
+    <div className={`min-h-screen w-full px-2.5 py-3 sm:px-4 sm:py-6 md:px-8 transition-colors duration-300 relative ${
       isDark ? "bg-[#12131a] text-[#e3e1ec]" : "bg-[#faf7f2] text-[#162033]"
     }`}>
       {/* Decorative Blur Backgrounds (only in dark mode) */}
@@ -48,45 +48,45 @@ export default function SourceDetail({ subject, onBack }) {
       )}
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto flex flex-col gap-8 relative z-10 w-full">
+      <div className="max-w-7xl mx-auto flex flex-col gap-3 sm:gap-6 relative z-10 w-full">
         
         {/* Top Breadcrumb & Title Area */}
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-2 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={handleBack}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm border ${
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shadow-sm border flex-shrink-0 ${
                 isDark
                   ? "bg-glass-surface border-glass-border hover:bg-white/10 hover:border-primary/50 text-on-surface"
                   : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
               }`}
             >
-              <FaArrowLeft size={16} />
+              <FaArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="px-2 py-0.5 rounded text-label-sm font-label-sm bg-primary/20 text-primary border border-primary/30 tracking-wider">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 mb-0.5 sm:mb-1">
+                <span className="px-1.5 py-0.5 sm:px-2 rounded text-[11px] sm:text-xs font-semibold bg-primary/20 text-primary border border-primary/30 tracking-wider">
                   {subject.code}
                 </span>
-                <span className={`px-2 py-0.5 rounded text-label-sm font-label-sm border ${
+                <span className={`px-1.5 py-0.5 sm:px-2 rounded text-[11px] sm:text-xs font-semibold border ${
                   isDark ? "bg-tertiary/20 text-tertiary border-tertiary/30" : "bg-orange-100 text-orange-600 border-orange-200"
                 }`}>
                   {subject.badge}
                 </span>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold tracking-tight truncate">
                 {subject.name}
               </h1>
             </div>
           </div>
 
           {/* Tab Switcher */}
-          <div className={`flex gap-2 p-1 rounded-xl w-fit shadow-inner ${
+          <div className={`flex gap-1.5 sm:gap-2 p-1 rounded-lg sm:rounded-xl w-fit shadow-inner ${
             isDark ? "bg-[#1e1f27]" : "bg-slate-200/60"
           }`}>
             <button
               onClick={() => handleTabChange("document")}
-              className={`relative px-6 py-2 rounded-lg text-body-md font-body-md transition-all duration-300 group overflow-hidden ${
+              className={`relative px-3.5 py-1.5 sm:px-6 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 group overflow-hidden ${
                 activeTab === "document"
                   ? "text-white"
                   : isDark
@@ -103,7 +103,7 @@ export default function SourceDetail({ subject, onBack }) {
             </button>
             <button
               onClick={() => handleTabChange("quiz")}
-              className={`relative px-6 py-2 rounded-lg text-body-md font-body-md transition-all duration-300 group overflow-hidden ${
+              className={`relative px-3.5 py-1.5 sm:px-6 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 group overflow-hidden ${
                 activeTab === "quiz"
                   ? "text-white"
                   : isDark

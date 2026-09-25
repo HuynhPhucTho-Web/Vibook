@@ -101,13 +101,13 @@ export default function SourceDocDetail({ subject, isDark, language }) {
   }, [selectedDoc, subject.id]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-280px)] lg:min-h-[600px] w-full">
+    <div className="flex flex-col lg:flex-row gap-3 sm:gap-6 lg:h-[calc(100vh-280px)] lg:min-h-[600px] w-full">
       {/* Left side list of documents */}
-      <div className="w-full lg:w-[350px] flex-shrink-0 flex flex-col gap-4 max-h-[380px] lg:max-h-none">
+      <div className="w-full lg:w-[350px] flex-shrink-0 flex flex-col gap-2.5 sm:gap-4 lg:max-h-none">
         <div className="relative flex items-center mb-1">
-          <FaSearch className={`absolute left-3 ${isDark ? "text-outline" : "text-slate-400"}`} size={16} />
+          <FaSearch className={`absolute left-3 ${isDark ? "text-outline" : "text-slate-400"}`} size={14} />
           <input
-            className={`w-full border rounded-lg py-2 pl-10 pr-4 text-body-md transition-all ${
+            className={`w-full border rounded-lg py-1.5 sm:py-2 pl-9 pr-3 text-xs sm:text-sm transition-all ${
               isDark
                 ? "bg-[#0c0d14] border-white/10 text-white placeholder:text-zinc-500 focus:border-electric-blue focus:bg-[#1e1f27]"
                 : "bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary"
@@ -120,15 +120,15 @@ export default function SourceDocDetail({ subject, isDark, language }) {
         </div>
 
         {/* Scrollable list */}
-        <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+        <div className="flex-1 lg:overflow-y-auto pr-0 lg:pr-2 space-y-2 sm:space-y-3 custom-scrollbar">
           {filteredDocs.map((doc) => {
             const isSelected = selectedDoc?.id === doc.id;
             const isPpt = isPresentationDoc(doc);
             return (
               <div
                 key={doc.id}
-                onClick={() => setSelectedDoc(doc)}
-                className={`group p-4 rounded-xl cursor-pointer transition-all border ${
+                onClick={() => setSelectedDoc(isSelected ? null : doc)}
+                className={`group p-2.5 sm:p-3.5 rounded-xl cursor-pointer transition-all border ${
                   isSelected
                     ? isDark
                       ? isPpt
@@ -142,9 +142,9 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                       : "bg-white border-slate-200 hover:bg-slate-50 shadow-sm"
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2.5 sm:gap-3">
                   <div
-                    className={`mt-1 w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${
+                    className={`mt-0.5 w-7 h-7 sm:w-8 sm:h-8 rounded flex items-center justify-center flex-shrink-0 ${
                       isSelected
                         ? isPpt
                           ? "bg-amber-500/20"
@@ -154,7 +154,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                           : "bg-slate-100 border border-slate-200"
                     }`}
                   >
-                    <FaFileAlt className={`text-[16px] ${
+                    <FaFileAlt className={`text-[13px] sm:text-[15px] ${
                       isSelected
                         ? isPpt
                           ? "text-amber-500"
@@ -163,7 +163,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                     }`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
                       <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
                         isPpt
                           ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
@@ -173,7 +173,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                       </span>
                     </div>
                     <h3
-                      className={`font-body-md text-body-md truncate font-medium ${
+                      className={`text-xs sm:text-sm truncate font-semibold ${
                         isSelected
                           ? isPpt
                             ? "text-amber-600 dark:text-amber-400 font-bold"
@@ -183,7 +183,7 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                     >
                       {doc.name}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1 text-label-sm font-label-sm text-outline">
+                    <div className="flex items-center gap-2 mt-0.5 text-[11px] sm:text-xs text-outline">
                       <span>{doc.size}</span>
                       <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
                       <span className="truncate">{doc.moduleName}</span>
@@ -191,27 +191,140 @@ export default function SourceDocDetail({ subject, isDark, language }) {
                   </div>
                 </div>
 
-                {/* Selectable item actions */}
+                {/* Mobile action button */}
+                <div className="lg:hidden flex items-center gap-2 mt-2 pt-2 border-t border-glass-border/30">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedDoc(isSelected ? null : doc);
+                    }}
+                    className={`flex-1 py-1 rounded text-white text-xs font-medium hover:brightness-110 transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer ${
+                      isSelected
+                        ? "bg-slate-600 hover:bg-slate-700 text-slate-200"
+                        : isPpt
+                          ? "bg-amber-600 hover:bg-amber-700"
+                          : "bg-primary"
+                    }`}
+                  >
+                    <FaEye size={12} />
+                    {isSelected
+                      ? (language === "vi" ? "Thu gọn xem trước" : "Collapse Preview")
+                      : language === "vi"
+                        ? (isPpt ? "Xem tài liệu PPT" : "Xem tài liệu")
+                        : (isPpt ? "View PPT" : "View Document")}
+                  </button>
+                </div>
+
+                {/* Inline Mobile Document Viewer Bar and Frame */}
                 {isSelected && (
-                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-glass-border">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (!currentUser) {
-                          window.location.href = "/login?from=" + encodeURIComponent(window.location.pathname);
-                        } else {
-                          window.open(getDocumentViewUrl(doc.pptUrl || doc.pdfUrl), "_blank");
-                        }
-                      }}
-                      className={`flex-1 py-1.5 rounded text-white text-label-sm font-label-sm hover:brightness-110 transition-all flex items-center justify-center gap-1.5 font-bold text-center border-none cursor-pointer ${
-                        isPpt ? "bg-amber-600 hover:bg-amber-700" : "bg-primary"
-                      }`}
-                    >
-                      <FaEye size={13} />
-                      {language === "vi"
-                        ? isPpt ? "Xem tài liệu PPT" : "Xem tài liệu"
-                        : isPpt ? "View PPT" : "Open Document"}
-                    </button>
+                  <div className="lg:hidden mt-2 pt-2 border-t border-glass-border/30 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                    {/* Document Header Details Bar */}
+                    <div className={`py-1.5 px-2.5 rounded-lg border flex flex-wrap items-center justify-between gap-1.5 ${
+                      isDark ? "bg-[#12131a] border-white/10" : "bg-slate-50 border-slate-200"
+                    }`}>
+                      <div className="flex items-center gap-1.5 min-w-0 max-w-[55%] sm:max-w-none">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
+                          isPpt
+                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                            : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30"
+                        }`}>
+                          {isPpt ? "PPT" : "PDF"}
+                        </span>
+                        <span className="text-xs truncate font-medium">
+                          {doc.name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        {currentUser && (
+                          <>
+                            {/* Download Button */}
+                            <a
+                              href={getDocumentDownloadUrl(doc.pdfUrl || doc.pptUrl)}
+                              download
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={language === "vi" ? (isPpt ? "Tải xuống PowerPoint (.ppt)" : "Tải xuống PDF") : "Download"}
+                              className={`p-1 sm:p-1.5 rounded border transition-colors flex items-center justify-center gap-1 no-underline ${
+                                isDark
+                                  ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
+                                  : "hover:bg-black/5 border-slate-200 text-slate-600"
+                              }`}
+                            >
+                              <FaDownload size={11} />
+                              <span className="text-[10px] font-bold hidden sm:inline">
+                                {isPpt ? "Tải PPT" : (language === "vi" ? "Tải" : "Download")}
+                              </span>
+                            </a>
+
+                            {/* Open in New Tab Button */}
+                            <a
+                              href={getDocumentViewUrl(doc.pdfUrl || doc.pptUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={language === "vi" ? "Mở trong tab mới" : "Open in new tab"}
+                              className={`p-1 sm:p-1.5 rounded border transition-colors flex items-center justify-center gap-1 no-underline ${
+                                isDark
+                                  ? "hover:bg-white/10 border-white/10 text-on-surface-variant"
+                                  : "hover:bg-black/5 border-slate-200 text-slate-600"
+                              }`}
+                            >
+                              <FaEye size={11} />
+                              <span className="text-[10px] font-bold hidden sm:inline">
+                                {language === "vi" ? "Mở tab" : "Open Tab"}
+                              </span>
+                            </a>
+
+                            <div className={`w-px h-4 mx-0.5 ${isDark ? "bg-glass-border" : "bg-slate-200"}`}></div>
+
+                            {/* Print Button */}
+                            <a
+                              href={getDocumentPreviewUrl(doc.pdfUrl || doc.pptUrl)}
+                              target="_blank"
+                              rel="noreferrer"
+                              title={language === "vi" ? "In tài liệu" : "Print"}
+                              className={`p-1 rounded transition-colors flex items-center justify-center ${
+                                isDark ? "hover:bg-white/10 text-on-surface-variant" : "hover:bg-black/5 text-slate-600"
+                              }`}
+                            >
+                              <FaPrint size={11} />
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Small Document Preview Frame */}
+                    <div className="w-full h-[250px] sm:h-[320px] rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-900/5 relative shadow-inner">
+                      {!currentUser ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gray-50/50 dark:bg-gray-900/50">
+                          <FaFileAlt className="text-red-500 mb-2" size={20} />
+                          <h5 className="text-xs font-bold mb-1 text-gray-800 dark:text-gray-100">
+                            {language === "vi" ? "Tài liệu này yêu cầu đăng nhập" : "Authentication Required"}
+                          </h5>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2 max-w-xs">
+                            {language === "vi" 
+                              ? "Vui lòng đăng nhập tài khoản ThoDev để xem tài liệu này." 
+                              : "Please sign in to view this document."}
+                          </p>
+                          <a
+                            href={`/login?from=${encodeURIComponent(window.location.pathname)}`}
+                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold no-underline"
+                          >
+                            {language === "vi" ? "Đăng nhập ngay" : "Login Now"}
+                          </a>
+                        </div>
+                      ) : (
+                        <iframe
+                          key={doc.id}
+                          src={getDocumentPreviewUrl(doc.pdfUrl || doc.pptUrl || doc.url)}
+                          className="w-full h-full bg-white border-0"
+                          title={doc.name}
+                          allow="autoplay; fullscreen"
+                          allowFullScreen
+                        ></iframe>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -226,8 +339,8 @@ export default function SourceDocDetail({ subject, isDark, language }) {
         </div>
       </div>
 
-      {/* Right side PDF viewer panel */}
-      <div className={`flex-1 min-h-[550px] lg:min-h-0 rounded-2xl border shadow-lg flex flex-col overflow-hidden relative ${
+      {/* Right side PDF viewer panel (Desktop only) */}
+      <div className={`hidden lg:flex flex-1 min-h-0 rounded-2xl border shadow-lg flex-col overflow-hidden relative ${
         isDark ? "bg-[#1e1f27]/50 border-white/10" : "bg-white border-slate-200"
       }`}>
         {selectedDoc ? (

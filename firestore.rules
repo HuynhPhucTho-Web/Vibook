@@ -118,10 +118,11 @@ service cloud.firestore {
         let newLikes = request.resource.data.likes;
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reactedBy'])
           && request.resource.data.reactedBy.diff(resource.data.reactedBy).affectedKeys().hasOnly([request.auth.uid])
-          && request.resource.data.reactedBy.get(request.auth.uid, null) in [null, 'Like', 'Love', 'Haha', 'Wow', 'Sad', 'Angry']
-          && newLikes.diff(oldLikes).affectedKeys().hasOnly(['Like', 'Love', 'Haha', 'Wow', 'Sad', 'Angry'])
+          && request.resource.data.reactedBy.get(request.auth.uid, null) in [null, 'Like', 'Love', 'Care', 'Haha', 'Wow', 'Sad', 'Angry']
+          && newLikes.diff(oldLikes).affectedKeys().hasOnly(['Like', 'Love', 'Care', 'Haha', 'Wow', 'Sad', 'Angry'])
           && newLikes.get('Like', 0) >= 0
           && newLikes.get('Love', 0) >= 0
+          && newLikes.get('Care', 0) >= 0
           && newLikes.get('Haha', 0) >= 0
           && newLikes.get('Wow', 0) >= 0
           && newLikes.get('Sad', 0) >= 0

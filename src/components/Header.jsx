@@ -43,7 +43,6 @@ const Header = () => {
   const [notifications, setNotifications] = useState([]);
   const [notificationPopoverOpen, setNotificationPopoverOpen] = useState(false);
   const [latestNewNotificationId, setLatestNewNotificationId] = useState(null);
-  const [autoDismissTrigger, setAutoDismissTrigger] = useState(0);
   const notificationRef = useRef(null);
   const { keyword: searchValue, setKeyword: setSearchValue, searchConfig } = useSearch();
   const [searchFocused, setSearchFocused] = useState(false);
@@ -194,18 +193,11 @@ const Header = () => {
           return;
         }
 
-        // Tự động bật mở popup thông báo trên Header và kích hoạt đếm ngược 5 giây khi có thông báo mới (chỉ trên Desktop)
+        // Lưu thông báo mới nhất để làm nổi bật khi mở popup
         const addedChanges = snapshot.docChanges().filter((c) => c.type === "added");
         if (addedChanges.length > 0) {
           const newestDoc = addedChanges[0].doc;
-          const newestData = newestDoc.data();
           setLatestNewNotificationId(newestDoc.id);
-
-          // Chỉ tự động mở popover trên màn hình Desktop (>= 768px)
-          if (typeof window !== "undefined" && window.innerWidth >= 768) {
-            setNotificationPopoverOpen(true);
-            setAutoDismissTrigger((prev) => prev + 1);
-          }
         }
       },
       (error) => {
@@ -226,12 +218,19 @@ const Header = () => {
   }, []);
 
   const handleMarkAllAsRead = useCallback(async () => {
+    if (!authUser) return;
     try {
-      const unreadItems = notifications.filter((n) => !n.read);
-      if (unreadItems.length === 0) return;
+      const q = query(
+        collection(db, "Notifications"),
+        where("userId", "==", authUser.uid)
+      );
+      const snapshot = await getDocs(q);
+      const unreadDocs = snapshot.docs.filter((d) => !d.data().read);
+      if (unreadDocs.length === 0) return;
+
       const batch = writeBatch(db);
-      unreadItems.forEach((n) => {
-        batch.update(doc(db, "Notifications", n.id), { read: true });
+      unreadDocs.forEach((d) => {
+        batch.update(d.ref, { read: true });
       });
       await batch.commit();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
@@ -239,7 +238,7 @@ const Header = () => {
     } catch (err) {
       console.error("Error marking all read:", err);
     }
-  }, [notifications]);
+  }, [authUser]);
 
   useEffect(() => {
     if (!authUser) {
@@ -503,8 +502,6 @@ const Header = () => {
               onMarkAsRead={handleMarkAsRead}
               onMarkAllAsRead={handleMarkAllAsRead}
               latestNewNotificationId={latestNewNotificationId}
-              autoDismissTrigger={autoDismissTrigger}
-              autoDismissDuration={5000}
               isAuthenticated={Boolean(authUser)}
               userMenuOpen={userMenuOpen}
               setUserMenuOpen={setUserMenuOpen}

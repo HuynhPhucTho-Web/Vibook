@@ -21,8 +21,6 @@ const HeaderRightActions = ({
   onMarkAsRead,
   onMarkAllAsRead,
   latestNewNotificationId,
-  autoDismissTrigger = 0,
-  autoDismissDuration = 5000,
   isAuthenticated = Boolean(auth.currentUser),
 
   userMenuOpen,
@@ -132,8 +130,6 @@ const HeaderRightActions = ({
           onMarkAsRead={onMarkAsRead}
           onMarkAllAsRead={onMarkAllAsRead}
           latestNewNotificationId={latestNewNotificationId}
-          autoDismissTrigger={autoDismissTrigger}
-          autoDismissDuration={autoDismissDuration}
         />
       </div>
 

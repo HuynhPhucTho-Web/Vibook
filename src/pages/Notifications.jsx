@@ -31,6 +31,7 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [userDetails, setUserDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
 
   useEffect(() => {
     let unsubscribeAuth = null;
@@ -136,6 +137,7 @@ const Notifications = () => {
   }, []);
 
   const handleMarkAllAsRead = useCallback(async () => {
+    if (!auth.currentUser) return;
     try {
       const unreadNotifications = notifications.filter((notif) => !notif.read);
 
@@ -144,6 +146,7 @@ const Notifications = () => {
         return;
       }
 
+      setIsMarkingAll(true);
       const batch = writeBatch(db);
       unreadNotifications.forEach((notif) => {
         batch.update(doc(db, "Notifications", notif.id), { read: true });
@@ -151,12 +154,15 @@ const Notifications = () => {
 
       await batch.commit();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      toast.success(`Đã đánh dấu ${unreadNotifications.length} thông báo là đã đọc`, {
+      toast.success("Đã đánh dấu tất cả là đã đọc", {
         position: "top-center",
-        autoClose: 1000,
+        autoClose: 1200,
       });
-    } catch {
+    } catch (error) {
+      console.error("Error marking all read:", error);
       toast.error("Không thể đánh dấu đã đọc", { position: "top-center" });
+    } finally {
+      setIsMarkingAll(false);
     }
   }, [notifications]);
 
@@ -346,21 +352,25 @@ const Notifications = () => {
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-neon-purple to-electric-blue hover:opacity-90 text-white text-xs font-semibold shadow-[0_0_15px_rgba(142,84,233,0.3)] transition-all flex items-center gap-1.5"
-                onClick={handleMarkAllAsRead}
-              >
-                <FaCheckCircle className="text-xs" />
-                <span>Đánh dấu đã đọc</span>
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={unreadCount === 0 || isMarkingAll}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                unreadCount > 0
+                  ? "bg-gradient-to-r from-neon-purple to-electric-blue hover:opacity-90 text-white shadow-[0_0_15px_rgba(142,84,233,0.3)] cursor-pointer active:scale-95"
+                  : "bg-surface-bright/20 text-on-surface-variant/40 border border-glass-border cursor-not-allowed"
+              }`}
+              onClick={handleMarkAllAsRead}
+              title={unreadCount > 0 ? "Đánh dấu tất cả thông báo là đã đọc" : "Không có thông báo chưa đọc"}
+            >
+              <FaCheckCircle className="text-xs" />
+              <span>{isMarkingAll ? "Đang xử lý..." : "Đánh dấu đọc tất cả"}</span>
+            </button>
 
             {readCount > 0 && (
               <button
                 type="button"
-                className="px-3 py-1.5 rounded-xl border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-xl border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-all flex items-center gap-1.5 active:scale-95"
                 onClick={handleDeleteReadNotifications}
                 title="Xóa tất cả thông báo đã đọc"
               >
@@ -371,7 +381,7 @@ const Notifications = () => {
 
             <button
               type="button"
-              className="px-3 py-1.5 rounded-xl border border-glass-border text-on-surface-variant hover:bg-surface-bright/40 text-xs font-medium transition-all flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl border border-glass-border text-on-surface-variant hover:bg-surface-bright/40 text-xs font-medium transition-all flex items-center gap-1.5 active:scale-95"
               onClick={handleDeleteOldNotifications}
               title="Xóa thông báo cũ hơn 3 ngày"
             >
@@ -436,6 +446,25 @@ const Notifications = () => {
           </button>
         )}
       </div>
+
+      {/* Quick banner for unread tab */}
+      {activeTab === "unread" && unreadCount > 0 && (
+        <div className="flex items-center justify-between p-3 mb-4 rounded-xl bg-neon-purple/10 border border-neon-purple/30 text-xs">
+          <div className="flex items-center gap-2 text-on-surface">
+            <span className="w-2 h-2 rounded-full bg-neon-purple animate-ping" />
+            <span>Bạn có <strong>{unreadCount}</strong> thông báo chưa đọc</span>
+          </div>
+          <button
+            type="button"
+            disabled={isMarkingAll}
+            onClick={handleMarkAllAsRead}
+            className="text-neon-purple hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+          >
+            <FaCheckCircle className="text-[11px]" />
+            <span>{isMarkingAll ? "Đang xử lý..." : "Đánh dấu đọc tất cả"}</span>
+          </button>
+        </div>
+      )}
 
       {/* Notifications List */}
       <NotificationList

@@ -4,14 +4,24 @@ import * as ite302c from "./data/ite302c";
 import * as mln122 from "./data/mln122";
 import * as mln111 from "./data/mln111";
 import * as mln131 from "./data/mln131";
-import * as prm393c from "./data/prm393c";
+// import * as prm393c from "./data/prm393c";
 import * as pmg201c from "./data/pmg201c";
 import * as hcm202 from "./data/hcm202";
 import * as vnr202 from "./data/vnr202";
+import * as lae101 from "./data/lae101";
 
 
 // 2. Concatenate arrays flatly
-const subjects = [dps201c.subject, ite302c.subject, mln122.subject, mln111.subject, mln131.subject, prm393c.subject, pmg201c.subject, hcm202.subject, vnr202.subject];
+const subjects = [
+  dps201c.subject,
+  ite302c.subject,
+  mln122.subject,
+  mln111.subject,
+  mln131.subject,
+  pmg201c.subject,
+  hcm202.subject,
+  vnr202.subject,
+  lae101.subject];
 
 const modules = [
   ...dps201c.modules,
@@ -19,22 +29,22 @@ const modules = [
   ...mln122.modules,
   ...mln111.modules,
   ...mln131.modules,
-  ...prm393c.modules,
   ...pmg201c.modules,
   ...hcm202.modules,
-  ...vnr202.modules
+  ...vnr202.modules,
+  ...lae101.modules
 ];
 
 const documents = [
   ...dps201c.documents,
   ...ite302c.documents,
   ...mln122.documents,
-  ...mln111.documents, 
+  ...mln111.documents,
   ...mln131.documents,
-  ...prm393c.documents,
   ...pmg201c.documents,
   ...hcm202.documents,
-  ...vnr202.documents
+  ...vnr202.documents,
+  ...lae101.documents
 ];
 
 const questions = [
@@ -43,10 +53,10 @@ const questions = [
   ...mln122.questions,
   ...mln111.questions,
   ...mln131.questions,
-  ...prm393c.questions,
   ...pmg201c.questions,
   ...hcm202.questions,
-  ...vnr202.questions
+  ...vnr202.questions,
+  ...lae101.questions
 ];
 
 // 3. Dynamic assembly mapper
@@ -60,12 +70,12 @@ export const sourceData = subjects.map((subj) => {
       // Wrap questions inside the expected quiz schema structure
       const modQuizzes = modQuestions.length > 0
         ? [
-            {
-              id: `${mod.id}-quiz`,
-              name: `${mod.name} Quiz`,
-              questions: modQuestions
-            }
-          ]
+          {
+            id: `${mod.id}-quiz`,
+            name: `${mod.name} Quiz`,
+            questions: modQuestions
+          }
+        ]
         : [];
 
       return {
