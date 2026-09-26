@@ -69,7 +69,7 @@ async function generate() {
     { path: '/feed', priority: '1.0', changefreq: 'daily' },
     { path: '/blog', priority: '0.9', changefreq: 'daily' },
     { path: '/market', priority: '0.9', changefreq: 'daily' },
-    { path: '/about', priority: '0.7', changefreq: 'monthly' },
+    { path: '/about', priority: '0.8', changefreq: 'weekly' },
     { path: '/privacy-policy', priority: '0.7', changefreq: 'monthly' },
     { path: '/terms-of-service', priority: '0.7', changefreq: 'monthly' },
     { path: '/content-policy', priority: '0.7', changefreq: 'monthly' },

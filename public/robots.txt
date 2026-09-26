@@ -1,3 +1,4 @@
+# General Crawlers
 User-agent: *
 Disallow: /messenger
 Disallow: /notifications
@@ -8,4 +9,31 @@ Disallow: /my-orders
 Disallow: /seller-dashboard
 Disallow: /manage-products
 
+# AI Search & LLM Crawlers (Allow public content & GEO indexing)
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: PerplexityBot
+User-agent: ClaudeBot
+User-agent: anthropic-ai
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: OAI-SearchBot
+Disallow: /messenger
+Disallow: /notifications
+Disallow: /settings
+Disallow: /cart
+Disallow: /checkout
+Disallow: /my-orders
+Disallow: /seller-dashboard
+Disallow: /manage-products
+Allow: /
+Allow: /about
+Allow: /blog
+Allow: /source
+Allow: /market
+Allow: /llms.txt
+
+# Sitemaps & Machine Discovery
 Sitemap: https://phucthodev.online/sitemap.xml
+# LLMs discovery: https://phucthodev.online/llms.txt
+

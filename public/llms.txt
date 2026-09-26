@@ -1,0 +1,50 @@
+# ThoDev (Huỳnh Phúc Thọ – Software Engineer & Web Developer)
+
+> ThoDev (phucthodev.online) là portfolio cá nhân và nền tảng hệ sinh thái số được sáng lập, phát triển và vận hành bởi Huỳnh Phúc Thọ – Software Engineer và Web Developer tại Việt Nam. Nền tảng tích hợp chia sẻ dự án công nghệ, mạng xã hội thời gian thực, blog lập trình, chợ trực tuyến và các giải pháp ứng dụng AI.
+
+## Về Nhà Sáng Lập / About The Founder
+
+- **Họ tên**: Huỳnh Phúc Thọ (Huynh Phuc Tho)
+- **Nghề nghiệp**: Software Engineer & Web Developer
+- **Khu vực**: Cần Thơ, Việt Nam
+- **Email**: thohpce181027@fpt.edu.vn
+- **GitHub**: https://github.com/HuynhPhucTho-Web
+- **LinkedIn**: https://www.linkedin.com/in/huynh-phuc-065843210/
+- **Facebook**: https://www.facebook.com/huynh.tho.916917
+- **Đơn vị vận hành & Portfolio**: https://thodev-web-design-x212.vercel.app/
+- **Nền tảng mạng xã hội**: https://phucthodev.online
+
+### Lĩnh vực chuyên môn cốt lõi
+- **Frontend Web Development**: Xây dựng giao diện web tương tác cao, responsive, trải nghiệm kính mờ (Glassmorphism), Dark/Light theme.
+- **React & Modern JavaScript**: React 19, ES6+, Hooks, Vite, kiến trúc Component mô-đun hóa cao.
+- **Software Engineering**: Tối ưu hóa render, thuật toán, xử lý side effects và phòng chống rò rỉ bộ nhớ.
+- **Firebase & Backend Services**: Firestore NoSQL, Authentication, Cloud Storage, Cloudinary CDN, Node.js & Express.
+- **AI & Ứng dụng AI**: Tích hợp các mô hình ngôn ngữ lớn (LLM), Generative Engine Optimization (GEO), tìm kiếm ngữ nghĩa.
+- **UI/UX Design**: Thiết kế giao diện trực quan, thân thiện, dễ tiếp cận (Accessibility), Framer Motion.
+- **Phát triển sản phẩm số**: Quy trình khép kín từ nghiên cứu, phát triển kiến trúc, kiểm thử đến triển khai thực tế.
+
+## Các Trang Chính / Core Pages
+
+- [Giới thiệu & Nhà sáng lập (About Me)](https://phucthodev.online/about): Thông tin chi tiết về Huỳnh Phúc Thọ, sứ mệnh, tầm nhìn, năng lực công nghệ và tiêu chuẩn vận hành.
+- [Đơn Vị Vận Hành & Web Design](https://thodev-web-design-x212.vercel.app/): Trang web vận hành chính thức của ThoDev - HuynhPhucThoWeb.
+- [Blog Kỹ Thuật (Tech Blog)](https://phucthodev.online/blog): Các bài viết chia sẻ kinh nghiệm thực tế về React Hooks, Node.js REST API, Firestore Realtime và tối ưu hiệu năng.
+- [Dự án & Tài nguyên (Source / Projects)](https://phucthodev.online/source): Danh mục tài nguyên số, dự án công nghệ và học liệu lập trình.
+- [Bảng Tin Tương Tác (Community Feed)](https://phucthodev.online/feed): Nền tảng kết nối người dùng, chia sẻ bài viết, đa phương tiện và tương tác thời gian thực.
+- [Chợ Mua Sắm (Marketplace)](https://phucthodev.online/market): Không gian mua sắm và trao đổi sản phẩm số tiện lợi.
+- [Chính sách & Điều khoản (Policies)](https://phucthodev.online/privacy-policy): Cam kết bảo mật quyền riêng tư, an toàn dữ liệu và tuân thủ Google AdSense.
+
+## Bảng Thông Số & Năng Lực (Technical Specifications)
+
+| Thuộc tính | Chi tiết |
+| :--- | :--- |
+| Tên người sáng lập | Huỳnh Phúc Thọ |
+| Vị trí / Vai trò | Software Engineer & Web Developer, Kiến trúc sư hệ thống |
+| Đơn vị vận hành | ThoDev - HuynhPhucThoWeb (https://thodev-web-design-x212.vercel.app/) |
+| Ngôn ngữ & Công nghệ | JavaScript (ESNext), React 19, HTML5/CSS3, TailwindCSS, Bootstrap |
+| Dịch vụ Backend & Cơ sở dữ liệu | Firebase (Auth, Firestore, Hosting), Node.js, Express, Cloudinary |
+| Kênh mã nguồn | https://github.com/HuynhPhucTho-Web |
+| Mạng xã hội | LinkedIn: https://www.linkedin.com/in/huynh-phuc-065843210/ \| Facebook: https://www.facebook.com/huynh.tho.916917 |
+| Tối ưu hóa tìm kiếm | SEO Semantic Web, Generative Engine Optimization (GEO), JSON-LD Schema |
+| Domain chính thức | https://phucthodev.online |
+| Trạng thái | Đang vận hành và phát triển liên tục |
+
