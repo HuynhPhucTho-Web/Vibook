@@ -101,6 +101,7 @@ const MainLayout = () => {
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   // Set theme classes on document element immediately before rendering loading state
   // to avoid white flash in dark mode.
@@ -124,11 +125,24 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const startTime = Date.now();
+    const MIN_DISPLAY_TIME = 1100; // Đảm bảo hiệu ứng intro xuất hiện trọn vẹn
+
     const unsubscribe = auth.onAuthStateChanged((user) => {
       console.log("Auth state changed:", user);
       setUser(user);
-      setLoading(false);
+
+      const elapsed = Date.now() - startTime;
+      const delay = Math.max(0, MIN_DISPLAY_TIME - elapsed);
+
+      setTimeout(() => {
+        setIsFadingOut(true);
+        setTimeout(() => {
+          setLoading(false);
+        }, 400); // 400ms mờ dần mượt mà
+      }, delay);
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -141,33 +155,118 @@ function App() {
     };
 
     return (
-      <div className="loading-container">
-        <div className="loading-brand-wrapper">
-          <div className="loading-logo-glow">
-            <svg viewBox="0 0 100 100" width="80" height="80" className="loading-logo-svg">
+      <div className={`loading-container ${isFadingOut ? "loading-fade-out" : ""}`}>
+        {/* Subtle, soft ambient glow directly behind the card */}
+        <div className="loading-ambient-glow" />
+
+        {/* Compact, refined brand card */}
+        <div className="loading-brand-card">
+          {/* Main logo */}
+          <div className="loading-logo-wrapper">
+            <svg
+              viewBox="0 0 100 100"
+              width="76"
+              height="76"
+              className="loading-logo-svg"
+            >
               <defs>
-                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8e54e9" />
-                  <stop offset="100%" stopColor="#4776e6" />
+                <linearGradient
+                  id="logoGrad"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop offset="0%" stopColor="#a855f7" />
+                  <stop offset="50%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#38bdf8" />
                 </linearGradient>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="6" result="blur" />
+
+                <filter
+                  id="glow"
+                  x="-50%"
+                  y="-50%"
+                  width="200%"
+                  height="200%"
+                >
+                  <feGaussianBlur stdDeviation="3.5" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
               </defs>
-              <circle cx="50" cy="50" r="44" fill="none" stroke="url(#logoGrad)" strokeWidth="3" strokeDasharray="180 100" className="loading-ring-outer" />
-              <circle cx="50" cy="50" r="34" fill="none" stroke="url(#logoGrad)" strokeWidth="2" strokeDasharray="80 80" className="loading-ring-inner" opacity="0.7" />
-              <path d="M35 40 L50 65 L65 40" fill="none" stroke="url(#logoGrad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" className="loading-logo-v" />
+
+              {/* Outer rotating ring */}
+              <circle
+                cx="50"
+                cy="50"
+                r="44"
+                fill="none"
+                stroke="url(#logoGrad)"
+                strokeWidth="2.5"
+                strokeDasharray="160 115"
+                className="loading-ring-outer"
+              />
+
+              {/* Inner rotating ring */}
+              <circle
+                cx="50"
+                cy="50"
+                r="35"
+                fill="none"
+                stroke="url(#logoGrad)"
+                strokeWidth="1.5"
+                strokeDasharray="65 90"
+                opacity="0.6"
+                className="loading-ring-inner"
+              />
+
+              {/* Logo V */}
+              <path
+                d="M36 40 L50 63 L64 40"
+                fill="none"
+                stroke="url(#logoGrad)"
+                strokeWidth="5.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#glow)"
+                className="loading-logo-v"
+              />
+
+              {/* Center point */}
+              <circle
+                cx="50"
+                cy="50"
+                r="2.5"
+                fill="#ffffff"
+                className="loading-center-dot"
+              />
             </svg>
           </div>
-          <h1 className="loading-app-title">ThoDev</h1>
-          <p className="loading-app-status">{getLoadingText()}</p>
+
+          {/* Brand */}
+          <div className="loading-text">
+            <h1 className="loading-app-title">
+              <span>Tho</span>Dev
+            </h1>
+
+            <div className="loading-status-wrapper">
+              <span className="loading-status-dot" />
+              <p className="loading-app-status">
+                {getLoadingText()}
+              </p>
+            </div>
+          </div>
+
+          {/* Loading line */}
+          <div className="loading-progress">
+            <div className="loading-progress-bar" />
+          </div>
         </div>
       </div>
     );
+
   }
 
   return (

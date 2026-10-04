@@ -1,11 +1,19 @@
 /* src/style/AdSense.css */
 
-/* Hide any ad card if it is not yet filled with an ad or iframe */
-.blog-ad-card:not(.is-filled):not(:has(iframe)):not(:has(ins[data-ad-status="filled"])),
-.blog-detail-ad-container:not(.is-filled):not(:has(iframe)):not(:has(ins[data-ad-status="filled"])),
-.home-ad-container:not(.is-filled):not(:has(iframe)):not(:has(ins[data-ad-status="filled"])),
-.source-ad-card:not(.is-filled):not(:has(iframe)):not(:has(ins[data-ad-status="filled"])),
-[data-ad-card]:not(.is-filled):not(:has(iframe)):not(:has(ins[data-ad-status="filled"])) {
+/* 1. Base state: All ad containers are completely collapsed, invisible,
+   and positioned absolute so they take ZERO space in grid or flex layouts.
+   Width: 100% allows AdSense to measure availableWidth accurately. */
+.source-ad-card,
+.home-ad-container,
+.blog-ad-card,
+.blog-detail-ad-container,
+[data-ad-card] {
+  position: absolute !important;
+  left: 0;
+  width: 100%;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
   border: none !important;
@@ -13,27 +21,88 @@
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
-  min-height: 0 !important;
-  height: 0 !important;
   overflow: hidden !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
-/* Explicitly collapse containers when AdSense status is unfilled or hidden */
+.source-ad-card:not(.is-filled) ins,
+.home-ad-container:not(.is-filled) ins,
+.blog-ad-card:not(.is-filled) ins,
+.blog-detail-ad-container:not(.is-filled) ins,
+[data-ad-card]:not(.is-filled) ins {
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+}
+
+/* 2. Filled state: ONLY when AdSense confirms data-ad-status="filled" */
+.source-ad-card.is-filled,
+.home-ad-container.is-filled,
+.blog-ad-card.is-filled,
+.blog-detail-ad-container.is-filled,
+[data-ad-card].is-filled {
+  position: static !important;
+  height: auto !important;
+  min-height: 50px !important;
+  max-height: none !important;
+  padding: 16px !important;
+  margin: 16px 0 !important;
+  border-radius: 1rem !important;
+  overflow: visible !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: opacity 0.3s ease;
+}
+
+/* Light mode styles for filled ad container */
+.source-ad-card.is-filled,
+.home-ad-container.is-filled,
+.blog-ad-card.is-filled,
+.blog-detail-ad-container.is-filled,
+[data-ad-card].is-filled {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Dark mode styles for filled ad container */
+.dark .source-ad-card.is-filled,
+.dark .home-ad-container.is-filled,
+.dark .blog-ad-card.is-filled,
+.dark .blog-detail-ad-container.is-filled,
+.dark [data-ad-card].is-filled {
+  background: rgba(30, 31, 39, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* 3. Unfilled state: When ad is unfilled, rejected, blocked, or pending approval */
 .is-unfilled,
+.source-ad-card.is-unfilled,
+.home-ad-container.is-unfilled,
+.blog-ad-card.is-unfilled,
+.blog-detail-ad-container.is-unfilled,
+[data-ad-card].is-unfilled,
+.source-ad-card:has(ins[data-ad-status="unfilled"]),
+.home-ad-container:has(ins[data-ad-status="unfilled"]),
 .blog-ad-card:has(ins[data-ad-status="unfilled"]),
 .blog-detail-ad-container:has(ins[data-ad-status="unfilled"]),
-.home-ad-container:has(ins[data-ad-status="unfilled"]),
-.source-ad-card:has(ins[data-ad-status="unfilled"]),
 [data-ad-card]:has(ins[data-ad-status="unfilled"]),
+.source-ad-card:has(ins[style*="display: none"]),
+.home-ad-container:has(ins[style*="display: none"]),
 .blog-ad-card:has(ins[style*="display: none"]),
 .blog-detail-ad-container:has(ins[style*="display: none"]),
-.home-ad-container:has(ins[style*="display: none"]),
-.source-ad-card:has(ins[style*="display: none"]),
 [data-ad-card]:has(ins[style*="display: none"]),
+.source-ad-card:has(ins[style*="display:none"]),
+.home-ad-container:has(ins[style*="display:none"]),
 .blog-ad-card:has(ins[style*="display:none"]),
 .blog-detail-ad-container:has(ins[style*="display:none"]),
-.home-ad-container:has(ins[style*="display:none"]),
-.source-ad-card:has(ins[style*="display:none"]),
 [data-ad-card]:has(ins[style*="display:none"]) {
   display: none !important;
   margin: 0 !important;
@@ -42,9 +111,11 @@
   height: 0 !important;
 }
 
+/* 4. Hide unfilled or hidden AdSense ins tags */
 ins.adsbygoogle[data-ad-status="unfilled"],
 ins.adsbygoogle[style*="display: none"],
 ins.adsbygoogle[style*="display:none"] {
   display: none !important;
 }
+
 

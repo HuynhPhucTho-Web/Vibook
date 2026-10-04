@@ -294,12 +294,7 @@ export default function SourcePage() {
               <React.Fragment key={subject.id}>
                 {/* In-feed Ad unit (displays after every 4 subjects) */}
                 {index > 0 && index % 4 === 0 && (
-                  <div className="col-span-full my-2 source-ad-card" data-ad-card style={{
-                    padding: "15px",
-                    background: isDark ? "rgba(30, 31, 39, 0.6)" : "white",
-                    border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",
-                    borderRadius: "1rem"
-                  }}>
+                  <div className="col-span-full source-ad-card" data-ad-card>
                     <AdSense adSlot="4399658395" adLayoutKey="-fm-19-1a-f8+16e" />
                   </div>
                 )}

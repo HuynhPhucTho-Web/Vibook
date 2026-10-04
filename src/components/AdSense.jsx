@@ -9,6 +9,7 @@ export default function AdSense({
   className = "",
 }) {
   const insRef = useRef(null);
+  const pushedRef = useRef(false);
 
   useEffect(() => {
     const ins = insRef.current;
@@ -24,6 +25,7 @@ export default function AdSense({
       if (container) {
         container.classList.add("is-filled");
         container.classList.remove("is-unfilled");
+        container.style.removeProperty("display");
       }
     };
 
@@ -36,43 +38,60 @@ export default function AdSense({
       }
     };
 
-    // 1. Observe mutations on <ins> element for ad status updates
-    const observer = new MutationObserver(() => {
+    const checkStatus = () => {
       const status = ins.getAttribute("data-ad-status");
-      const hasIframe = ins.querySelector("iframe");
       const isHidden =
         ins.style.display === "none" ||
         (window.getComputedStyle && window.getComputedStyle(ins).display === "none");
 
-      if (status === "unfilled" || isHidden) {
-        markUnfilled();
-      } else if (status === "filled" || hasIframe) {
+      if (status === "filled" && !isHidden) {
         markFilled();
+      } else if (status === "unfilled" || isHidden) {
+        markUnfilled();
       }
+    };
+
+    // 1. Observe mutations on <ins> element for ad status updates
+    const observer = new MutationObserver(() => {
+      checkStatus();
     });
 
     observer.observe(ins, {
       attributes: true,
-      attributeFilter: ["data-ad-status", "style"],
+      attributeFilter: ["data-ad-status", "style", "class"],
       childList: true,
+      subtree: true,
     });
 
-    // 2. Request ad from AdSense
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (err) {
-      console.warn("AdSense push error:", err);
-      markUnfilled();
+    // 2. Request ad from AdSense safely (avoiding duplicate push TagError)
+    const isAlreadyInitialized =
+      ins.getAttribute("data-adsbygoogle-status") === "done" || pushedRef.current;
+
+    if (!isAlreadyInitialized) {
+      pushedRef.current = true;
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        const errMsg = err?.message || String(err);
+        if (errMsg.includes("already have ads in them")) {
+          // All elements already have ads, re-verify status without erroring out
+          checkStatus();
+        } else {
+          console.warn("AdSense push error:", err);
+          markUnfilled();
+        }
+      }
+    } else {
+      checkStatus();
     }
 
-    // 3. Fallback timeout: If ad is blocked by client or network fails, collapse after 2s
+    // 3. Fallback timeout: If ad is not filled (pending approval, unapproved, unfilled, or blocked), collapse cleanly
     const timer = setTimeout(() => {
       const status = ins.getAttribute("data-ad-status");
-      const hasIframe = ins.querySelector("iframe");
-      if (status !== "filled" && !hasIframe) {
+      if (status !== "filled") {
         markUnfilled();
       }
-    }, 2000);
+    }, 1500);
 
     return () => {
       observer.disconnect();

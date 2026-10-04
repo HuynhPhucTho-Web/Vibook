@@ -95,11 +95,12 @@ const BlogCardSkeleton = () => (
       <div className="skeleton-title skeleton-shimmer"></div>
       <div className="skeleton-desc skeleton-desc-1 skeleton-shimmer"></div>
       <div className="skeleton-desc skeleton-desc-2 skeleton-shimmer"></div>
-      <div className="skeleton-desc skeleton-desc-3 skeleton-shimmer"></div>
-      <div className="skeleton-actions">
-        <div className="skeleton-btn skeleton-btn-read skeleton-shimmer"></div>
-        <div className="skeleton-btn skeleton-btn-fav skeleton-shimmer"></div>
-        <div className="skeleton-btn skeleton-btn-action skeleton-shimmer"></div>
+      <div className="skeleton-footer">
+        <div className="skeleton-stats skeleton-shimmer"></div>
+        <div className="skeleton-actions-compact">
+          <div className="skeleton-btn-fav skeleton-shimmer"></div>
+          <div className="skeleton-btn-read skeleton-shimmer"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1276,15 +1277,7 @@ const BlogPages = () => {
                   <React.Fragment key={post.id || post.slug}>
                     {/* In-feed Ad unit (displays after every 3 posts) */}
                     {index > 0 && index % 3 === 0 && (
-                      <div className="blog-ad-card" data-ad-card style={{
-                        gridColumn: "1 / -1",
-                        margin: "15px 0",
-                        padding: "15px",
-                        background: "var(--vb-glass-surface)",
-                        border: "1px solid var(--vb-glass-border)",
-                        borderRadius: "var(--vb-radius-md)",
-                        backdropFilter: "var(--vb-glass-blur)"
-                      }}>
+                      <div className="blog-ad-card" data-ad-card style={{ gridColumn: "1 / -1" }}>
                         <AdSense adSlot="9056933175" adLayoutKey="-62+ca+8-3b+jw" />
                       </div>
                     )}
@@ -1334,14 +1327,7 @@ const BlogPages = () => {
           />
 
           {/* Detail View Ad Unit */}
-          <div className="blog-detail-ad-container px-4 my-4" data-ad-card style={{
-            margin: "20px 0",
-            padding: "15px",
-            background: "var(--vb-glass-surface)",
-            border: "1px solid var(--vb-glass-border)",
-            borderRadius: "var(--vb-radius-md)",
-            backdropFilter: "var(--vb-glass-blur)"
-          }}>
+          <div className="blog-detail-ad-container" data-ad-card>
             {/* Note: You can replace '9056933175' with a different ad slot ID from AdSense for detail page if desired */}
             <AdSense adSlot="9056933175" adFormat="auto" />
           </div>

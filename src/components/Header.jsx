@@ -124,7 +124,7 @@ const Header = () => {
     const now = new Date();
     const min = now.getMinutes();
     const hour = now.getHours();
-    const baseOffset = 25 + ((min + hour) % 15) + (hour % 6);
+    const baseOffset = 1 + ((min + hour) % 15) + (hour % 6);
     return onlineCount + baseOffset;
   }, [onlineCount]);
 
