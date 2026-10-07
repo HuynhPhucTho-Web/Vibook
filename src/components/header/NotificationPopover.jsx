@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { formatTimeAgo } from "../notification/NotificationUtils";
 
-const NotificationPopover = ({
+const NotificationPopover = React.memo(({
   isOpen,
   onClose,
   notifications = [],
@@ -140,17 +140,15 @@ const NotificationPopover = ({
             damping: 32,
             mass: 0.7,
           }}
-          className={`hidden md:block absolute right-0 top-full mt-2 w-[360px] sm:w-[385px] max-w-[94vw] rounded-[20px] z-[1000] overflow-hidden origin-top-right ${
-            isLight
+          className={`hidden md:block absolute right-0 top-full mt-2 w-[360px] sm:w-[385px] max-w-[94vw] rounded-[20px] z-[1000] overflow-hidden origin-top-right ${isLight
               ? "bg-white text-gray-900 border border-gray-100 shadow-[0_16px_40px_-10px_rgba(0,0,0,0.16),0_0_1px_rgba(0,0,0,0.08)]"
               : "bg-[#151622] text-[#e3e1ec] border border-white/10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8),0_0_16px_rgba(142,84,233,0.15)]"
-          }`}
+            }`}
         >
           {/* Header (Compact) */}
           <div
-            className={`px-4 py-2.5 flex items-center justify-between border-b ${
-              isLight ? "border-gray-100" : "border-white/5"
-            }`}
+            className={`px-4 py-2.5 flex items-center justify-between border-b ${isLight ? "border-gray-100" : "border-white/5"
+              }`}
           >
             <div className="flex items-center gap-1.5">
               <h4 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-white mb-0">
@@ -171,11 +169,10 @@ const NotificationPopover = ({
                     e.stopPropagation();
                     onMarkAllAsRead?.();
                   }}
-                  className={`text-[11px] px-2 py-0.5 rounded-lg flex items-center gap-1 font-medium transition-all ${
-                    isLight
+                  className={`text-[11px] px-2 py-0.5 rounded-lg flex items-center gap-1 font-medium transition-all ${isLight
                       ? "text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                       : "text-purple-400 hover:text-purple-300 hover:bg-purple-950/40"
-                  }`}
+                    }`}
                   title="Đánh dấu tất cả là đã đọc"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
@@ -186,11 +183,10 @@ const NotificationPopover = ({
               <button
                 type="button"
                 onClick={() => onClose?.()}
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                  isLight
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isLight
                     ? "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                     : "text-outline hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
                 title="Đóng"
                 aria-label="Đóng thông báo"
               >
@@ -201,22 +197,20 @@ const NotificationPopover = ({
 
           {/* Quick Filter Tabs (Compact) */}
           <div
-            className={`flex items-center gap-1.5 px-4 py-2 border-b text-[11px] font-medium ${
-              isLight ? "border-gray-100" : "border-white/5"
-            }`}
+            className={`flex items-center gap-1.5 px-4 py-2 border-b text-[11px] font-medium ${isLight ? "border-gray-100" : "border-white/5"
+              }`}
           >
             <button
               type="button"
               onClick={() => setActiveTab("all")}
-              className={`px-3 py-1 rounded-full transition-all duration-200 ${
-                activeTab === "all"
+              className={`px-3 py-1 rounded-full transition-all duration-200 ${activeTab === "all"
                   ? isLight
                     ? "bg-purple-100 text-purple-700 font-bold shadow-sm"
                     : "bg-purple-900/50 text-purple-200 border border-purple-500/30 font-bold"
                   : isLight
-                  ? "text-gray-500 hover:text-gray-800 hover:bg-gray-100/80"
-                  : "text-on-surface-variant hover:text-white hover:bg-white/5"
-              }`}
+                    ? "text-gray-500 hover:text-gray-800 hover:bg-gray-100/80"
+                    : "text-on-surface-variant hover:text-white hover:bg-white/5"
+                }`}
             >
               Tất cả ({notifications.length})
             </button>
@@ -224,15 +218,14 @@ const NotificationPopover = ({
             <button
               type="button"
               onClick={() => setActiveTab("unread")}
-              className={`px-3 py-1 rounded-full transition-all duration-200 ${
-                activeTab === "unread"
+              className={`px-3 py-1 rounded-full transition-all duration-200 ${activeTab === "unread"
                   ? isLight
                     ? "bg-purple-100 text-purple-700 font-bold shadow-sm"
                     : "bg-purple-900/50 text-purple-200 border border-purple-500/30 font-bold"
                   : isLight
-                  ? "text-gray-500 hover:text-gray-800 hover:bg-gray-100/80"
-                  : "text-on-surface-variant hover:text-white hover:bg-white/5"
-              }`}
+                    ? "text-gray-500 hover:text-gray-800 hover:bg-gray-100/80"
+                    : "text-on-surface-variant hover:text-white hover:bg-white/5"
+                }`}
             >
               Chưa đọc ({unreadCount})
             </button>
@@ -241,15 +234,14 @@ const NotificationPopover = ({
               <button
                 type="button"
                 onClick={() => setActiveTab("study")}
-                className={`px-3 py-1 rounded-full transition-all duration-200 ${
-                  activeTab === "study"
+                className={`px-3 py-1 rounded-full transition-all duration-200 ${activeTab === "study"
                     ? isLight
                       ? "bg-purple-100 text-purple-700 font-bold shadow-sm"
                       : "bg-purple-900/50 text-purple-200 border border-purple-500/30 font-bold"
                     : isLight
-                    ? "text-gray-500 hover:text-gray-800 hover:bg-gray-100/80"
-                    : "text-on-surface-variant hover:text-white hover:bg-white/5"
-                }`}
+                      ? "text-gray-500 hover:text-gray-800 hover:bg-gray-100/80"
+                      : "text-on-surface-variant hover:text-white hover:bg-white/5"
+                  }`}
               >
                 Học tập ({studyCount})
               </button>
@@ -287,15 +279,14 @@ const NotificationPopover = ({
                   <div
                     key={notif.id}
                     onClick={() => handleItemClick(notif)}
-                    className={`p-2.5 rounded-xl transition-all duration-200 cursor-pointer relative group my-0.5 ${
-                      isHighlight
+                    className={`p-2.5 rounded-xl transition-colors duration-150 cursor-pointer relative group my-0.5 ${isHighlight
                         ? isLight
                           ? "bg-purple-50/50 hover:bg-purple-100/50"
                           : "bg-purple-950/20 hover:bg-purple-900/30"
                         : isLight
-                        ? "hover:bg-gray-50/90 opacity-90 hover:opacity-100"
-                        : "hover:bg-white/5 opacity-80 hover:opacity-100"
-                    }`}
+                          ? "hover:bg-gray-50/90 opacity-90 hover:opacity-100"
+                          : "hover:bg-white/5 opacity-80 hover:opacity-100"
+                      }`}
                   >
                     <div className="flex items-start gap-2.5">
                       {/* Avatar / Icon with small bottom-right badge */}
@@ -308,11 +299,10 @@ const NotificationPopover = ({
                           />
                         ) : (
                           <div
-                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border shadow-sm ${
-                              isLight
+                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border shadow-sm ${isLight
                                 ? "bg-blue-50 text-blue-500 border-blue-100"
                                 : "bg-purple-900/40 text-purple-300 border-purple-700/30"
-                            }`}
+                              }`}
                           >
                             <MessageSquare className="w-4 h-4" />
                           </div>
@@ -340,11 +330,10 @@ const NotificationPopover = ({
                         </div>
 
                         <p
-                          className={`text-[12px] leading-snug line-clamp-2 ${
-                            isHighlight
+                          className={`text-[12px] leading-snug line-clamp-2 ${isHighlight
                               ? "font-medium text-gray-800 dark:text-gray-100"
                               : "text-gray-600 dark:text-gray-300"
-                          }`}
+                            }`}
                         >
                           {notif.content || "Bạn có thông báo mới."}
                         </p>
@@ -353,17 +342,17 @@ const NotificationPopover = ({
                         {(notif.type === "quiz" ||
                           notif.type === "subject_quiz" ||
                           notif.subjectCode) && (
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <button
-                              type="button"
-                              className="px-2 py-0.5 bg-gradient-to-r from-neon-purple to-electric-blue hover:opacity-95 text-white rounded-md text-[11px] font-semibold shadow-[0_0_8px_rgba(142,84,233,0.3)] transition-opacity flex items-center gap-1"
-                            >
-                              <span>Vào làm ngay</span>
-                              <ArrowRight className="w-2.5 h-2.5" />
-                            </button>
-                            <span className="text-[10px] text-gray-400">Hạn: Hôm nay</span>
-                          </div>
-                        )}
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <button
+                                type="button"
+                                className="px-2 py-0.5 bg-gradient-to-r from-neon-purple to-electric-blue hover:opacity-95 text-white rounded-md text-[11px] font-semibold shadow-[0_0_8px_rgba(142,84,233,0.3)] transition-opacity flex items-center gap-1"
+                              >
+                                <span>Vào làm ngay</span>
+                                <ArrowRight className="w-2.5 h-2.5" />
+                              </button>
+                              <span className="text-[10px] text-gray-400">Hạn: Hôm nay</span>
+                            </div>
+                          )}
                       </div>
 
                       {/* Unread pulsing dot */}
@@ -379,9 +368,8 @@ const NotificationPopover = ({
 
           {/* Footer (Compact) */}
           <div
-            className={`px-4 py-2.5 border-t flex items-center justify-between text-[11px] ${
-              isLight ? "border-gray-100 bg-gray-50/40" : "border-white/5 bg-white/[0.02]"
-            }`}
+            className={`px-4 py-2.5 border-t flex items-center justify-between text-[11px] ${isLight ? "border-gray-100 bg-gray-50/40" : "border-white/5 bg-white/[0.02]"
+              }`}
           >
             {unreadCount > 0 ? (
               <button
@@ -390,11 +378,10 @@ const NotificationPopover = ({
                   e.stopPropagation();
                   onMarkAllAsRead?.();
                 }}
-                className={`font-semibold flex items-center gap-1.5 transition-colors ${
-                  isLight
+                className={`font-semibold flex items-center gap-1.5 transition-colors ${isLight
                     ? "text-purple-600 hover:text-purple-700"
                     : "text-neon-purple hover:text-purple-300"
-                }`}
+                  }`}
                 title="Đánh dấu tất cả thông báo là đã đọc"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
@@ -420,6 +407,8 @@ const NotificationPopover = ({
       )}
     </AnimatePresence>
   );
-};
+},);
+
+NotificationPopover.displayName = "NotificationPopover";
 
 export default NotificationPopover;

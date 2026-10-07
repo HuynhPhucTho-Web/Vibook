@@ -47,7 +47,7 @@ const UserAvatar = React.memo(({ src, alt, size = 40 }) => {
   );
 });
 
-const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo }) => {
+const NotificationItem = React.memo(({ notification, onMarkAsRead, onDelete, formatTimeAgo }) => {
   const navigate = useNavigate();
 
   const handleItemClick = () => {
@@ -186,7 +186,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
   return (
     <div
       onClick={handleItemClick}
-      className={`group relative flex items-center p-3.5 sm:p-4 rounded-2xl transition-all duration-300 cursor-pointer border ${
+      className={`group relative flex items-center p-3.5 sm:p-4 rounded-2xl transition-colors duration-150 cursor-pointer border ${
         notification.read
           ? "opacity-80 hover:opacity-100 bg-surface-bright/20 hover:bg-surface-bright/40 border-glass-border"
           : "border-neon-purple/40 bg-neon-purple/10 hover:bg-neon-purple/15 shadow-[0_4px_20px_rgba(142,84,233,0.12)]"
@@ -240,7 +240,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
         )}
         <button
           type="button"
-          className="p-2 rounded-lg text-rose-400 opacity-60 group-hover:opacity-100 hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+          className="p-2 rounded-lg text-rose-400 opacity-60 group-hover:opacity-100 hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onDelete?.(notification.id);
@@ -252,6 +252,8 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, formatTimeAgo 
       </div>
     </div>
   );
-};
+});
+
+NotificationItem.displayName = "NotificationItem";
 
 export default NotificationItem;

@@ -189,8 +189,18 @@
 }
 
 .sidebar__icon {
-  font-size: 1.1rem;
+  width: 20px;
+  height: 20px;
   min-width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.sidebar__link:hover .sidebar__icon {
+  transform: scale(1.08);
 }
 
 .sidebar__label {

@@ -23,7 +23,9 @@ import {
   updateDoc,
   writeBatch,
 } from "firebase/firestore";
-import { FaSearch, FaTimes, FaBars } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
+import { MorphIcon } from "morphicons/react";
+import { Menu, X } from "lucide";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 import { auth, db } from "../components/firebase";
@@ -32,6 +34,10 @@ import SearchResults from "./header/SearchResults";
 import HeaderRightActions from "./header/HeaderRightActions";
 import { normalizeSearchText } from "../utils/postContent";
 import { useSearch } from "../context/SearchContext";
+import {
+  normalizeTimestamp,
+  isSameNotificationList,
+} from "./notification/NotificationUtils";
 import "../style/Header.css";
 
 const Header = () => {
@@ -177,44 +183,67 @@ const Header = () => {
   }, []);
 
   const isInitialNotifLoad = useRef(true);
+  const prevHeaderNotifsRef = useRef([]);
+  const notifDebounceRef = useRef(null);
+
   useEffect(() => {
     if (!authUser) {
       setUnreadCount(0);
       setNotifications([]);
+      prevHeaderNotifsRef.current = [];
       return undefined;
     }
     isInitialNotifLoad.current = true;
-    return onSnapshot(
+    const unsubscribe = onSnapshot(
       query(
         collection(db, "Notifications"),
         where("userId", "==", authUser.uid),
       ),
       (snapshot) => {
-        const allNotifs = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        }));
-        allNotifs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        setNotifications(allNotifs.slice(0, 25));
-        const unread = allNotifs.filter((n) => !n.read).length;
-        setUnreadCount(unread);
+        // Coalesce rapid burst snapshot events (local write + server ack)
+        if (notifDebounceRef.current) clearTimeout(notifDebounceRef.current);
+        notifDebounceRef.current = setTimeout(() => {
+          const allNotifs = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          }));
+          allNotifs.sort((a, b) => {
+            const timeB = normalizeTimestamp(b.createdAt);
+            const timeA = normalizeTimestamp(a.createdAt);
+            return timeB - timeA;
+          });
+          const top25 = allNotifs.slice(0, 25);
+          const unread = allNotifs.filter((n) => !n.read).length;
 
-        if (isInitialNotifLoad.current) {
-          isInitialNotifLoad.current = false;
-          return;
-        }
+          // Chỉ cập nhật notifications khi thực sự có thay đổi dữ liệu
+          if (!isSameNotificationList(prevHeaderNotifsRef.current, top25)) {
+            prevHeaderNotifsRef.current = top25;
+            setNotifications(top25);
+          }
+          setUnreadCount((prev) => (prev !== unread ? unread : prev));
 
-        // Lưu thông báo mới nhất để làm nổi bật khi mở popup
-        const addedChanges = snapshot.docChanges().filter((c) => c.type === "added");
-        if (addedChanges.length > 0) {
-          const newestDoc = addedChanges[0].doc;
-          setLatestNewNotificationId(newestDoc.id);
-        }
+          if (isInitialNotifLoad.current) {
+            isInitialNotifLoad.current = false;
+            return;
+          }
+
+          // Lưu thông báo mới nhất để làm nổi bật khi mở popup
+          const addedChanges = snapshot.docChanges().filter((c) => c.type === "added");
+          if (addedChanges.length > 0) {
+            const newestDoc = addedChanges[0].doc;
+            setLatestNewNotificationId(newestDoc.id);
+          }
+        }, 60);
       },
       (error) => {
         console.error("Error listening to notifications:", error);
       }
     );
+
+    return () => {
+      if (notifDebounceRef.current) clearTimeout(notifDebounceRef.current);
+      unsubscribe();
+    };
   }, [authUser]);
 
   const handleMarkAsRead = useCallback(async (notifId) => {
@@ -451,19 +480,20 @@ const Header = () => {
     >
       <div className="header-row relative">
         <div className="flex items-center flex-shrink-0 gap-2 sm:gap-3">
-          {/* Nút bấm mở/đóng Sidebar duy nhất trên Header - cho cả Desktop và Mobile */}
+          {/* Nút bấm mở/đóng Sidebar duy nhất trên Header - cho cả Desktop và Mobile với MorphIcon animation */}
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("toggleSidebar"))}
             className="header-sidebar-toggle"
             aria-label={mobileSidebarOpen ? (t("closeMenu") || "Thu gọn menu") : (t("openMenu") || "Mở menu")}
             title={mobileSidebarOpen ? "Thu gọn menu" : "Mở menu"}
+            aria-expanded={mobileSidebarOpen}
           >
-            {mobileSidebarOpen ? (
-              <FaTimes className="text-lg" />
-            ) : (
-              <FaBars className="text-lg" />
-            )}
+            <MorphIcon
+              icon={mobileSidebarOpen ? X : Menu}
+              size={20}
+              strokeWidth={2.2}
+            />
           </button>
 
           <Link to="/feed" className="no-underline flex items-center">

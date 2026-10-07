@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useContext, useCallback, useMemo, useRef } from "react";
 import { auth, db } from "../components/firebase";
 import {
   collection,
@@ -23,8 +23,29 @@ import {
   formatTimeAgo,
   cleanupOldNotifications,
   createNotificationIfNotExists,
-  setupNotificationListeners
+  setupNotificationListeners,
+  normalizeTimestamp,
+  isSameNotificationList,
 } from "../components/notification/NotificationUtils";
+
+const ALLOWED_NOTIFICATION_TYPES = [
+  "friend_request",
+  "friend_post",
+  "friend_message",
+  "new_blog",
+  "post_reaction",
+  "post_like",
+  "post_comment",
+  "comment_reply",
+  "comment_reaction",
+  "quiz",
+  "course",
+  "subject_quiz",
+  "subject_doc",
+  "document",
+  "post_tag",
+  "share_tag",
+];
 
 const Notifications = () => {
   const { theme } = useContext(ThemeContext);
@@ -32,27 +53,36 @@ const Notifications = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const prevNotificationsRef = useRef([]);
 
   useEffect(() => {
     let unsubscribeAuth = null;
     let unsubscribeNotifications = null;
     const activeListeners = new Set();
 
-    const setupListeners = async () => {
+    const setupListeners = () => {
       try {
-        unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+        unsubscribeAuth = auth.onAuthStateChanged((user) => {
           if (user) {
-            // Load user details
+            // Load user details async without blocking notifications listener
             const userRef = doc(db, "Users", user.uid);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-              setUserDetails(userSnap.data());
-            }
+            getDoc(userRef)
+              .then((userSnap) => {
+                if (userSnap.exists()) {
+                  setUserDetails(userSnap.data());
+                } else {
+                  setUserDetails({ displayName: user.displayName, email: user.email });
+                }
+              })
+              .catch((err) => {
+                console.error("Error loading user details:", err);
+                setUserDetails({ displayName: user.displayName, email: user.email });
+              });
 
-            // Cleanup old notifications
-            await cleanupOldNotifications(user.uid);
+            // Cleanup old notifications chạy nền (tối đa 1 lần/ngày), không chặn UI
+            cleanupOldNotifications(user.uid);
 
-            // Setup notifications listener - query theo userId không cần composite index, sort client-side
+            // Setup notifications listener - query theo userId, sắp xếp client-side ổn định
             const notificationsQuery = query(
               collection(db, "Notifications"),
               where("userId", "==", user.uid)
@@ -61,29 +91,30 @@ const Notifications = () => {
             unsubscribeNotifications = onSnapshot(
               notificationsQuery,
               (snapshot) => {
-                const allNotifications = snapshot.docs.map((doc) => ({
-                  id: doc.id,
-                  ...doc.data(),
+                const allNotifications = snapshot.docs.map((d) => ({
+                  id: d.id,
+                  ...d.data(),
                 }));
-                // Sắp xếp giảm dần theo thời gian tạo
-                allNotifications.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-                // Lấy tất cả thông báo hợp lệ của người dùng
-                const allowedTypes = [
-                  "friend_request",
-                  "friend_post",
-                  "friend_message",
-                  "new_blog",
-                  "post_reaction",
-                  "post_like",
-                  "post_comment",
-                  "comment_reply",
-                  "comment_reaction",
-                ];
+                // Sắp xếp giảm dần theo thời gian tạo chuẩn hóa
+                allNotifications.sort((a, b) => {
+                  const timeB = normalizeTimestamp(b.createdAt);
+                  const timeA = normalizeTimestamp(a.createdAt);
+                  return timeB - timeA;
+                });
+
+                // Lọc thông báo hợp lệ
                 const filteredNotifications = allNotifications.filter(
-                  (notif) => allowedTypes.includes(notif.type) || Boolean(notif.content)
+                  (notif) =>
+                    ALLOWED_NOTIFICATION_TYPES.includes(notif.type) ||
+                    Boolean(notif.content)
                 );
-                setNotifications(filteredNotifications);
+
+                // Chỉ cập nhật state nếu dữ liệu thực sự thay đổi để tránh giựt UI / re-render thừa
+                if (!isSameNotificationList(prevNotificationsRef.current, filteredNotifications)) {
+                  prevNotificationsRef.current = filteredNotifications;
+                  setNotifications(filteredNotifications);
+                }
                 setIsLoading(false);
               },
               (err) => {
@@ -92,20 +123,21 @@ const Notifications = () => {
               }
             );
 
-            // Setup listeners for creating notifications
+            // Setup listeners dự phòng cho tạo thông báo thời gian thực (đã có guard isInitial)
             const { activeListeners: listeners } = setupNotificationListeners(
               user,
               createNotificationIfNotExists
             );
-            activeListeners.add(...listeners);
-
+            if (listeners && typeof listeners.forEach === "function") {
+              listeners.forEach((unsub) => activeListeners.add(unsub));
+            }
           } else {
             setUserDetails(null);
+            prevNotificationsRef.current = [];
             setNotifications([]);
             setIsLoading(false);
           }
         });
-
       } catch (error) {
         console.error("Setup listeners error:", error);
         toast.error("Unable to load notification", { position: "top-center" });
@@ -118,9 +150,10 @@ const Notifications = () => {
     return () => {
       unsubscribeAuth && unsubscribeAuth();
       unsubscribeNotifications && unsubscribeNotifications();
-      activeListeners.forEach(unsubscribe => {
-        if (typeof unsubscribe === 'function') unsubscribe();
+      activeListeners.forEach((unsubscribe) => {
+        if (typeof unsubscribe === "function") unsubscribe();
       });
+      activeListeners.clear();
     };
   }, []);
 
@@ -309,7 +342,7 @@ const Notifications = () => {
     });
   }, [notifications, activeTab]);
 
-  if (isLoading) {
+  if (isLoading && notifications.length === 0) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
         <div className="spinner-border text-primary" role="status">
@@ -319,10 +352,10 @@ const Notifications = () => {
     );
   }
 
-  if (!userDetails) {
+  if (!auth.currentUser && !isLoading) {
     return (
       <div className="page-shell">
-        <h5 className="text-muted text-center">Vui lòng đăng nhập để xem thông báo</h5>
+        <h5 className="text-muted text-center py-10">Vui lòng đăng nhập để xem thông báo</h5>
       </div>
     );
   }

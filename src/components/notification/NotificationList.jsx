@@ -2,7 +2,7 @@ import React from "react";
 import NotificationItem from "./NotificationItem";
 import { Bell } from "lucide-react";
 
-const NotificationList = ({ notifications, onMarkAsRead, onDelete, formatTimeAgo }) => {
+const NotificationList = React.memo(({ notifications, onMarkAsRead, onDelete, formatTimeAgo }) => {
   if (notifications.length === 0) {
     return (
       <div className="text-center py-12 px-4 rounded-2xl bg-surface-bright/20 border border-glass-border">
@@ -30,6 +30,8 @@ const NotificationList = ({ notifications, onMarkAsRead, onDelete, formatTimeAgo
       ))}
     </div>
   );
-};
+});
+
+NotificationList.displayName = "NotificationList";
 
 export default NotificationList;

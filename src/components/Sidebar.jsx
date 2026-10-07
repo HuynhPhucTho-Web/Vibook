@@ -1,23 +1,25 @@
 import React, { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { MorphIcon } from "morphicons/react";
 import {
-  FaHome,
-  FaUserPlus,
-  FaUsers,
-  FaCalendarAlt,
-  FaVideo,
-  FaGamepad,
-  FaShoppingBag,
-  FaSignOutAlt,
-  FaBars,
-  FaTimes,
-  FaYoutube,
-  FaCog,
-  FaFacebookMessenger,
-  FaBlog,
-  FaInfoCircle,
-  FaBookOpen,
-} from "react-icons/fa";
+  House,
+  Users,
+  UserPlus,
+  BookOpen,
+  FileText,
+  Calendar,
+  CalendarDays,
+  Video,
+  Film,
+  Gamepad2,
+  Trophy,
+  MessageSquare,
+  MessagesSquare,
+  Settings,
+  Sliders,
+  Info,
+  GraduationCap,
+} from "lucide";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import { auth } from "../components/firebase";
@@ -37,26 +39,23 @@ const MOBILE_BREAKPOINT = 768;
 // Guest: public items + Settings (page open; private sections gated inside page).
 // Messenger locked → toast; /messenger URL still behind RequireAuth.
 const MENU = [
-  { path: "/feed", icon: FaHome, labelKey: "home", requiresAuth: false },
-  { path: "/friends", icon: FaUserPlus, labelKey: "friends", requiresAuth: false },
-  { path: "/blog", icon: FaBlog, labelKey: "blog", requiresAuth: false },
-  { path: "/source", icon: FaBookOpen, labelKey: "source", requiresAuth: false },
-  // { path: "/groups", icon: FaUsers, labelKey: "groups", requiresAuth: false },
-  { path: "/events", icon: FaCalendarAlt, labelKey: "events", requiresAuth: false },
-  { path: "/videos", icon: FaYoutube, labelKey: "video", requiresAuth: false },
-  // { path: "/story", icon: FaVideo, labelKey: "story", requiresAuth: false },
-  { path: "/playgame", icon: FaGamepad, labelKey: "playGame", requiresAuth: false },
-  
-  // { path: "/market", icon: FaShoppingBag, labelKey: "store", requiresAuth: false },
+  { path: "/feed", icon: House, activeIcon: House, labelKey: "home", requiresAuth: false },
+  { path: "/friends", icon: UserPlus, activeIcon: Users, labelKey: "friends", requiresAuth: false },
+  { path: "/blog", icon: FileText, activeIcon: BookOpen, labelKey: "blog", requiresAuth: false },
+  { path: "/source", icon: BookOpen, activeIcon: GraduationCap, labelKey: "source", requiresAuth: false },
+  { path: "/events", icon: Calendar, activeIcon: CalendarDays, labelKey: "events", requiresAuth: false },
+  { path: "/videos", icon: Video, activeIcon: Film, labelKey: "video", requiresAuth: false },
+  { path: "/playgame", icon: Gamepad2, activeIcon: Trophy, labelKey: "playGame", requiresAuth: false },
   {
     path: "/messenger",
-    icon: FaFacebookMessenger,
+    icon: MessageSquare,
+    activeIcon: MessagesSquare,
     labelKey: "messenger",
     requiresAuth: true,
     loginMessageKey: "loginToMessenger",
   },
-  { path: "/settings", icon: FaCog, labelKey: "settings", requiresAuth: false },
-  { path: "/about", icon: FaInfoCircle, labelKey: "about", requiresAuth: false },
+  { path: "/settings", icon: Settings, activeIcon: Sliders, labelKey: "settings", requiresAuth: false },
+  { path: "/about", icon: Info, activeIcon: Info, labelKey: "about", requiresAuth: false },
 ];
 
 export default function Sidebar() {
@@ -327,7 +326,7 @@ export default function Sidebar() {
         <nav id="sidebar-menu" className="sidebar__menu" aria-label="Primary">
           <ul>
             {MENU.map((item) => {
-              const { path, icon: Icon, labelKey, requiresAuth } = item;
+              const { path, icon: DefaultIcon, activeIcon: ActiveIcon, labelKey, requiresAuth } = item;
               return (
                 <li key={path}>
                   <NavLink
@@ -359,9 +358,18 @@ export default function Sidebar() {
                       }
                     }}
                   >
-                    {React.createElement(Icon, { className: "sidebar__icon" })}
-                    {(!isCollapsed || isMobile) && (
-                      <span className="sidebar__label">{t(labelKey)}</span>
+                    {({ isActive }) => (
+                      <>
+                        <MorphIcon
+                          icon={isActive ? (ActiveIcon || DefaultIcon) : DefaultIcon}
+                          size={20}
+                          strokeWidth={isActive ? 2.3 : 1.9}
+                          className="sidebar__icon"
+                        />
+                        {(!isCollapsed || isMobile) && (
+                          <span className="sidebar__label">{t(labelKey)}</span>
+                        )}
+                      </>
                     )}
                   </NavLink>
                 </li>
