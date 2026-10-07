@@ -3035,8 +3035,8 @@ export const questions = [
     ],
     "sourcePage": 82,
     "needsReview": false,
-    "question": "Quan điểm nào dưới đây thuộc về bản chất của CNXH trong tư tưởng Hồ Chí Minh: ",
-    "question_vi": "Quan điểm nào dưới đây thuộc về bản chất của CNXH trong tư tưởng Hồ Chí Minh: ",
+    "question": "Quan điểm nào dưới đây thuộc về bản chất của CNXH trong tư tưởng Hồ Chí Minh:",
+    "question_vi": "Quan điểm nào dưới đây thuộc về bản chất của CNXH trong tư tưởng Hồ Chí Minh:",
     "note": "",
     "note_vi": "",
     "options": [

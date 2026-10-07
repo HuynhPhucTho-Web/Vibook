@@ -28,7 +28,7 @@ import { LanguageContext } from "../context/LanguageContext";
 import { requireLogin } from "../utils/requireLogin";
 
 // ======= constants =======
-const DEFAULT_HEADER_HEIGHT = 100; // fallback nếu không đo được
+const DEFAULT_HEADER_HEIGHT = 72; // fallback nếu không đo được
 
 const COLLAPSED_WIDTH = 72;
 const EXPANDED_WIDTH = 200;
@@ -145,65 +145,37 @@ export default function Sidebar() {
     if (isMobile) setIsMobileOpen(false);
   }, [location.pathname, isMobile]);
 
-  // Listen for closeSidebar event
+  // Listen for toggleSidebar and closeSidebar events
   useEffect(() => {
+    const handleToggleSidebar = () => {
+      if (isMobile) {
+        setIsMobileOpen((prev) => !prev);
+      } else {
+        setIsCollapsed((prev) => !prev);
+      }
+    };
     const handleCloseSidebar = () => {
       if (isMobile) setIsMobileOpen(false);
     };
+
+    window.addEventListener("toggleSidebar", handleToggleSidebar);
     window.addEventListener("closeSidebar", handleCloseSidebar);
-    return () => window.removeEventListener("closeSidebar", handleCloseSidebar);
-  }, [isMobile]);
-
-  // Auto-close sidebar after 5 seconds of inactivity (mobile only)
-  useEffect(() => {
-    if (!isMobile || !isMobileOpen) {
-      if (autoCloseTimerRef.current) {
-        clearTimeout(autoCloseTimerRef.current);
-        autoCloseTimerRef.current = null;
-      }
-      return;
-    }
-
-    const startAutoCloseTimer = () => {
-      if (autoCloseTimerRef.current) {
-        clearTimeout(autoCloseTimerRef.current);
-      }
-      autoCloseTimerRef.current = setTimeout(() => {
-        setIsMobileOpen(false);
-      }, 5000); // 5 seconds
-    };
-
-    const resetTimer = () => {
-      startAutoCloseTimer();
-    };
-
-    // Start timer when sidebar opens
-    startAutoCloseTimer();
-
-    // Add event listeners to reset timer on interaction
-    const sidebar = document.querySelector(".sidebar");
-    if (sidebar) {
-      sidebar.addEventListener("mouseenter", resetTimer);
-      sidebar.addEventListener("mouseleave", resetTimer);
-      sidebar.addEventListener("click", resetTimer);
-      sidebar.addEventListener("touchstart", resetTimer);
-      sidebar.addEventListener("touchend", resetTimer);
-    }
 
     return () => {
-      if (autoCloseTimerRef.current) {
-        clearTimeout(autoCloseTimerRef.current);
-        autoCloseTimerRef.current = null;
-      }
-      if (sidebar) {
-        sidebar.removeEventListener("mouseenter", resetTimer);
-        sidebar.removeEventListener("mouseleave", resetTimer);
-        sidebar.removeEventListener("click", resetTimer);
-        sidebar.removeEventListener("touchstart", resetTimer);
-        sidebar.removeEventListener("touchend", resetTimer);
-      }
+      window.removeEventListener("toggleSidebar", handleToggleSidebar);
+      window.removeEventListener("closeSidebar", handleCloseSidebar);
     };
-  }, [isMobile, isMobileOpen]);
+  }, [isMobile]);
+
+
+  // Đồng bộ trạng thái mở/đóng Sidebar với Header
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("sidebarStateChange", {
+        detail: { isOpen: isMobile ? isMobileOpen : !isCollapsed },
+      })
+    );
+  }, [isMobile, isMobileOpen, isCollapsed]);
 
   // Persist trạng thái thu gọn (chỉ desktop)
   useEffect(() => {
@@ -320,28 +292,11 @@ export default function Sidebar() {
   // ======= render =======
   return (
     <>
-      {/* Mobile toggle button */}
-      {isMobile && !isMobileOpen && (
-        <button
-          className={`sidebar__mobile-toggle sidebar--${theme === "light" ? "light" : "dark"}`}
-          aria-label={t("openMenu")}
-          // KHÔNG dùng onClick ở đây nữa, click sẽ xử lý trong handleUp ở useEffect
-          onMouseDown={handleFabMouseDown}
-          onTouchStart={handleFabTouchStart}
-          style={{
-            top: `${Math.max(headerHeight + 8, fabPosition.top)}px`,
-            left: `${fabPosition.left}px`,
-          }}
-        >
-          <FaBars />
-        </button>
-      )}
-
       {/* Mobile backdrop (bắt đầu từ dưới header) */}
       {isMobile && isMobileOpen && (
         <button
           className="sidebar__backdrop"
-          style={{ top: headerHeight }}
+          style={{ top: "calc(var(--app-header-height, 72px) - 1px)" }}
           aria-label={t("closeMenu")}
           onClick={() => setIsMobileOpen(false)}
         />
@@ -362,41 +317,12 @@ export default function Sidebar() {
           .replace(/\s+/g, " ")
           .trim()}
         style={{
-          top: "var(--app-header-height, 72px)",
-          height: "calc(100dvh - var(--app-header-height, 72px))",
+          top: "calc(var(--app-header-height, 72px) - 1px)",
+          height: "calc(100dvh - var(--app-header-height, 72px) + 1px)",
           width: sidebarWidth,
-          zIndex: 1002,
+          zIndex: 1000,
         }}
       >
-        {/* Header */}
-        <div className="sidebar__header">
-          <button
-            className="sidebar__toggle"
-            onClick={toggleSidebar}
-            aria-label={
-              isMobile
-                ? isMobileOpen
-                  ? t("closeMenu")
-                  : t("openMenu")
-                : isCollapsed
-                  ? t("expandSidebar")
-                  : t("collapseSidebar")
-            }
-            aria-expanded={isMobile ? isMobileOpen : !isCollapsed}
-            aria-controls="sidebar-menu"
-          >
-            {(isMobile && isMobileOpen) || (!isMobile && !isCollapsed) ? (
-              <FaTimes />
-            ) : (
-              <FaBars />
-            )}
-          </button>
-
-          {(!isCollapsed || isMobile) && (
-            <h5 className="sidebar__brand" title="ThoDev">ThoDev</h5>
-          )}
-        </div>
-
         {/* Menu */}
         <nav id="sidebar-menu" className="sidebar__menu" aria-label="Primary">
           <ul>

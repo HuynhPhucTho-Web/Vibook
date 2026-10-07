@@ -54,6 +54,7 @@ import SourcePage from "./pages/source/SourcePage";
 import { clearLoginRedirect, getLoginRedirect } from "./utils/requireLogin";
 import { VideoPlayerProvider } from "./context/VideoPlayerContext";
 import GlobalPlayer from "./components/video/GlobalPlayer";
+import MascotChatbot from "./components/chatbot/MascotChatbot";
 
 // Layout for authentication pages
 const AuthLayout = () => (
@@ -94,6 +95,7 @@ const MainLayout = () => {
         </main>
       </div>
       <GlobalPlayer />
+      <MascotChatbot />
     </div>
   );
 };

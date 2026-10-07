@@ -1,6 +1,6 @@
 /* ========= THEME TOKENS (DESIGN.md glass) ========= */
 .sidebar--light {
-  --sb-bg: var(--vb-glass-surface-strong, rgba(255, 255, 255, 0.88));
+  --sb-bg: var(--vb-glass-surface-strong, rgba(255, 255, 255, 0.95));
   --sb-border: var(--vb-glass-border, rgba(15, 23, 42, 0.1));
   --sb-border-strong: rgba(142, 84, 233, 0.24);
   --sb-text: rgba(22, 32, 51, 0.75);
@@ -14,7 +14,7 @@
 }
 
 .sidebar--dark {
-  --sb-bg: rgba(18, 19, 26, 0.8);
+  --sb-bg: rgba(18, 19, 26, 0.92);
   --sb-border: var(--vb-glass-border, rgba(255, 255, 255, 0.08));
   --sb-border-strong: rgba(142, 84, 233, 0.3);
   --sb-text: #cdc3d6;
@@ -31,12 +31,15 @@
 .sidebar {
   position: fixed;
   left: 0;
+  top: calc(var(--app-header-height, 72px) - 1px);
+  height: calc(100dvh - var(--app-header-height, 72px) + 1px);
   display: flex;
   flex-direction: column;
   width: 200px;
   background: var(--sb-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border-top: none;
   border-right: 1px solid var(--sb-border);
   box-shadow: var(--sb-shadow);
   transition: width .25s ease, transform .25s ease, background .25s ease;
@@ -58,12 +61,7 @@
 
 /* ========= HEADER ========= */
 .sidebar__header {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  padding: 1rem;
-  border-bottom: 1px solid var(--sb-border);
-  background: color-mix(in oklab, var(--sb-bg), transparent 90%);
+  display: none;
 }
 
 .sidebar__toggle {
@@ -101,7 +99,7 @@
 .sidebar__menu {
   display: flex;
   flex-direction: column;
-  padding: .5rem;
+  padding: .75rem .5rem;
   gap: .25rem;
   height: 100%;
   overflow-y: auto;
@@ -326,12 +324,14 @@
 
 .sidebar__backdrop {
   position: fixed;
-  top: 0;
+  top: calc(var(--app-header-height, 72px) - 1px);
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, .5);
+  z-index: 999;
+  background: rgba(0, 0, 0, .45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: none;
 }
 

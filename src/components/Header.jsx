@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -22,7 +23,7 @@ import {
   updateDoc,
   writeBatch,
 } from "firebase/firestore";
-import { FaSearch, FaTimes } from "react-icons/fa";
+import { FaSearch, FaTimes, FaBars } from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 import { auth, db } from "../components/firebase";
@@ -56,6 +57,16 @@ const Header = () => {
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const [onlineCount, setOnlineCount] = useState(1);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Lắng nghe trạng thái đóng/mở Sidebar để đổi icon đồng bộ
+  useEffect(() => {
+    const handleSidebarChange = (e) => {
+      setMobileSidebarOpen(Boolean(e.detail?.isOpen));
+    };
+    window.addEventListener("sidebarStateChange", handleSidebarChange);
+    return () => window.removeEventListener("sidebarStateChange", handleSidebarChange);
+  }, []);
 
   // Manage user presence registration
   useEffect(() => {
@@ -139,7 +150,7 @@ const Header = () => {
     return t("searchPlaceholder") || "Tìm kiếm người dùng, bài viết...";
   }, [searchMode, searchConfig, t]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const header = appHeaderRef.current;
     if (!header) return undefined;
     const syncHeaderHeight = () =>
@@ -436,10 +447,25 @@ const Header = () => {
     <header
       ref={appHeaderRef}
       data-app-header
-      className={`sticky top-0 z-[998] transition-all duration-300 backdrop-blur-[20px] ${theme === "light" ? "bg-white/95 border-b border-black/10 shadow-[0_8px_32px_rgba(0,0,0,0.1)]" : "bg-black/80 border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"}`}
+      className={`sticky top-0 z-[1001] transition-all duration-300 backdrop-blur-[20px] ${theme === "light" ? "bg-white/95 border-b border-black/10" : "bg-black/80 border-b border-white/10"}`}
     >
       <div className="header-row relative">
-        <div className="flex items-center flex-shrink-0 gap-3">
+        <div className="flex items-center flex-shrink-0 gap-2 sm:gap-3">
+          {/* Nút bấm mở/đóng Sidebar duy nhất trên Header - cho cả Desktop và Mobile */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggleSidebar"))}
+            className="header-sidebar-toggle"
+            aria-label={mobileSidebarOpen ? (t("closeMenu") || "Thu gọn menu") : (t("openMenu") || "Mở menu")}
+            title={mobileSidebarOpen ? "Thu gọn menu" : "Mở menu"}
+          >
+            {mobileSidebarOpen ? (
+              <FaTimes className="text-lg" />
+            ) : (
+              <FaBars className="text-lg" />
+            )}
+          </button>
+
           <Link to="/feed" className="no-underline flex items-center">
             <img src="/images/logo.png" alt="ThoDev" className="h-12 sm:h-15 object-contain" />
           </Link>

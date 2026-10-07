@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  envPrefix: 'VITE_REACT_APP_', // Explicitly set the prefix for environment variables
+  envPrefix: ['VITE_REACT_APP_', 'VITE_'], // Cho phép cả tiền tố VITE_ và VITE_REACT_APP_
   build: {
     rollupOptions: {
       output: {
