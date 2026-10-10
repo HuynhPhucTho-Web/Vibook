@@ -8978,8 +8978,8 @@ export const questions = [
       },
       {
         "key": "B",
-        "text": "Văn hóá không như lĩnh vực khác, có mỗi quan hệ với các lĩnh vực khác",
-        "text_vi": "Văn hóá không như lĩnh vực khác, có mỗi quan hệ với các lĩnh vực khác"
+        "text": "Văn hóa không như lĩnh vực khác, có mỗi quan hệ với các lĩnh vực khác",
+        "text_vi": "Văn hóa không như lĩnh vực khác, có mỗi quan hệ với các lĩnh vực khác"
       },
       {
         "key": "C",
@@ -9126,11 +9126,17 @@ export const questions = [
     ],
     "sourcePage": 264,
     "needsReview": false,
-    "question": "Chế độ xã hội dưới sự lãnh đạo của Đảng Cộng sản và giai cấp công nhân, đánh đổ đế quốc và phong kiến,trên nền tảng công nông liên minh, nhân dân lao động làm chủ, nhân dân dân chủ chuyền chính theo tư tưởngMác - Lênin, theo Hồ Chí Minh đó là: A Chế độ chuyên chính vô sản",
-    "question_vi": "Chế độ xã hội dưới sự lãnh đạo của Đảng Cộng sản và giai cấp công nhân, đánh đổ đế quốc và phong kiến,trên nền tảng công nông liên minh, nhân dân lao động làm chủ, nhân dân dân chủ chuyền chính theo tư tưởngMác - Lênin, theo Hồ Chí Minh đó là: A Chế độ chuyên chính vô sản",
+    "question": "Chế độ xã hội dưới sự lãnh đạo của Đảng Cộng sản và giai cấp công nhân, đánh đổ đế quốc và phong kiến,trên nền tảng công nông liên minh, nhân dân lao động làm chủ, nhân dân dân chủ chuyền chính theo tư tưởngMác - Lênin, theo Hồ Chí Minh đó là",
+    "question_vi": "Chế độ xã hội dưới sự lãnh đạo của Đảng Cộng sản và giai cấp công nhân, đánh đổ đế quốc và phong kiến,trên nền tảng công nông liên minh, nhân dân lao động làm chủ, nhân dân dân chủ chuyền chính theo tư tưởngMác - Lênin, theo Hồ Chí Minh đó là",
     "note": "",
     "note_vi": "",
     "options": [
+
+      {
+        "key": "A",
+        "text": "Chế độ chuyên chính vô sản",
+        "text_vi": "Chế độ chuyên chính vô sản"
+      },
       {
         "key": "B",
         "text": "Chế độ dân chủ nhân dân",
@@ -10284,7 +10290,7 @@ export const questions = [
       {
         "key": "D",
         "text": "Sức mạnh của quyền lựcb",
-        "text_vi": "Sức mạnh của quyền lựcb"
+        "text_vi": "Sức mạnh của quyền lực"
       }
     ]
   },
@@ -21488,13 +21494,13 @@ export const questions = [
       },
       {
         "key": "C",
-        "text": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóá tạo điều kiện thúc đẩy phát triển chính trị",
-        "text_vi": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóá tạo điều kiện thúc đẩy phát triển chính trị"
+        "text": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóa tạo điều kiện thúc đẩy phát triển chính trị",
+        "text_vi": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóa tạo điều kiện thúc đẩy phát triển chính trị"
       },
       {
         "key": "D",
-        "text": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóá tạo điều kiện thúc đẩy phát triển thiết chế pháp luật",
-        "text_vi": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóá tạo điều kiện thúc đẩy phát triển thiết chế pháp luật"
+        "text": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóa tạo điều kiện thúc đẩy phát triển thiết chế pháp luật",
+        "text_vi": "Theo Hồ Chí Minh, văn hóa không thụ động, ngồi chờ cho kinh tế phát triển. Phát triển văn hóa tạo điều kiện thúc đẩy phát triển thiết chế pháp luật"
       }
     ]
   },

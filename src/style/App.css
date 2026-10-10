@@ -662,4 +662,388 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(142, 84, 233, 0.5);
-}
+}
+
+/* =====================================================================
+   🌌 AMBIENT VIDEO WALLPAPER & GLASSMORPHISM SYSTEM
+   ===================================================================== */
+
+/* 1. Universal Shell & Background Neutralization */
+body.ambient-mode-active,
+html.ambient-mode-active,
+.ambient-mode-active.app-shell,
+.ambient-mode-active .app-shell,
+.ambient-mode-active .app-shell__body,
+.ambient-mode-active .app-shell__main,
+.ambient-mode-active .app-shell__content,
+.ambient-mode-active .page-shell,
+body.ambient-mode-active div[class*="min-h-screen"],
+body.ambient-mode-active .home-container,
+body.ambient-mode-active .friends-page,
+body.ambient-mode-active .blog-container,
+body.ambient-mode-active .setting-page,
+body.ambient-mode-active [class*="bg-[#faf7f2]"],
+body.ambient-mode-active [class*="bg-[#12131a]"],
+body.ambient-mode-active [class*="bg-[#0c0d14]"],
+body.ambient-mode-active [class*="bg-neutral-900"],
+body.ambient-mode-active [class*="bg-neutral-100"],
+body.ambient-mode-active [class*="bg-gray-900"],
+body.ambient-mode-active [class*="bg-gray-50"]:not(button):not(input):not(span) {
+  background-color: transparent !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Stacking context: UI floats gracefully above the video wallpaper (z-index: 0) */
+body.ambient-mode-active .app-shell__body,
+body.ambient-mode-active .app-shell__main,
+body.ambient-mode-active .app-shell__content,
+body.ambient-mode-active .page-shell {
+  position: relative;
+  z-index: 10;
+}
+
+/* 2. Header & Navigation Glassmorphism */
+body.ambient-mode-active [data-app-header] {
+  background: rgba(18, 19, 28, 0.45) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  z-index: 50 !important;
+}
+
+body.ambient-mode-active .header-search-input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+body.ambient-mode-active .sidebar {
+  background: rgba(18, 19, 28, 0.42) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  z-index: 45 !important;
+}
+
+body.ambient-mode-active .sidebar__link {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+body.ambient-mode-active .sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+body.ambient-mode-active .sidebar__link.is-active {
+  background: rgba(142, 84, 233, 0.35) !important;
+  color: #fff !important;
+  border-left-color: #8e54e9 !important;
+}
+
+/* 3. Universal Frosted Glass Cards & Panels */
+body.ambient-mode-active .post-card,
+body.ambient-mode-active .post-item-container,
+body.ambient-mode-active .post-creator-container,
+body.ambient-mode-active .feed-skeleton__card,
+body.ambient-mode-active .blog-promo-strip,
+body.ambient-mode-active .blog-promo-card,
+body.ambient-mode-active .friend-card,
+body.ambient-mode-active .friends-page__sidebar,
+body.ambient-mode-active .blog-card,
+body.ambient-mode-active .blog-detail-container,
+body.ambient-mode-active .setting-card,
+body.ambient-mode-active .setting-nav,
+body.ambient-mode-active .vb-glass,
+body.ambient-mode-active .video-hub-card,
+body.ambient-mode-active .video-row-card,
+body.ambient-mode-active .product-card,
+body.ambient-mode-active .card,
+body.ambient-mode-active .bg-surface-container,
+body.ambient-mode-active .bg-surface-container-low,
+body.ambient-mode-active .bg-surface-container-high,
+body.ambient-mode-active [class*="grid"] > div[class*="rounded-xl"][class*="shadow-lg"],
+body.ambient-mode-active [class*="grid"] > div[class*="group"][class*="rounded-xl"],
+body.ambient-mode-active [class*="max-w-7xl"] aside > div,
+body.ambient-mode-active [class*="max-w-7xl"] main,
+body.ambient-mode-active [class*="grid"] > button[class*="rounded-2xl"][class*="border"] {
+  background: rgba(18, 20, 32, 0.52) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Luminous Neon Hover Glow on Frosted Glass */
+body.ambient-mode-active .post-card:hover,
+body.ambient-mode-active .post-item-container:hover,
+body.ambient-mode-active .post-creator-container:hover,
+body.ambient-mode-active .friend-card:hover,
+body.ambient-mode-active .blog-card:hover,
+body.ambient-mode-active .setting-card:hover,
+body.ambient-mode-active .vb-glass:hover,
+body.ambient-mode-active [class*="grid"] > div[class*="rounded-xl"][class*="shadow-lg"]:hover,
+body.ambient-mode-active [class*="grid"] > button[class*="rounded-2xl"][class*="border"]:hover {
+  background: rgba(24, 26, 42, 0.62) !important;
+  border-color: rgba(168, 85, 247, 0.45) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45), 0 0 18px rgba(168, 85, 247, 0.25) !important;
+}
+
+/* 4. Tailwind Solid Utility Overrides (Converts Opaque White/Dark Blocks into Frosted Glass) */
+body.ambient-mode-active .bg-white:not(span):not(button):not(input):not(circle):not(path),
+body.ambient-mode-active .dark\:bg-gray-800:not(span):not(button):not(input),
+body.ambient-mode-active .bg-gray-800:not(span):not(button):not(input),
+body.ambient-mode-active .bg-neutral-800:not(span):not(button):not(input),
+body.ambient-mode-active [class*="bg-[#1e1f27]"]:not(span):not(button) {
+  background: rgba(18, 20, 32, 0.52) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Inner containers, pills, and secondary card backgrounds */
+body.ambient-mode-active .bg-slate-50,
+body.ambient-mode-active .bg-slate-100,
+body.ambient-mode-active .bg-gray-50,
+body.ambient-mode-active .bg-gray-100,
+body.ambient-mode-active .bg-neutral-50,
+body.ambient-mode-active .bg-neutral-100,
+body.ambient-mode-active .dark\:bg-gray-700,
+body.ambient-mode-active .bg-gray-700 {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* 5. Home Page Specifics */
+body.ambient-mode-active .post-collapsed-prompt {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .pc-textarea,
+body.ambient-mode-active .ql-editor,
+body.ambient-mode-active .comment-input {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.ambient-mode-active .comment-item,
+body.ambient-mode-active .post-comments-container {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 6. Friends Page Specifics */
+body.ambient-mode-active .friends-page__search {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(14px) !important;
+}
+
+body.ambient-mode-active .friends-page__search-input {
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .friends-page__nav-button {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+body.ambient-mode-active .friends-page__nav-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .friends-page__nav-button.is-active {
+  background: linear-gradient(135deg, #8e54e9, #4776e6) !important;
+  color: #ffffff !important;
+}
+
+/* 7. Blog Page Specifics */
+body.ambient-mode-active .blog-controls .search-bar input,
+body.ambient-mode-active .blog-controls .filters select {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(14px) !important;
+}
+
+body.ambient-mode-active .blog-card .card-title,
+body.ambient-mode-active .blog-card .card-title-link {
+  color: #ffffff !important;
+}
+
+/* 8. Events Page Specifics & Modals */
+body.ambient-mode-active .event-modal-overlay > div,
+body.ambient-mode-active .modal-content,
+body.ambient-mode-active [role="dialog"] > div {
+  background: rgba(18, 20, 32, 0.85) !important;
+  backdrop-filter: blur(26px) !important;
+  -webkit-backdrop-filter: blur(26px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .event-modal-overlay input,
+body.ambient-mode-active .event-modal-overlay textarea,
+body.ambient-mode-active .event-modal-overlay .ql-container {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+/* 9. Setting Page Specifics */
+body.ambient-mode-active .setting-box,
+body.ambient-mode-active .setting-row {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .setting-nav button {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+body.ambient-mode-active .setting-nav button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .setting-nav button.is-active {
+  background: rgba(142, 84, 233, 0.35) !important;
+  color: #ffffff !important;
+}
+
+/* 10. Source / Quiz / Document Details */
+body.ambient-mode-active [class*="max-w-7xl"] aside > div {
+  background: rgba(18, 20, 32, 0.52) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+body.ambient-mode-active [class*="max-w-7xl"] main {
+  background: rgba(18, 20, 32, 0.56) !important;
+  backdrop-filter: blur(22px) !important;
+  -webkit-backdrop-filter: blur(22px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Question matrix index numbers (1, 2, 3...) */
+body.ambient-mode-active [class*="max-w-7xl"] button[class*="aspect-square"] {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active [class*="max-w-7xl"] button[class*="aspect-square"]:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+/* Question choices buttons (A, B, C, D) */
+body.ambient-mode-active [class*="max-w-7xl"] button[class*="group"][class*="text-left"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active [class*="max-w-7xl"] button[class*="group"][class*="text-left"]:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(168, 85, 247, 0.4) !important;
+}
+
+/* Mode tabs & select dropdowns */
+body.ambient-mode-active [class*="max-w-7xl"] select,
+body.ambient-mode-active [class*="max-w-7xl"] input {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Document preview box */
+body.ambient-mode-active [class*="max-w-7xl"] .bg-bg-deep,
+body.ambient-mode-active [class*="max-w-7xl"] [class*="aspect-[1/1.4]"] {
+  background: rgba(18, 20, 32, 0.55) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+/* 11. Universal Inputs & Form Controls */
+body.ambient-mode-active input,
+body.ambient-mode-active textarea,
+body.ambient-mode-active select,
+body.ambient-mode-active .vb-input {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+body.ambient-mode-active input::placeholder,
+body.ambient-mode-active textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* 12. Text Contrast & Readability Guard over Live Video */
+body.ambient-mode-active h1,
+body.ambient-mode-active h2,
+body.ambient-mode-active h3,
+body.ambient-mode-active h4,
+body.ambient-mode-active h5,
+body.ambient-mode-active h6 {
+  color: #ffffff !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85) !important;
+}
+
+body.ambient-mode-active p,
+body.ambient-mode-active span:not([class*="badge"]):not([class*="chip"]),
+body.ambient-mode-active label,
+body.ambient-mode-active a {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+}
+
+body.ambient-mode-active .text-gray-900,
+body.ambient-mode-active .text-gray-800,
+body.ambient-mode-active .text-slate-900,
+body.ambient-mode-active .text-slate-800,
+body.ambient-mode-active .text-slate-700,
+body.ambient-mode-active .text-neutral-900,
+body.ambient-mode-active .text-neutral-800,
+body.ambient-mode-active .text-black,
+body.ambient-mode-active [class*="text-[#162033]"] {
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .text-gray-500,
+body.ambient-mode-active .text-gray-600,
+body.ambient-mode-active .text-slate-500,
+body.ambient-mode-active .text-slate-600,
+body.ambient-mode-active .text-neutral-500,
+body.ambient-mode-active .text-neutral-400,
+body.ambient-mode-active .text-muted {
+  color: #cbd5e1 !important;
+}
+
+body.ambient-mode-active .user-name {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+}
+
+body.ambient-mode-active .user-desc {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+

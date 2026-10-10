@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import MascotTrigger from "./MascotTrigger";
 import ChatDrawer from "./ChatDrawer";
+import { LanguageContext } from "../../context/LanguageContext";
 import {
   getActivePageContext,
   getContextualQuickPrompts,
@@ -13,7 +15,44 @@ const MASCOT_IMAGE = "/images/mascot/mascot_1.png";
 
 const MascotChatbot = () => {
   const location = useLocation();
+  const { language } = useContext(LanguageContext) || { language: "vi" };
+  const [isVisible, setIsVisible] = useState(() => {
+    return localStorage.getItem("vibook_show_chatbot") !== "false";
+  });
   const [isOpen, setIsOpen] = useState(false);
+
+  // Lắng nghe thay đổi trạng thái ẩn/hiện chatbot từ Cài đặt hoặc sự kiện
+  useEffect(() => {
+    const handleVisibilityChange = (e) => {
+      if (e.detail !== undefined) {
+        setIsVisible(Boolean(e.detail));
+      } else {
+        setIsVisible(localStorage.getItem("vibook_show_chatbot") !== "false");
+      }
+    };
+
+    window.addEventListener("vibook_chatbot_visibility_change", handleVisibilityChange);
+    window.addEventListener("storage", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("vibook_chatbot_visibility_change", handleVisibilityChange);
+      window.removeEventListener("storage", handleVisibilityChange);
+    };
+  }, []);
+
+  // Hàm ẩn chatbot và thông báo người dùng nơi bật lại
+  const handleHideChatbot = useCallback(() => {
+    localStorage.setItem("vibook_show_chatbot", "false");
+    setIsVisible(false);
+    setIsOpen(false);
+    window.dispatchEvent(
+      new CustomEvent("vibook_chatbot_visibility_change", { detail: false })
+    );
+    toast.info(
+      language === "vi"
+        ? "Đã ẩn trợ lý Astro AI. Bạn có thể bật lại trong Cài đặt > Khả năng tiếp cận."
+        : "Astro AI chatbot hidden. You can enable it in Settings > Accessibility."
+    );
+  }, [language]);
   const [messages, setMessages] = useState(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
@@ -110,7 +149,7 @@ const MascotChatbot = () => {
       const errorMessage = {
         id: `bot_err_${Date.now()}`,
         sender: "bot",
-        content: "⚠️ Đã xảy ra lỗi khi kết nối. Bạn thử lại nhé!",
+        content: `⚠️ ${err.message || "Đã xảy ra lỗi khi kết nối. Bạn thử lại nhé!"}`,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -127,13 +166,16 @@ const MascotChatbot = () => {
     } catch {}
   };
 
+  if (!isVisible) return null;
+
   return (
-    <div className="astro-chatbot-container">
+    <div className="astro-chatbot-container" data-chatbot="true">
       {/* Nút mascot lơ lửng góc dưới bên phải */}
       <MascotTrigger
         onClick={() => setIsOpen(true)}
         isDrawerOpen={isOpen}
         mascotSrc={MASCOT_IMAGE}
+        onHideChatbot={handleHideChatbot}
       />
 
       {/* Khung chat trượt từ mép phải */}
@@ -149,6 +191,7 @@ const MascotChatbot = () => {
         onClearMessages={handleClearMessages}
         quickPrompts={quickPrompts}
         mascotSrc={MASCOT_IMAGE}
+        onHideChatbot={handleHideChatbot}
       />
     </div>
   );

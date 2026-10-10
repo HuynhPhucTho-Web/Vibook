@@ -32,6 +32,23 @@
   box-shadow: var(--vb-shadow-elevated), var(--vb-glow-border);
 }
 
+body.ambient-mode-active .post-item-container,
+body.ambient-mode-active .post-item-container.light,
+body.ambient-mode-active .post-item-container.dark {
+  background: rgba(18, 20, 32, 0.52) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+body.ambient-mode-active .post-item-container:hover {
+  background: rgba(24, 26, 42, 0.62) !important;
+  border-color: rgba(168, 85, 247, 0.45) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45), 0 0 18px rgba(168, 85, 247, 0.25) !important;
+}
+
 .post-item-header {
   padding: 1rem;
   display: flex;

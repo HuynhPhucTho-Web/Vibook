@@ -34,6 +34,16 @@
   --setting-accent-soft: rgba(142, 84, 233, 0.16);
 }
 
+body.ambient-mode-active .setting-page,
+body.ambient-mode-active .setting-page--light,
+body.ambient-mode-active .setting-page--dark {
+  --setting-card: rgba(18, 20, 32, 0.52);
+  --setting-border: rgba(255, 255, 255, 0.14);
+  --setting-text: #ffffff;
+  --setting-muted: #cbd5e1;
+  background: transparent;
+}
+
 .setting-page *, .setting-page *::before, .setting-page *::after { box-sizing: border-box; }
 
 .setting-hero {

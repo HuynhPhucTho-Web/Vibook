@@ -26,6 +26,17 @@
   border-color: var(--vb-glass-border, rgba(255, 255, 255, 0.12));
 }
 
+body.ambient-mode-active .post-creator-container,
+body.ambient-mode-active .post-creator-container.light,
+body.ambient-mode-active .post-creator-container.dark {
+  background: rgba(18, 20, 32, 0.52) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
 .post-creator-header {
   padding: 1.5rem;
 }

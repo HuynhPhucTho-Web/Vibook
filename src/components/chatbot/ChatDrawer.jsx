@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaTimes, FaCog, FaTrashAlt } from "react-icons/fa";
+import { FaTimes, FaCog, FaTrashAlt, FaEyeSlash } from "react-icons/fa";
 import ChatContextBadge from "./ChatContextBadge";
 import ChatMessageList from "./ChatMessageList";
 import ChatInput from "./ChatInput";
 import ChatSettingsModal from "./ChatSettingsModal";
+import { getActiveAiProvider } from "../../services/geminiChatService";
 
 const ChatDrawer = ({
   isOpen,
@@ -18,8 +19,10 @@ const ChatDrawer = ({
   onClearMessages,
   quickPrompts,
   mascotSrc = "/images/mascot/mascot_1.png",
+  onHideChatbot,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
+  const currentProvider = getActiveAiProvider();
 
   return (
     <>
@@ -58,7 +61,7 @@ const ChatDrawer = ({
                     <h2 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-1.5">
                       Astro Assistant
                       <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 font-medium">
-                        AI
+                        {currentProvider === "gemini" ? "Gemini AI" : "Groq AI"}
                       </span>
                     </h2>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
@@ -71,7 +74,7 @@ const ChatDrawer = ({
                   <button
                     type="button"
                     onClick={() => setShowSettings(true)}
-                    title="Cài đặt Gemini API Key"
+                    title="Cài đặt AI (Google Gemini & Groq)"
                     className="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-300 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                   >
                     <FaCog className="w-3.5 h-3.5" />
@@ -85,6 +88,17 @@ const ChatDrawer = ({
                   >
                     <FaTrashAlt className="w-3.5 h-3.5" />
                   </button>
+
+                  {onHideChatbot && (
+                    <button
+                      type="button"
+                      onClick={onHideChatbot}
+                      title="Ẩn icon trợ lý (Bật lại trong Cài đặt > Khả năng tiếp cận)"
+                      className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <FaEyeSlash className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
                   <button
                     type="button"

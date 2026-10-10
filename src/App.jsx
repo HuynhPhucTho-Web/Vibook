@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useLayoutEffect } from "react";
+import React, { useEffect, useState, useLayoutEffect, useContext } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./style/App.css";
@@ -52,7 +52,7 @@ import BlogPages from "./pages/blog/BlogPages";
 import AboutPage, { PrivacyPolicyPage, TermsOfServicePage, ContentPolicyPage, OtherStandardsPage } from "./pages/AboutPages";
 import SourcePage from "./pages/source/SourcePage";
 import { clearLoginRedirect, getLoginRedirect } from "./utils/requireLogin";
-import { VideoPlayerProvider } from "./context/VideoPlayerContext";
+import { VideoPlayerProvider, VideoPlayerContext } from "./context/VideoPlayerContext";
 import GlobalPlayer from "./components/video/GlobalPlayer";
 import MascotChatbot from "./components/chatbot/MascotChatbot";
 
@@ -83,8 +83,10 @@ const AuthEntry = ({ user, children }) => {
 };
 
 const MainLayout = () => {
+  const { isAmbientMode } = useContext(VideoPlayerContext);
+
   return (
-    <div className="App app-shell">
+    <div className={`App app-shell ${isAmbientMode ? "ambient-mode-active" : ""}`}>
       <Header />
       <div className="app-shell__body">
         <Sidebar />

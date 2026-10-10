@@ -95,6 +95,9 @@ const Setting = () => {
   const [compactMode, setCompactMode] = useState(
     () => localStorage.getItem("vibook_compact_mode") === "true",
   );
+  const [showChatbot, setShowChatbot] = useState(
+    () => localStorage.getItem("vibook_show_chatbot") !== "false",
+  );
   const [showPasswords, setShowPasswords] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: "", next: "", confirm: "" });
   const [changingPassword, setChangingPassword] = useState(false);
@@ -178,6 +181,29 @@ const Setting = () => {
     localStorage.setItem("vibook_reduced_motion", String(reducedMotion));
     localStorage.setItem("vibook_compact_mode", String(compactMode));
   }, [compactMode, fontSize, reducedMotion]);
+
+  useEffect(() => {
+    localStorage.setItem("vibook_show_chatbot", String(showChatbot));
+    window.dispatchEvent(
+      new CustomEvent("vibook_chatbot_visibility_change", { detail: showChatbot }),
+    );
+  }, [showChatbot]);
+
+  useEffect(() => {
+    const handleChatbotVisibility = (e) => {
+      if (e.detail !== undefined) {
+        setShowChatbot(Boolean(e.detail));
+      } else {
+        setShowChatbot(localStorage.getItem("vibook_show_chatbot") !== "false");
+      }
+    };
+    window.addEventListener("vibook_chatbot_visibility_change", handleChatbotVisibility);
+    window.addEventListener("storage", handleChatbotVisibility);
+    return () => {
+      window.removeEventListener("vibook_chatbot_visibility_change", handleChatbotVisibility);
+      window.removeEventListener("storage", handleChatbotVisibility);
+    };
+  }, []);
 
   const promptLoginForPrivate = () => {
     requireLogin({
@@ -553,6 +579,17 @@ const Setting = () => {
                 </div>
               </div>
               <div className="setting-list">
+                <div className="setting-row">
+                  <div>
+                    <strong>{t("settingShowChatbot")}</strong>
+                    <small>{t("settingShowChatbotDescription")}</small>
+                  </div>
+                  <Toggle
+                    checked={showChatbot}
+                    onChange={setShowChatbot}
+                    label={t("settingShowChatbot")}
+                  />
+                </div>
                 <div className="setting-row">
                   <div>
                     <strong>{t("settingReducedMotion")}</strong>

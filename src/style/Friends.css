@@ -21,6 +21,15 @@
   --border-color: var(--vb-glass-border, rgba(255, 255, 255, 0.12));
 }
 
+body.ambient-mode-active .friends-page,
+body.ambient-mode-active .friends-page.light,
+body.ambient-mode-active .friends-page.dark {
+  --bg-color: transparent;
+  --text-color: #ffffff;
+  --card-bg: rgba(18, 20, 32, 0.52);
+  --border-color: rgba(255, 255, 255, 0.14);
+}
+
 .friends-page__header {
   width: 100%;
   margin-bottom: var(--vb-space-3, 24px);

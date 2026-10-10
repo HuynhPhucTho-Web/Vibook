@@ -110,7 +110,7 @@ const BlogCard = ({ post, isFavorite, onToggleFavorite, onEdit, onDelete, t, get
                     e.stopPropagation();
                     onEdit(post);
                   }}
-                  title={t("editPost") || "Chỉnh sửa bài viết"}
+                  title={t("editBlogPost") || t("editPost") || "Chỉnh sửa bài viết"}
                   className="author-icon-btn edit-btn"
                 >
                   <FaEdit />
@@ -122,7 +122,7 @@ const BlogCard = ({ post, isFavorite, onToggleFavorite, onEdit, onDelete, t, get
                     e.stopPropagation();
                     onDelete(post.id, post.isStatic);
                   }}
-                  title={t("deletePost") || "Xóa bài viết"}
+                  title={t("deleteBlogPost") || t("deletePost") || "Xóa bài viết"}
                   className="author-icon-btn delete-btn"
                 >
                   <FaTrash />

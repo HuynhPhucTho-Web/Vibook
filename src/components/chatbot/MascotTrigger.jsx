@@ -14,7 +14,12 @@ const clampY = (y) => {
   return Math.min(Math.max(76, y), max);
 };
 
-const MascotTrigger = ({ onClick, isDrawerOpen, mascotSrc = "/images/mascot/mascot_1.png" }) => {
+const MascotTrigger = ({
+  onClick,
+  isDrawerOpen,
+  mascotSrc = "/images/mascot/mascot_1.png",
+  onHideChatbot,
+}) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [hasDismissedTooltip, setHasDismissedTooltip] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -182,22 +187,54 @@ const MascotTrigger = ({ onClick, isDrawerOpen, mascotSrc = "/images/mascot/masc
                 <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
                   Astro AI
                 </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowTooltip(false);
-                    setHasDismissedTooltip(true);
-                  }}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md"
-                >
-                  <FaTimes className="w-2.5 h-2.5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  {onHideChatbot && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onHideChatbot();
+                      }}
+                      title="Tắt icon trợ lý (Bật lại trong Cài đặt > Khả năng tiếp cận)"
+                      className="px-1.5 py-0.5 text-[10.5px] rounded-md bg-purple-100 hover:bg-red-500 hover:text-white dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 font-medium transition-colors"
+                    >
+                      Tắt icon
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowTooltip(false);
+                      setHasDismissedTooltip(true);
+                    }}
+                    title="Đóng lời nhắc"
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md"
+                  >
+                    <FaTimes className="w-2.5 h-2.5" />
+                  </button>
+                </div>
               </div>
 
               <p className="leading-relaxed text-[11.5px]">
                 Cần tớ đọc và giải thích nội dung trang này không? Bấm vào tớ nhé! (Nhấn giữ để di chuyển)
               </p>
+
+              {onHideChatbot && (
+                <div className="mt-2 pt-1.5 border-t border-purple-100 dark:border-purple-900/40 flex items-center justify-between text-[11px]">
+                  <span className="text-gray-400 text-[10px]">Cài đặt &gt; Khả năng tiếp cận</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onHideChatbot();
+                    }}
+                    className="text-purple-600 dark:text-purple-400 hover:text-red-500 dark:hover:text-red-400 font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
+                  >
+                    Ẩn icon trợ lý
+                  </button>
+                </div>
+              )}
 
               {/* Mũi nhọn speech bubble */}
               <div
@@ -247,6 +284,21 @@ const MascotTrigger = ({ onClick, isDrawerOpen, mascotSrc = "/images/mascot/masc
             isDragging ? "cursor-grabbing" : "cursor-grab"
           } focus:outline-hidden`}
         >
+          {/* Nút tắt/ẩn nhanh icon mascot hiển thị khi rê chuột */}
+          {onHideChatbot && !isDragging && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onHideChatbot();
+              }}
+              title="Tắt icon trợ lý (Bật lại trong Cài đặt > Khả năng tiếp cận)"
+              className="absolute -top-1.5 -right-1.5 z-30 w-5 h-5 rounded-full bg-slate-900/90 dark:bg-black/90 hover:bg-red-500 text-gray-300 hover:text-white border border-white/20 shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer active:scale-95"
+            >
+              <FaTimes className="w-2.5 h-2.5" />
+            </button>
+          )}
+
           {/* Hiệu ứng hào quang phát sáng nhẹ xung quanh mascot */}
           <div
             className={`absolute inset-0 rounded-full bg-purple-500/25 dark:bg-purple-600/35 blur-xl transition-all ${

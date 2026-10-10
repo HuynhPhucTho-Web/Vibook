@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaPaperPlane } from "react-icons/fa";
+import { getActiveEngineLabel } from "../../services/geminiChatService";
 
 const ChatInput = ({ onSend, isLoading }) => {
   const [text, setText] = useState("");
   const inputRef = useRef(null);
+  const [engineLabel, setEngineLabel] = useState(() => getActiveEngineLabel());
 
   useEffect(() => {
     if (!isLoading) {
       inputRef.current?.focus();
     }
+    setEngineLabel(getActiveEngineLabel());
   }, [isLoading]);
 
   const handleSubmit = (e) => {
@@ -46,14 +49,16 @@ const ChatInput = ({ onSend, isLoading }) => {
           type="submit"
           disabled={!text.trim() || isLoading}
           aria-label="Gửi tin nhắn"
-          className="absolute right-1.5 p-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white disabled:opacity-40 disabled:hover:scale-100 hover:scale-105 active:scale-95 transition-all shadow-xs"
+          className="absolute right-1.5 p-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white disabled:opacity-40 disabled:hover:scale-100 hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer"
         >
           <FaPaperPlane className="w-3.5 h-3.5" />
         </button>
       </div>
       <div className="flex items-center justify-between mt-1 px-1 text-[10px] text-gray-400">
         <span>Nhấn Enter để gửi</span>
-        <span>Astro AI • Groq Powered</span>
+        <span className="font-medium text-purple-600/80 dark:text-purple-400/80">
+          Astro AI • {engineLabel}
+        </span>
       </div>
     </form>
   );

@@ -35,9 +35,45 @@ export const getActivePageContext = () => {
   let extractedText = "";
 
   if (contentEl) {
-    // Đọc TRỰC TIẾP innerText từ phần tử đang hiển thị trên màn hình
-    // TUYỆT ĐỐI không dùng cloneNode().innerText vì trình duyệt không tính layout cho detached node dẫn đến chuỗi rỗng!
-    extractedText = contentEl.innerText || "";
+    // Loại bỏ các phần tử chatbot UI ra khỏi context để tránh AI đọc nhầm giao diện chat
+    // Sử dụng TreeWalker để duyệt cây DOM và bỏ qua các node thuộc chatbot
+    const CHATBOT_SELECTORS = [
+      "[data-chatbot]",
+      ".mascot-chatbot",
+      ".chat-drawer",
+      // z-index cao (fixed overlay) — lấy theo aria-label nếu không có class cố định
+    ];
+
+    // Clone để không ảnh hưởng đến live DOM
+    const clone = contentEl.cloneNode(true);
+
+    // Xóa tất cả phần tử chatbot trong clone
+    CHATBOT_SELECTORS.forEach((sel) => {
+      clone.querySelectorAll(sel).forEach((el) => el.remove());
+    });
+
+    // Xóa thêm theo z-index style cực cao (fixed panel chatbot)
+    clone.querySelectorAll("[style*='z-index']").forEach((el) => {
+      const zi = parseInt(el.style.zIndex || "0", 10);
+      if (zi >= 1050) el.remove();
+    });
+
+    // Xóa phần tử có aria-label chứa từ khóa chatbot
+    clone.querySelectorAll("[aria-label]").forEach((el) => {
+      const label = (el.getAttribute("aria-label") || "").toLowerCase();
+      if (label.includes("astro") || label.includes("chatbot") || label.includes("trợ lý")) {
+        el.remove();
+      }
+    });
+
+    // Đọc innerText từ clone đã được làm sạch
+    // Clone được gắn tạm vào document để trình duyệt tính layout và trả về innerText đúng
+    const tempDiv = document.createElement("div");
+    tempDiv.style.cssText = "position:absolute;left:-9999px;top:-9999px;visibility:hidden;pointer-events:none;";
+    tempDiv.appendChild(clone);
+    document.body.appendChild(tempDiv);
+    extractedText = clone.innerText || "";
+    document.body.removeChild(tempDiv);
   }
 
   // 3. Trích xuất chuyên sâu khi đang ở trang Quiz / Đề ôn thi (/source)
@@ -68,12 +104,36 @@ export const getActivePageContext = () => {
   }
 
   // 4. Làm sạch văn bản: giữ lại dòng để AI hiểu cấu trúc danh sách / câu hỏi / đáp án
+  // Lọc thêm các dòng đặc trưng của chatbot UI để tránh AI đọc nhầm giao diện chat
+  const CHATBOT_UI_PATTERNS = [
+    "Astro AI",
+    "Astro Assistant",
+    "Astro •",
+    "Cần tớ đọc và giải thích",
+    "Nhấn Enter để gửi",
+    "Groq Powered",
+    "Gemini Powered",
+    "Google Gemini",
+    "Google AI Studio",
+    "Hỏi Astro về",
+    "Đồng hành & Đọc ngữ cảnh",
+    "Đang đọc:",
+    "Quét lại",
+    "Xóa đoạn hội thoại",
+    "Cài đặt Gemini",
+    "Cài đặt AI",
+    "Vừa xong",
+  ];
+
   const cleanLines = extractedText
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l.length > 0 && !l.startsWith("Astro AI") && !l.includes("Cần tớ đọc và giải thích"));
+    .filter((l) => {
+      if (!l || l.length === 0) return false;
+      return !CHATBOT_UI_PATTERNS.some((pattern) => l.includes(pattern));
+    });
 
-  const cleanedText = cleanLines.join("\n").slice(0, 3000);
+  const cleanedText = cleanLines.join("\n").slice(0, 1500);
 
   const finalContent = structuredDetail
     ? `${structuredDetail}\n[NỘI DUNG VĂN BẢN TRÊN TRANG]:\n${cleanedText}`

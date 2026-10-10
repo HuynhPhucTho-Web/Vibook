@@ -1,13 +1,13 @@
-ViBook Business Requirement Document (BRD)
+Tho-Dev Business Requirement Document (BRD)
 Version
-Project: ViBook Social Network
+Project: Tho-Dev Social Network
 Version: 2.0
 Document Type: Business Requirement
 Status: Approved
 1. Tổng quan hệ thống
 1.1 Mục tiêu
 
-ViBook là mạng xã hội cho phép người dùng:
+Tho-Dev là mạng xã hội cho phép người dùng:
 
 đọc tin tức
 xem hồ sơ

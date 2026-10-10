@@ -1,5 +1,5 @@
 /**
- * ViBook Design System — Futuristic Tech / Glassmorphism
+ * Tho-Dev Design System — Futuristic Tech / Glassmorphism
  * Source of truth: DESIGN.md
  */
 
@@ -98,6 +98,31 @@ html:not(.dark) {
   --app-border: var(--vb-glass-border);
 }
 
+/* Ambient Video Wallpaper Mode Design Tokens */
+html.ambient-mode-active,
+body.ambient-mode-active,
+html.ambient-mode-active:not(.dark),
+body.ambient-mode-active:not(.dark) {
+  --vb-background: transparent !important;
+  --vb-bg-deep: transparent !important;
+  --app-background: transparent !important;
+  --vb-surface: rgba(18, 20, 32, 0.52) !important;
+  --vb-surface-dim: rgba(15, 17, 26, 0.45) !important;
+  --vb-surface-container: rgba(22, 24, 38, 0.54) !important;
+  --vb-surface-container-low: rgba(18, 20, 32, 0.48) !important;
+  --vb-surface-container-high: rgba(28, 30, 46, 0.6) !important;
+  --vb-surface-container-highest: rgba(35, 38, 56, 0.68) !important;
+  --app-card: rgba(22, 24, 38, 0.54) !important;
+  --vb-glass-surface: rgba(22, 24, 38, 0.48) !important;
+  --vb-glass-surface-strong: rgba(22, 24, 38, 0.6) !important;
+  --vb-glass-border: rgba(255, 255, 255, 0.14) !important;
+  --vb-glass-border-strong: rgba(168, 85, 247, 0.45) !important;
+  --vb-on-surface: #ffffff !important;
+  --vb-on-surface-variant: #e2e8f0 !important;
+  --app-text: #ffffff !important;
+  --app-muted: #cbd5e1 !important;
+}
+
 /* ========== Layout shell ========== */
 .page-shell {
   width: 100%;
@@ -151,7 +176,7 @@ body {
 }
 
 /* Ambient brand glow (dark) */
-html.dark body {
+html.dark:not(.ambient-mode-active) body:not(.ambient-mode-active) {
   background-image:
     radial-gradient(circle at 30% 12%, rgba(142, 84, 233, 0.14), transparent 42%),
     radial-gradient(circle at 78% 88%, rgba(71, 118, 230, 0.12), transparent 40%);

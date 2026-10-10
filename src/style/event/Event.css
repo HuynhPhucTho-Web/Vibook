@@ -64,3 +64,12 @@
   overflow-wrap: break-word !important;
   white-space: normal !important;
 }
+
+body.ambient-mode-active .event-modal-overlay > div {
+  background: rgba(18, 20, 32, 0.85) !important;
+  backdrop-filter: blur(26px) !important;
+  -webkit-backdrop-filter: blur(26px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6) !important;
+  color: #ffffff !important;
+}

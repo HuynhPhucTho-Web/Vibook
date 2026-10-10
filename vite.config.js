@@ -38,13 +38,6 @@ export default defineConfig({
             if (normalizedId.includes('framer-motion')) {
               return 'framer-motion';
             }
-            if (
-              normalizedId.includes('react') ||
-              normalizedId.includes('react-dom') ||
-              normalizedId.includes('react-router')
-            ) {
-              return 'vendor-react';
-            }
             return 'vendor';
           }
         },
