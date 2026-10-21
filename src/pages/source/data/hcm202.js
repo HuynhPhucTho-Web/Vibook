@@ -5597,7 +5597,7 @@ export const questions = [
     "id": 158,
     "moduleId": "hcm202-all",
     "answer": [
-      "C"
+      "D"
     ],
     "sourcePage": 158,
     "needsReview": false,

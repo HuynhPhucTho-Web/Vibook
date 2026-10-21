@@ -235,10 +235,24 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
     }
   };
 
+  const handleFlashcardClick = () => {
+    if (!currentQuestion) return;
+    if (!flashcardFlipped) {
+      setFlashcardFlipped(true);
+    } else {
+      if (currentIndex < activeQuestionsList.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        setCurrentIndex(0);
+      }
+      setFlashcardFlipped(false);
+    }
+  };
+
   const handleRevealAnswer = () => {
     if (!currentQuestion) return;
     if (quizMode === "flashcard") {
-      setFlashcardFlipped(!flashcardFlipped);
+      handleFlashcardClick();
     } else if (quizMode !== "exam") {
       setCheckedQuestions((prev) => ({ ...prev, [currentQuestion.id]: true }));
     }
@@ -589,7 +603,7 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                   /* Flashcard rendering */
                   <div className="w-full flex justify-center py-2 sm:py-4">
                     <div
-                      onClick={handleRevealAnswer}
+                      onClick={handleFlashcardClick}
                       className={`w-full max-w-2xl min-h-[160px] sm:min-h-[220px] rounded-xl sm:rounded-2xl border-2 cursor-pointer p-4 sm:p-8 relative flex flex-col justify-between group/flash shadow-md sm:shadow-xl hover:border-primary/50 transition-all duration-300 ${
                         isDark ? "bg-[#1e1f27]/80 border-glass-border" : "bg-white border-slate-200"
                       }`}
@@ -653,10 +667,21 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
                         })}
                       </div>
 
-                      <div className="text-center text-[10px] sm:text-xs text-outline group-hover/flash:text-primary transition-colors mt-2 sm:mt-4">
-                        {flashcardFlipped
-                          ? (language === "vi" ? "Click để xem câu hỏi" : "Click to view question")
-                          : (language === "vi" ? "Click để lật thẻ đáp án" : "Click to flip card for answer")}
+                      <div className="text-center text-[10px] sm:text-xs text-outline group-hover/flash:text-primary transition-colors mt-2 sm:mt-4 flex items-center justify-center gap-1.5">
+                        {flashcardFlipped ? (
+                          <>
+                            <span>
+                              {currentIndex < activeQuestionsList.length - 1
+                                ? (language === "vi" ? "Click để chuyển câu hỏi tiếp theo" : "Click to go to next question")
+                                : (language === "vi" ? "Click để quay lại câu đầu" : "Click to return to first question")}
+                            </span>
+                            <FaArrowRight className="w-2.5 h-2.5 inline group-hover/flash:translate-x-1 transition-transform" />
+                          </>
+                        ) : (
+                          <span>
+                            {language === "vi" ? "Click để lật thẻ đáp án" : "Click to flip card for answer"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
