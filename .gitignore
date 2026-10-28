@@ -31,3 +31,9 @@ dist-ssr
 .impeccable/
 .claude/
 .codex/
+
+
+.env
+.env*.local
+.env.local
+.env.production
