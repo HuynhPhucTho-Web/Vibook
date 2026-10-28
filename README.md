@@ -24,10 +24,10 @@
   <br />
 
   <p align="center">
+    <a href="#-hình-ảnh--giao-diện-thực-tế"><strong>Hình ảnh giao diện »</strong></a> •
     <a href="#-tính-năng-nổi-bật"><strong>Khám phá tính năng »</strong></a> •
     <a href="#-cài-đặt--hướng-dẫn-chạy"><strong>Bắt đầu nhanh »</strong></a> •
-    <a href="#-kiến-trúc--công-nghệ"><strong>Công nghệ sử dụng »</strong></a> •
-    <a href="#-quy-chuẩn-thiết-kế-design-system"><strong>Design System »</strong></a>
+    <a href="#-kiến-trúc--công-nghệ"><strong>Công nghệ sử dụng »</strong></a>
   </p>
 
 </div>
@@ -37,19 +37,17 @@
 ## 📖 Mục Lục
 
 - [Giới thiệu tổng quan](#-giới-thiệu-tổng-quan)
-- [Hình ảnh & Giao diện minh họa](#-hình-ảnh--giao-diện-minh-họa)
+- [Hình ảnh & Giao diện thực tế](#-hình-ảnh--giao-diện-thực-tế)
+  - [1. Giao diện Đăng nhập (Login Page)](#1-giao-diện-đăng-nhập-login-page)
+  - [2. Giao diện Đăng ký (Register Page)](#2-giao-diện-đăng-ký-register-page)
+  - [3. Trang chủ & Bảng tin cộng đồng (Home Feed)](#3-trang-chủ--bảng-tin-cộng-đồng-home-feed)
+  - [4. Mạng lưới Bạn bè & Kết nối (Friends)](#4-mạng-lưới-bạn-bè--kết-nối-friends)
+  - [5. Nền tảng Blog học thuật & Kỹ thuật (Blog List)](#5-nền-tảng-blog-học-thuật--kỹ-thuật-blog-list)
+  - [6. Kho tài nguyên & Ngân hàng học liệu (Knowledge Nexus)](#6-kho-tài-nguyên--ngân-hàng-học-liệu-knowledge-nexus)
+  - [7. Quản lý Sự kiện & Hội thảo công nghệ (Events)](#7-quản-lý-sự-kiện--hội-thảo-công-nghệ-events)
+  - [8. Trung tâm Video & Học lập trình (Video Hub)](#8-trung-tâm-video--học-lập-trình-video-hub)
+  - [9. Khu vực Trò chơi giải trí (Gaming Zone)](#9-khu-vực-trò-chơi-giải-trí-gaming-zone)
 - [Tính năng nổi bật](#-tính-năng-nổi-bật)
-  - [1. Xác thực & Bảo mật đa tầng (Authentication)](#1-xác-thực--bảo-mật-đa-tầng-authentication)
-  - [2. Bảng tin cộng đồng (Social Feed)](#2-bảng-tin-cộng-đồng-social-feed)
-  - [3. Kho tài nguyên & Ôn thi trắc nghiệm (Academic Resources & Quiz)](#3-kho-tài-nguyên--ôn-thi-trắc-nghiệm-academic-resources--quiz)
-  - [4. Nền tảng Blog học thuật & Kỹ thuật](#4-nền-tảng-blog-học-thuật--kỹ-thuật)
-  - [5. Video Hub & Trình phát Ambient PiP toàn ứng dụng](#5-video-hub--trình-phát-ambient-pip-toàn-ứng-dụng)
-  - [6. Nhóm học tập, Sự kiện & Bạn bè](#6-nhóm-học-tập-sự-kiện--bạn-bè)
-  - [7. Tin nhắn trực tiếp thời gian thực (Messenger)](#7-tin-nhắn-trực-tiếp-thời-gian-thực-messenger)
-  - [8. Sàn sách & Tài liệu giáo trình (Marketplace)](#8-sàn-sách--tài-liệu-giáo-trình-marketplace)
-  - [9. Trợ lý AI Thông Minh (ThoDev Mascot Chatbot)](#9-trợ-lý-ai-thông-minh-thodev-mascot-chatbot)
-  - [10. Trò chơi giải trí (Mini-games)](#10-trò-chơi-giải-trí-mini-games)
-  - [11. Hệ thống giao diện Theme kép & Đa ngôn ngữ](#11-hệ-thống-giao-diện-theme-kép--đa-ngôn-ngữ)
 - [Kiến trúc & Công nghệ](#-kiến-trúc--công-nghệ)
 - [Cấu trúc thư mục dự án](#-cấu-trúc-thư-mục-dự-án)
 - [Cài đặt & Hướng dẫn chạy](#-cài-đặt--hướng-dẫn-chạy)
@@ -70,30 +68,87 @@ Khác với các ứng dụng đọc sách thụ động hoặc các nền tản
 
 ---
 
-## 🖼️ Hình ảnh & Giao diện minh họa
+## 🖼️ Hình ảnh & Giao diện thực tế
+
+Dưới đây là các ảnh chụp màn hình trực tiếp từ hệ thống ThoDev (ViBook):
+
+### 1. Giao diện Đăng nhập (Login Page)
+> Hệ thống đăng nhập bảo mật với hiệu ứng lưới động WebGL CursorGrid tương tác chuột, bộ chuyển đổi giao diện phân đoạn `[ ☀️ Sáng | 🌙 Tối ]`, thanh trượt chống bot tự động (Anti-Bot Slider) và tùy chọn đăng nhập nhanh với Google OAuth.
 
 <div align="center">
+  <img src="public/images/images_introduce/1.png" alt="Giao diện Đăng nhập ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
 
-| **Bảng tin & Khám phá tri thức** | **Xác thực bảo mật & Nền WebGL** |
-|:---:|:---:|
-| <img src="public/images/mascot/01_robot_browser.png" width="280" alt="Bảng tin cộng đồng ThoDev" /> | <img src="public/images/mascot/04_robot_code_sign.png" width="280" alt="Bảo mật & Xác thực" /> |
-| *Bảng tin cập nhật bài viết, tài liệu học tập và thảo luận theo thời gian thực* | *Hệ thống đăng nhập bảo mật với Anti-Bot Slider & hiệu ứng lưới CursorGrid* |
+<br />
 
-| **Ngân hàng ôn thi & Trắc nghiệm** | **Nền tảng Blog kỹ thuật & Học thuật** |
-|:---:|:---:|
-| <img src="public/images/ite302c/quiz_ite.png" width="340" alt="Hệ thống trắc nghiệm học phần" /><br /><img src="public/images/mascot/09_robot_book_bulb.png" width="160" alt="Ôn tập bài giảng" /> | <img src="public/images/blog/static-1.webp" width="340" alt="Blog học thuật ThoDev" /> |
-| *Luyện thi trắc nghiệm tương tác cao kèm giải thích đáp án và Flashcard* | *Đọc & soạn thảo bài viết kỹ thuật chuyên sâu với rich-text editor hiện đại* |
+### 2. Giao diện Đăng ký (Register Page)
+> Mẫu đăng ký thành viên mới với thiết kế Glassmorphism đồng bộ, xác nhận mật khẩu thời gian thực, điều khoản sử dụng và kiểm tra bảo mật kéo thả trước khi kích hoạt tài khoản.
 
-| **Trợ lý AI Mascot Đồng Hành** | **Trò chơi thư giãn trí tuệ** |
-|:---:|:---:|
-| <img src="public/images/mascot/05_flying_robot.png" width="240" alt="ThoDev AI Chatbot" /> | <img src="public/images/caro3x3.jpg" width="240" alt="Cờ Caro 3x3 Mini Game" /> |
-| *Robot AI tích hợp trực tiếp hỗ trợ giải đáp thắc mắc và hướng dẫn sử dụng* | *Mini game Cờ Caro 3x3 giải tỏa căng thẳng sau những giờ ôn thi căng thẳng* |
+<div align="center">
+  <img src="public/images/images_introduce/2.png" alt="Giao diện Đăng ký ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
 
-| **Giao diện đa thiết bị & Di động** | **Chế độ sáng / tối đồng bộ** |
-|:---:|:---:|
-| <img src="public/images/mascot/06_robot_tablet.png" width="240" alt="Hỗ trợ di động qua Capacitor" /> | <img src="public/images/mascot/03_robot_moon.png" width="240" alt="Theme kép Dark & Light Mode" /> |
-| *Đóng gói Hybrid Android mượt mà, tối ưu trên cả desktop lẫn tablet và smartphone* | *Hỗ trợ đồng bộ giao diện Tối/Sáng tức thì kèm 5 bảng màu khí quyển linh hoạt* |
+<br />
 
+### 3. Trang chủ & Bảng tin cộng đồng (Home Feed)
+> Bảng tin mạng xã hội hiển thị bài viết người dùng, thanh trạng thái trực tuyến (`16 đang online`), mục bài viết Blog công nghệ nổi bật (DevOps, UI/UX, Cloud, C++, React) cùng hệ thống tương tác thả cảm xúc và bình luận.
+
+<div align="center">
+  <img src="public/images/images_introduce/3.png" alt="Trang chủ và Bảng tin cộng đồng ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
+
+<br />
+
+### 4. Mạng lưới Bạn bè & Kết nối (Friends)
+> Giao diện tìm kiếm, quản lý danh sách bạn bè, gửi lời mời kết bạn và xem thông tin hồ sơ của các thành viên trong cộng đồng ThoDev.
+
+<div align="center">
+  <img src="public/images/images_introduce/4.png" alt="Mạng lưới Bạn bè ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
+
+<br />
+
+### 5. Nền tảng Blog học thuật & Kỹ thuật (Blog List)
+> Thư viện bài viết chuyên sâu với ảnh bìa chất lượng cao, phân loại theo chủ đề (DevOps, Thủ thuật máy tính, Cloud / Deployment, UI/UX), hiển thị thời gian đọc ước tính, lượt xem và lượt yêu thích.
+
+<div align="center">
+  <img src="public/images/images_introduce/5.png" alt="Danh sách bài viết Blog ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
+
+<br />
+
+### 6. Kho tài nguyên & Ngân hàng học liệu (Knowledge Nexus)
+> Cổng tri thức tổng hợp bài giảng, slide tài liệu và ngân hàng câu hỏi trắc nghiệm tự luyện phân theo từng mã học phần đại học (`DPS201c`, `ITE302c`, `MLN131`, `PMG201c`, `HCM202`, `VNR202`, `LAE101`...).
+
+<div align="center">
+  <img src="public/images/images_introduce/6.png" alt="Kho Tài Liệu Học Tập Knowledge Nexus" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
+
+<br />
+
+### 7. Quản lý Sự kiện & Hội thảo công nghệ (Events)
+> Nơi theo dõi và đăng ký tham gia các sự kiện triển lãm công nghệ, chuỗi sự kiện Hi-Tech, hội thảo kiến trúc phần mềm trực tuyến (Zoom) và trực tiếp.
+
+<div align="center">
+  <img src="public/images/images_introduce/7.png" alt="Quản lý Sự kiện ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
+
+<br />
+
+### 8. Trung tâm Video & Học lập trình (Video Hub)
+> Kênh tổng hợp các khóa học lập trình chất lượng cao (React, JavaScript, HTML & CSS) và công nghệ mới với khả năng phát video toàn cục và tìm kiếm trực tiếp qua YouTube link/ID.
+
+<div align="center">
+  <img src="public/images/images_introduce/8.png" alt="Trung tâm Video Học tập ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+</div>
+
+<br />
+
+### 9. Khu vực Trò chơi giải trí (Gaming Zone)
+> Bộ sưu tập các mini game giải trí đa dạng (Pikachu Online, Cờ Caro 3x3, Purr-Fish, Sudoku, Cờ Vua Chess, Cờ Caro 5x5) giúp giải tỏa căng thẳng sau giờ học.
+
+<div align="center">
+  <img src="public/images/images_introduce/9.png" alt="Khu vực Trò chơi giải trí ThoDev" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
 </div>
 
 ---
@@ -151,7 +206,7 @@ Khác với các ứng dụng đọc sách thụ động hoặc các nền tản
 - Sử dụng mô hình ngôn ngữ lớn để trả lời câu hỏi học tập, giải thích bài tập và hướng dẫn sử dụng các tính năng trong hệ thống.
 
 ### 10. Trò chơi giải trí (Mini-games)
-- Tích hợp game Cờ Caro 3x3 (`PlayGame.jsx`) với thuật toán thông minh, giao diện trực quan giúp thư giãn và xả stress sau các phiên làm việc tập trung.
+- Tích hợp 6 mini game đa dạng: Pikachu Online, Cờ Caro 3x3, Purr-Fish, Sudoku, Cờ Vua Chess, Cờ Caro 5x5 giúp thư giãn và xả stress sau các phiên làm việc tập trung.
 
 ### 11. Hệ thống giao diện Theme kép & Đa ngôn ngữ
 - **Chế độ Giao diện:** Hỗ trợ chuyển đổi nhanh chế độ **Sáng (Light Mode)** và **Tối (Dark Mode)** không bị chớp nháy (Flash of unstyled content).
@@ -207,6 +262,7 @@ Vibook/
 │   └── BUSINESS_RULES.md
 ├── public/                    # Tài nguyên tĩnh công khai
 │   ├── images/
+│   │   ├── images_introduce/  # Bộ 9 ảnh chụp màn hình thực tế (1.png - 9.png)
 │   │   ├── blog/              # Ảnh bìa bài viết blog
 │   │   ├── mascot/            # Bộ ảnh Mascot Robot ThoDev
 │   │   └── ite302c/           # Ảnh học liệu môn học
