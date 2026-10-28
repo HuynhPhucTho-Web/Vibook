@@ -28,6 +28,7 @@ npm i @emoji-mart/react @emoji-mart/data
 npm install lucide-react
 npm install react-icons --save
 npm install framer-motion
+npx shadcn@latest add @react-bits/CursorGrid-JS-TW
 
 ## Short Dependence
 
