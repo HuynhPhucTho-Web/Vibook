@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from '../context/LanguageContext';
 import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash, FaCheck, FaUpload } from "react-icons/fa";
+import PageHeaderBanner from "../components/PageHeaderBanner";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
 import { useSearch } from "../context/SearchContext";
@@ -230,44 +231,32 @@ const Games = () => {
 
   return (
     <div className="page-shell">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <FaGamepad className="text-pink-500" /> {t("gameTitleCount")} ({games.length})
-          </h1>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            {/* <input
-              type="text"
-              placeholder="🔍 Search games..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={`w-full sm:w-64 px-4 py-2 rounded-full ${cls.input} ${cls.ringFocus}`}
-            /> */}
-
-
-
-
-            <button
-              type="button"
-              onClick={() => {
-                if (
-                  !requireLogin({
-                    navigate,
-                    message: "Please log in to create a game",
-                  })
-                ) {
-                  return;
-                }
-                setShowCreateModal(true);
-              }}
-              className="vb-btn vb-btn--primary"
-            >
-              <FaPlus size={14} />
-              {t("addGame")}
-            </button>
-
-          </div>
-        </div>
+        {/* Standardized Page Header Banner */}
+        <PageHeaderBanner
+          icon={FaGamepad}
+          title={t("gameTitleCount") || "Kho Trò Chơi"}
+          subtitle="GAMING HUB"
+          badge={`(${games.length})`}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                !requireLogin({
+                  navigate,
+                  message: "Please log in to create a game",
+                })
+              ) {
+                return;
+              }
+              setShowCreateModal(true);
+            }}
+            className="vb-btn vb-btn--primary"
+          >
+            <FaPlus size={14} />
+            <span>{t("addGame")}</span>
+          </button>
+        </PageHeaderBanner>
 
         {/* Create Modal */}
         {showCreateModal && (

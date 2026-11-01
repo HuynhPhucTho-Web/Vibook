@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../../components/firebase";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../../utils/confirmDialog";
 import { useSearch } from "../../context/SearchContext";
 import { uploadToCloudinary } from "../../utils/cloudinary";
 import {
@@ -34,7 +35,8 @@ import SEO from "../../components/SEO";
 import BlogDetail from "../../components/blog/BlogDetail";
 import BlogFormModal from "../../components/blog/BlogFormModal";
 import AdSense from "../../components/AdSense";
-import { FaHeart, FaPlus } from "react-icons/fa";
+import { FaHeart, FaPlus, FaNewspaper } from "react-icons/fa";
+import PageHeaderBanner from "../../components/PageHeaderBanner";
 import "../../style/Blog.css";
 
 const formats = [
@@ -888,7 +890,8 @@ const BlogPages = () => {
       toast.info("Bài viết mẫu (tĩnh) không thể xóa");
       return;
     }
-    if (!window.confirm(t("confirmDelete"))) return;
+    const ok = await confirmDialog(t("confirmDelete"), { confirmText: t("deleteBlogPost") || "Xóa" });
+    if (!ok) return;
     try {
       await deleteDoc(doc(db, "BlogPosts", postId));
       setPosts((prev) => prev.filter((p) => p.id !== postId));
@@ -1207,47 +1210,73 @@ const BlogPages = () => {
 
       {/* List view */}
       {!isDetailView && (
-        <div>
-          <div className="blog-header">
-            <h1>{t("blogListTitle")}</h1>
+        <div className="w-full max-w-[1200px] mx-auto">
+          {/* Standardized Page Header Banner */}
+          <PageHeaderBanner
+            icon={FaNewspaper}
+            title={t("blogListTitle") || "Blog & Tin tức"}
+            subtitle="BLOG HUB"
+            badge={posts?.length ? `(${filteredPosts?.length || posts.length})` : null}
+          >
+            {/* Category Select */}
+            <select
+              value={selectedCategory || ""}
+              onChange={handleCategoryChange}
+              className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none"
+              title="Danh mục"
+            >
+              <option value="" className="bg-neutral-900 text-white">
+                {t("allCategories") || "Tất cả danh mục"}
+              </option>
+              {filterCategories.map((cat) => (
+                <option key={cat.id} value={cat.name} className="bg-neutral-900 text-white">
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Sort Select */}
+            <select
+              value={sortBy}
+              onChange={handleSortChange}
+              className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none"
+              title="Sắp xếp"
+            >
+              <option value="newest" className="bg-neutral-900 text-white">{t("sortByNewest")}</option>
+              <option value="oldest" className="bg-neutral-900 text-white">{t("sortByOldest")}</option>
+              <option value="favorites" className="bg-neutral-900 text-white">Yêu thích nhất</option>
+            </select>
+
+            {/* Favorite Filter Toggle */}
             {auth.currentUser && (
-              <button onClick={openAddModal} className="vb-btn vb-btn--primary">
-                <FaPlus size={14} />
-                {t("addPost")}
+              <button
+                type="button"
+                onClick={() => setShowFavoritesOnly(prev => !prev)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border ${
+                  showFavoritesOnly
+                    ? "bg-red-500/20 text-red-400 border-red-500/40"
+                    : "bg-neutral-900/40 border-purple-500/20 text-slate-300 hover:text-white"
+                }`}
+                title={showFavoritesOnly ? "Hiện tất cả bài viết" : "Lọc bài viết đã thích"}
+              >
+                <FaHeart size={11} className={showFavoritesOnly ? "text-red-400" : "text-slate-400"} />
+                <span>{showFavoritesOnly ? "Tất cả" : "Yêu thích"}</span>
               </button>
             )}
-          </div>
 
-          <div className="blog-controls">
-            <div className="filters">
-              <select value={selectedCategory || ""} onChange={handleCategoryChange}>
-                <option value="">{t("allCategories") || "All Categories"}</option>
-                {filterCategories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+            {/* Add Post Button */}
+            {auth.currentUser && (
+              <button
+                type="button"
+                onClick={openAddModal}
+                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md shadow-purple-500/20 flex items-center gap-1.5 transition-all duration-200 cursor-pointer"
+              >
+                <FaPlus size={11} />
+                <span>{t("addPost")}</span>
+              </button>
+            )}
+          </PageHeaderBanner>
 
-              <select value={sortBy} onChange={handleSortChange}>
-                <option value="newest">{t("sortByNewest")}</option>
-                <option value="oldest">{t("sortByOldest")}</option>
-                <option value="favorites">Yêu thích nhất</option>
-              </select>
-
-              {auth.currentUser && (
-                <button
-                  type="button"
-                  className={`btn btn-sm ${showFavoritesOnly ? "btn-danger" : "btn-outline-danger"} d-inline-flex align-items-center gap-1`}
-                  onClick={() => setShowFavoritesOnly(prev => !prev)}
-                  style={{ height: "38px" }}
-                >
-                  <FaHeart /> {showFavoritesOnly ? "Hiện tất cả" : "Bài viết yêu thích"}
-                </button>
-              )}
-            </div>
-          </div>
-          
           {searchTerm && (
             <div className="search-banner mb-4 d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: "rgba(142, 84, 233, 0.08)", border: "1px solid var(--vb-glass-border, rgba(255,255,255,0.08))", backdropFilter: "blur(8px)", color: "var(--app-text)" }}>
               <span className="d-flex align-items-center gap-2">

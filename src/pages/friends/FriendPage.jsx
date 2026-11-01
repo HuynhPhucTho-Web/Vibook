@@ -8,6 +8,8 @@ import { requireLogin } from "../../utils/requireLogin";
 import "../../style/Friends.css";
 import { useSearch } from "../../context/SearchContext";
 import SEO from "../../components/SEO";
+import { FaUserFriends } from "react-icons/fa";
+import PageHeaderBanner from "../../components/PageHeaderBanner";
 
 import FriendRequests from "../../components/friends/FriendRequests";
 import FriendsList from "../../components/friends/FriendsList";
@@ -74,12 +76,19 @@ const Friends = () => {
         slug="/friends"
         noindex={true}
       />
-      <div className="friends-page__header">
-        <div className="friends-page__header-content">
-          <h1>{t("friends")}</h1>
-          {isGuest && <p className="friends-page__guest-hint">{t("guestFriendsHint")}</p>}
-        </div>
-      </div>
+      {/* Standardized Page Header Banner */}
+      <PageHeaderBanner
+        icon={FaUserFriends}
+        title={t("friends") || "Bạn bè"}
+        subtitle="FRIENDS HUB"
+        badge={isGuest ? "Guest" : null}
+      >
+        {isGuest && (
+          <span className="text-xs text-amber-500/90 font-medium">
+            {t("guestFriendsHint")}
+          </span>
+        )}
+      </PageHeaderBanner>
 
       <div className="friends-page__layout">
         <aside className="friends-page__sidebar">

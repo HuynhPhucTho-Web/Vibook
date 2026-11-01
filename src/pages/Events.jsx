@@ -27,6 +27,7 @@ import { requireLogin } from "../utils/requireLogin";
 import ReactQuill from "react-quill-new";
 import { useSearch } from "../context/SearchContext";
 import SEO from "../components/SEO";
+import PageHeaderBanner from "../components/PageHeaderBanner";
 import "../style/event/Event.css";
 
 const quillModules = {
@@ -606,37 +607,27 @@ const Events = () => {
         slug="/events"
         schema={eventSchema}
       />
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-3">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-            {t("eventsTitle")} ({filteredEvents.length})
-          </h1>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            {/* <input
-              type="text"
-              placeholder={`🔍 ${t("searchEvents")}`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            /> */}
-
-
-            <button
-              onClick={() => {
-                if (!auth.currentUser) {
-                  navigate("/login", { state: { from: "/events" } });
-                } else {
-                  setShowCreateModal(true);
-                }
-              }}
-              className="vb-btn vb-btn--primary"
-            >
-              <FaPlus size={14} />
-              {t("createEvent")}
-            </button>
-
-          </div>
-        </div>
+        {/* Standardized Page Header Banner */}
+        <PageHeaderBanner
+          icon={FaCalendarAlt}
+          title={t("eventsTitle") || "Sự kiện & Hội thảo"}
+          subtitle="EVENT HUB"
+          badge={`(${filteredEvents.length})`}
+        >
+          <button
+            onClick={() => {
+              if (!auth.currentUser) {
+                navigate("/login", { state: { from: "/events" } });
+              } else {
+                setShowCreateModal(true);
+              }
+            }}
+            className="vb-btn vb-btn--primary"
+          >
+            <FaPlus size={14} />
+            <span>{t("createEvent")}</span>
+          </button>
+        </PageHeaderBanner>
 
         {/* Tab Bar */}
         <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6 gap-6">
