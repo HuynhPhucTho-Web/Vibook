@@ -221,6 +221,7 @@ const Messenger = () => {
     const unsubscribes = [];
 
     users.forEach((friend) => {
+      if (!friend?.uid) return;
       const chatId = createChatId(currentUser.uid, friend.uid);
       const messagesRef = collection(db, "Messages", chatId, "messages");
       const configRef = doc(db, "Messages", chatId);
@@ -252,7 +253,7 @@ const Messenger = () => {
       // 2. Unread messages listener (messages sent to currentUser which currentUser has not read)
       const unreadQuery = query(
         messagesRef,
-        where("receiverId", "==", currentUser.uid)
+        where("senderId", "==", friend.uid)
       );
       const unsubUnread = onSnapshot(unreadQuery, (snapshot) => {
         const unreadCount = snapshot.docs.filter(docSnap => {
