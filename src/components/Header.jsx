@@ -242,7 +242,7 @@ const Header = () => {
 
     return () => {
       if (notifDebounceRef.current) clearTimeout(notifDebounceRef.current);
-      unsubscribe();
+      try { if (typeof unsubscribe === "function") unsubscribe(); } catch (_) {}
     };
   }, [authUser]);
 

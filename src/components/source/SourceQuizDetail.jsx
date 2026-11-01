@@ -281,8 +281,8 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
     }
   };
 
-  const handleResetProgress = () => {
-    if (window.confirm(language === "vi" ? "Đặt lại toàn bộ tiến trình và đáp án?" : "Reset all quiz answers and progress?")) {
+  const handleResetProgress = async () => {
+    if (await confirmDialog(language === "vi" ? "Đặt lại toàn bộ tiến trình và đáp án?" : "Reset all quiz answers and progress?", { confirmText: language === "vi" ? "Đặt lại" : "Reset", type: "warning" })) {
       setUserAnswers({});
       setCheckedQuestions({});
       setBookmarkedIds([]);
@@ -292,8 +292,8 @@ export default function SourceQuizDetail({ subject, isDark, language }) {
     }
   };
 
-  const handleSubmitExam = () => {
-    if (window.confirm(language === "vi" ? "Bạn có chắc chắn muốn nộp bài thi?" : "Are you sure you want to submit the exam?")) {
+  const handleSubmitExam = async () => {
+    if (await confirmDialog(language === "vi" ? "Bạn có chắc chắn muốn nộp bài thi?" : "Are you sure you want to submit the exam?", { confirmText: language === "vi" ? "Nộp bài" : "Submit", type: "warning" })) {
       setExamSubmitted(true);
     }
   };

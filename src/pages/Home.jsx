@@ -100,7 +100,7 @@ function Home() {
     });
     return () => {
       cancelled = true;
-      unsub();
+      try { if (typeof unsub === "function") unsub(); } catch (_) {}
     };
   }, [userDetails]);
 
@@ -200,7 +200,7 @@ function Home() {
       );
       return () => {
         cancelled = true;
-        unsubPosts();
+      try { if (typeof unsubPosts === "function") unsubPosts(); } catch (_) {}
       };
     }
 
@@ -234,7 +234,7 @@ function Home() {
 
     return () => {
       cancelled = true;
-      unsubPosts();
+      try { if (typeof unsubPosts === "function") unsubPosts(); } catch (_) {}
     };
   }, [searchParams]);
 
