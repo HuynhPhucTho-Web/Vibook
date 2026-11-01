@@ -4,6 +4,7 @@ import { sourceData } from "./sourceData";
 import SourceDetail from "../../components/source/SourceDetail";
 import { LanguageContext } from "../../context/LanguageContext";
 import SEO from "../../components/SEO";
+import PageHeaderBanner from "../../components/PageHeaderBanner";
 import { ThemeContext } from "../../context/ThemeContext";
 import AdSense from "../../components/AdSense";
 import {
@@ -202,7 +203,7 @@ export default function SourcePage() {
   if (activeSubject) {
     const isQuiz = tab === "quiz";
     return (
-      <>
+      <div className="page-shell source-page">
         <SEO
           title={`${activeSubject.name} - ${isQuiz ? (language === "vi" ? "Ngân hàng Quiz" : "Quiz Bank") : (language === "vi" ? "Tài liệu học tập" : "Study Documents")}`}
           description={`Tải tài liệu môn học ${activeSubject.name} (${activeSubject.code}) - Giáo trình, đề cương, câu hỏi ôn tập tại ThoDev.`}
@@ -213,21 +214,19 @@ export default function SourcePage() {
           subject={activeSubject}
           onBack={() => navigate("/source")}
         />
-      </>
+      </div>
     );
   }
 
   return (
-    <div className={`min-h-screen w-full px-4 py-8 md:px-8 transition-colors duration-300 z-10 ${
-      isDark ? "bg-[#12131a] text-[#e3e1ec]" : "bg-[#faf7f2] text-[#162033]"
-    }`}>
+    <div className={`page-shell source-page ${isDark ? "text-[#e3e1ec]" : "text-[#162033]"}`}>
       <SEO
         title="Kho Tài Liệu Học Tập"
         description="Kho tài liệu ôn thi học thuật, đề cương, giáo trình và ngân hàng câu hỏi ôn tập trắc nghiệm trực tuyến chất lượng tại ThoDev."
         slug="/source"
         noindex={true}
       />
-      <div className="max-w-7xl mx-auto flex flex-col gap-10">
+      <div className="w-full max-w-[1200px] mx-auto flex flex-col gap-4">
         
         {/* Background Decorative Blobs (visible in dark mode only) */}
         {isDark && (
@@ -237,53 +236,28 @@ export default function SourcePage() {
           </div>
         )}
 
-        {/* Page Header Area */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 z-10">
-          <div className="flex flex-col gap-2 max-w-2xl">
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-2 h-2 rounded-full bg-neon-purple shadow-[0_0_10px_rgba(142,84,233,0.8)]"></div>
-              <span className="font-label-sm text-label-sm uppercase tracking-widest text-primary font-bold">
-                KNOWLEDGE NEXUS
-              </span>
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {language === "vi" ? "Kho Tài Liệu Học Tập" : "Subject Modules"}
-            </h1>
-            <p className={`font-body-md text-body-md opacity-85 mt-1 ${isDark ? "text-[#cdc3d6]" : "text-slate-600"}`}>
-              {language === "vi"
-                ? "Truy cập và ôn tập toàn bộ tài liệu học tập, slide bài giảng, bài tập và hệ thống câu hỏi trắc nghiệm tự luyện."
-                : "Access and review all enrolled course materials, documentation, and assessments."}
-            </p>
+        {/* Standardized Page Header Banner */}
+        <PageHeaderBanner
+          icon={FaBook}
+          title={language === "vi" ? "Kho Tài Liệu Học Tập" : "Subject Modules"}
+          subtitle="SOURCE HUB"
+          badge={`(${filteredSubjects.length})`}
+        >
+          <div className="relative flex items-center min-w-[200px] sm:min-w-[260px]">
+            <FaSearch className="absolute left-3 text-slate-400 pointer-events-none" size={13} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={language === "vi" ? "Tìm kiếm môn học..." : "Filter subjects..."}
+              className={`w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-xl border transition-all outline-none ${
+                isDark
+                  ? "bg-black/30 border-white/10 text-white placeholder-slate-400 focus:border-purple-500"
+                  : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-purple-500"
+              }`}
+            />
           </div>
-
-          {/* Filter Input wrapper */}
-          <div className="w-full md:w-80 relative group z-10">
-            {isDark && (
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/20 to-electric-blue/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-50 group-focus-within:opacity-100"></div>
-            )}
-            <div className={`relative rounded-xl border p-1 transition-colors flex items-center ${
-              isDark
-                ? "bg-surface/80 border-glass-border group-focus-within:border-electric-blue/50"
-                : "bg-white border-slate-300 group-focus-within:border-primary/50 shadow-sm"
-            }`}>
-              <FaSearch className={`ml-3 ${isDark ? "text-outline" : "text-slate-400"}`} size={16} />
-              <input
-                className={`w-full bg-transparent border-none focus:outline-none font-body-md py-2 px-3 ${
-                  isDark ? "text-on-surface placeholder:text-outline/70" : "text-slate-900 placeholder:text-slate-400"
-                }`}
-                placeholder={language === "vi" ? "Tìm kiếm môn học..." : "Filter subjects..."}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button className={`rounded-lg p-2 transition-colors mr-1 flex items-center justify-center ${
-                isDark ? "bg-surface-bright/50 hover:bg-surface-bright" : "bg-slate-100 hover:bg-slate-200"
-              }`}>
-                <FaFilter className={`${isDark ? "text-on-surface-variant" : "text-slate-600"}`} size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
+        </PageHeaderBanner>
 
         {/* Grid List of Subject Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 z-10">

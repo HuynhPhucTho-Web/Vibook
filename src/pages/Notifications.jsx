@@ -361,7 +361,8 @@ const Notifications = () => {
   }
 
   return (
-    <div className="page-shell max-w-4xl mx-auto px-3 sm:px-6 py-6">
+    <div className="page-shell">
+      <div className="w-full max-w-[1200px] mx-auto">
       {/* Top Header Banner */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
@@ -505,7 +506,9 @@ const Notifications = () => {
         onMarkAsRead={handleMarkAsRead}
         onDelete={handleDeleteNotification}
         formatTimeAgo={formatTimeAgo}
+
       />
+      </div>
     </div>
   );
 };

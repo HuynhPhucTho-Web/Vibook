@@ -36,8 +36,8 @@ export default function SourceDetail({ subject, onBack }) {
   };
 
   return (
-    <div className={`min-h-screen w-full px-2.5 py-3 sm:px-4 sm:py-6 md:px-8 transition-colors duration-300 relative ${
-      isDark ? "bg-[#12131a] text-[#e3e1ec]" : "bg-[#faf7f2] text-[#162033]"
+    <div className={`w-full transition-colors duration-300 relative ${
+      isDark ? "text-[#e3e1ec]" : "text-[#162033]"
     }`}>
       {/* Decorative Blur Backgrounds (only in dark mode) */}
       {isDark && (
@@ -48,7 +48,7 @@ export default function SourceDetail({ subject, onBack }) {
       )}
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto flex flex-col gap-3 sm:gap-6 relative z-10 w-full">
+      <div className="max-w-[1200px] mx-auto flex flex-col gap-3 sm:gap-6 relative z-10 w-full">
         
         {/* Top Breadcrumb & Title Area */}
         <div className="flex flex-col gap-2 sm:gap-4">

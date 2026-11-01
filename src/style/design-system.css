@@ -128,7 +128,7 @@ body.ambient-mode-active:not(.dark) {
   width: 100%;
   max-width: 100% !important;
   margin: 0;
-  padding: var(--vb-space-2) var(--vb-space-2) var(--vb-space-4);
+  padding: var(--vb-space-2);
   box-sizing: border-box;
   overflow-x: hidden;
   min-height: calc(100dvh - var(--app-header-height, 72px));
@@ -158,7 +158,7 @@ body.ambient-mode-active:not(.dark) {
 @media (max-width: 820px) {
   .page-shell {
     max-width: 100%;
-    padding: 12px 12px 24px;
+    padding: 12px;
   }
 }
 
@@ -505,4 +505,197 @@ html:not(.dark) .form-control {
 }
 .nav-tabs .nav-link.is-locked {
   opacity: 0.7;
+}
+
+/* =====================================================================
+   UNIFIED TOP-RIGHT SLIDING TOASTS & CONFIRM DIALOGS
+   ===================================================================== */
+
+/* Container position: top-right below the 72px header */
+.Toastify__toast-container--top-right {
+  top: 80px !important;
+  right: 18px !important;
+  width: 360px !important;
+  max-width: calc(100vw - 36px) !important;
+  padding: 0 !important;
+  z-index: 10001 !important;
+}
+
+/* Base unified toast */
+.Toastify__toast.vb-unified-toast,
+.Toastify__toast.vb-confirm-toast-item {
+  border-radius: var(--vb-radius-lg, 0.85rem) !important;
+  padding: 10px 14px !important;
+  min-height: 48px !important;
+  margin-bottom: 10px !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--vb-glass-border-strong, rgba(168, 85, 247, 0.35)) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), var(--vb-glow-purple) !important;
+  font-family: var(--vb-font-sans, inherit) !important;
+  font-size: 13px !important;
+  transition: all 0.25s ease !important;
+}
+
+/* Dark mode toast background */
+html.dark .Toastify__toast.vb-unified-toast,
+html.dark .Toastify__toast.vb-confirm-toast-item,
+.Toastify__toast--dark.vb-unified-toast {
+  background: rgba(22, 23, 34, 0.94) !important;
+  color: #f1f0f5 !important;
+}
+
+/* Light mode toast background */
+html:not(.dark) .Toastify__toast.vb-unified-toast,
+html:not(.dark) .Toastify__toast.vb-confirm-toast-item,
+.Toastify__toast--light.vb-unified-toast {
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: #1a1a24 !important;
+  border-color: rgba(142, 84, 233, 0.3) !important;
+  box-shadow: 0 10px 25px rgba(22, 32, 51, 0.12) !important;
+}
+
+/* Body reset */
+.vb-confirm-toast-body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Confirm Box Layout */
+.vb-confirm-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.vb-confirm-box__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vb-confirm-box__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.vb-confirm-box__icon--danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.vb-confirm-box__icon--warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.vb-confirm-box__icon--info {
+  background: rgba(142, 84, 233, 0.2);
+  color: #d0bcff;
+  border: 1px solid rgba(142, 84, 233, 0.35);
+}
+
+.vb-confirm-box__title {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  flex: 1;
+}
+
+.vb-confirm-box__close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 3px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vb-confirm-box__close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.vb-confirm-box__message {
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 2px 0 0 2px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+html:not(.dark) .vb-confirm-box__message {
+  color: rgba(26, 26, 36, 0.88);
+}
+
+.vb-confirm-box__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html:not(.dark) .vb-confirm-box__actions {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.vb-confirm-box__btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+}
+
+.vb-confirm-box__btn--cancel {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #d1d5db;
+}
+
+html:not(.dark) .vb-confirm-box__btn--cancel {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #4b5563;
+}
+
+.vb-confirm-box__btn--cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+html:not(.dark) .vb-confirm-box__btn--cancel:hover {
+  background: rgba(0, 0, 0, 0.09);
+  color: #111827;
+}
+
+.vb-confirm-box__btn--confirm.vb-confirm-box__btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+}
+
+.vb-confirm-box__btn--confirm.vb-confirm-box__btn--danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
 }

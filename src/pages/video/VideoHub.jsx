@@ -352,7 +352,7 @@ function VideoPlayer() {
       />
 
       {/* ── Main Container: max-w-[1200px] đồng bộ chuẩn với Home.jsx ── */}
-      <div className="w-full max-w-[1200px] mx-auto px-3 sm:px-4 py-3 flex flex-col gap-5 box-border">
+      <div className="w-full max-w-[1200px] mx-auto flex flex-col gap-4 box-border">
         {/* ── Top Navigation Bar (Gọn gàng, không trùng lặp nút) ── */}
         <div
           className={`rounded-2xl px-4 py-3 flex items-center justify-between gap-3 border transition-colors backdrop-blur-xl ${

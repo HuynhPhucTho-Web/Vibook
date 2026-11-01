@@ -9,6 +9,7 @@
   --setting-page-background-strong: transparent;
   width: 100%;
   max-width: 1200px;
+  padding: 0;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -73,6 +74,7 @@ body.ambient-mode-active .setting-page--dark {
 
 .setting-layout {
   max-width: 1200px;
+  padding: 0;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(210px, 245px) minmax(0, 1fr);
@@ -289,7 +291,7 @@ html[data-compact="true"] .setting-card { padding: 20px; }
 html[data-compact="true"] .setting-row { min-height: 60px; padding-block: 9px; }
 
 @media (max-width: 900px) {
-  .setting-page { padding: 20px; }
+
   .setting-layout { grid-template-columns: 1fr; }
   .setting-nav { position: static; display: flex; overflow-x: auto; padding: 7px; scrollbar-width: none; }
   .setting-nav::-webkit-scrollbar { display: none; }
@@ -298,7 +300,7 @@ html[data-compact="true"] .setting-row { min-height: 60px; padding-block: 9px; }
 }
 
 @media (max-width: 620px) {
-  .setting-page { padding: 14px 12px 24px; }
+
   .setting-hero { margin: 5px 3px 16px; }
   .setting-hero__icon { width: 48px; height: 48px; border-radius: 15px; font-size: 21px; }
   .setting-hero span { display: none; }

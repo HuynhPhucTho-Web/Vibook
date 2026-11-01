@@ -22,6 +22,7 @@ import {
   FaUserCog,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../utils/confirmDialog";
 import { auth, db } from "../components/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { LanguageContext } from "../context/LanguageContext";
@@ -29,6 +30,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { requireLogin } from "../utils/requireLogin";
 import "../style/Setting.css";
 import SEO from "../components/SEO";
+import PageHeaderBanner from "../components/PageHeaderBanner";
 
 /** Guest may use these (local prefs). Account-bound sections stay private. */
 const PUBLIC_SECTION_IDS = new Set(["appearance", "accessibility"]);
@@ -307,7 +309,8 @@ const Setting = () => {
 
   const handleLogout = async () => {
     if (!currentUser) return;
-    if (!window.confirm(t("settingLogoutConfirm"))) return;
+    const ok = await confirmDialog(t("settingLogoutConfirm"), { title: t("logout") || "Đăng xuất", confirmText: t("logout") || "Đăng xuất", type: "warning" });
+    if (!ok) return;
     await auth.signOut();
     navigate("/homevibook", { replace: true });
   };
@@ -346,23 +349,25 @@ const Setting = () => {
     isGuest && PRIVATE_SECTION_IDS.has(activeSection) && !PUBLIC_SECTION_IDS.has(activeSection);
 
   return (
-    <div className={`page-shell setting-page setting-page--${theme}`} style={pageStyle}>
+    <div className="page-shell">
       <SEO
         title="Cài đặt tài khoản"
         description="Quản lý thông tin tài khoản, cấu hình quyền riêng tư, cài đặt bảo mật và tùy biến giao diện trên mạng xã hội ThoDev."
         slug="/settings"
         noindex={true}
       />
-      <header className="setting-hero">
-        <div className="setting-hero__icon">
-          <FaUserCog />
-        </div>
-        <div>
-          <p>{t("settingEyebrow")}</p>
-          <h1>{t("settingTitle")}</h1>
-          <span>{isGuest ? t("settingGuestHint") : t("settingSubtitle")}</span>
-        </div>
-      </header>
+      <div className={`setting-page setting-page--${theme}`} style={pageStyle}>
+        {/* Standardized Page Header Banner */}
+      <PageHeaderBanner
+        icon={FaUserCog}
+        title={t("settingTitle") || "Cài đặt tài khoản"}
+        subtitle={t("settingEyebrow") || "SETTINGS"}
+        badge={isGuest ? "Guest" : null}
+      >
+        <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline-block">
+          {isGuest ? t("settingGuestHint") : t("settingSubtitle")}
+        </span>
+      </PageHeaderBanner>
 
       <div className="setting-layout">
         <nav className="setting-nav" aria-label={t("settingTitle")}>
@@ -707,6 +712,7 @@ const Setting = () => {
             </section>
           )}
         </main>
+      </div>
       </div>
     </div>
   );

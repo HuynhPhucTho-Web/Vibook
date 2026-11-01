@@ -8,7 +8,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--vb-space-2) var(--vb-space-2) var(--vb-space-4);
+  padding: 0;
   box-sizing: border-box;
   font-family: var(--vb-font-sans);
   color: var(--app-text);
