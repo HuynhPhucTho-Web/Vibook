@@ -17,6 +17,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../utils/confirmDialog";
 import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane, FaUser } from "react-icons/fa";
 import { ThemeContext } from "../context/ThemeContext";
 import { db } from "../components/firebase";
@@ -209,7 +210,8 @@ const CommentItem = ({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Xóa bình luận này?")) return;
+    const ok = await confirmDialog("Xóa bình luận này?", { confirmText: "Xóa" });
+    if (!ok) return;
 
     try {
       let targetRef = isReply

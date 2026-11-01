@@ -11,6 +11,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../utils/confirmDialog";
 import StoryCreateForm from "../components/story/StoryCreateForm";
 import { requireLogin } from "../utils/requireLogin";
 
@@ -326,7 +327,7 @@ const Storys = () => {
                     <div className="absolute bottom-4 right-4">
                       <button
                         onClick={async () => {
-                          const ok = confirm("Delete this story?");
+                          const ok = await confirmDialog("Delete this story?", { confirmText: "Delete" });
                           if (!ok) return;
                           try {
                             await deleteDoc(doc(db, "Stories", story.id));

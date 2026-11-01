@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import { FaCheck, FaGlobeAmericas, FaLock, FaSearch, FaTag, FaTimes, FaUserFriends, FaHeart, FaEye } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../utils/confirmDialog";
 import { db } from "../components/firebase";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
@@ -761,7 +762,8 @@ const PostItem = ({ post, auth, userDetails, onPostDeleted, handlePrivatePost, i
   }, [post.id]);
 
   const handleDeletePost = async () => {
-    if (!window.confirm(t("confirmDeletePost"))) return;
+    const ok = await confirmDialog(t("confirmDeletePost"), { confirmText: t("deletePost") || "Xóa" });
+    if (!ok) return;
     setIsDeleting(true);
     try {
       const postRef = doc(db, "Posts", post.id);

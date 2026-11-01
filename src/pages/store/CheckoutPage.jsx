@@ -34,7 +34,7 @@ const CheckoutPage = () => {
     e.preventDefault();
     // TODO: Implement order submission
     console.log('Order submitted:', { formData, orderItems });
-    alert('Order placed successfully!');
+    toast.success('Order placed successfully!');
   };
 
   const getTotalPrice = () => {

@@ -14,6 +14,7 @@ import {
     arrayRemove
 } from "firebase/firestore";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../../utils/confirmDialog";
 import { FaReply, FaTimes, FaChevronDown, FaChevronUp, FaRegSmile, FaPaperPlane, FaUser } from "react-icons/fa";
 import { ThemeContext } from "../../context/ThemeContext";
 import { LanguageContext } from "../../context/LanguageContext";
@@ -304,7 +305,8 @@ const CommentItem = ({ comment, groupId, postId, auth, userDetails, isReply = fa
     };
 
     const handleDelete = async () => {
-        if (!window.confirm("Xóa bình luận này?")) return;
+        const ok = await confirmDialog("Xóa bình luận này?", { confirmText: "Xóa" });
+        if (!ok) return;
 
         try {
             let targetRef = isReply

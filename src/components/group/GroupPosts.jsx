@@ -90,7 +90,7 @@ export default function GroupPostComposer({ groupId }) {
       setShowEmoji(false);
     } catch (e) {
       console.error(e);
-      alert("Đăng bài thất bại");
+      toast.error("Đăng bài thất bại");
     } finally {
       setLoading(false);
     }

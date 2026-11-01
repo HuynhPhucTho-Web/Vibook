@@ -43,7 +43,7 @@ const SellerPage = () => {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+    if (await confirmDialog('Bạn có chắc muốn xóa sản phẩm này?', { confirmText: 'Xóa' })) {
       await deleteDoc(doc(db, 'Products', id));
       setProducts(products.filter(p => p.id !== id));
     }

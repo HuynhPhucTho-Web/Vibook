@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../../utils/confirmDialog";
 import { FaCheck, FaTimes, FaUser, FaSearch } from "react-icons/fa";
 import { useSearch } from "../../context/SearchContext";
 
@@ -126,7 +127,8 @@ const FriendRequests = ({ currentUser }) => {
   const handleCancel = async (request) => {
     if (!currentUser) return;
 
-    if (!window.confirm(`Cancel friend request to ${request.toUserName}?`)) {
+    const ok = await confirmDialog(`Cancel friend request to ${request.toUserName}?`, { title: "Hủy lời mời", confirmText: "Hủy yêu cầu", type: "warning" });
+    if (!ok) {
       return;
     }
 

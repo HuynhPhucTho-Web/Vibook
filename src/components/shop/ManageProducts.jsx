@@ -137,7 +137,7 @@ const ManageProducts = () => {
       setShowForm(false);
       resetForm();
     } catch (error) {
-      alert('Lỗi lưu sản phẩm!');
+      toast.error('Lỗi lưu sản phẩm!');
     }
   };
 
@@ -164,7 +164,7 @@ const ManageProducts = () => {
   };
 
   const handleDelete = async (productId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa?')) {
+    if (await confirmDialog('Bạn có chắc chắn muốn xóa?', { confirmText: 'Xóa' })) {
       try {
         await deleteDoc(doc(db, 'Products', productId));
         setProducts(products.filter(p => p.id !== productId));

@@ -38,7 +38,7 @@ export default function GroupHeader({ group }) {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!f.type.startsWith("image/")) {
-      alert("Please choose an image");
+      toast.warning("Please choose an image");
       e.target.value = "";
       return;
     }
@@ -66,7 +66,7 @@ export default function GroupHeader({ group }) {
       setBannerPreview(url);
     } catch (e) {
       console.error(e);
-      alert("Failed to update banner");
+      toast.error("Failed to update banner");
     } finally {
       setSaving(false);
     }

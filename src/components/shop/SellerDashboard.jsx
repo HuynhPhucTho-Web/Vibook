@@ -56,8 +56,8 @@ const SellerDashboard = () => {
     setLoading(false);
   };
 
-  const handleDeleteProduct = (productId) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+  const handleDeleteProduct = async (productId) => {
+    if (await confirmDialog('Are you sure you want to delete this product?', { confirmText: 'Delete' })) {
       setProducts(products.filter(p => p.id !== productId));
     }
   };

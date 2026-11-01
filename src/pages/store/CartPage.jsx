@@ -16,8 +16,8 @@ const CartPage = () => {
   const cartItems = cart || [];
   const subtotal = getTotalPrice ? getTotalPrice() : 0;
 
-  const handleRemoveItem = (id) => {
-    if (window.confirm(t("removeItemConfirm"))) {
+  const handleRemoveItem = async (id) => {
+    if (await confirmDialog(t("removeItemConfirm"), { confirmText: t("remove") || "Xóa" })) {
       removeFromCart(id);
     }
   };

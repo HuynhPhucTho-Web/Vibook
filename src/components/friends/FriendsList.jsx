@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../components/firebase";
 import { toast } from "react-toastify";
+import { confirmDialog } from "../../utils/confirmDialog";
 import { FaComments, FaUserMinus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSearch } from "../../context/SearchContext";
@@ -76,7 +77,8 @@ const FriendsList = ({ currentUser }) => {
   const handleUnfriend = async (friend) => {
     if (!friend.friendshipId || !currentUser) return;
 
-    if (!window.confirm(`Remove ${friend.displayName || "this user"} from your friends?`)) {
+    const ok = await confirmDialog(`Remove ${friend.displayName || "this user"} from your friends?`, { title: "Hủy kết bạn", confirmText: "Hủy kết bạn", type: "warning" });
+    if (!ok) {
       return;
     }
 

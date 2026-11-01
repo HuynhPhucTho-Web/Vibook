@@ -181,7 +181,7 @@ export default function GroupPostItem({
       setShowReactions(false);
     } catch (e) {
       console.error(e);
-      alert("Không thể react");
+      toast.error("Không thể react");
       // Revert on error if needed, but for simplicity, rely on onSnapshot
     } finally {
       setIsReacting(false);
@@ -190,13 +190,14 @@ export default function GroupPostItem({
 
   /** delete */
   const handleDelete = async () => {
-    if (!window.confirm("Xóa bài viết này?")) return;
+    const ok = await confirmDialog("Xóa bài viết này?", { confirmText: "Xóa" });
+    if (!ok) return;
     setIsDeleting(true);
     try {
       const ref = doc(db, "Groups", groupId, "Posts", post.id);
       const snap = await getDoc(ref);
       if (!snap.exists() || snap.data().userId !== auth?.currentUser?.uid) {
-        alert("Không thể xóa");
+        toast.error("Không thể xóa");
         setIsDeleting(false);
         return;
       }
@@ -205,7 +206,7 @@ export default function GroupPostItem({
       onPostDeleted?.(post.id);
     } catch (e) {
       console.error(e);
-      alert("Lỗi khi xóa");
+      toast.error("Lỗi khi xóa");
     } finally {
       setIsDeleting(false);
     }
@@ -222,7 +223,7 @@ export default function GroupPostItem({
       else await navigator.clipboard.writeText(url);
     } catch (e) {
       console.error(e);
-      alert("Không thể chia sẻ");
+      toast.error("Không thể chia sẻ");
     }
     setShowShare(false);
   };
@@ -244,7 +245,7 @@ export default function GroupPostItem({
       await updateDoc(ref, { content: newContent });
     } catch (e) {
       console.error(e);
-      alert("Không thể lưu thay đổi");
+      toast.error("Không thể lưu thay đổi");
       // Revert on error
       setLocalPost(prev => ({ ...prev, content: localPost.content }));
       setIsEditing(true);

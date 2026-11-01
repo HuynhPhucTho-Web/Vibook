@@ -52,7 +52,7 @@ const GroupEvents = () => {
   const leaveEvent = async (eventId) => {
     if (!isOwner) return;
     // similar leave logic
-    alert("Leave event feature not fully implemented yet (demo)");
+    toast.info("Leave event feature not fully implemented yet (demo)");
   };
 
   return (
