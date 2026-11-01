@@ -10,7 +10,7 @@ import {
   Outlet,
   useLocation,
 } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Login from "./components/login";
 import SignUp from "./components/register";
@@ -22,6 +22,7 @@ import Groups from "./pages/Groups";
 import Events from "./pages/Events";
 import Storys from "./pages/StoryPages";
 import PlayGame from "./pages/PlayGame";
+import ToolsPage from "./pages/ToolsPage";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import GroupPage from "./pages/GroupPage";
@@ -324,6 +325,8 @@ function App() {
                       <Route path="/content-policy" element={<ContentPolicyPage />} />
                       <Route path="/other-standards" element={<OtherStandardsPage />} />
                       <Route path="/playgame" element={<PlayGame />} />
+                      <Route path="/tools" element={<ToolsPage />} />
+                      <Route path="/tool" element={<Navigate to="/tools" replace />} />
                       <Route path="/market" element={<Store />} />
                       <Route path="/product/:id" element={<ProductPage />} />
                       <Route path="/videos" element={<Video />} />
@@ -359,17 +362,18 @@ function App() {
 
                   <ToastContainer
                     position="top-right"
+                    transition={Slide}
                     autoClose={3000}
                     hideProgressBar={false}
                     newestOnTop
-                    closeOnClick
+                    closeOnClick={false}
                     rtl={false}
                     pauseOnFocusLoss
-                    draggable
+                    draggable={false}
                     pauseOnHover
                     theme="colored"
-                    toastClassName="custom-toast"
-                    bodyClassName="custom-toast-body"
+                    toastClassName="vb-unified-toast"
+                    bodyClassName="vb-unified-toast-body"
                   />
                 </Router>
               </CartProvider>

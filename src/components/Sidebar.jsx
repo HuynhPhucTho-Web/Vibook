@@ -19,6 +19,8 @@ import {
   Sliders,
   Info,
   GraduationCap,
+  Wrench,
+  Hammer,
 } from "lucide";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -43,6 +45,7 @@ const MENU = [
   { path: "/friends", icon: UserPlus, activeIcon: Users, labelKey: "friends", requiresAuth: false },
   { path: "/blog", icon: FileText, activeIcon: BookOpen, labelKey: "blog", requiresAuth: false },
   { path: "/source", icon: BookOpen, activeIcon: GraduationCap, labelKey: "source", requiresAuth: false },
+  { path: "/tools", icon: Wrench, activeIcon: Hammer, labelKey: "tools", requiresAuth: false },
   { path: "/events", icon: Calendar, activeIcon: CalendarDays, labelKey: "events", requiresAuth: false },
   { path: "/videos", icon: Video, activeIcon: Film, labelKey: "video", requiresAuth: false },
   { path: "/playgame", icon: Gamepad2, activeIcon: Trophy, labelKey: "playGame", requiresAuth: false },

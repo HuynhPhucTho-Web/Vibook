@@ -587,6 +587,89 @@ service cloud.firestore {
         && !gameId.matches('^default-.*');
     }
 
+
+    /* ========= TOOLS (KHO CÔNG CỤ & TIỆN ÍCH) ========= */
+    match /Tools/{toolId} {
+      // Mọi người (kể cả khách) đều có thể xem danh sách công cụ
+      allow read: if true;
+
+      // Người dùng đã đăng nhập có thể tạo công cụ mới
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && !toolId.matches('^default-.*')
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.description is string
+        && request.resource.data.description.size() >= 1
+        && request.resource.data.imgUrl is string
+        && request.resource.data.imgUrl.size() >= 1
+        && request.resource.data.category is string
+        && request.resource.data.category.size() >= 1;
+
+      // Cập nhật công cụ:
+      // 1. Chủ sở hữu có thể cập nhật thông tin công cụ (không được đổi ownerId, không sửa default tool)
+      // 2. Bất kỳ ai đăng nhập có thể cập nhật lượt tương tác (views, clicks, favoriteCount)
+      allow update: if isSignedIn() && (
+        (
+          request.auth.uid == resource.data.ownerId
+          && !toolId.matches('^default-.*')
+          && request.resource.data.ownerId == resource.data.ownerId
+          && request.resource.data.title is string
+          && request.resource.data.title.size() >= 1
+          && request.resource.data.description is string
+          && request.resource.data.imgUrl is string
+        )
+        ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['views', 'clicks', 'favoriteCount'])
+        )
+      );
+
+      // Xóa công cụ: Chỉ chủ sở hữu được xóa, không được xóa công cụ mặc định hệ thống
+      allow delete: if isSignedIn()
+        && request.auth.uid == resource.data.ownerId
+        && !toolId.matches('^default-.*');
+
+      // Đánh giá / phản hồi về công cụ
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isSignedIn()
+          && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isSignedIn()
+          && resource.data.userId == request.auth.uid;
+      }
+
+      // Bình luận công cụ
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn()
+          && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isSignedIn()
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    /* ========= FAVORITE TOOLS (LƯU / YÊU THÍCH CÔNG CỤ) ========= */
+    match /FavoriteTools/{favoriteId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && favoriteId == request.auth.uid + '_' + request.resource.data.toolId
+        && request.resource.data.keys().hasAll(['userId', 'toolId', 'createdAt']);
+      allow update: if false;
+      allow delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    /* ========= TOOL CATEGORIES (DANH MỤC CÔNG CỤ) ========= */
+    match /ToolCategories/{catId} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isSignedIn() && !catId.matches('^default-.*');
+    }
+
     /* ========= BLOG ========= */
     match /BlogPosts/{postId} {
       allow read: if true;

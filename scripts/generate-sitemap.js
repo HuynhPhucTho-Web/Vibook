@@ -80,7 +80,8 @@ async function generate() {
     { path: '/playgame', priority: '0.6', changefreq: 'monthly' },
     { path: '/videos', priority: '0.8', changefreq: 'daily' },
     { path: '/friends', priority: '0.7', changefreq: 'weekly' },
-    { path: '/source', priority: '0.7', changefreq: 'weekly' }
+    { path: '/source', priority: '0.7', changefreq: 'weekly' },
+    { path: '/tools', priority: '0.8', changefreq: 'daily' }
   ];
 
   const currentDateStr = formatDate(new Date());

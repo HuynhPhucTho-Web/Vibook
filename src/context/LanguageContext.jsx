@@ -24,6 +24,7 @@ const translations = {
     playGame: "Play Game",
     store: "Store",
     source: "Library",
+    tools: "Tools",
 
     // Common
     loading: "Loading ThoDev...",
@@ -314,6 +315,33 @@ const translations = {
     addGame: "Add Game",
     Nogamesfound: "No games found.",
 
+    // Tools
+    toolsTitle: "Developer & Utility Tools",
+    toolsSubtitle: "Discover, explore and share useful software, AI, and developer tools.",
+    toolsCount: "Tools",
+    addTool: "Add Tool",
+    addNewTool: "Add New Tool",
+    editTool: "Edit Tool",
+    deleteTool: "Delete Tool",
+    toolTitle: "Tool Name",
+    toolDesc: "Description",
+    toolLink: "Tool Link (URL)",
+    toolImage: "Image Link (URL)",
+    toolCategory: "Category",
+    openTool: "Open Tool",
+    searchToolsPlaceholder: "Search tools by name, description or category...",
+    noToolsFound: "No tools found.",
+    noToolsDesc: "Try adjusting your search query or filter, or add a new tool!",
+    confirmDeleteTool: "Are you sure you want to delete this tool?",
+    toolCreatedSuccess: "Tool created successfully!",
+    toolUpdatedSuccess: "Tool updated successfully!",
+    toolDeletedSuccess: "Tool deleted successfully!",
+    itemsPerPage: "Items per page",
+    page: "Page",
+    of: "of",
+    previous: "Previous",
+    next: "Next",
+
 
     // Post creation
     whatsOnYourMind: "What's on your mind?",
@@ -550,6 +578,7 @@ const translations = {
     playGame: "Chơi game",
     store: "Cửa hàng",
     source: "Kho tài liệu",
+    tools: "Công cụ",
 
     // Common
     loading: "Đang tải ThoDev...",
@@ -837,6 +866,33 @@ const translations = {
     gameImage: "Ảnh Trò Chơi (URL)",
     playNow: "Chơi Ngay",
     Nogamesfound: "Không tìm thấy trò chơi nào.",
+
+    // Tools
+    toolsTitle: "Kho Công Cụ & Tiện Ích",
+    toolsSubtitle: "Khám phá, chia sẻ và lưu trữ các công cụ phần mềm, AI, đồ họa và lập trình hữu ích.",
+    toolsCount: "Công Cụ",
+    addTool: "Thêm công cụ",
+    addNewTool: "Thêm Công Cụ Mới",
+    editTool: "Sửa công cụ",
+    deleteTool: "Xóa công cụ",
+    toolTitle: "Tên Công Cụ",
+    toolDesc: "Thông Tin Mô Tả",
+    toolLink: "Link Truy Cập (URL)",
+    toolImage: "Link Hình Ảnh (URL)",
+    toolCategory: "Danh Mục",
+    openTool: "Truy cập",
+    searchToolsPlaceholder: "Tìm kiếm công cụ theo tên, mô tả hoặc danh mục...",
+    noToolsFound: "Không tìm thấy công cụ nào.",
+    noToolsDesc: "Thử thay đổi từ khóa tìm kiếm, danh mục hoặc thêm công cụ mới!",
+    confirmDeleteTool: "Bạn có chắc chắn muốn xóa công cụ này không?",
+    toolCreatedSuccess: "Thêm công cụ thành công!",
+    toolUpdatedSuccess: "Cập nhật công cụ thành công!",
+    toolDeletedSuccess: "Đã xóa công cụ thành công!",
+    itemsPerPage: "Số mục mỗi trang",
+    page: "Trang",
+    of: "trên",
+    previous: "Trước",
+    next: "Sau",
     
 
     // Post creation
@@ -972,6 +1028,7 @@ const translations = {
     story: "ストーリー",
     playGame: "ゲーム",
     store: "ストア",
+    tools: "ツール",
 
     // Common
     loading: "ThoDevを読み込み中...",
@@ -1277,6 +1334,33 @@ const translations = {
     gameImage: "ゲーム画像 (URL)",
     playNow: "今すぐプレイ",
     Nogamesfound: "ゲームが見つかりません。",
+
+    // Tools
+    toolsTitle: "ツール＆ユーティリティ",
+    toolsSubtitle: "便利なAI、開発、デザイン、ユーティリティツールを発見・共有しましょう。",
+    toolsCount: "ツール",
+    addTool: "ツールを追加",
+    addNewTool: "新しいツールを追加",
+    editTool: "ツールを編集",
+    deleteTool: "ツールを削除",
+    toolTitle: "ツール名",
+    toolDesc: "説明情報",
+    toolLink: "ツールリンク (URL)",
+    toolImage: "画像リンク (URL)",
+    toolCategory: "カテゴリー",
+    openTool: "開く",
+    searchToolsPlaceholder: "名前、説明、カテゴリーで検索...",
+    noToolsFound: "ツールが見つかりません。",
+    noToolsDesc: "検索条件を変更するか、新しいツールを追加してください！",
+    confirmDeleteTool: "このツールを削除してもよろしいですか？",
+    toolCreatedSuccess: "ツールが正常に追加されました！",
+    toolUpdatedSuccess: "ツールが正常に更新されました！",
+    toolDeletedSuccess: "ツールが削除されました！",
+    itemsPerPage: "表示件数",
+    page: "ページ",
+    of: "/",
+    previous: "前へ",
+    next: "次へ",
     
 
 
