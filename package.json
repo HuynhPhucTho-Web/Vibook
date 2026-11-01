@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "node scripts/generate-sitemap.js && vite build",
+    "dev": "node scripts/patch-firebase.cjs && vite",
+    "build": "node scripts/patch-firebase.cjs && node scripts/generate-sitemap.js && vite build",
+    "postinstall": "node scripts/patch-firebase.cjs",
     "parse:mln131": "node scripts/parse-mln131.js",
     "parse:hcm202": "node scripts/parse-hcm202.js",
     "parse:vnr202": "node scripts/parse-vnr202.js",
