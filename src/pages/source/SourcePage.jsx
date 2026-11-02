@@ -7,6 +7,7 @@ import SEO from "../../components/SEO";
 import PageHeaderBanner from "../../components/PageHeaderBanner";
 import { ThemeContext } from "../../context/ThemeContext";
 import AdSense from "../../components/AdSense";
+import { useSearch } from "../../context/SearchContext";
 import {
   FaSearch,
   FaFilter,
@@ -43,7 +44,6 @@ export default function SourcePage() {
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
 
-  const [searchQuery, setSearchQuery] = useState("");
   const { subjectCode, tab } = useParams();
   const navigate = useNavigate();
 
@@ -51,6 +51,28 @@ export default function SourcePage() {
   const activeSubject = subjectCode
     ? sourceData.find((s) => s.code.toLowerCase() === subjectCode.toLowerCase())
     : null;
+
+  const { keyword: searchQuery, setKeyword: setSearchQuery, setSearchConfig } = useSearch();
+
+  // Synchronize search with Header bar
+  React.useEffect(() => {
+    if (activeSubject) {
+      setSearchConfig(null);
+      return;
+    }
+    setSearchConfig({
+      placeholder:
+        language === "vi"
+          ? "Tìm kiếm môn học theo tên, mã môn..."
+          : language === "ja"
+          ? "科目名または科目コードで検索..."
+          : "Search subjects by name or code...",
+    });
+    return () => {
+      setSearchConfig(null);
+      setSearchQuery("");
+    };
+  }, [activeSubject, setSearchConfig, setSearchQuery, language]);
 
   // Auto redirect /source/:subjectCode to /source/:subjectCode/document if tab is missing or invalid
   React.useEffect(() => {
@@ -62,7 +84,7 @@ export default function SourcePage() {
   // Filter subjects based on query and hide subjects with 0 docs (Thin Content protection)
   const filteredSubjects = sourceData.filter((subject) => {
     if (subject.docsCount === 0) return false;
-    const query = searchQuery.toLowerCase().trim();
+    const query = (searchQuery || "").toLowerCase().trim();
     if (!query) return true;
     return (
       subject.name.toLowerCase().includes(query) ||
@@ -242,22 +264,27 @@ export default function SourcePage() {
           title={language === "vi" ? "Kho Tài Liệu Học Tập" : "Subject Modules"}
           subtitle="SOURCE HUB"
           badge={`(${filteredSubjects.length})`}
-        >
-          <div className="relative flex items-center min-w-[200px] sm:min-w-[260px]">
-            <FaSearch className="absolute left-3 text-slate-400 pointer-events-none" size={13} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={language === "vi" ? "Tìm kiếm môn học..." : "Filter subjects..."}
-              className={`w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm rounded-xl border transition-all outline-none ${
-                isDark
-                  ? "bg-black/30 border-white/10 text-white placeholder-slate-400 focus:border-purple-500"
-                  : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-purple-500"
-              }`}
-            />
+        />
+
+        {/* Active Search Indicator */}
+        {searchQuery?.trim() && (
+          <div className="mb-4 flex items-center justify-between p-3 rounded-xl border border-purple-500/20 bg-purple-500/10 backdrop-blur-md text-xs sm:text-sm">
+            <span className="flex items-center gap-2">
+              <FaSearch className="text-purple-400 flex-shrink-0" size={13} />
+              <span>
+                {language === "vi" ? "Tìm kiếm môn học:" : "Subject search:"}{" "}
+                <strong className="text-purple-300 font-semibold">"{searchQuery.trim()}"</strong>
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="text-purple-400 hover:text-purple-300 font-semibold cursor-pointer transition-colors whitespace-nowrap"
+            >
+              {language === "vi" ? "Xóa tìm kiếm ×" : "Clear search ×"}
+            </button>
           </div>
-        </PageHeaderBanner>
+        )}
 
         {/* Grid List of Subject Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 z-10">

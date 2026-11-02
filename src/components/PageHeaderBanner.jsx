@@ -19,13 +19,13 @@ export default function PageHeaderBanner({
 
   return (
     <div
-      className={`rounded-2xl px-4 py-3 mb-4 flex items-center justify-between gap-3 border transition-colors backdrop-blur-xl ${
+      className={`rounded-2xl px-3 sm:px-4 py-3 mb-4 flex items-center justify-between gap-3 border transition-colors backdrop-blur-xl ${
         isDark
           ? "bg-[#1a1b22]/80 border-white/10"
           : "bg-white/80 border-slate-200/80 shadow-sm"
       } ${className}`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-3 min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2.5 sm:gap-3 min-w-0">
         {/* Brand / Page Title on Left */}
         <div
           className={`flex items-center gap-2.5 select-none flex-shrink-0 ${
@@ -69,7 +69,7 @@ export default function PageHeaderBanner({
 
         {/* Filters, Controls & Action Buttons on Right */}
         {children && (
-          <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+          <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto no-scrollbar flex-nowrap [&>*]:flex-1 sm:[&>*]:flex-initial [&>*]:min-w-0 [&>button]:h-[34px] [&>select]:h-[34px]">
             {children}
           </div>
         )}
