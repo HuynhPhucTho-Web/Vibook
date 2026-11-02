@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { auth, db } from "../components/firebase";
 import { doc, onSnapshot, query, collection, where, getDoc, addDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from "../context/LanguageContext";
 import { toast } from "react-toastify";
+import { FaArrowLeft } from "react-icons/fa";
 import PostCreator from "../components/PostCreate";
 import PostItem from "../components/PostItem";
 import ProfileHeader from "../components/profile/UpdateProfile";
@@ -15,11 +16,33 @@ import { setUserProfileCache } from "../utils/userCache";
 import SEO from "../components/SEO";
 import { useMemo } from "react";
 
-
 function Profile() {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = location.state?.from;
+  const fromLabel = location.state?.fromLabel;
+  const returnUser = location.state?.returnUser;
+
+  const handleBack = useCallback(() => {
+    if (fromPath) {
+      navigate(fromPath, {
+        state: {
+          selectedUser: returnUser,
+        },
+      });
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/homevibook");
+    }
+  }, [fromPath, returnUser, navigate]);
+
+  const backLabel = useMemo(() => {
+    if (fromLabel) return `Quay lại ${fromLabel}`;
+    return "Quay lại";
+  }, [fromLabel]);
   const { uid: routeUid } = useParams();
   const [currentUid, setCurrentUid] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
@@ -330,9 +353,26 @@ function Profile() {
           type="profile"
           schema={profileSchema}
         />
+        {/* Thanh điều hướng quay lại trang trước */}
+        <div className="mb-3 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleBack}
+            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer border shadow-xs ${
+              theme === "dark"
+                ? "bg-[#18181b] hover:bg-[#202024] text-gray-200 border-gray-800 hover:border-purple-500/40"
+                : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-purple-300"
+            }`}
+            title={backLabel}
+          >
+            <FaArrowLeft className="w-3.5 h-3.5 text-purple-500" />
+            <span>{backLabel}</span>
+          </button>
+        </div>
         <ProfileHeader
           user={userDetails}
-          isOwner={isOwner}
+
+isOwner={isOwner}
           postCount={posts.length}
           friendCount={friendCount}
           followerCount={followerCount}
@@ -347,8 +387,7 @@ function Profile() {
         {/* Story của đúng user đang xem */}
         <ProfileStories userId={userDetails.id} theme={theme} />
 
-
-        {isOwner && (
+{isOwner && (
           <div className="mt-4">
             <PostCreator onPostCreated={(p) => setPosts(prev => [p, ...prev])} />
           </div>
@@ -387,3 +426,4 @@ function Profile() {
 }
 
 export default Profile;
+

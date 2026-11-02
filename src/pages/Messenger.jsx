@@ -1,4 +1,5 @@
-                                                                                                                             import React, { useState, useEffect, useContext, useCallback, useMemo, useRef } from "react";
+                                                                                                                             import { useLocation } from "react-router-dom";
+import React, { useState, useEffect, useContext, useCallback, useMemo, useRef } from "react";
 import { auth, db } from "../components/firebase";
 import {
   collection,
@@ -35,14 +36,27 @@ const getDefaultChatTheme = (theme) =>
 const Messenger = () => {
   const { theme } = useContext(ThemeContext);
   const { t } = useContext(LanguageContext);
+  const location = useLocation();
   const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(() => location.state?.selectedUser || null);
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [replyMessage, setReplyMessage] = useState(null);
+
+  // Sync selectedUser from router location.state when returning from profile or external links
+  useEffect(() => {
+    if (location.state?.selectedUser) {
+      const incoming = location.state.selectedUser;
+      const incomingUid = incoming.uid || incoming.id;
+      if (incomingUid) {
+        const found = users.find((u) => u.uid === incomingUid);
+        setSelectedUser(found || { ...incoming, uid: incomingUid });
+      }
+    }
+  }, [location.state, users]);
   const [chatTheme, setChatTheme] = useState(() => getDefaultChatTheme(theme));
   const chatThemeCustomizedRef = useRef(false);
   const [showRecallModal, setShowRecallModal] = useState(false);
@@ -169,7 +183,7 @@ const Messenger = () => {
         unsubscribeRefs.current.friends = unsubscribe;
       } catch (error) {
         console.error("Error setting up friends listener:", error);
-        toast.error(t("couldNotLoadFriends"), { position: "top-center" });
+        toast.error(t("couldNotLoadFriends"));
         setIsLoading(false);
       }
     };
@@ -448,7 +462,7 @@ const Messenger = () => {
       console.error(`Error sending message:`, error);
       // Remove the optimistic message on failure
       setMessages(prev => prev.filter(msg => msg.id !== tempMessageId));
-      toast.error(t("couldNotSendMessage"), { position: "top-center" });
+      toast.error(t("couldNotSendMessage"));
     }
   }, [selectedUser, currentUser, createChatId, t, replyMessage]);
 
@@ -541,7 +555,7 @@ const Messenger = () => {
       }
     } catch (error) {
       console.error("Error adding reaction:", error);
-      toast.error(t("couldNotAddReaction") || "Không thể thả cảm xúc", { position: "top-center" });
+      toast.error(t("couldNotAddReaction") || "Không thể thả cảm xúc");
     }
   }, [currentUser, selectedUser, createChatId, t]);
 

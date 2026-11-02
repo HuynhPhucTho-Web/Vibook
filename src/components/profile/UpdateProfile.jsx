@@ -4,6 +4,7 @@ import { auth, db } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import {
+  FaArrowLeft,
   FaCamera,
   FaSpinner,
   FaLink,
@@ -659,7 +660,7 @@ export default function ProfileHeader({
                         {isFollowing ? "Following" : "Follow"}
                       </button>
                       <button
-                        onClick={() => navigate('/messenger')}
+                        onClick={() => navigate('/messenger', { state: { selectedUser: { ...user, uid: user?.id || user?.uid } } })}
                         className={`px-5 py-2.5 rounded-lg font-semibold transition ${bgButton} ${textPrimary}`}
                       >
                         Message
@@ -896,7 +897,7 @@ export default function ProfileHeader({
                   </button>
 
                   <button
-                    onClick={() => navigate('/messenger')}
+                    onClick={() => navigate('/messenger', { state: { selectedUser: { ...user, uid: user?.id || user?.uid } } })}
                     className={`inline-flex items-center justify-center px-3 py-2.5 rounded-xl font-semibold text-sm transition ${bgButton} ${textPrimary}`}
                   >
                     Message
