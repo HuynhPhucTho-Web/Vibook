@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useContext } from "react";
+import { ThemeContext } from "../../context/ThemeContext";
 import { motion } from "framer-motion";
 import { FaUser, FaRobot, FaLightbulb } from "react-icons/fa";
 
@@ -96,6 +97,8 @@ const ChatMessageList = ({
   onSelectPrompt,
   mascotSrc = "/images/mascot/mascot_1.png",
 }) => {
+  const { theme } = useContext(ThemeContext) || { theme: "light" };
+  const isDark = theme === "dark";
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -114,7 +117,7 @@ const ChatMessageList = ({
           />
         </div>
         <div className="flex-1">
-          <div className="bg-gray-100 dark:bg-[#1f202b] text-gray-800 dark:text-gray-200 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-xs border border-gray-200/50 dark:border-white/5">
+          <div className="bg-slate-100 dark:bg-[#27272a] text-slate-800 dark:text-gray-200 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-xs border border-slate-200/80 dark:border-gray-800/60">
             <p className="font-medium text-gray-900 dark:text-white mb-1">
               Xin chào! Tớ là Astro
             </p>
@@ -158,7 +161,7 @@ const ChatMessageList = ({
                 className={`px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm shadow-xs ${
                   isUser
                     ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-sm"
-                    : "bg-gray-100 dark:bg-[#1f202b] text-gray-800 dark:text-gray-200 rounded-tl-sm border border-gray-200/50 dark:border-white/5"
+                    : "bg-slate-100 dark:bg-[#27272a] text-slate-800 dark:text-gray-200 rounded-tl-sm border border-slate-200/80 dark:border-gray-800/60"
                 }`}
               >
                 {renderFormattedText(msg.content)}
@@ -185,7 +188,7 @@ const ChatMessageList = ({
           <div className="w-7 h-7 rounded-full overflow-hidden bg-purple-100 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/40 p-0.5">
             <img src={mascotSrc} alt="Bot" className="w-full h-full object-contain" />
           </div>
-          <div className="bg-gray-100 dark:bg-[#1f202b] rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5 border border-gray-200/50 dark:border-white/5">
+          <div className="bg-slate-100 dark:bg-[#27272a] rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5 border border-slate-200/80 dark:border-gray-800/60">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"></span>
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]"></span>
             <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-bounce [animation-delay:0.4s]"></span>
@@ -199,17 +202,17 @@ const ChatMessageList = ({
       {/* Quick Prompts gợi ý thông minh */}
       {quickPrompts.length > 0 && !isLoading && (
         <div className="pt-2">
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-2">
-            <FaLightbulb className="text-amber-500" />
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+            <FaLightbulb className="text-amber-500 flex-shrink-0" />
             <span>Gợi ý cho bạn:</span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex md:flex-wrap gap-1.5 overflow-x-auto pb-1 no-scrollbar flex-nowrap">
             {quickPrompts.map((prompt, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => onSelectPrompt(prompt)}
-                className="text-left text-xs px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/30 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40 transition-colors shadow-2xs"
+                className="text-xs bg-purple-50 hover:bg-purple-100 dark:bg-[#202024] dark:hover:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/50 px-3 py-1.5 rounded-lg whitespace-nowrap text-left transition flex-shrink-0 cursor-pointer shadow-2xs"
               >
                 {prompt}
               </button>

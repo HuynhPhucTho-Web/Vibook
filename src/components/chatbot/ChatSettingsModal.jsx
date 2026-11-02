@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { ThemeContext } from "../../context/ThemeContext";
 import {
   FaKey,
   FaExternalLinkAlt,
@@ -20,6 +21,8 @@ import {
 } from "../../services/geminiChatService";
 
 const ChatSettingsModal = ({ isOpen, onClose }) => {
+  const { theme } = useContext(ThemeContext) || { theme: "light" };
+  const isDark = theme === "dark";
   const [activeTab, setActiveTab] = useState("gemini");
   const [provider, setProvider] = useState(() => getActiveAiProvider());
   const [geminiKey, setGeminiKey] = useState(() => getStoredApiKey());
@@ -55,7 +58,7 @@ const ChatSettingsModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-      <div className="w-full max-w-lg bg-white dark:bg-[#1a1b26] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 p-5 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className={`w-full max-w-lg rounded-2xl shadow-2xl border p-5 overflow-hidden flex flex-col max-h-[90vh] ${isDark ? "bg-[#18181b] border-gray-800 text-gray-200" : "bg-white border-slate-200 text-slate-800"}`}>
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2.5">

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { ThemeContext } from "../../context/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes } from "react-icons/fa";
 
@@ -20,6 +21,8 @@ const MascotTrigger = ({
   mascotSrc = "/images/mascot/mascot_1.png",
   onHideChatbot,
 }) => {
+  const { theme } = useContext(ThemeContext) || { theme: "light" };
+  const isDark = theme === "dark";
   const [showTooltip, setShowTooltip] = useState(false);
   const [hasDismissedTooltip, setHasDismissedTooltip] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -181,10 +184,14 @@ const MascotTrigger = ({
                 isNearTop ? "top-full mt-3" : "bottom-full mb-3"
               } ${
                 isNearLeft ? "left-0" : "right-0"
-              } w-52 sm:w-60 p-3 rounded-2xl bg-white dark:bg-[#1b1c27] text-gray-800 dark:text-gray-100 shadow-xl border border-purple-200/60 dark:border-purple-800/40 text-xs z-10`}
+              } w-52 sm:w-60 p-3 rounded-2xl shadow-xl border text-xs z-10 transition-colors ${
+                isDark
+                  ? "bg-[#18181b] text-gray-200 border-gray-800"
+                  : "bg-white text-gray-800 border-purple-200/80"
+              }`}
             >
               <div className="flex items-start justify-between gap-1 mb-1">
-                <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                <span className="font-semibold text-purple-500 dark:text-purple-400 flex items-center gap-1">
                   Astro AI
                 </span>
                 <div className="flex items-center gap-1">
@@ -196,7 +203,11 @@ const MascotTrigger = ({
                         onHideChatbot();
                       }}
                       title="Tắt icon trợ lý (Bật lại trong Cài đặt > Khả năng tiếp cận)"
-                      className="px-1.5 py-0.5 text-[10.5px] rounded-md bg-purple-100 hover:bg-red-500 hover:text-white dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 font-medium transition-colors"
+                      className={`px-1.5 py-0.5 text-[10.5px] rounded-md font-medium transition-colors cursor-pointer border ${
+                        isDark
+                          ? "bg-purple-950/60 text-purple-300 hover:bg-red-500 hover:text-white border-purple-800/50"
+                          : "bg-purple-100 text-purple-700 hover:bg-red-500 hover:text-white border-purple-200"
+                      }`}
                     >
                       Tắt icon
                     </button>
@@ -209,19 +220,23 @@ const MascotTrigger = ({
                       setHasDismissedTooltip(true);
                     }}
                     title="Đóng lời nhắc"
-                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md"
+                    className={`p-1 rounded-md transition-colors cursor-pointer ${
+                      isDark ? "text-gray-400 hover:text-gray-200" : "text-gray-400 hover:text-gray-600"
+                    }`}
                   >
                     <FaTimes className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </div>
 
-              <p className="leading-relaxed text-[11.5px]">
+              <p className={`leading-relaxed text-[11.5px] my-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 Cần tớ đọc và giải thích nội dung trang này không? Bấm vào tớ nhé! (Nhấn giữ để di chuyển)
               </p>
 
               {onHideChatbot && (
-                <div className="mt-2 pt-1.5 border-t border-purple-100 dark:border-purple-900/40 flex items-center justify-between text-[11px]">
+                <div className={`mt-2 pt-1.5 border-t flex items-center justify-between text-[11px] ${
+                  isDark ? "border-gray-800" : "border-purple-100"
+                }`}>
                   <span className="text-gray-400 text-[10px]">Cài đặt &gt; Khả năng tiếp cận</span>
                   <button
                     type="button"
@@ -229,7 +244,9 @@ const MascotTrigger = ({
                       e.stopPropagation();
                       onHideChatbot();
                     }}
-                    className="text-purple-600 dark:text-purple-400 hover:text-red-500 dark:hover:text-red-400 font-medium transition-colors bg-transparent border-none p-0 cursor-pointer"
+                    className={`font-medium transition-colors bg-transparent border-none p-0 cursor-pointer ${
+                      isDark ? "text-purple-400 hover:text-red-400" : "text-purple-600 hover:text-red-500"
+                    }`}
                   >
                     Ẩn icon trợ lý
                   </button>
@@ -242,7 +259,11 @@ const MascotTrigger = ({
                   isNearTop ? "-top-2 border-l border-t" : "-bottom-2 border-r border-b"
                 } ${
                   isNearLeft ? "left-8" : "right-8"
-                } w-3.5 h-3.5 bg-white dark:bg-[#1b1c27] border-purple-200/60 dark:border-purple-800/40 transform rotate-45`}
+                } w-3.5 h-3.5 transform rotate-45 ${
+                  isDark
+                    ? "bg-[#18181b] border-gray-800"
+                    : "bg-white border-purple-200/80"
+                }`}
               />
             </motion.div>
           )}

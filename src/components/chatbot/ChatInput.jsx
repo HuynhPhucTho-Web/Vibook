@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaPaperPlane } from "react-icons/fa";
+import React, { useState, useRef, useEffect, useContext } from "react";
+import { ThemeContext } from "../../context/ThemeContext";
 import { getActiveEngineLabel } from "../../services/geminiChatService";
 
 const ChatInput = ({ onSend, isLoading }) => {
+  const { theme } = useContext(ThemeContext) || { theme: "light" };
+  const isDark = theme === "dark";
   const [text, setText] = useState("");
   const inputRef = useRef(null);
   const [engineLabel, setEngineLabel] = useState(() => getActiveEngineLabel());
@@ -31,7 +33,7 @@ const ChatInput = ({ onSend, isLoading }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-3 border-t border-gray-100 dark:border-white/10 bg-white/80 dark:bg-[#15161f]/80 backdrop-blur-md"
+      className={`p-3 border-t ${isDark ? "bg-[#202024] border-gray-800" : "bg-slate-50 border-slate-200"}`}
     >
       <div className="relative flex items-center">
         <input
@@ -42,21 +44,23 @@ const ChatInput = ({ onSend, isLoading }) => {
           onKeyDown={handleKeyDown}
           placeholder="Hỏi Astro về nội dung trang này..."
           disabled={isLoading}
-          className="w-full pl-3.5 pr-11 py-2.5 text-xs sm:text-sm rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/30 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-60"
+          className={`w-full text-xs pl-3.5 pr-10 py-2.5 rounded-xl border focus:outline-none focus:border-purple-500 transition disabled:opacity-60 ${isDark ? "bg-[#121214] text-white placeholder-gray-500 border-gray-700" : "bg-white text-slate-900 placeholder-slate-400 border-slate-200"}`}
         />
 
         <button
           type="submit"
           disabled={!text.trim() || isLoading}
           aria-label="Gửi tin nhắn"
-          className="absolute right-1.5 p-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white disabled:opacity-40 disabled:hover:scale-100 hover:scale-105 active:scale-95 transition-all shadow-xs cursor-pointer"
+          className="absolute right-1.5 p-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:opacity-90 disabled:opacity-40 transition cursor-pointer shadow-xs"
         >
-          <FaPaperPlane className="w-3.5 h-3.5" />
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
         </button>
       </div>
-      <div className="flex items-center justify-between mt-1 px-1 text-[10px] text-gray-400">
-        <span>Nhấn Enter để gửi</span>
-        <span className="font-medium text-purple-600/80 dark:text-purple-400/80">
+      <div className="flex justify-between items-center mt-1.5 px-1">
+        <span className="text-[10px] text-gray-500">Nhấn Enter để gửi</span>
+        <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
           Astro AI • {engineLabel}
         </span>
       </div>
