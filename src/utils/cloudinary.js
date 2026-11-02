@@ -10,7 +10,7 @@ export const uploadToCloudinary = async (file, options = {}) => {
   } = options;
 
   if (!cloudName || !uploadPreset) {
-    toast.error("Cloudinary configuration missing in .env", { position: "top-center" });
+    toast.error("Cloudinary configuration missing in .env");
     throw new Error("Missing Cloudinary config");
   }
 
@@ -31,7 +31,7 @@ export const uploadToCloudinary = async (file, options = {}) => {
     return data.secure_url; // URL Cloudinary hoàn chỉnh
   } catch (error) {
     console.error("Cloudinary upload error:", error);
-    toast.error("Failed to upload to Cloudinary", { position: "top-center" });
+    toast.error("Failed to upload to Cloudinary");
     throw error;
   }
 };

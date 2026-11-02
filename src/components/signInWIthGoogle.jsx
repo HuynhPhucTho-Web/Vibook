@@ -30,7 +30,7 @@ function SignInwithGoogle() {
           lastName: "",
         }, { merge: true });
 
-        toast.success("Đăng nhập thành công!", { position: "top-center" });
+        toast.success("Đăng nhập thành công!");
         clearLoginRedirect();
 
         if (!hasPassword) {
@@ -43,7 +43,7 @@ function SignInwithGoogle() {
         }
       }
     }).catch((error) => {
-      toast.error(error.message || "Google sign-in failed", { position: "bottom-center" });
+      toast.error(error.message || "Google sign-in failed");
     });
   }
 

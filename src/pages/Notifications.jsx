@@ -140,7 +140,7 @@ const Notifications = () => {
         });
       } catch (error) {
         console.error("Setup listeners error:", error);
-        toast.error("Unable to load notification", { position: "top-center" });
+        toast.error("Unable to load notification");
         setIsLoading(false);
       }
     };
@@ -161,11 +161,10 @@ const Notifications = () => {
     try {
       await updateDoc(doc(db, "Notifications", notificationId), { read: true });
       toast.success("Marked as read", {
-        position: "top-center",
         autoClose: 1000
       });
     } catch {
-      toast.error("Cannot mark all notifications", { position: "top-center" });
+      toast.error("Cannot mark all notifications");
     }
   }, []);
 
@@ -175,7 +174,7 @@ const Notifications = () => {
       const unreadNotifications = notifications.filter((notif) => !notif.read);
 
       if (unreadNotifications.length === 0) {
-        toast.info("Không có thông báo chưa đọc", { position: "top-center" });
+        toast.info("Không có thông báo chưa đọc");
         return;
       }
 
@@ -188,12 +187,11 @@ const Notifications = () => {
       await batch.commit();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       toast.success("Đã đánh dấu tất cả là đã đọc", {
-        position: "top-center",
         autoClose: 1200,
       });
     } catch (error) {
       console.error("Error marking all read:", error);
-      toast.error("Không thể đánh dấu đã đọc", { position: "top-center" });
+      toast.error("Không thể đánh dấu đã đọc");
     } finally {
       setIsMarkingAll(false);
     }
@@ -204,12 +202,11 @@ const Notifications = () => {
       await deleteDoc(doc(db, "Notifications", notificationId));
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
       toast.success("Đã xóa thông báo", {
-        position: "top-center",
         autoClose: 1000,
       });
     } catch (error) {
       console.error("Error deleting notification:", error);
-      toast.error("Không thể xóa thông báo", { position: "top-center" });
+      toast.error("Không thể xóa thông báo");
     }
   }, []);
 
@@ -220,7 +217,7 @@ const Notifications = () => {
       const readNotifications = notifications.filter((notif) => notif.read);
 
       if (readNotifications.length === 0) {
-        toast.info("Không có thông báo đã đọc nào để xóa", { position: "top-center" });
+        toast.info("Không có thông báo đã đọc nào để xóa");
         return;
       }
 
@@ -232,12 +229,11 @@ const Notifications = () => {
       await batch.commit();
       setNotifications((prev) => prev.filter((notif) => !notif.read));
       toast.success(`Đã xóa ${readNotifications.length} thông báo đã đọc`, {
-        position: "top-center",
         autoClose: 1200,
       });
     } catch (error) {
       console.error("Error deleting read notifications:", error);
-      toast.error("Không thể xóa thông báo đã đọc", { position: "top-center" });
+      toast.error("Không thể xóa thông báo đã đọc");
     }
   }, [notifications]);
 
@@ -251,7 +247,7 @@ const Notifications = () => {
       );
 
       if (oldNotifications.length === 0) {
-        toast.info("Không có thông báo cũ hơn 3 ngày để xóa", { position: "top-center" });
+        toast.info("Không có thông báo cũ hơn 3 ngày để xóa");
         return;
       }
 
@@ -265,12 +261,11 @@ const Notifications = () => {
         prev.filter((n) => !n.createdAt || n.createdAt >= threeDaysAgo)
       );
       toast.success(`Đã xóa ${oldNotifications.length} thông báo cũ`, {
-        position: "top-center",
         autoClose: 1200,
       });
     } catch (error) {
       console.error("Error deleting old notifications:", error);
-      toast.error("Không thể xóa thông báo cũ", { position: "top-center" });
+      toast.error("Không thể xóa thông báo cũ");
     }
   }, [notifications]);
 

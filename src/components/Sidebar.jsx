@@ -283,11 +283,10 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      toast.success("Logged out successfully", { position: "top-center" });
+      toast.success("Logged out successfully");
     } catch (e) {
       toast.error(`Failed to log out: ${e.message}`, {
-        position: "top-center",
-      });
+        });
     }
   };
 

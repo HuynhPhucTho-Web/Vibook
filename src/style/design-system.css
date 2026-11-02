@@ -203,6 +203,15 @@ html.dark:not(.ambient-mode-active) body:not(.ambient-mode-active) {
   background: linear-gradient(180deg, #8e54e9, #4776e6);
 }
 
+/* Hide scrollbar utility */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ========== Buttons ========== */
 .vb-btn {
   display: inline-flex;
@@ -511,14 +520,71 @@ html:not(.dark) .form-control {
    UNIFIED TOP-RIGHT SLIDING TOASTS & CONFIRM DIALOGS
    ===================================================================== */
 
-/* Container position: top-right below the 72px header */
-.Toastify__toast-container--top-right {
-  top: 80px !important;
-  right: 18px !important;
-  width: 360px !important;
-  max-width: calc(100vw - 36px) !important;
-  padding: 0 !important;
-  z-index: 10001 !important;
+/* Desktop & Tablet (> 640px): Slide from top-right below the app header */
+@media (min-width: 641px) {
+  .Toastify__toast-container--top-right,
+  .Toastify__toast-container--top-center,
+  .Toastify__toast-container {
+    top: calc(var(--app-header-height, 60px) + 14px) !important;
+    right: 20px !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: 380px !important;
+    max-width: calc(100vw - 40px) !important;
+    padding: 0 !important;
+    z-index: 10001 !important;
+    transform: none !important;
+  }
+}
+
+/* Mobile (<= 640px): Perfectly Centered below header, equal left & right margins */
+@media (max-width: 640px) {
+  .Toastify__toast-container--top-right,
+  .Toastify__toast-container--top-center,
+  .Toastify__toast-container--bottom-center,
+  .Toastify__toast-container {
+    top: calc(var(--app-header-height, 60px) + 10px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    bottom: auto !important;
+    width: calc(100% - 24px) !important;
+    max-width: 440px !important;
+    padding: 0 !important;
+    z-index: 10001 !important;
+    transform: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .Toastify__toast.vb-unified-toast,
+  .Toastify__toast.vb-confirm-toast-item,
+  .Toastify__toast.tech-toast-container,
+  .Toastify__toast {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-bottom: 8px !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Ensure Slide animations enter and exit from the right across all containers */
+.Toastify__slide-enter--top-right,
+.Toastify__slide-enter--top-center,
+.Toastify__slide-enter--bottom-center {
+  animation-name: Toastify__slideInRight !important;
+}
+
+.Toastify__slide-exit--top-right,
+.Toastify__slide-exit--top-center,
+.Toastify__slide-exit--bottom-center {
+  animation-name: Toastify__slideOutRight !important;
 }
 
 /* Base unified toast */

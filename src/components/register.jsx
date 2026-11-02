@@ -35,22 +35,22 @@ function Register() {
     if (submitting) return;
 
     if (!agreeTerms) {
-      toast.error("Bạn phải đồng ý với Điều khoản và Chính sách để đăng ký!", { position: "bottom-center" });
+      toast.error("Bạn phải đồng ý với Điều khoản và Chính sách để đăng ký!");
       return;
     }
 
     if (!captchaVerified) {
-      toast.error("Vui lòng xác minh bạn không phải robot!", { position: "bottom-center" });
+      toast.error("Vui lòng xác minh bạn không phải robot!");
       return;
     }
 
     if (password.length < 8) {
-      toast.error("Mật khẩu phải có ít nhất 8 ký tự!", { position: "bottom-center" });
+      toast.error("Mật khẩu phải có ít nhất 8 ký tự!");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Mật khẩu xác nhận không khớp!", { position: "bottom-center" });
+      toast.error("Mật khẩu xác nhận không khớp!");
       return;
     }
 
@@ -78,7 +78,6 @@ function Register() {
       toast.success(
         "Đăng ký thành công! Vui lòng mở email và xác nhận tài khoản trước khi đăng nhập.",
         {
-          position: "top-center",
           autoClose: 9000,
         }
       );
@@ -99,7 +98,7 @@ function Register() {
       } catch {
         // ignore
       }
-      toast.error(error.message, { position: "bottom-center" });
+      toast.error(error.message);
     } finally {
       setSubmitting(false);
     }

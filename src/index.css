@@ -3,15 +3,7 @@
 @tailwind utilities;
 
 /* —— Tech glassmorphism login toast (DESIGN.md + requireLogin) —— */
-.Toastify__toast-container--top-center {
-  width: calc(100% - 32px);
-  max-width: 440px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0;
-  top: 16px;
-  z-index: 9999;
-}
+/* .Toastify__toast-container--top-center handled in design-system.css */
 
 .tech-toast-container.Toastify__toast,
 .Toastify__toast.tech-toast-container {

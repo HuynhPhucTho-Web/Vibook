@@ -56,7 +56,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
         const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
         if (!cloudName || !uploadPreset) {
           console.error(`[${currentDateTime}] Missing Cloudinary envs`);
-          toast.error("Cloudinary configuration missing in .env", { position: "top-center" });
+          toast.error("Cloudinary configuration missing in .env");
         }
       }, [currentDateTime]);
 
@@ -126,7 +126,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
             setRecordingTime(0);
         } catch (error) {
             console.error("Error starting recording:", error);
-            toast.error(t("failedToStartRecording"), { position: "top-center" });
+            toast.error(t("failedToStartRecording"));
         }
     };
 
@@ -225,7 +225,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
     const handleFileInputChange = async (e) => {
         const files = Array.from(e.target.files || []);
         if (attachedFiles.length + files.length > 5) {
-            toast.error("Maximum 5 files per message", { position: "top-center" });
+            toast.error("Maximum 5 files per message");
             return;
         }
 
@@ -233,7 +233,7 @@ const MessageInput = ({ messageText, onMessageChange, onSendMessage, replyMessag
         for (const f of files) {
             const ok = validateFile(f);
             if (!ok.valid) {
-                toast.error(ok.error, { position: "top-center" });
+                toast.error(ok.error);
                 continue;
             }
             const preview = await createFilePreview(f);

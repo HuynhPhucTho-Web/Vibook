@@ -86,7 +86,7 @@ const PostCreator = ({ onPostCreated }) => {
     const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
     if (!cloudName || !uploadPreset) {
       console.error("Missing Cloudinary envs");
-      toast.error(t("missingCloudinaryConfig"), { position: "top-center" });
+      toast.error(t("missingCloudinaryConfig"));
     }
   }, [t]);
 
@@ -148,14 +148,14 @@ const PostCreator = ({ onPostCreated }) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) setIsComposerExpanded(true);
     if (mediaFiles.length + files.length > MAX_MEDIA_FILES) {
-      toast.error(t("maxFilesError") || `Tối đa ${MAX_MEDIA_FILES} tệp`, { position: "top-center" });
+      toast.error(t("maxFilesError") || `Tối đa ${MAX_MEDIA_FILES} tệp`);
       return;
     }
     const push = [];
     for (const f of files) {
       const ok = validateFile(f);
       if (!ok.valid) {
-        toast.error(ok.error, { position: "top-center" });
+        toast.error(ok.error);
         continue;
       }
       const preview = await createFilePreview(f);
@@ -219,7 +219,7 @@ const PostCreator = ({ onPostCreated }) => {
       if (!file) return;
       const validation = validateFile(file);
       if (!validation.valid) {
-        toast.error(validation.error, { position: "top-center" });
+        toast.error(validation.error);
         return;
       }
       setIsUploading(true);
@@ -236,7 +236,7 @@ const PostCreator = ({ onPostCreated }) => {
         editor?.setSelection(range.index + 1, 0);
       } catch (error) {
         console.error("Embedded image upload error", error);
-        toast.error(error.message || t("uploadFailed"), { position: "top-center" });
+        toast.error(error.message || t("uploadFailed"));
       } finally {
         setIsUploading(false);
       }
@@ -267,14 +267,14 @@ const PostCreator = ({ onPostCreated }) => {
   const handlePostSubmit = async () => {
     if (isUploading) return;
     if (!postTitle.trim()) {
-      toast.error(t("postTitleRequired"), { position: "top-center" });
+      toast.error(t("postTitleRequired"));
       return;
     }
     const safeHtml = sanitizePostHtml(postContent);
     const contentText = postHtmlToText(safeHtml);
     const hasEmbeddedImage = /<img\b/i.test(safeHtml);
     if (!contentText && !hasEmbeddedImage && mediaFiles.length === 0) {
-      toast.error(t("contentOrMediaRequired"), { position: "top-center" });
+      toast.error(t("contentOrMediaRequired"));
       return;
     }
     if (
@@ -328,10 +328,10 @@ const PostCreator = ({ onPostCreated }) => {
       setIsComposerExpanded(false);
       setUploadProgress(0);
       onPostCreated && (await onPostCreated({ ...postData, id: ref.id }));
-      toast.success(t("postSuccess"), { position: "top-center" });
+      toast.success(t("postSuccess"));
     } catch (err) {
       console.error(`[${currentDateTime}] create post error`, err);
-      toast.error(err.message || t("postError"), { position: "top-center" });
+      toast.error(err.message || t("postError"));
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -450,7 +450,7 @@ const PostCreator = ({ onPostCreated }) => {
       });
     } catch (err) {
       console.error("Open camera error:", err);
-      toast.error(t("cameraError"), { position: "top-center" });
+      toast.error(t("cameraError"));
     }
   };
 
@@ -468,7 +468,7 @@ const PostCreator = ({ onPostCreated }) => {
 
   const capturePhoto = () => {
     if (mediaFiles.length >= MAX_MEDIA_FILES) {
-      toast.error(t("maxFilesError") || `Tối đa ${MAX_MEDIA_FILES} tệp`, { position: "top-center" });
+      toast.error(t("maxFilesError") || `Tối đa ${MAX_MEDIA_FILES} tệp`);
       return;
     }
     const v = videoRef.current;
@@ -499,7 +499,7 @@ const PostCreator = ({ onPostCreated }) => {
               id: Date.now() + Math.random(),
             },
           ]);
-          toast.success(t("photoCaptured"), { position: "top-center" });
+          toast.success(t("photoCaptured"));
           closeCamera();
         };
         reader.readAsDataURL(file);
@@ -514,7 +514,7 @@ const PostCreator = ({ onPostCreated }) => {
     for (const f of files) {
       const ok = validateFile(f);
       if (!ok.valid) {
-        toast.error(ok.error, { position: "top-center" });
+        toast.error(ok.error);
         continue;
       }
       const preview = await createFilePreview(f);

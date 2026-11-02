@@ -15,7 +15,7 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
     e.preventDefault();
 
     if (!replyText.trim()) {
-      toast.error("Reply cannot be left blank", { position: "top-center" });
+      toast.error("Reply cannot be left blank");
       return;
     }
 
@@ -57,13 +57,12 @@ const ReplyComment = ({ commentId, postId, auth, userDetails, setReplyTo }) => {
       setReplyText("");
       setReplyTo(null);
       toast.success("💬 Reply added!", {
-        position: "top-center",
         autoClose: 1000,
         style: { fontSize: '16px', fontWeight: '500' }
       });
     } catch (error) {
       console.error("Error adding reply:", error);
-      toast.error(`Cannot add reply: ${error.message}`, { position: "top-center" });
+      toast.error(`Cannot add reply: ${error.message}`);
     }
   };
 

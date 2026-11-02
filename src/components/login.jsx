@@ -72,7 +72,7 @@ function Login() {
     if (st?.needsEmailVerification || st?.fromRegister) {
       toast.info(
         "Hãy xác nhận email (link trong hộp thư) rồi đăng nhập lại tại đây.",
-        { position: "top-center", autoClose: 9000 }
+        { autoClose: 9000 }
       );
     }
   }, [location.state]);
@@ -82,11 +82,11 @@ function Login() {
     if (submitting) return;
     if (lockoutTime && Date.now() < lockoutTime) {
       const secs = Math.ceil((lockoutTime - Date.now()) / 1000);
-      toast.error(`Đăng nhập tạm thời bị khóa. Vui lòng thử lại sau ${secs} giây.`, { position: "top-center" });
+      toast.error(`Đăng nhập tạm thời bị khóa. Vui lòng thử lại sau ${secs} giây.`);
       return;
     }
     if (!captchaVerified) {
-      toast.error("Vui lòng hoàn thành xác minh bảo mật (anti-bot)!", { position: "top-center" });
+      toast.error("Vui lòng hoàn thành xác minh bảo mật (anti-bot)!");
       return;
     }
 
@@ -107,12 +107,12 @@ function Login() {
           await sendEmailVerification(fresh);
           toast.warning(
             "Tài khoản chưa xác nhận email. Chúng tôi đã gửi lại link xác nhận — kiểm tra hộp thư rồi đăng nhập lại.",
-            { position: "top-center", autoClose: 9000 }
+            { autoClose: 9000 }
           );
         } catch {
           toast.warning(
             "Tài khoản chưa được xác nhận. Vui lòng kiểm tra email trước khi đăng nhập!",
-            { position: "top-center", autoClose: 8000 }
+            { autoClose: 8000 }
           );
         }
         await signOut(auth);
@@ -135,7 +135,7 @@ function Login() {
       localStorage.removeItem("vibook_login_failures");
       localStorage.removeItem("vibook_login_locktime");
 
-      toast.success("Đăng nhập thành công!", { position: "top-center" });
+      toast.success("Đăng nhập thành công!");
       clearLoginRedirect();
       navigate(redirectTo, { replace: true });
     } catch (error) {
@@ -146,9 +146,9 @@ function Login() {
         const lockUntil = Date.now() + 60000; // 60 seconds lock
         setLockoutTime(lockUntil);
         localStorage.setItem("vibook_login_locktime", lockUntil.toString());
-        toast.error("Tài khoản đã nhập sai mật khẩu 5 lần. Tạm khóa đăng nhập trong 60 giây để phòng chống Brute-Force.", { position: "top-center", autoClose: 8000 });
+        toast.error("Tài khoản đã nhập sai mật khẩu 5 lần. Tạm khóa đăng nhập trong 60 giây để phòng chống Brute-Force.", { autoClose: 8000 });
       } else {
-        toast.error(`${error.message} (Còn ${5 - nextAttempts} lần thử trước khi bị khóa)`, { position: "bottom-center" });
+        toast.error(`${error.message} (Còn ${5 - nextAttempts} lần thử trước khi bị khóa)`);
       }
     } finally {
       setSubmitting(false);

@@ -71,7 +71,7 @@ const Storys = () => {
       },
       (error) => {
         console.error("Error fetching stories:", error);
-        toast.error("Failed to load stories.", { position: "top-center" });
+        toast.error("Failed to load stories.");
       }
     );
 
@@ -97,12 +97,12 @@ const Storys = () => {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
     if (newStory.mediaFiles.length + files.length > 5) {
-      toast.error("Maximum 5 videos per story.", { position: "top-center" });
+      toast.error("Maximum 5 videos per story.");
       return;
     }
     const validFiles = files.filter((file) => {
       const check = validateFile(file);
-      if (!check.valid) toast.error(check.error, { position: "top-center" });
+      if (!check.valid) toast.error(check.error);
       return check.valid;
     });
 
@@ -148,8 +148,7 @@ const Storys = () => {
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
       toast.error(`Failed to upload video: ${error.message}`, {
-        position: "top-center",
-      });
+        });
       return null;
     }
   };
@@ -159,8 +158,7 @@ const Storys = () => {
     e.preventDefault();
     if (!newStory.title.trim() && newStory.mediaFiles.length === 0) {
       toast.error("Please provide a title or video file.", {
-        position: "top-center",
-      });
+        });
       return;
     }
     if (
@@ -197,12 +195,11 @@ const Storys = () => {
       await addDoc(collection(db, "Stories"), storyData);
       setNewStory({ title: "", mediaFiles: [] });
       setShowCreateForm(false);
-      toast.success("Story created successfully!", { position: "top-center" });
+      toast.success("Story created successfully!");
     } catch (error) {
       console.error("Error creating story:", error);
       toast.error(`Failed to create story: ${error.message}`, {
-        position: "top-center",
-      });
+        });
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -332,12 +329,10 @@ const Storys = () => {
                           try {
                             await deleteDoc(doc(db, "Stories", story.id));
                             toast.success("Story deleted", {
-                              position: "top-center",
-                            });
+                              });
                           } catch {
                             toast.error("Failed to delete story", {
-                              position: "top-center",
-                            });
+                              });
                           }
                         }}
                         className="rounded-lg bg-red-500/80 text-white px-3 py-1 text-sm hover:bg-red-600 transition"

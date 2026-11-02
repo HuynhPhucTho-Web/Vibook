@@ -1,5 +1,5 @@
 import React from "react";
-import { toast } from "react-toastify";
+import { toast, Slide } from "react-toastify";
 import { auth } from "../components/firebase";
 
 const FROM_KEY = "vibook_login_from";
@@ -209,7 +209,8 @@ export function requireLogin(options = {}) {
 
   const toastOpts = {
     toastId: TOAST_ID,
-    position: "top-center",
+    position: "top-right",
+    transition: Slide,
     autoClose: 3000,
     closeOnClick: false,
     closeButton: false,
