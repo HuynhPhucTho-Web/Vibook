@@ -22,6 +22,7 @@ import { useSearch } from "../context/SearchContext";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import SEO from "../components/SEO";
 import PageHeaderBanner from "../components/PageHeaderBanner";
+import RightSideDrawer from "../components/common/RightSideDrawer";
 import { DEFAULT_TOOLS } from "./toolsData";
 import {
   FaPlus,
@@ -801,7 +802,7 @@ export default function ToolsPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none"
+            className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2 sm:px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none text-center truncate"
             title="Sắp xếp"
           >
             <option value="newest" className="bg-neutral-900 text-white">
@@ -822,7 +823,7 @@ export default function ToolsPage() {
           <select
             value={itemsPerPage}
             onChange={(e) => setItemsPerPage(Number(e.target.value))}
-            className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none"
+            className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2 sm:px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none text-center truncate"
             title="Hiển thị mỗi trang"
           >
             <option value={12} className="bg-neutral-900 text-white">
@@ -846,10 +847,10 @@ export default function ToolsPage() {
               resetForm();
               setShowAddModal(true);
             }}
-            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md shadow-purple-500/20 flex items-center gap-1.5 transition-all duration-200 cursor-pointer"
+            className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md shadow-purple-500/20 flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer whitespace-nowrap"
           >
-            <FaPlus size={10} />
-            <span>{language === "vi" ? "Thêm công cụ" : "Add Tool"}</span>
+            <FaPlus size={10} className="flex-shrink-0" />
+            <span className="truncate">{language === "vi" ? "Tạo" : "Create"}</span>
           </button>
         </PageHeaderBanner>
 
@@ -1222,45 +1223,23 @@ export default function ToolsPage() {
         )}
       </div>
 
-      {/* ================= MODAL: ADD / EDIT TOOL ================= */}
-      {showAddModal &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            className="tool-detail-backdrop"
-            onClick={() => setShowAddModal(false)}
-          >
-            <div
-              className="tool-detail-modal p-4 sm:p-5"
-              onClick={(e) => e.stopPropagation()}
-            >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-2.5 mb-3.5 border-b border-purple-500/20">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                  {editingTool ? <FaEdit size={12} /> : <FaPlus size={12} />}
-                </div>
-                <h2 className="text-base sm:text-lg font-bold text-inherit">
-                  {editingTool
-                    ? language === "vi"
-                      ? "Chỉnh sửa công cụ"
-                      : "Edit Tool"
-                    : language === "vi"
-                    ? "Thêm công cụ mới"
-                    : "Add New Tool"}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAddModal(false)}
-                className="w-6 h-6 rounded-full bg-neutral-800/80 hover:bg-neutral-700 text-neutral-400 hover:text-white flex items-center justify-center transition"
-              >
-                <FaTimes size={11} />
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleSubmitTool} className="flex flex-col gap-3 text-xs sm:text-sm">
+      {/* ================= DRAWER: ADD / EDIT TOOL ================= */}
+      <RightSideDrawer
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title={
+          editingTool
+            ? language === "vi"
+              ? "Chỉnh sửa công cụ"
+              : "Edit Tool"
+            : language === "vi"
+            ? "Thêm công cụ mới"
+            : "Add New Tool"
+        }
+        icon={editingTool ? FaEdit : FaPlus}
+        width="w-full sm:w-[480px] md:w-[520px]"
+      >
+        <form onSubmit={handleSubmitTool} className="flex flex-col gap-3 text-xs sm:text-sm">
               {/* Field 1: Tool Name */}
               <div>
                 <label className="block font-semibold mb-1 text-inherit text-xs">
@@ -1277,7 +1256,7 @@ export default function ToolsPage() {
                       ? "Ví dụ: ChatGPT, Canva, GitHub Copilot..."
                       : "e.g. ChatGPT, Figma, Notion..."
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-neutral-900/50 border border-purple-500/20 focus:border-purple-500/60 outline-none text-inherit text-xs sm:text-sm transition"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-neutral-900/50 border border-slate-300 dark:border-purple-500/20 focus:border-purple-500/60 outline-none text-slate-800 dark:text-neutral-100 text-xs sm:text-sm transition"
                 />
               </div>
 
@@ -1306,7 +1285,7 @@ export default function ToolsPage() {
                         ? "Nhập danh mục (VD: AI, Lập trình, DevOps, Marketing...)"
                         : "Type category (e.g. AI, DevOps, Design...)"
                     }
-                    className="w-full px-3 py-2 pr-8 rounded-lg bg-neutral-900/50 border border-purple-500/20 focus:border-purple-500/60 outline-none text-inherit text-xs sm:text-sm transition"
+                    className="w-full px-3 py-2 pr-8 rounded-lg bg-slate-50 dark:bg-neutral-900/50 border border-slate-300 dark:border-purple-500/20 focus:border-purple-500/60 outline-none text-slate-800 dark:text-neutral-100 text-xs sm:text-sm transition"
                   />
                   {formCategory && (
                     <button
@@ -1451,7 +1430,7 @@ export default function ToolsPage() {
                     setImagePreviewError(false);
                   }}
                   placeholder="https://images.unsplash.com/... hoặc dán link ảnh"
-                  className="w-full px-3 py-2 rounded-lg bg-neutral-900/50 border border-purple-500/20 focus:border-purple-500/60 outline-none text-inherit text-xs sm:text-sm transition"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-neutral-900/50 border border-slate-300 dark:border-purple-500/20 focus:border-purple-500/60 outline-none text-slate-800 dark:text-neutral-100 text-xs sm:text-sm transition"
                 />
 
                 {/* Live Image Preview Box */}
@@ -1511,7 +1490,7 @@ export default function ToolsPage() {
                       ? "Mô tả ngắn gọn tính năng, công dụng hoặc cách sử dụng công cụ..."
                       : "Describe features, use cases or what this tool does..."
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-neutral-900/50 border border-purple-500/20 focus:border-purple-500/60 outline-none text-inherit text-xs sm:text-sm transition resize-none"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-neutral-900/50 border border-slate-300 dark:border-purple-500/20 focus:border-purple-500/60 outline-none text-slate-800 dark:text-neutral-100 text-xs sm:text-sm transition resize-none"
                 />
               </div>
 
@@ -1525,7 +1504,7 @@ export default function ToolsPage() {
                   value={formLink}
                   onChange={(e) => setFormLink(e.target.value)}
                   placeholder="https://example.com"
-                  className="w-full px-3 py-2 rounded-lg bg-neutral-900/50 border border-purple-500/20 focus:border-purple-500/60 outline-none text-inherit text-xs sm:text-sm transition"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-neutral-900/50 border border-slate-300 dark:border-purple-500/20 focus:border-purple-500/60 outline-none text-slate-800 dark:text-neutral-100 text-xs sm:text-sm transition"
                 />
               </div>
 
@@ -1558,10 +1537,7 @@ export default function ToolsPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>,
-        document.body
-      )}
+      </RightSideDrawer>
 
       {/* ================= MODAL: TOOL DETAILS ================= */}
       {detailTool &&

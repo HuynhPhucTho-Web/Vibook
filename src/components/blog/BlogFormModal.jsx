@@ -1,7 +1,7 @@
 import React from "react";
 import ReactQuill from "react-quill-new";
-import { FaTimes } from "react-icons/fa";
-
+import { FaPenNib, FaEdit } from "react-icons/fa";
+import RightSideDrawer from "../common/RightSideDrawer";
 const BlogFormModal = ({
   showModal,
   onClose,
@@ -27,15 +27,14 @@ const BlogFormModal = ({
   if (!showModal) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header d-flex justify-content-between align-items-center mb-3">
-          <h2>{editingPost ? t("editPost") : t("createPost")}</h2>
-          <button type="button" className="close-btn border-0 bg-transparent" onClick={onClose}>
-            <FaTimes />
-          </button>
-        </div>
-        <form onSubmit={onSubmit} className="modal-form">
+    <RightSideDrawer
+      isOpen={showModal}
+      onClose={onClose}
+      title={editingPost ? t("editPost") : t("createPost")}
+      icon={editingPost ? FaEdit : FaPenNib}
+      width="w-full sm:w-[540px] md:w-[640px]"
+    >
+      <form onSubmit={onSubmit} className="modal-form">
           <div className="form-group mb-3">
             <label className="form-label font-weight-bold">{t("title")}</label>
             <input
@@ -195,8 +194,7 @@ const BlogFormModal = ({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </RightSideDrawer>
   );
 };
 

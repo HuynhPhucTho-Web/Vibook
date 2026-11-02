@@ -28,6 +28,7 @@ import ReactQuill from "react-quill-new";
 import { useSearch } from "../context/SearchContext";
 import SEO from "../components/SEO";
 import PageHeaderBanner from "../components/PageHeaderBanner";
+import RightSideDrawer from "../components/common/RightSideDrawer";
 import "../style/event/Event.css";
 
 const quillModules = {
@@ -174,7 +175,6 @@ const Events = () => {
     }, (error) => {
       console.error("Error fetching events:", error);
       toast.error(t("unableToLoadEvents"), {
-        position: "top-center",
         autoClose: 3000,
       });
       setIsLoading(false);
@@ -242,7 +242,7 @@ const Events = () => {
     async (e) => {
       e.preventDefault();
       if (!eventName.trim() || !startDateTime.trim() || !endDateTime.trim()) {
-        toast.error(t("eventNameRequired"), { position: "top-center" });
+        toast.error(t("eventNameRequired"));
         return;
       }
       if (!requireLogin({ navigate, message: t("loginToCreateEvent") })) return;
@@ -273,12 +273,11 @@ const Events = () => {
         setEventOnlineLink("");
         setShowCreateModal(false);
         toast.success(t("eventCreated"), {
-          position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error creating event:", error);
-        toast.error(t("eventCreateFailed"), { position: "top-center" });
+        toast.error(t("eventCreateFailed"));
       }
     },
     [eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, isOnline, eventOnlineLink, navigate, t]
@@ -312,10 +311,10 @@ const Events = () => {
         setEventBannerImage("");
         setIsOnline(false);
         setEventOnlineLink("");
-        toast.success(t("eventUpdated"), { position: "top-center" });
+        toast.success(t("eventUpdated"));
       } catch (error) {
         console.error("Error updating event:", error);
-        toast.error(t("eventUpdateFailed"), { position: "top-center" });
+        toast.error(t("eventUpdateFailed"));
       }
     },
     [editingEvent, eventName, startDateTime, endDateTime, eventLocation, eventDescription, eventBannerImage, isOnline, eventOnlineLink, currentUser]
@@ -336,12 +335,11 @@ const Events = () => {
           attendees: [...attendees, user.uid],
         });
         toast.success(t("joinedEvent"), {
-          position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error joining event:", error);
-        toast.error(t("joinEventFailed"), { position: "top-center" });
+        toast.error(t("joinEventFailed"));
       }
     },
     [navigate, t]
@@ -362,12 +360,11 @@ const Events = () => {
           attendees: attendees.filter((uid) => uid !== user.uid),
         });
         toast.success(t("leftEvent"), {
-          position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error leaving event:", error);
-        toast.error(t("leaveEventFailed"), { position: "top-center" });
+        toast.error(t("leaveEventFailed"));
       }
     },
     [navigate, t]
@@ -377,7 +374,7 @@ const Events = () => {
   const handleDeleteEvent = useCallback(
     async (eventId, ownerId) => {
       if (!currentUser || currentUser.uid !== ownerId) {
-        toast.error(t("onlyOwnerCanDeleteEvent"), { position: "top-center" });
+        toast.error(t("onlyOwnerCanDeleteEvent"));
         return;
       }
 
@@ -385,12 +382,11 @@ const Events = () => {
         const eventRef = doc(db, "Events", eventId);
         await deleteDoc(eventRef);
         toast.success(t("eventDeleted"), {
-          position: "top-center",
           autoClose: 2000,
         });
       } catch (error) {
         console.error("Error deleting event:", error);
-        toast.error(t("eventDeleteFailed"), { position: "top-center" });
+        toast.error(t("eventDeleteFailed"));
       }
     },
     [currentUser]
@@ -459,7 +455,7 @@ const Events = () => {
     const uploadPreset = import.meta.env.VITE_REACT_APP_CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
-      toast.error(t("cloudinaryConfigMissing"), { position: "top-center" });
+      toast.error(t("cloudinaryConfigMissing"));
       throw new Error("Missing Cloudinary config in .env");
     }
 
@@ -478,7 +474,7 @@ const Events = () => {
       return data.secure_url; // final Cloudinary URL
     } catch (error) {
       console.error("Cloudinary upload error:", error);
-      toast.error("Failed to upload image to Cloudinary", { position: "top-center" });
+      toast.error("Failed to upload image to Cloudinary");
       throw error;
     }
   }, [t]);
@@ -511,7 +507,7 @@ const Events = () => {
         photoURL: null,
       }));
       setParticipantsData(fallbackUsers);
-      toast.error(t("unableToLoadParticipants"), { position: "top-center" });
+      toast.error(t("unableToLoadParticipants"));
     }
   }, [t]);
 
@@ -622,10 +618,10 @@ const Events = () => {
                 setShowCreateModal(true);
               }
             }}
-            className="vb-btn vb-btn--primary"
+            className="vb-btn vb-btn--primary !min-h-[34px] !py-1.5 !text-xs sm:!text-sm"
           >
             <FaPlus size={14} />
-            <span>{t("createEvent")}</span>
+            <span>{language === "vi" ? "Tạo" : "Create"}</span>
           </button>
         </PageHeaderBanner>
 
@@ -657,25 +653,15 @@ const Events = () => {
           </button>
         </div>
 
-        {/* Create Event Modal */}
-        {showCreateModal && (
-          <div className="event-modal-overlay p-4">
-            <div
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700"
-              ref={modalRef}
-            >
-              <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100 dark:border-gray-700">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                  {t("createNewEvent")}
-                </h3>
-                <button
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                  onClick={() => setShowCreateModal(false)}
-                >
-                  <FaTimes size={18} />
-                </button>
-              </div>
-              <form onSubmit={handleCreateEvent}>
+        {/* Create Event Drawer */}
+        <RightSideDrawer
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title={t("createNewEvent")}
+          icon={FaCalendarAlt}
+          width="w-full sm:w-[500px] md:w-[560px]"
+        >
+          <form onSubmit={handleCreateEvent}>
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("eventName")} <span className="text-red-500">*</span>
@@ -876,29 +862,20 @@ const Events = () => {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
+        </RightSideDrawer>
 
-        {/* Edit Event Modal */}
-        {showEditModal && (
-          <div className="event-modal-overlay p-4">
-            <div
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700"
-              ref={modalRef}
-            >
-              <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100 dark:border-gray-700">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                  {t("updateEvent")}
-                </h3>
-                <button
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  <FaTimes size={18} />
-                </button>
-              </div>
-              <form onSubmit={handleUpdateEvent}>
+        {/* Edit Event Drawer */}
+        <RightSideDrawer
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingEvent(null);
+          }}
+          title={t("updateEvent")}
+          icon={FaEdit}
+          width="w-full sm:w-[500px] md:w-[560px]"
+        >
+          <form onSubmit={handleUpdateEvent}>
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     {t("eventName")} <span className="text-red-500">*</span>
@@ -1099,9 +1076,7 @@ const Events = () => {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
+        </RightSideDrawer>
 
         {/* Participants Modal */}
         {showParticipantsModal && selectedEvent && (

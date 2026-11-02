@@ -9,6 +9,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { LanguageContext } from '../context/LanguageContext';
 import { FaPlus, FaTimes, FaGamepad, FaEllipsisV, FaEdit, FaTrash, FaCheck, FaUpload } from "react-icons/fa";
 import PageHeaderBanner from "../components/PageHeaderBanner";
+import RightSideDrawer from "../components/common/RightSideDrawer";
 import { Search } from "lucide-react";
 import { requireLogin } from "../utils/requireLogin";
 import { useSearch } from "../context/SearchContext";
@@ -19,7 +20,7 @@ const Games = () => {
 
   const { theme } = useContext(ThemeContext);
   const isDark = theme === "dark";
-  const { t } = useContext(LanguageContext);
+  const { t, language } = useContext(LanguageContext);
   const navigate = useNavigate();
   const cls = {
     page: "",
@@ -251,24 +252,22 @@ const Games = () => {
               }
               setShowCreateModal(true);
             }}
-            className="vb-btn vb-btn--primary"
+            className="vb-btn vb-btn--primary !min-h-[34px] !py-1.5 !text-xs sm:!text-sm"
           >
             <FaPlus size={14} />
-            <span>{t("addGame")}</span>
+            <span>{language === "vi" ? "Tạo" : "Create"}</span>
           </button>
         </PageHeaderBanner>
 
-        {/* Create Modal */}
-        {showCreateModal && (
-          <div className={cls.backdrop}>
-            <div ref={modalRef} className={`${cls.surface} ${cls.border} rounded-xl p-6 w-full max-w-md`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold"> {t("addNewgame")} </h3>
-                <button className={`${cls.muted} hover:opacity-80`} onClick={() => setShowCreateModal(false)}>
-                  <FaTimes size={20} />
-                </button>
-              </div>
-              <form onSubmit={handleCreateGame} className="space-y-3">
+        {/* Create Game Drawer */}
+        <RightSideDrawer
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title={t("addNewgame") || "Thêm trò chơi mới"}
+          icon={FaGamepad}
+          width="w-full sm:w-[460px] md:w-[500px]"
+        >
+          <form onSubmit={handleCreateGame} className="space-y-3">
                 <input
                   type="text" value={gameTitle} onChange={(e) => setGameTitle(e.target.value)}
                   placeholder={t("gameTitle")} className={`w-full p-2 ${cls.input} ${cls.ringFocus}`} required
@@ -336,13 +335,11 @@ const Games = () => {
                     className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 flex items-center gap-2"
                   >
                     {isUploadingCreateImg && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                    <span>{t("addGame")}</span>
+                    <span>Tạo</span>
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
+        </RightSideDrawer>
 
         {/* Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">

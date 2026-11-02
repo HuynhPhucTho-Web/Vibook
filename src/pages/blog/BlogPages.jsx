@@ -111,7 +111,7 @@ const BlogCardSkeleton = () => (
 let cachedBlogState = null;
 
 const BlogPages = () => {
-  const { t } = useContext(LanguageContext);
+  const { t, language } = useContext(LanguageContext);
   const { slug } = useParams();
   const navigate = useNavigate();
   const isDetailView = !!slug;
@@ -1222,11 +1222,11 @@ const BlogPages = () => {
             <select
               value={selectedCategory || ""}
               onChange={handleCategoryChange}
-              className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none"
+              className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2 sm:px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none text-center truncate"
               title="Danh mục"
             >
               <option value="" className="bg-neutral-900 text-white">
-                {t("allCategories") || "Tất cả danh mục"}
+                {language === "vi" ? "Tất cả danh mục" : (t("allCategories") || "All Categories")}
               </option>
               {filterCategories.map((cat) => (
                 <option key={cat.id} value={cat.name} className="bg-neutral-900 text-white">
@@ -1239,12 +1239,14 @@ const BlogPages = () => {
             <select
               value={sortBy}
               onChange={handleSortChange}
-              className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none"
+              className="bg-neutral-900/40 dark:bg-neutral-900/60 border border-purple-500/20 rounded-lg px-2 sm:px-2.5 py-1.5 text-xs text-inherit cursor-pointer font-medium outline-none text-center truncate"
               title="Sắp xếp"
             >
               <option value="newest" className="bg-neutral-900 text-white">{t("sortByNewest")}</option>
               <option value="oldest" className="bg-neutral-900 text-white">{t("sortByOldest")}</option>
-              <option value="favorites" className="bg-neutral-900 text-white">Yêu thích nhất</option>
+              <option value="favorites" className="bg-neutral-900 text-white">
+                {language === "vi" ? "Yêu thích" : "Favorites"}
+              </option>
             </select>
 
             {/* Favorite Filter Toggle */}
@@ -1252,15 +1254,15 @@ const BlogPages = () => {
               <button
                 type="button"
                 onClick={() => setShowFavoritesOnly(prev => !prev)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border ${
+                className={`px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all border whitespace-nowrap ${
                   showFavoritesOnly
                     ? "bg-red-500/20 text-red-400 border-red-500/40"
                     : "bg-neutral-900/40 border-purple-500/20 text-slate-300 hover:text-white"
                 }`}
                 title={showFavoritesOnly ? "Hiện tất cả bài viết" : "Lọc bài viết đã thích"}
               >
-                <FaHeart size={11} className={showFavoritesOnly ? "text-red-400" : "text-slate-400"} />
-                <span>{showFavoritesOnly ? "Tất cả" : "Yêu thích"}</span>
+                <FaHeart size={11} className={`flex-shrink-0 ${showFavoritesOnly ? "text-red-400" : "text-slate-400"}`} />
+                <span className="truncate">{showFavoritesOnly ? "Tất cả" : "Yêu thích"}</span>
               </button>
             )}
 
@@ -1269,10 +1271,10 @@ const BlogPages = () => {
               <button
                 type="button"
                 onClick={openAddModal}
-                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md shadow-purple-500/20 flex items-center gap-1.5 transition-all duration-200 cursor-pointer"
+                className="px-2 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md shadow-purple-500/20 flex items-center justify-center gap-1 transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
-                <FaPlus size={11} />
-                <span>{t("addPost")}</span>
+                <FaPlus size={11} className="flex-shrink-0" />
+                <span className="truncate">{language === "vi" ? "Tạo" : "Create"}</span>
               </button>
             )}
           </PageHeaderBanner>
