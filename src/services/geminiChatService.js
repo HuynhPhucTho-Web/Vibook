@@ -5,6 +5,7 @@
  */
 
 import { buildVibookKnowledge } from "./vibookKnowledgeBase";
+import { getOfflineResponse } from "./offlineBotKnowledge";
 
 // Danh sách từ khóa model bị loại trừ — dùng cả khi validate cache
 const MODEL_EXCLUDED_KEYWORDS = [
@@ -142,6 +143,13 @@ export const isGroqEnvKey = () => {
 };
 
 /**
+ * Kiểm tra xem có bất kỳ API Key nào khả dụng không
+ */
+export const hasConfiguredApiKey = () => {
+  return Boolean(getStoredApiKey() || getStoredGroqApiKey());
+};
+
+/**
  * Lấy và đặt nhà cung cấp AI ưu tiên ('gemini' | 'groq')
  */
 export const getActiveAiProvider = () => {
@@ -160,6 +168,9 @@ export const setActiveAiProvider = (provider) => {
 };
 
 export const getActiveEngineLabel = () => {
+  if (!hasConfiguredApiKey()) {
+    return "Astro Core (Tri thức tích hợp)";
+  }
   const provider = getActiveAiProvider();
   if (provider === "gemini") {
     const activeModel = sessionStorage.getItem("vibook_active_gemini_model") || "gemini-2.5-flash";
@@ -170,28 +181,10 @@ export const getActiveEngineLabel = () => {
 };
 
 /**
- * Trả lời offline khi chưa cài API Key
+ * Trả lời offline khi chưa cài API Key hoặc khi API gặp sự cố
  */
 const generateFallbackResponse = (userMessage, context) => {
-  const lowerMsg = userMessage.toLowerCase();
-
-  if (lowerMsg.includes("tóm tắt") || lowerMsg.includes("nội dung trang")) {
-    if (context.content && context.content.length > 30) {
-      const preview = context.content.slice(0, 300);
-      return `📄 **Tóm tắt nhanh nội dung đang hiển thị:**\n\n> "${preview}..."\n\n*(Trang: **${context.title}** - Chuyên mục: **${context.category}**)*`;
-    }
-    return `Hiện tại trang **${context.title}** chưa có nhiều văn bản để tóm tắt. Bạn hãy điều hướng đến bài viết hoặc tài liệu cụ thể nhé!`;
-  }
-
-  if (lowerMsg.includes("chào") || lowerMsg.includes("hello") || lowerMsg.includes("hi")) {
-    return `Chào bạn! Mình là **Astro** - Trợ lý AI của Vibook. Mình đang theo dõi trang **${context.title}** cùng bạn đây! Bạn cần mình giải đáp hoặc tóm tắt điều gì trên màn hình không?`;
-  }
-
-  if (lowerMsg.includes("tài liệu") || lowerMsg.includes("môn") || lowerMsg.includes("ôn thi")) {
-    return `📚 Để ôn tập thi hoặc tải tài liệu trắc nghiệm, bạn có thể vào mục **Ngân hàng đề & Tài liệu** (/source). Vibook có sẵn các môn như Triết học (MLN131), Tư tưởng Hồ Chí Minh (HCM202), Lịch sử Đảng (VNR202),...`;
-  }
-
-  return `Chào bạn! Mình đã đọc được ngữ cảnh trang **"${context.title}"** bạn đang xem.\n\nĐể mình có thể phân tích thông minh và giải đáp mọi thắc mắc học tập, hãy chắc chắn bạn đã cấu hình **VITE_GEMINI_API_KEY** trong file .env hoặc bấm vào nút **⚙️ Cài đặt** ở trên nhé!`;
+  return getOfflineResponse(userMessage, context);
 };
 
 /**
@@ -664,6 +657,8 @@ export const sendMessageToGemini = async ({
   const groqApiKey = getStoredGroqApiKey();
   const activeProvider = getActiveAiProvider();
 
+  const lastUserMsg = messages[messages.length - 1]?.content || "";
+
   // 1. Khi ưu tiên Gemini (mặc định nếu có key Gemini)
   if (activeProvider === "gemini") {
     if (geminiApiKey) {
@@ -676,16 +671,21 @@ export const sendMessageToGemini = async ({
           try {
             console.info("Đang tự động fallback sang Groq API...");
             const groqReply = await callGroqAPI(groqApiKey, messages, context);
-            return `*(⚠️ Lưu ý: Gemini API gặp sự cố: ${geminiError.message}. Astro đã chuyển sang Groq để trả lời bạn)*\n\n${groqReply}`;
+            return `*(⚠️ Lưu ý: Gemini API gặp sự cố. Astro đã chuyển sang Groq để trả lời bạn)*\n\n${groqReply}`;
           } catch (groqError) {
-            throw new Error(`Gemini: ${geminiError.message} | Groq: ${groqError.message}`);
+            console.warn("Groq API fallback cũng gặp sự cố:", groqError);
           }
         }
-        throw geminiError;
+        // Tự động chuyển sang tri thức chuẩn, không làm đứt quãng hội thoại
+        return generateFallbackResponse(lastUserMsg, context);
       }
     } else if (groqApiKey) {
-      // Chưa cấu hình Gemini nhưng có Groq
-      return await callGroqAPI(groqApiKey, messages, context);
+      try {
+        return await callGroqAPI(groqApiKey, messages, context);
+      } catch (groqError) {
+        console.warn("Groq API gặp sự cố:", groqError);
+        return generateFallbackResponse(lastUserMsg, context);
+      }
     }
   }
 
@@ -700,15 +700,19 @@ export const sendMessageToGemini = async ({
           try {
             console.info("Đang tự động fallback sang Gemini API...");
             const geminiReply = await callGeminiAPI(geminiApiKey, messages, context);
-            return `*(⚠️ Lưu ý: Groq API gặp sự cố: ${groqError.message}. Astro đã chuyển sang Gemini để trả lời bạn)*\n\n${geminiReply}`;
+            return `*(⚠️ Lưu ý: Groq API gặp sự cố. Astro đã chuyển sang Gemini để trả lời bạn)*\n\n${geminiReply}`;
           } catch (geminiError) {
-            throw new Error(`Groq: ${groqError.message} | Gemini: ${geminiError.message}`);
+            console.warn("Gemini API fallback cũng gặp sự cố:", geminiError);
           }
         }
-        throw groqError;
+        return generateFallbackResponse(lastUserMsg, context);
       }
     } else if (geminiApiKey) {
-      return await callGeminiAPI(geminiApiKey, messages, context);
+      try {
+        return await callGeminiAPI(geminiApiKey, messages, context);
+      } catch (geminiError) {
+        return generateFallbackResponse(lastUserMsg, context);
+      }
     }
   }
 
@@ -718,10 +722,14 @@ export const sendMessageToGemini = async ({
       return await callGeminiAPI(geminiApiKey, messages, context);
     } catch (err) {
       if (groqApiKey) {
-        const groqReply = await callGroqAPI(groqApiKey, messages, context);
-        return `*(⚠️ Lưu ý: Gemini gặp sự cố: ${err.message}. Astro đã chuyển sang Groq để trả lời bạn)*\n\n${groqReply}`;
+        try {
+          const groqReply = await callGroqAPI(groqApiKey, messages, context);
+          return `*(⚠️ Lưu ý: Gemini gặp sự cố. Astro đã chuyển sang Groq để trả lời bạn)*\n\n${groqReply}`;
+        } catch {
+          return generateFallbackResponse(lastUserMsg, context);
+        }
       }
-      throw err;
+      return generateFallbackResponse(lastUserMsg, context);
     }
   }
 
@@ -729,12 +737,11 @@ export const sendMessageToGemini = async ({
     try {
       return await callGroqAPI(groqApiKey, messages, context);
     } catch (err) {
-      throw err;
+      return generateFallbackResponse(lastUserMsg, context);
     }
   }
 
-  // 4. Nếu chưa cài bất kỳ API key nào, dùng bộ phản hồi mẫu
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  const lastUserMsg = messages[messages.length - 1]?.content || "";
+  // 4. Nếu chưa cài bất kỳ API key nào, dùng bộ phản hồi mẫu chuẩn xác và phong phú
+  await new Promise((resolve) => setTimeout(resolve, 300));
   return generateFallbackResponse(lastUserMsg, context);
 };

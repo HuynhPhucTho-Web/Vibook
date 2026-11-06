@@ -164,32 +164,43 @@ export const getContextualQuickPrompts = (pathname = "") => {
       "Giải thích chi tiết câu hỏi này",
       "Tại sao đáp án này lại đúng?",
       "Tóm tắt các khái niệm cốt lõi trong câu này",
-      "Mẹo ghi nhớ kiến thức phần này",
+      "Các môn học có sẵn trên Vibook",
+      "Giới thiệu các tính năng nổi bật của Vibook",
     ];
   }
   if (pathname.startsWith("/blog")) {
     return [
       "Tóm tắt bài viết trong 3 ý chính",
       "Giải thích kỹ thuật được nhắc đến",
-      "Đánh giá bài viết này có gì nổi bật?",
+      "Giới thiệu các tính năng nổi bật của Vibook",
+      "Hướng dẫn tìm kiếm tài liệu học tập",
     ];
   }
   if (pathname.startsWith("/market") || pathname.startsWith("/product")) {
     return [
-      "Sản phẩm này có những tính năng gì?",
       "Hướng dẫn cách đặt hàng và thanh toán",
-      "Đánh giá chi tiết về sản phẩm này",
+      "Sản phẩm này có những tính năng gì?",
+      "Giới thiệu các tính năng nổi bật của Vibook",
     ];
   }
   if (pathname.startsWith("/friends")) {
     return [
       "Làm sao để tìm kiếm và kết bạn nhanh?",
-      "Gợi ý bạn bè cùng khoa / sở thích",
+      "Giới thiệu các tính năng nổi bật của Vibook",
+      "Hướng dẫn tìm kiếm tài liệu học tập",
+    ];
+  }
+  if (pathname.startsWith("/settings")) {
+    return [
+      "Hướng dẫn tùy chỉnh giao diện và cỡ chữ",
+      "Giới thiệu các tính năng nổi bật của Vibook",
+      "Hướng dẫn tìm kiếm tài liệu học tập",
     ];
   }
   return [
     "Giới thiệu các tính năng nổi bật của Vibook",
     "Hướng dẫn tìm kiếm tài liệu học tập",
+    "Các môn học có sẵn trên Vibook",
     "Trò chuyện & Giải đáp thắc mắc",
   ];
 };

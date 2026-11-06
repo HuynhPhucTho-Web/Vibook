@@ -212,7 +212,7 @@ const ChatMessageList = ({
                 key={i}
                 type="button"
                 onClick={() => onSelectPrompt(prompt)}
-                className="text-xs bg-purple-50 hover:bg-purple-100 dark:bg-[#202024] dark:hover:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/50 px-3 py-1.5 rounded-lg whitespace-nowrap text-left transition flex-shrink-0 cursor-pointer shadow-2xs"
+                className="text-xs bg-purple-50 hover:bg-purple-100 dark:bg-[#202024] dark:hover:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-900/50 px-3 py-1.5 rounded-lg whitespace-nowrap text-left transition-all duration-150 flex-shrink-0 cursor-pointer shadow-2xs hover:border-purple-400 dark:hover:border-purple-600 hover:scale-[1.02] active:scale-[0.98]"
               >
                 {prompt}
               </button>

@@ -15,6 +15,7 @@ const HeaderRightActions = ({
   unreadCount,
   unreadMessagesCount,
   notifications = [],
+  isNotifLoading = false,
   notificationPopoverOpen = false,
   setNotificationPopoverOpen,
   notificationRef,
@@ -35,6 +36,10 @@ const HeaderRightActions = ({
 }) => {
   const navigate = useNavigate();
   const isLight = theme === "light";
+
+  const handleClosePopover = React.useCallback(() => {
+    setNotificationPopoverOpen?.(false);
+  }, [setNotificationPopoverOpen]);
 
   // Guest: Login only (hide messenger / notifications / user menu)
   if (!isAuthenticated) {
@@ -123,13 +128,14 @@ const HeaderRightActions = ({
         {/* Floating popover */}
         <NotificationPopover
           isOpen={notificationPopoverOpen}
-          onClose={() => setNotificationPopoverOpen?.(false)}
+          onClose={handleClosePopover}
           notifications={notifications}
           unreadCount={unreadCount}
           theme={theme}
           onMarkAsRead={onMarkAsRead}
           onMarkAllAsRead={onMarkAllAsRead}
           latestNewNotificationId={latestNewNotificationId}
+          isLoading={isNotifLoading}
         />
       </div>
 
@@ -151,4 +157,4 @@ const HeaderRightActions = ({
   );
 };
 
-export default HeaderRightActions;
+export default React.memo(HeaderRightActions);

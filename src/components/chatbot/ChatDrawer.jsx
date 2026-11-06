@@ -13,7 +13,7 @@ import {
 import ChatMessageList from "./ChatMessageList";
 import ChatInput from "./ChatInput";
 import ChatSettingsModal from "./ChatSettingsModal";
-import { getActiveAiProvider } from "../../services/geminiChatService";
+import { getActiveAiProvider, hasConfiguredApiKey } from "../../services/geminiChatService";
 
 const ChatDrawer = ({
   isOpen,
@@ -102,7 +102,7 @@ const ChatDrawer = ({
                         Astro Assistant
                       </h3>
                       <span className={`text-[10px] px-1.5 py-0.2 rounded border font-medium flex-shrink-0 ${isDark ? "bg-purple-950 text-purple-300 border-purple-800" : "bg-purple-100 text-purple-700 border-purple-300"}`}>
-                        {currentProvider === "gemini" ? "Gemini" : "Groq"}
+                        {hasConfiguredApiKey() ? (currentProvider === "gemini" ? "Gemini AI" : "Groq AI") : "Astro AI"}
                       </span>
                     </div>
                     <p

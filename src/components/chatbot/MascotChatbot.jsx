@@ -9,6 +9,10 @@ import {
   getContextualQuickPrompts,
 } from "../../utils/pageContextExtractor";
 import { sendMessageToGemini } from "../../services/geminiChatService";
+import {
+  getNextSuggestions,
+  getOfflineResponse,
+} from "../../services/offlineBotKnowledge";
 
 const STORAGE_KEY = "vibook_astro_chat_messages";
 const MASCOT_IMAGE = "/images/mascot/mascot_1.png";
@@ -144,15 +148,27 @@ const MascotChatbot = () => {
       };
 
       setMessages((prev) => [...prev, botMessage]);
+
+      // Tự động cập nhật các gợi ý tiếp theo mượt mà
+      const nextPrompts = getNextSuggestions(text, location.pathname);
+      if (nextPrompts && nextPrompts.length > 0) {
+        setQuickPrompts(nextPrompts);
+      }
     } catch (err) {
-      console.error("Lỗi gửi tin nhắn cho bot:", err);
-      const errorMessage = {
-        id: `bot_err_${Date.now()}`,
+      console.warn("Lỗi gửi tin nhắn cho bot, tự động chuyển sang tri thức tích hợp:", err);
+      const fallbackReply = getOfflineResponse(text, currentCtx);
+      const botMessage = {
+        id: `bot_${Date.now()}`,
         sender: "bot",
-        content: `⚠️ ${err.message || "Đã xảy ra lỗi khi kết nối. Bạn thử lại nhé!"}`,
+        content: fallbackReply,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, botMessage]);
+
+      const nextPrompts = getNextSuggestions(text, location.pathname);
+      if (nextPrompts && nextPrompts.length > 0) {
+        setQuickPrompts(nextPrompts);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -161,6 +177,7 @@ const MascotChatbot = () => {
   // Xóa lịch sử trò chuyện
   const handleClearMessages = () => {
     setMessages([]);
+    setQuickPrompts(getContextualQuickPrompts(location.pathname));
     try {
       sessionStorage.removeItem(STORAGE_KEY);
     } catch {}

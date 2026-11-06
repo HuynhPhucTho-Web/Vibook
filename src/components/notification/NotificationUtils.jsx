@@ -59,6 +59,9 @@ export const isSameNotificationList = (prevList = [], newList = []) => {
       a.read !== b.read ||
       a.type !== b.type ||
       a.content !== b.content ||
+      a.actorPhoto !== b.actorPhoto ||
+      a.actorName !== b.actorName ||
+      a.subjectCode !== b.subjectCode ||
       normalizeTimestamp(a.createdAt) !== normalizeTimestamp(b.createdAt)
     ) {
       return false;

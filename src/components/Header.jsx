@@ -45,9 +45,31 @@ const Header = () => {
   const { language, setLanguage, t } = useContext(LanguageContext);
   const location = useLocation();
   const [authUser, setAuthUser] = useState(() => auth.currentUser);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(() => {
+    try {
+      const cached = localStorage.getItem("vibook_unread_count");
+      return cached ? Number(cached) : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const cached = localStorage.getItem("vibook_header_notifications");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isNotifLoading, setIsNotifLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem("vibook_header_notifications");
+      return !cached || JSON.parse(cached).length === 0;
+    } catch {
+      return true;
+    }
+  });
   const [notificationPopoverOpen, setNotificationPopoverOpen] = useState(false);
   const [latestNewNotificationId, setLatestNewNotificationId] = useState(null);
   const notificationRef = useRef(null);
@@ -178,12 +200,21 @@ const Header = () => {
   useEffect(() => {
     return auth.onAuthStateChanged((user) => {
       setAuthUser(user);
-      if (!user) setUnreadCount(0);
+      if (!user) {
+        setUnreadCount(0);
+        setNotifications([]);
+        prevHeaderNotifsRef.current = [];
+      setIsNotifLoading(false);
+        try {
+          localStorage.removeItem("vibook_header_notifications");
+          localStorage.removeItem("vibook_unread_count");
+        } catch (_) {}
+      }
     });
   }, []);
 
   const isInitialNotifLoad = useRef(true);
-  const prevHeaderNotifsRef = useRef([]);
+  const prevHeaderNotifsRef = useRef(notifications);
   const notifDebounceRef = useRef(null);
 
   useEffect(() => {
@@ -191,6 +222,7 @@ const Header = () => {
       setUnreadCount(0);
       setNotifications([]);
       prevHeaderNotifsRef.current = [];
+      setIsNotifLoading(false);
       return undefined;
     }
     isInitialNotifLoad.current = true;
@@ -202,7 +234,7 @@ const Header = () => {
       (snapshot) => {
         // Coalesce rapid burst snapshot events (local write + server ack)
         if (notifDebounceRef.current) clearTimeout(notifDebounceRef.current);
-        notifDebounceRef.current = setTimeout(() => {
+        const processSnapshot = () => {
           const allNotifs = snapshot.docs.map((d) => ({
             id: d.id,
             ...d.data(),
@@ -210,7 +242,8 @@ const Header = () => {
           allNotifs.sort((a, b) => {
             const timeB = normalizeTimestamp(b.createdAt);
             const timeA = normalizeTimestamp(a.createdAt);
-            return timeB - timeA;
+            if (timeB !== timeA) return timeB - timeA;
+            return (b.id || "").localeCompare(a.id || "");
           });
           const top25 = allNotifs.slice(0, 25);
           const unread = allNotifs.filter((n) => !n.read).length;
@@ -219,8 +252,20 @@ const Header = () => {
           if (!isSameNotificationList(prevHeaderNotifsRef.current, top25)) {
             prevHeaderNotifsRef.current = top25;
             setNotifications(top25);
+            try {
+              localStorage.setItem("vibook_header_notifications", JSON.stringify(top25));
+            } catch (_) {}
           }
-          setUnreadCount((prev) => (prev !== unread ? unread : prev));
+          setUnreadCount((prev) => {
+            if (prev !== unread) {
+              try {
+                localStorage.setItem("vibook_unread_count", String(unread));
+              } catch (_) {}
+              return unread;
+            }
+            return prev;
+          });
+          setIsNotifLoading(false);
 
           if (isInitialNotifLoad.current) {
             isInitialNotifLoad.current = false;
@@ -233,7 +278,14 @@ const Header = () => {
             const newestDoc = addedChanges[0].doc;
             setLatestNewNotificationId(newestDoc.id);
           }
-        }, 60);
+        };
+
+        if (isInitialNotifLoad.current) {
+          processSnapshot();
+        } else {
+          if (notifDebounceRef.current) clearTimeout(notifDebounceRef.current);
+          notifDebounceRef.current = setTimeout(processSnapshot, 40);
+        }
       },
       (error) => {
         console.error("Error listening to notifications:", error);
@@ -248,10 +300,22 @@ const Header = () => {
 
   const handleMarkAsRead = useCallback(async (notifId) => {
     try {
+      setNotifications((prev) => {
+        const next = prev.map((n) => (n.id === notifId ? { ...n, read: true } : n));
+        prevHeaderNotifsRef.current = next;
+        try {
+          localStorage.setItem("vibook_header_notifications", JSON.stringify(next));
+        } catch (_) {}
+        return next;
+      });
+      setUnreadCount((prev) => {
+        const next = Math.max(0, prev - 1);
+        try {
+          localStorage.setItem("vibook_unread_count", String(next));
+        } catch (_) {}
+        return next;
+      });
       await updateDoc(doc(db, "Notifications", notifId), { read: true });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
-      );
     } catch (err) {
       console.error("Error marking notification read:", err);
     }
@@ -260,6 +324,20 @@ const Header = () => {
   const handleMarkAllAsRead = useCallback(async () => {
     if (!authUser) return;
     try {
+      // Optimistic update
+      setNotifications((prev) => {
+        const next = prev.map((n) => ({ ...n, read: true }));
+        prevHeaderNotifsRef.current = next;
+        try {
+          localStorage.setItem("vibook_header_notifications", JSON.stringify(next));
+        } catch (_) {}
+        return next;
+      });
+      setUnreadCount(0);
+      try {
+        localStorage.setItem("vibook_unread_count", "0");
+      } catch (_) {}
+
       const q = query(
         collection(db, "Notifications"),
         where("userId", "==", authUser.uid)
@@ -273,8 +351,6 @@ const Header = () => {
         batch.update(d.ref, { read: true });
       });
       await batch.commit();
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
     } catch (err) {
       console.error("Error marking all read:", err);
     }
@@ -552,6 +628,7 @@ const Header = () => {
               unreadCount={unreadCount}
               unreadMessagesCount={unreadMessagesCount}
               notifications={notifications}
+              isNotifLoading={isNotifLoading}
               notificationPopoverOpen={notificationPopoverOpen}
               setNotificationPopoverOpen={setNotificationPopoverOpen}
               notificationRef={notificationRef}
