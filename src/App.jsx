@@ -127,6 +127,14 @@ function App() {
     };
     const selectedBackground = bgColors[background] || bgColors.default;
     document.documentElement.style.setProperty("--app-background", selectedBackground[theme]);
+
+    // Đồng bộ thuộc tính font-size, compact mode, motion trước paint để tránh giật font / layout shift
+    const savedFontSize = localStorage.getItem("vibook_font_size") || "normal";
+    document.documentElement.dataset.fontSize = savedFontSize;
+    const savedCompact = localStorage.getItem("vibook_compact_mode") === "true";
+    document.documentElement.dataset.compact = String(savedCompact);
+    const savedMotion = localStorage.getItem("vibook_reduced_motion") === "true";
+    document.documentElement.dataset.reducedMotion = String(savedMotion);
   }, []);
 
   useEffect(() => {

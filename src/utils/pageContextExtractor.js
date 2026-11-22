@@ -1,6 +1,6 @@
 /**
  * Trích xuất ngữ cảnh văn bản hiển thị trên trang hiện tại để gửi cho AI Chatbot.
- * Sửa lỗi cloneNode.innerText rỗng trong trình duyệt bằng cách đọc trực tiếp từ live DOM.
+ * Đọc trực tiếp từ Live DOM an toàn, không clone/chèn phần tử vào document.body để tránh layout shift và lỗi innerText rỗng.
  */
 
 export const getActivePageContext = () => {
@@ -24,56 +24,65 @@ export const getActivePageContext = () => {
   else if (pathname.startsWith("/profile") || pathname.startsWith("/user")) category = "Trang cá nhân";
   else if (pathname.startsWith("/messenger")) category = "Tin nhắn trực tuyến";
   else if (pathname.startsWith("/about")) category = "Giới thiệu nền tảng ThoDev / Vibook";
-  else if (pathname.startsWith("/settings")) category = "Cài đặt tài khoản";
+  else if (pathname.startsWith("/settings")) category = "Cài đặt tài khoản & Hệ thống";
 
   // 2. Tìm vùng nội dung chính trên màn hình
   const contentEl =
     document.querySelector(".app-shell__content") ||
+    document.querySelector(".cockpit-page") ||
     document.querySelector("main") ||
     document.querySelector("#root");
 
   let extractedText = "";
 
   if (contentEl) {
-    // Loại bỏ các phần tử chatbot UI ra khỏi context để tránh AI đọc nhầm giao diện chat
-    // Sử dụng TreeWalker để duyệt cây DOM và bỏ qua các node thuộc chatbot
-    const CHATBOT_SELECTORS = [
-      "[data-chatbot]",
-      ".mascot-chatbot",
-      ".chat-drawer",
-      // z-index cao (fixed overlay) — lấy theo aria-label nếu không có class cố định
-    ];
+    // Nếu là vùng nội dung trang độc lập (.app-shell__content hoặc .cockpit-page)
+    // Các vùng này nằm hoàn toàn bên ngoài MascotChatbot nên an toàn tuyệt đối khi đọc innerText trực tiếp
+    const isIsolatedPage =
+      contentEl.classList.contains("app-shell__content") ||
+      contentEl.classList.contains("cockpit-page") ||
+      Boolean(contentEl.closest(".app-shell__content"));
 
-    // Clone để không ảnh hưởng đến live DOM
-    const clone = contentEl.cloneNode(true);
+    if (isIsolatedPage && contentEl.innerText) {
+      extractedText = contentEl.innerText;
+    } else {
+      // Trường hợp đọc từ main hoặc #root: dùng TreeWalker duyệt live DOM trực tiếp
+      // Bỏ qua các thành phần chatbot, script, style mà KHÔNG chèn/xóa phần tử vào document.body
+      const walker = document.createTreeWalker(
+        contentEl,
+        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+        {
+          acceptNode(node) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const el = node;
+              const tag = (el.tagName || "").toLowerCase();
+              if (tag === "script" || tag === "style" || tag === "noscript") {
+                return NodeFilter.FILTER_REJECT;
+              }
+              if (
+                (el.matches && el.matches("[data-chatbot], .mascot-chatbot, .chat-drawer, [aria-hidden='true']")) ||
+                (el.getAttribute("aria-label") || "").toLowerCase().includes("chatbot") ||
+                (el.getAttribute("aria-label") || "").toLowerCase().includes("astro")
+              ) {
+                return NodeFilter.FILTER_REJECT;
+              }
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          },
+        }
+      );
 
-    // Xóa tất cả phần tử chatbot trong clone
-    CHATBOT_SELECTORS.forEach((sel) => {
-      clone.querySelectorAll(sel).forEach((el) => el.remove());
-    });
-
-    // Xóa thêm theo z-index style cực cao (fixed panel chatbot)
-    clone.querySelectorAll("[style*='z-index']").forEach((el) => {
-      const zi = parseInt(el.style.zIndex || "0", 10);
-      if (zi >= 1050) el.remove();
-    });
-
-    // Xóa phần tử có aria-label chứa từ khóa chatbot
-    clone.querySelectorAll("[aria-label]").forEach((el) => {
-      const label = (el.getAttribute("aria-label") || "").toLowerCase();
-      if (label.includes("astro") || label.includes("chatbot") || label.includes("trợ lý")) {
-        el.remove();
+      const parts = [];
+      let curr = walker.nextNode();
+      while (curr) {
+        if (curr.nodeType === Node.TEXT_NODE) {
+          const val = curr.nodeValue ? curr.nodeValue.trim() : "";
+          if (val) parts.push(val);
+        }
+        curr = walker.nextNode();
       }
-    });
-
-    // Đọc innerText từ clone đã được làm sạch
-    // Clone được gắn tạm vào document để trình duyệt tính layout và trả về innerText đúng
-    const tempDiv = document.createElement("div");
-    tempDiv.style.cssText = "position:absolute;left:-9999px;top:-9999px;visibility:hidden;pointer-events:none;";
-    tempDiv.appendChild(clone);
-    document.body.appendChild(tempDiv);
-    extractedText = clone.innerText || "";
-    document.body.removeChild(tempDiv);
+      extractedText = parts.join("\n");
+    }
   }
 
   // 3. Trích xuất chuyên sâu khi đang ở trang Quiz / Đề ôn thi (/source)
@@ -139,17 +148,28 @@ export const getActivePageContext = () => {
     ? `${structuredDetail}\n[NỘI DUNG VĂN BẢN TRÊN TRANG]:\n${cleanedText}`
     : cleanedText;
 
+  // Xác định tiêu đề trang phù hợp
+  let pageTitle = document.title || "Vibook Platform";
+  if (!pageTitle || pageTitle.includes("Software Engineer & Web Developer")) {
+    const headingEl = document.querySelector("h1, h2");
+    if (headingEl && headingEl.innerText?.trim()) {
+      pageTitle = `${headingEl.innerText.trim()} | ThoDev`;
+    } else if (pathname.startsWith("/settings")) {
+      pageTitle = "Cài đặt hệ thống ThoDev | Digital Cockpit";
+    }
+  }
+
   // Debug log để kiểm tra trong Console (F12)
   console.log("Astro Scanner - Đã đọc ngữ cảnh UI:", {
     url: pathname,
-    title: document.title,
+    title: pageTitle,
     contentLength: finalContent.length,
     preview: finalContent.slice(0, 200),
   });
 
   return {
     url: pathname,
-    title: document.title || "Vibook Platform",
+    title: pageTitle,
     category,
     content: finalContent || "Trang hiện tại chưa có nội dung văn bản cụ thể.",
   };
